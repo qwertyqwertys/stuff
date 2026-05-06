@@ -837,7 +837,7 @@ const recentGamesData = useMemo(() => {
       ) : (
         /* --- EVERYTHING INSIDE HERE IS THE NORMAL SITE --- */
         <>
-          <Header 
+        <Header 
   searchQuery={searchQuery} 
   setSearchQuery={setSearchQuery}
   supplier={supplier}       
@@ -850,7 +850,6 @@ const recentGamesData = useMemo(() => {
   theme={theme}   
   onViewProfile={() => setSelectedFriendId('me')} 
   onRandomGame={() => {
-    // Now it pulls from filteredGames so it respects your GN-MATH selection!
     const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
     if (playable.length > 0) {
       launchContent(playable[Math.floor(Math.random() * playable.length)]);
@@ -859,53 +858,62 @@ const recentGamesData = useMemo(() => {
   isChatOpen={isChatOpen}
   setIsChatOpen={setIsChatOpen}
 />
-          <div className={`${isLightMode ? 'bg-white' : 'bg-[#09090b]/90'} backdrop-blur-md px-4 pt-1.5 overflow-hidden sticky top-16 z-40 transition-colors group`}>
-            <div className="max-w-7xl mx-auto relative flex items-center">
-              {canScrollLeft && (
-                <div className={`absolute left-0 z-50 flex items-center pr-12 h-full bg-gradient-to-r ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b] via-[#09090b]/80'} to-transparent pointer-events-none`}>
-                  <button 
-                    onClick={() => scrollCategories('left')}
-                    className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-                  >
-                    <ChevronLeft className="w-4 h-4 text-black" />
-                  </button>
-                </div>
-              )}
 
-              <div 
-                ref={categoryScrollRef}
-                onScroll={checkScroll}
-                className="flex gap-2 overflow-x-auto pb-4 no-scrollbar scroll-smooth px-2 w-full"
-              >
-                {categoriesWithCounts.map(cat => (
-                  <button 
-                    key={cat.name} 
-                    onClick={() => setActiveCategory(cat.name)} 
-                    className={`px-4 py-2 rounded-full text-[10px] font-black uppercase border shrink-0 transition-all ${
-                      activeCategory === cat.name 
-                        ? 'bg-[var(--theme)] border-[var(--theme)] text-black' 
-                        : isLightMode 
-                          ? 'bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200' 
-                          : 'bg-white/5 border-white/10 text-zinc-500 hover:bg-white/10'
-                    }`}
-                  >
-                    {cat.name} <span className="opacity-40 ml-1">{cat.count}</span>
-                  </button>
-                ))}
-              </div>
+{/* --- MAIN STICKY CATEGORY SECTION --- */}
+<div className={`sticky top-16 z-40 w-full backdrop-blur-md transition-colors border-b ${
+  isLightMode ? 'bg-white/80 border-black/5' : 'bg-[#09090b]/80 border-white/5'
+}`}>
+  <div className="max-w-7xl mx-auto px-4 relative flex items-center group">
+    
+    {/* Left Scroll Arrow */}
+    {canScrollLeft && (
+      <div className={`absolute left-0 z-50 flex items-center pr-12 h-full bg-gradient-to-r ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b] via-[#09090b]/80'} to-transparent pointer-events-none`}>
+        <button 
+          onClick={() => scrollCategories('left')}
+          className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+        >
+          <ChevronLeft className="w-4 h-4 text-black" />
+        </button>
+      </div>
+    )}
 
-              {canScrollRight && (
-                <div className={`absolute -right-9 z-50 flex items-center pl-12 h-full bg-gradient-to-l ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b] via-[#09090b]/80'} to-transparent pointer-events-none`}>
-                  <button 
-                    onClick={() => scrollCategories('right')}
-                    className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-                  >
-                    <ChevronRight className="w-4 h-4 text-black" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+    {/* The Actual Categories */}
+    <div 
+      ref={categoryScrollRef}
+      onScroll={checkScroll}
+      className="no-scrollbar flex items-center gap-2 overflow-x-auto py-4 scroll-smooth w-full"
+    >
+      {categoriesWithCounts.map(cat => (
+        <button 
+          key={cat.name} 
+          onClick={() => setActiveCategory(cat.name)} 
+          style={{ fontFamily: "'Baloo 2', cursive" }}
+          className={`px-5 py-2 rounded-full text-xs font-bold uppercase border shrink-0 transition-all active:scale-95 ${
+            activeCategory === cat.name 
+              ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_15px_rgba(var(--theme-rgb),0.3)]' 
+              : isLightMode 
+                ? 'bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200' 
+                : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'
+          }`}
+        >
+          {cat.name} <span className="opacity-50 ml-1.5 font-black">{cat.count}</span>
+        </button>
+      ))}
+    </div>
+
+    {/* Right Scroll Arrow */}
+    {canScrollRight && (
+      <div className={`absolute right-0 z-50 flex items-center pl-12 h-full bg-gradient-to-l ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b] via-[#09090b]/80'} to-transparent pointer-events-none`}>
+        <button 
+          onClick={() => scrollCategories('right')}
+          className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+        >
+          <ChevronRight className="w-4 h-4 text-black" />
+        </button>
+      </div>
+    )}
+  </div>
+</div>
 
           <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12">
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
