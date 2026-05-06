@@ -859,7 +859,7 @@ const recentGamesData = useMemo(() => {
   setIsChatOpen={setIsChatOpen}
 />
 
-{/* --- MAIN STICKY CATEGORY SECTION --- */}
+{/* --- THIS IS THE ONLY DIV YOU NEED FOR STICKY --- */}
 <div className={`sticky top-16 z-40 w-full backdrop-blur-md transition-colors border-b ${
   isLightMode ? 'bg-white/80 border-black/5' : 'bg-[#09090b]/80 border-white/5'
 }`}>
@@ -870,14 +870,14 @@ const recentGamesData = useMemo(() => {
       <div className={`absolute left-0 z-50 flex items-center pr-12 h-full bg-gradient-to-r ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b] via-[#09090b]/80'} to-transparent pointer-events-none`}>
         <button 
           onClick={() => scrollCategories('left')}
-          className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+          className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
         >
           <ChevronLeft className="w-4 h-4 text-black" />
         </button>
       </div>
     )}
 
-    {/* The Actual Categories */}
+    {/* Categories Area */}
     <div 
       ref={categoryScrollRef}
       onScroll={checkScroll}
@@ -906,7 +906,7 @@ const recentGamesData = useMemo(() => {
       <div className={`absolute right-0 z-50 flex items-center pl-12 h-full bg-gradient-to-l ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b] via-[#09090b]/80'} to-transparent pointer-events-none`}>
         <button 
           onClick={() => scrollCategories('right')}
-          className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+          className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
         >
           <ChevronRight className="w-4 h-4 text-black" />
         </button>
@@ -914,7 +914,6 @@ const recentGamesData = useMemo(() => {
     )}
   </div>
 </div>
-
           <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12">
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
               <section className="space-y-4">
