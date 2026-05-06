@@ -859,29 +859,15 @@ const recentGamesData = useMemo(() => {
   setIsChatOpen={setIsChatOpen}
 />
 
-{/* --- THIS IS THE ONLY DIV YOU NEED FOR STICKY --- */}
-<div className={`sticky top-16 z-40 w-full backdrop-blur-md transition-colors border-b ${
-  isLightMode ? 'bg-white/80 border-black/5' : 'bg-[#09090b]/80 border-white/5'
+{/* --- THE STICKY CATEGORY BAR --- */}
+<div className={`sticky top-16 z-40 w-full backdrop-blur-md transition-all border-b ${
+  isLightMode ? 'bg-white/80 border-black/5' : 'bg-[#0a0a0a]/80 border-white/5'
 }`}>
-  <div className="max-w-7xl mx-auto px-4 relative flex items-center group">
-    
-    {/* Left Scroll Arrow */}
-    {canScrollLeft && (
-      <div className={`absolute left-0 z-50 flex items-center pr-12 h-full bg-gradient-to-r ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b] via-[#09090b]/80'} to-transparent pointer-events-none`}>
-        <button 
-          onClick={() => scrollCategories('left')}
-          className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-        >
-          <ChevronLeft className="w-4 h-4 text-black" />
-        </button>
-      </div>
-    )}
-
-    {/* Categories Area */}
+  <div className="max-w-7xl mx-auto px-4">
     <div 
       ref={categoryScrollRef}
       onScroll={checkScroll}
-      className="no-scrollbar flex items-center gap-2 overflow-x-auto py-4 scroll-smooth w-full"
+      className="no-scrollbar flex items-center gap-2 overflow-x-auto py-4 scroll-smooth"
     >
       {categoriesWithCounts.map(cat => (
         <button 
@@ -900,6 +886,8 @@ const recentGamesData = useMemo(() => {
         </button>
       ))}
     </div>
+  </div>
+</div>
 
     {/* Right Scroll Arrow */}
     {canScrollRight && (
