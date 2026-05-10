@@ -218,7 +218,7 @@ const getLaunchUrl = (game, currentSupplier) => {
     win.document.write(`
       <html>
         <head>
-          <title>Capybara Science - Playing</title>
+          <title>DO NOT REFRESH</title>
         </head>
         <body style="margin:0;padding:0;overflow:hidden;background:#000;">
           <iframe 
