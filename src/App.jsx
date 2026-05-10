@@ -210,28 +210,30 @@ const getLaunchUrl = (game, currentSupplier) => {
     });
 
   const startTime = Date.now();
-  // Change 1: Open about:blank so the window is ready for the iframe
   const win = window.open('about:blank', '_blank');
 
   if (win) {
-    win.document.title = "DO NOT REFRESH";
-    win.document.body.style = 'margin:0;padding:0;overflow:hidden;background:#000;';
-    
-    const iframe = win.document.createElement('iframe');
-    // Change 2: Use game.url directly to ensure the new GitHub link is used
-    iframe.src = game.url; 
-    iframe.style = 'width:100vw;height:100vh;border:none;display:block;';
-    iframe.allow = "fullscreen";
-    
-    win.document.body.appendChild(iframe);
-    
+    // We write the HTML directly so there's no way it can be empty
+    win.document.write(`
+      <html>
+        <head><title>DO NOT REFRESH</title></head>
+        <body style="margin:0;padding:0;overflow:hidden;background:#000;">
+          <iframe 
+            src="${game.url}" 
+            style="width:100vw;height:100vh;border:none;" 
+            allow="fullscreen">
+          </iframe>
+        </body>
+      </html>
+    `);
+    win.document.close(); // Tells the browser we are done writing
+
     const checkInterval = setInterval(() => {
       if (win.closed) {
         clearInterval(checkInterval);
         const duration = Math.floor((Date.now() - startTime) / 1000 / 60);
         if (duration > 0) {
           setPlaytimes(prev => {
-            // Using item.id to keep your playtime tracking working
             const updated = { ...prev, [item.id]: (prev[item.id] || 0) + duration };
             localStorage.setItem('capy-playtimes', JSON.stringify(updated));
             return updated;
