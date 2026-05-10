@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/assets/capybara.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+      :root {
+        --bg-color: #121212;
+      }
+
+      body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100%; /* Changed from height: 100% */
+        background-color: var(--bg-color);
+        font-family: 'Baloo 2', cursive;
+        /* "overflow-y: auto" allows the page to scroll down if the content is long */
+        overflow-y: auto; 
+      }
+
+      #root {
+        width: 100%;
+        /* Let the root div grow as long as the game list needs it to be */
+        min-height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.jsx"></script>
+    
+  </body>
+</html>
