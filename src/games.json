@@ -413,6 +413,13 @@
     "category": "Creative"
   },
   {
+    "id": "tuff-client-minecraft-1.12-(fake)",
+    "title": "Tuff Client Minecraft 1.12 (fake)",
+    "url": "https://github.com/HudseyBoYouTube/stuff/releases/download/v1.0.0/tuff-client-1.12.html",
+    "thumbnail": "https://assets-prd.ignimgs.com/2021/12/14/minecraft-1639513933156.jpg?crop=1%3A1%2Csmart&format=jpg&auto=webp&quality=80",
+    "category": "Creative"
+  },
+  {
     "id": "doodle-jump",
     "title": "Doodle Jump",
     "url": "https://play.coolmathgames.eu.org/storage/ag/echo/doodle-jump/",
