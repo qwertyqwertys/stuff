@@ -210,7 +210,7 @@ const getLaunchUrl = (game, currentSupplier) => {
     });
 
   const startTime = Date.now();
-  const win = window.open('about:blank', '_blank');
+  const win = window.open(game.url, '_blank');
 
   if (win) {
     win.document.title = "DO NOT REFRESH";
