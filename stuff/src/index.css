@@ -1,0 +1,209 @@
+/* Updated Force-Scale index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Fredoka:wght@600&family=Baloo+2:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg-main: #0a0a0a;
+  --text-main: #f4f4f5; 
+  --card-bg: #18181b;   
+  --border-main: rgba(255, 255, 255, 0.1);
+}
+
+.light-mode {
+  --bg-main: #ffffff !important;
+  --text-main: #18181b !important;
+  --card-bg: #f4f4f5 !important;
+  --border-main: rgba(0, 0, 0, 0.1) !important;
+  background-color: #ffffff !important;
+  color: #18181b !important;
+}
+
+.light-mode .bg-zinc-900,
+.light-mode .bg-zinc-950,
+.light-mode .bg-black {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+}
+
+.light-mode .sticky, .light-mode header, .light-mode .backdrop-blur-md {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode header input,
+.light-mode .bg-white\/5 {
+  background-color: #f4f4f5 !important;
+  color: #18181b !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode .bg-zinc-900\/50 {
+  background-color: #f4f4f5 !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode .text-white,
+.light-mode .text-zinc-100,
+.light-mode .text-zinc-200,
+.light-mode .text-zinc-300 {
+  color: #18181b !important;
+}
+
+.light-mode .text-zinc-400,
+.light-mode .text-zinc-500 {
+  color: #71717a !important; 
+}
+
+.light-mode .border-white\/5,
+.light-mode .border-white\/10,
+.light-mode .border-zinc-800 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-background: var(--bg-main);
+  --color-foreground: var(--text-main);
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    @apply antialiased transition-colors duration-300;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--theme);
+  border: 2px solid var(--bg-main);
+  @apply rounded-full transition-colors;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.2);
+}
+
+.no-scrollbar {
+  overflow-x: scroll !important;
+  overflow-y: hidden !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  height: 58px !important;
+  padding-bottom: 16px !important;
+  margin-bottom: -16px !important;
+  scrollbar-width: thin !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  height: 8px !important;
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.no-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #71717a !important; 
+  border-radius: 10px !important;
+  border: 2px solid white !important;
+}
+
+.show-vertical-bar {
+  overflow-y: scroll !important; 
+  overflow-x: hidden !important;
+  scrollbar-width: thin !important;
+  display: block !important;
+}
+
+.show-vertical-bar::-webkit-scrollbar {
+  width: 8px !important; 
+  display: block !important;
+}
+
+.show-vertical-bar::-webkit-scrollbar-track {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+}
+
+.show-vertical-bar::-webkit-scrollbar-thumb {
+  background-color: var(--theme) !important;
+  border-radius: 10px !important;
+  min-height: 40px !important; 
+  border: 2px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+.no-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme) transparent;
+}
+
+/* --- SPEED HACK --- */
+.bg-zinc-900\/40, .bg-zinc-900\/50 {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 320px;
+}
+
+/* --- CAPYBARA CURSOR --- */
+.bg-zinc-900\/40, .bg-zinc-900\/50 {
+  cursor: url('https://img.icons8.com/color/28/capybara.png'), pointer !important;
+}
+
+.bg-zinc-900\/40:active, .bg-zinc-900\/50:active {
+  cursor: url('https://img.icons8.com/color/28/test-tube.png'), pointer !important;
+}
+
+/* --- THE "NUCLEAR" OVERRIDE FOR STATUS BAR (TOP RIGHT) --- */
+
+/* This targets the right-aligned container and scales everything inside it */
+header div[class*="ml-auto"], 
+header .flex.items-center.gap-4.ml-auto {
+  gap: 2rem !important; 
+}
+
+/* Force Font Size on all text/numbers in the right corner */
+header div[class*="ml-auto"] span,
+header div[class*="ml-auto"] p,
+header div[class*="ml-auto"] div {
+  font-family: 'Baloo 2', cursive !important;
+  font-size: 1.3rem !important; /* Bumped up even more */
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* Force Icon Scaling (SVG and Images) */
+header div[class*="ml-auto"] svg,
+header div[class*="ml-auto"] img,
+header div[class*="ml-auto"] .lucide {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  stroke-width: 2.5px !important; /* Make icon lines thicker */
+}
+
+/* Ensure the Logo (Top Left) stays Fredoka 600 */
+header .flex.items-center.gap-2 span, 
+header h1, 
+.logo-text {
+  font-family: 'Fredoka', sans-serif !important;
+  font-weight: 600 !important;
+}

@@ -1,0 +1,1084 @@
+[
+  {
+  "id": "request",
+  "title": "Request a Game",
+  "url": "https://docs.google.com/forms/d/e/1FAIpQLSchc4UVIaZj0_wiEQgnQMK0iSyaxo8_bzuOCeKylOeY77tIlw/viewform",
+  "thumbnail": "/assets/googleform.png",
+  "category": "Community"
+  },
+  {
+    "id": "report",
+    "title": "Report stuff",
+    "url": "https://docs.google.com/forms/d/e/1FAIpQLSckC9I0AjsMheAIbs_c9GF_UV6yQVjT_2Xrt0Z3ScR3ThLiFA/viewform",
+    "thumbnail": "/assets/googleform.png",
+    "category": "Community"
+  },
+  {
+    "id": "flappy-bird",
+    "title": "Flappy Bird",
+    "url": "https://personal.denison.edu/~lalla/314f20/ladi/index.html",
+    "thumbnail": "/assets/flappybird.png",
+    "category": "Arcade"
+  },
+  {
+    "id": "thisis-sand",
+    "title": "This Is Sand",
+    "url": "https://thisissand.com/",
+    "thumbnail": "/assets/thisissand.jpg",
+    "category": "Creative"
+  },
+  {
+    "id": "cookie-clicker",
+    "title": "Cookie Clicker",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/cookie-clicker/",
+    "thumbnail": "/assets/cookieclicker.png",
+    "category": "Idle"
+  },
+  {
+    "id": "basket-bros",
+    "title": "Basket Bros",
+    "url": "https://wizardsbasketball.com/index.php?game=bbros",
+    "thumbnail": "/assets/basketbros.png",
+    "category": "Sports"
+  },
+  {
+    "id": "soccer-bros",
+    "title": "Soccer Bros",
+    "url": "https://sb.wizardsbasketball.com/og/",
+    "thumbnail": "/assets/soccerbros.png",
+    "category": "Sports"
+  },
+  {
+    "id": "wrestle-bros",
+    "title": "Wrestle Bros",
+    "url": "https://wb.wizardsbasketball.com/",
+    "thumbnail": "/assets/wrestlebros.jpg",
+    "category": "Sports"
+  },
+  {
+    "id": "baseball-bros",
+    "title": "Baseball Bros",
+    "url": "https://bbb.wizardsbasketball.com/",
+    "thumbnail": "/assets/baseballbros.jpg",
+    "category": "Sports"
+  },
+  {
+    "id": "football-bros",
+    "title": "Football Bros",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/548.html",
+    "thumbnail": "/assets/footballbros.png",
+    "category": "Sports"
+  },
+  {
+    "id": "granny",
+    "title": "Granny",
+    "url": "https://superalgebra.polden.com/books/files/k12learning/gn/90.html",
+    "thumbnail": "/assets/granny.jpg",
+    "category": "Horror"
+  },
+  {
+    "id": "clash-royale",
+    "title": "Clash Royale (fake)",
+    "url": "https://velara.turbo-education.com/assets/games/clashofvikings.html",
+    "thumbnail": "/assets/clashroyale.jpg",
+    "category": "Strategy"
+  },
+  {
+    "id": "cluster-rush",
+    "title": "Cluster Rush",
+    "url": "https://velara.turbo-education.com/assets/games/clusterrush.html",
+    "thumbnail": "/assets/clusterrush.png",
+    "category": "Platformer"
+  },
+  {
+    "id": "snowrider-3d",
+    "title": "Snow Rider 3d",
+    "url": "https://velara.turbo-education.com/assets/games/snowrider3d.html",
+    "thumbnail": "/assets/snowrider3d.png",
+    "category": "Arcade"
+  },
+  {
+    "id": "race-survival-king",
+    "title": "Race Survival King",
+    "url": "https://velara.turbo-education.com/assets/games/survivalrace.html",
+    "thumbnail": "/assets/racesurvivalking.png",
+    "category": "Survival"
+  },
+  {
+    "id": "stickman-hook",
+    "title": "Stickman Hook",
+    "url": "https://velara.turbo-education.com/assets/games/stickmanhook.html",
+    "thumbnail": "/assets/stickmanhook.jpg",
+    "category": "Platformer"
+  },
+  {
+    "id": "slope",
+    "title": "Slope",
+    "url": "https://classroom.drama.teacher.reading.campus.internationalbdg.com/equations/slope/index.html",
+    "thumbnail": "/assets/slope.png",
+    "category": "Arcade"
+  },
+  {
+    "id": "ragdoll-archers",
+    "title": "Ragdoll Archers",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/originals/ragdoll-archers/",
+    "thumbnail": "/assets/ragdollarchers.png",
+    "category": "Action"
+  },
+  {
+    "id": "ragdoll-hit",
+    "title": "Ragdoll Hit",
+    "url": "https://qwlfsylkvsimcf.salavat.ru/misc/ragdoll-hit/index.html",
+    "thumbnail": "/assets/ragdollhit.png",
+    "category": "Action"
+  },
+  {
+    "id": "eggy-car",
+    "title": "Eggy Car",
+    "url": "https://velara.turbo-education.com/assets/games/eggycar.html",
+    "thumbnail": "/assets/eggycar.png",
+    "category": "Skill"
+  },
+  {
+    "id": "drive-mad",
+    "title": "Drive Mad",
+    "url": "https://velara.turbo-education.com/assets/games/drivemad.html",
+    "thumbnail": "/assets/drivemad.png",
+    "category": "Driving"
+  },
+  {
+    "id": "ovo",
+    "title": "OvO",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/ovo/",
+    "thumbnail": "/assets/ovo.jpg",
+    "category": "Platformer"
+  },
+  {
+    "id": "monkey-mart",
+    "title": "Monkey Mart",
+    "url": "https://velara.turbo-education.com/assets/games/monkeymart.html",
+    "thumbnail": "/assets/monkeymart.png",
+    "category": "Casual"
+  },
+  {
+    "id": "retro-bowl",
+    "title": "Retro Bowl",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/retro-bowl/",
+    "thumbnail": "/assets/retrobowl.jpg",
+    "category": "Sports"
+  },
+  {
+    "id": "retro-bowl-college",
+    "title": "Retro Bowl College",
+    "url": "https://velara.turbo-education.com/assets/games/retrobowlcollege.html",
+    "thumbnail": "https://www.semfirms.com/sites/default/files/images/retro-bowl-college-favicon.png",
+    "category": "Sports"
+  },
+  {
+    "id": "gun-spin",
+    "title": "GunSpin",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/91.html",
+    "thumbnail": "https://images.dwncdn.net/images/t_app-icon-l/p/39d0a468-21ab-466d-a65b-5585c02dd7ad/15864794/gunspin-logo",
+    "category": "Arcade"
+  },
+  {
+    "id": "rooftop-snipers",
+    "title": "Rooftop Snipers",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/originals/rooftopsnipers/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=314,height=314,fit=cover,f=auto/c127771edb0e821e4109b7058ae3f094/rooftop-snipers.jpeg",
+    "category": "Action"
+  },
+  {
+    "id": "paper.io-(fake)",
+    "title": "Paper.io (fake)",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/originals/paperio/",
+    "thumbnail": "https://i.pinimg.com/736x/33/48/8a/33488a03a8ec1fb8f79d4800e5d17dcf.jpg",
+    "category": "Io"
+  },
+  {
+    "id": "paper.io-2",
+    "title": "Paper.io 2",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/originals/paperio2/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYI9XuUUZ774KqnfuXSPm1EwXtccJo5q_mng&s",
+    "category": "Io"
+  },
+  {
+    "id": "tiny-fishing",
+    "title": "Tiny Fishing",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/tiny-fishing/",
+    "thumbnail": "https://www.virlan.co/unblocked-games/wp-content/uploads/2024/02/tiny-fishing.jpg",
+    "category": "Skill"
+  },
+  {
+    "id": "baldi's-basics",
+    "title": "Baldi's Basics",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/466.html",
+    "thumbnail": "https://fontmeme.com/images/badis-basics-font.png",
+    "category": "Skill"
+  },
+  {
+    "id": "bloons-td",
+    "title": "Bloons TD",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/bloonstd/",
+    "thumbnail": "https://imgs.crazygames.com/auto-covers/bloons-tower-defense_1x1.jpg?format=auto&quality=70&metadata=none",
+    "category": "Strategy"
+  },
+  {
+    "id": "bloons-td-2",
+    "title": "Bloons TD 2",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/bloonstd2/",
+    "thumbnail": "https://assets-prd.ignimgs.com/2024/04/26/bloonstd2-1714172517746.jpg",
+    "category": "Strategy"
+  },
+  {
+    "id": "dune",
+    "title": "Dune",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/dune/",
+    "thumbnail": "https://cdn.aptoide.com/imgs/0/f/a/0faa6de9c6fbd892baa4732fc67f980a_screen.png",
+    "category": "Skill"
+  },
+  {
+    "id": "poly-track",
+    "title": "PolyTrack",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/originals/polytrack/",
+    "thumbnail": "https://cdn2.steamgriddb.com/thumb/9442e15eadaf27455b8b4f25dbc1f182.jpg",
+    "category": "Driving"
+  },
+  {
+    "id": "level-devil",
+    "title": "Level Devil",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/level-devil/",
+    "thumbnail": "https://store-images.s-microsoft.com/image/apps.10593.14411882092909650.e59c3c06-872a-420e-9804-eb29fddbff61.77661cd9-b4c3-4816-bc9a-019ff9af1073?h=210",
+    "category": "Platformer"
+  },
+  {
+    "id": "block-blast",
+    "title": "Block Blast (fake)",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/6.html",
+    "thumbnail": "https://dn720704.ca.archive.org/0/items/Block_Blast_1.0.0_ios_10.0/appstore_icon_1742084968.jpg",
+    "category": "Puzzle"
+  },
+  {
+    "id": "ice-dodo",
+    "title": "Ice Dodo",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/5.html",
+    "thumbnail": "https://imgs.crazygames.com/auto-covers/ice-dodo_1x1?format=auto&quality=70&metadata=none",
+    "category": "Arcade"
+  },
+  {
+    "id": "iron-snout",
+    "title": "Iron Snout",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/iron-snout/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-6nDGbtMIOccbg4-1DTYccv-HLjE4URbxqw&s",
+    "category": "Action"
+  },
+  {
+    "id": "bacon-may-die",
+    "title": "Bacon May Die",
+    "url": "https://visaliainvitational.com/assets/storage/webgl/bmd/",
+    "thumbnail": "https://cdn.aptoide.com/imgs/4/b/f/4bf1fc547444d5f37d79fa3aba07321a_icon.png",
+    "category": "Action"
+  },
+  {
+    "id": "space-waves",
+    "title": "Space Waves",
+    "url": "https://healthyedu.installgentoo.com/filestorage/gd/space-waves/index.html",
+    "thumbnail": "https://imgs.crazygames.com/space-waves_1x1/20241203031650/space-waves_1x1-cover?format=auto&quality=100&metadata=none&width=1200",
+    "category": "Skill"
+  },
+  {
+    "id": "line-rider",
+    "title": "Line Rider",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/95.html",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/thumb/5/5a/Bosh.svg/250px-Bosh.svg.png",
+    "category": "Creative"
+  },
+  {
+    "id": "spacebar-clicker",
+    "title": "Spacebar Clicker",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/473.html",
+    "thumbnail": "https://1games.io/data/image/game/spacebar-clicker/banner/spacebar-clicker.png",
+    "category": "Idle"
+  },
+  {
+    "id": "tube-jumpers",
+    "title": "Tube Jumpers",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/111.html",
+    "thumbnail": "https://cdn-1.webcatalog.io/catalog/poki-tube-jumpers/poki-tube-jumpers-icon-filled-256.png?v=1714779575173",
+    "category": "Action"
+  },
+  {
+    "id": "snowball.io",
+    "title": "Snowball.io (fake)",
+    "url": "https://velara.turbo-education.com/assets/games/snowballio.html",
+    "thumbnail": "https://www.mathnook.com/img/addthis-fun-games/snowball-io-200x200.jpg",
+    "category": "Io"
+  },
+  {
+    "id": "vex",
+    "title": "Vex",
+    "url": "https://velara.turbo-education.com/assets/games/vex1.html",
+    "thumbnail": "https://i.ytimg.com/vi/BgaG9avGnz0/hqdefault.jpg?sqp=-oaymwEmCOADEOgC8quKqQMa8AEB-AHeA4AC4AOKAgwIABABGGUgZShlMA8=&rs=AOn4CLBDt-Afs-dyIejfBDVOJ_sQTLRw4A",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-2",
+    "title": "Vex 2",
+    "url": "https://velara.turbo-education.com/assets/games/vex2.html",
+    "thumbnail": "https://yepicdn.com/system/static/thumbs/tile_thumb/1119/thumb150_vex-2.jpg?1492006228",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-3",
+    "title": "Vex 3",
+    "url": "https://velara.turbo-education.com/assets/games/vex3.html",
+    "thumbnail": "https://cdn2.steamgriddb.com/thumb/a95cca70410750703e390cd3877c3fca.jpg",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-3-xmas",
+    "title": "Vex 3 Xmas",
+    "url": "https://velara.turbo-education.com/assets/games/vex3xmas.html",
+    "thumbnail": "https://www.mathnook.com/img/addthis-fun-games/vex-3-xmas-200x200.png",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-4",
+    "title": "Vex 4",
+    "url": "https://velara.turbo-education.com/assets/games/vex4.html",
+    "thumbnail": "https://www.contezero.com/user/pages/03.games/01.action/vex-4/VEX4.jpg",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-5",
+    "title": "Vex 5",
+    "url": "https://velara.turbo-education.com/assets/games/vex5.html",
+    "thumbnail": "https://img.gamedistribution.com/f120262ab72743039fbce88c1f370df8-512x512.jpg",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-6",
+    "title": "Vex 6",
+    "url": "https://velara.turbo-education.com/assets/games/vex6.html",
+    "thumbnail": "https://img.gamedistribution.com/4925e12574364121a48c61c35f649c36-512x512.jpeg",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-7",
+    "title": "Vex 7",
+    "url": "https://velara.turbo-education.com/assets/games/vex7.html",
+    "thumbnail": "https://img.gamedistribution.com/0c454c9562d249d28ba3a2b50564042c-512x512.jpg",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-8",
+    "title": "Vex 8",
+    "url": "https://velara.turbo-education.com/assets/games/vex8.html",
+    "thumbnail": "https://epiconlinegames.com/wp-content/uploads/2025/10/Vex-8.webp",
+    "category": "Platformer"
+  },
+  {
+    "id": "crossy-road",
+    "title": "Crossy Road",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/crossyroad/",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/71/Crossy_Road_icon.jpeg",
+    "category": "Arcade"
+  },
+  {
+    "id": "draw-joust",
+    "title": "Draw Joust",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/387.html",
+    "thumbnail": "https://www.metacritic.com/a/img/catalog/provider/6/12/6-1-748295-52.jpg",
+    "category": "Action"
+  },
+  {
+    "id": "super-hot",
+    "title": "SUPERHOT",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/superhot/",
+    "thumbnail": "https://i.kickstarter.com/assets/011/609/376/9118166d49e15455e574b7b5c20d2a96_original.png?anim=false&fit=cover&gravity=auto&height=873&origin=ugc&q=92&v=1463685320&width=1552&sig=Efko%2B7rQH7l6LdYUzUZSyASZ4r0cAhRqWLCibHOnYpA%3D",
+    "category": "Action"
+  },
+  {
+    "id": "geometry-dash",
+    "title": "Geometry Dash",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/geometry-dash/",
+    "thumbnail": "https://assets-prd.ignimgs.com/2021/12/14/geometrydash-1639510868467.jpg",
+    "category": "Skill"
+  },
+  {
+    "id": "minecraft-1.8-&-1.12-(fake)",
+    "title": "Minecraft 1.8 & 1.12 (fake)",
+    "url": "https://docs.google.com/forms/d/e/1FAIpQLSchc4UVIaZj0_wiEQgnQMK0iSyaxo8_bzuOCeKylOeY77tIlw/viewform",
+    "thumbnail": "https://assets-prd.ignimgs.com/2021/12/14/minecraft-1639513933156.jpg?crop=1%3A1%2Csmart&format=jpg&auto=webp&quality=80",
+    "category": "Creative"
+  },
+  {
+    "id": "doodle-jump",
+    "title": "Doodle Jump",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/doodle-jump/",
+    "thumbnail": "https://assets-prd.ignimgs.com/2022/03/16/doodlejump-1647405974576.jpg",
+    "category": "Arcade"
+  },
+  {
+    "id": "doge-miner",
+    "title": "Doge Miner",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/511.html",
+    "thumbnail": "https://www.dolldivine.com/images/doge-coin-miner-game.png",
+    "category": "Idle"
+  },
+  {
+    "id": "slow-roads",
+    "title": "Slow Roads",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/slow-roads/",
+    "thumbnail": "https://cdn-1.webcatalog.io/catalog/slow-roads/slow-roads-icon-filled-256.png?v=1714780308395",
+    "category": "Driving"
+  },
+  {
+    "id": "subway-surfers",
+    "title": "Subway Surfers",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/subway-surfers/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/7f4c7dc492227ec127a47e4b3197754e/subway-surfers.png",
+    "category": "Runner"
+  },
+  {
+    "id": "n-gon",
+    "title": "n-gon",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/180.html",
+    "thumbnail": "https://img.itch.zone/aW1hZ2UvNTE5MDkwLzEyMzMyODU5LnBuZw==/original/RGApqj.png",
+    "category": "Action"
+  },
+  {
+    "id": "csgo-clicker",
+    "title": "CSGO Clicker",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/csgo-clicker/",
+    "thumbnail": "https://avatars.githubusercontent.com/u/39322951?s=280&v=4",
+    "category": "Idle"
+  },
+  {
+    "id": "1v1.lol",
+    "title": "1v1.LOL",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/58.html",
+    "thumbnail": "https://assets.about.me/background/users/u/n/b/unblockedgame1v1lol_1722245404_678.jpg",
+    "category": "Action"
+  },
+  {
+    "id": "2048",
+    "title": "2048",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/2048/",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/1/18/2048_logo.svg",
+    "category": "Puzzle"
+  },
+  {
+    "id": "basketball-stars",
+    "title": "Basketball Stars",
+    "url": "https://sainttech.rhyno-audio.net/zones/h/basketballstars/",
+    "thumbnail": "https://m.media-amazon.com/images/I/81BL1Hx2KuL.png",
+    "category": "Sports"
+  },
+  {
+    "id": "getting-over-it",
+    "title": "Getting Over It ",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/557.html",
+    "thumbnail": "https://sm.ign.com/ign_nl/cover/g/getting-ov/getting-over-it-with-bennett-foddy_z7y4.jpg",
+    "category": "Skill"
+  },
+  {
+    "id": "achievement-unlocked",
+    "title": "Achievement Unlocked",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/60.html",
+    "thumbnail": "https://a.silvergames.com/j/b/achievement-unlocked.jpg",
+    "category": "Platformer"
+  },
+  {
+    "id": "solitaire",
+    "title": "Solitaire",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/solitaire/",
+    "thumbnail": "https://cdn.jim-nielsen.com/ios/512/solitaire-2022-02-03.png?rf=1024",
+    "category": "Puzzle"
+  },
+  {
+    "id": "tag",
+    "title": "Tag",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/originals/tag/",
+    "thumbnail": "https://icc-games.com/wp-content/uploads/2025/09/Tag-Unblocked.webp",
+    "category": "Action"
+  },
+  {
+    "id": "yohoho.io",
+    "title": "YoHoHo.io",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/originals/yohoho/",
+    "thumbnail": "https://imgs.crazygames.com/auto-covers/yohoho-io_1x1.jpg?format=auto&quality=70&metadata=none",
+    "category": "Io"
+  },
+  {
+    "id": "recoil",
+    "title": "Recoil",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/recoil/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1QkUNFpUJR2wsZIdUqxjxyyvtkB5o3xjtgA&s",
+    "category": "Action"
+  },
+  {
+    "id": "gobble",
+    "title": "Gobble",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/gobble/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=314,height=314,fit=cover,f=auto/1801ed3d50240731304d3c98106a9e7a/gobble.png",
+    "category": "Arcade"
+  },
+  {
+    "id": "highway-racer",
+    "title": "Highway Racer",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/originals/highway-racer/",
+    "thumbnail": "https://imgs.crazygames.com/auto-covers/highway-racer_1x1.png?format=auto&quality=70&metadata=none",
+    "category": "Driving"
+  },
+  {
+    "id": "highway-racer-2",
+    "title": "Highway Racer 2",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/originals/highway-race2/",
+    "thumbnail": "https://imgs.crazygames.com/games/highway-racer-2/cover_16x9-1693297858485.png?metadata=none&quality=100&width=1200&height=630&fit=crop",
+    "category": "Driving"
+  },
+  {
+    "id": "ball-dodge",
+    "title": "Ball Dodge",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/ball-dodge/",
+    "thumbnail": "https://m.gjcdn.net/game-screenshot/300/29952964-jsbsc9m8-v4.webp",
+    "category": "Sports"
+  },
+  {
+    "id": "sky-riders",
+    "title": "Sky Riders",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/sky-riders/",
+    "thumbnail": "https://imgs.search.brave.com/C_9RKTcDlYQ0KXbjL-p2KzrfK7UDu9izJr4yxVOKNt8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMuZHJpZnRlZC5j/b20vd3AtY29udGVu/dC91cGxvYWRzLzIw/MjQvMDMvc2t5LXJp/ZGVycy01NzAuanBn",
+    "category": "Driving"
+  },
+  {
+    "id": "sausage-flip",
+    "title": "Sausage Flip",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/sausage-flip/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/7d0655113228257bad41d851c074600d/sausage-flip.png",
+    "category": "Arcade"
+  },
+  {
+    "id": "super-mario-64",
+    "title": "Super Mario 64",
+    "url": "https://msbabkiesclass.com/resources/sm64/index.html",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/thumb/e/e9/Super_Mario_64.png/250px-Super_Mario_64.png",
+    "category": "Classic"
+  },
+  {
+    "id": "10-minutes-till-dawn",
+    "title": "10 Minutes Till Dawn",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/10-minutes-till-dawn/",
+    "thumbnail": "https://imgs.crazygames.com/auto-covers/10-minutes-till-dawn_1x1.png?format=auto&quality=70&metadata=none",
+    "category": "Survival"
+  },
+  {
+    "id": "boxing-random",
+    "title": "Boxing Random",
+    "url": "https://sainttech.rhyno-audio.net/zones/h/boxingrandom/",
+    "thumbnail": "https://imgs.crazygames.com/auto-covers/boxing-random_1x1.jpeg?format=auto&quality=100&metadata=none&width=1200",
+    "category": "Random"
+  },
+  {
+    "id": "aquapark.io",
+    "title": "aquapark.io (fake)",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/448.html",
+    "thumbnail": "https://store-images.s-microsoft.com/image/apps.63925.14634069183662722.c171aa28-d69f-4e61-816b-bed08184b8ec.18c7544b-63c5-446f-b833-2ce5764c3668",
+    "category": "Io"
+  },
+  { 
+    "id": "stick-merge",
+    "title": "Stick Merge",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/stick-merge/",
+    "thumbnail": "https://www.virlan.co/unblocked-games/wp-content/uploads/2022/08/stick-merge-game.jpg",
+    "category": "Action"
+  },
+  {
+    "id": "temple-run-2",
+    "title": "Temple Run 2",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/temple-run-2/",
+    "thumbnail": "https://cdn.jim-nielsen.com/ios/512/temple-run-2-2020-04-16.png?rf=1024",
+    "category": "Runner"
+  },
+  {
+    "id": "world's-hardest-game",
+    "title": "World's Hardest Game",
+    "url": "https://msbabkiesclass.com/resources/twhg/index.html",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=314,height=314,fit=cover,f=auto/61368b108e1e8625e6f7b2daccb98324/worlds-hardest-game.png",
+    "category": "Skill"
+  },
+  {
+    "id": "world's-hardest-game-2",
+    "title": "World's Hardest Game 2",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/worlds-hardest-game-2/",
+    "thumbnail": "https://www.coolmathgames.com/sites/default/files/WorldsHardestGame2_OG-logo.jpg",
+    "category": "Skill"
+  },
+  {
+    "id": "webgl-fluid-simulation",
+    "title": "WebGL Fluid Simulation",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/webgl-fluid-simulation/",
+    "thumbnail": "https://imgs.search.brave.com/WPNMiGCS__lsyS1xGREZgCX4_Hmdxj-KMZh8k3XWe-I/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9leHRl/cm5hbC1wcmV2aWV3/LnJlZGQuaXQvd2Vi/Z2wtZmx1aWQtc2lt/dWxhdGlvbi12MC1L/SGdpdVJXZVg2V2gt/alB0XzdnOXpCWnY0/a0xQdVEyUGpHOWpv/bkw4LVBnLmpwZz9h/dXRvPXdlYnAmcz01/ODIzZmIwNTc5MDBl/Yjg3NDk4NWQ0MDY4/YjI0YzUxOGFhODc0/Yzkw",
+    "category": "Creative"
+  },
+  {
+    "id": "blumgi-ball",
+    "title": "Blumgi Ball",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/blumgi-ball/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/5cc06f22e46c13e1c7917dad7c48e5dd/blumgi-ball.png",
+    "category": "Sports"
+  },
+  {
+    "id": "blumgi-rocket",
+    "title": "Blumgi Rocket",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/blumgi-rocket/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/672fb98802b00740e3c885cb2b31fc51/blumgi-rocket.png",
+    "category": "Driving"
+  },
+  {
+    "id": "blumgi-castle",
+    "title": "Blumgi Castle",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/blumgi-castle/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/535793fb806824a12dfe0136c4208b51/blumgi-castle.png",
+    "category": "Action"
+  },
+  {
+    "id": "blumgi-bloom",
+    "title": "Blumgi Bloom",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/blumgi-bloom/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/f9ea10a5c3cd14ac288a3fbd28b687d2/blumgi-bloom.png",
+    "category": "Easy"
+  },
+  {
+    "id": "blumgi-slime",
+    "title": "Blumgi Slime",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/blumgi-slime/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/9aa6000ed201eba3c8f878c489a7c3ce/blumgi-slime.png",
+    "category": "Easy"
+  },
+  {
+    "id": "blumgi-dragon",
+    "title": "Blumgi Dragon",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/blumgi-dragon/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/8f330ccd95d2be6425074df1d9d28e2a/blumgi-dragon.png",
+    "category": "Action"
+  },
+  {
+    "id": "blumgi-racers",
+    "title": "Blumgi Racers",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/blumgi-racers/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/dbeb9170182271f87ecd5626b68a73aa/blumgi-racers.png",
+    "category": "Driving"
+  },
+  {
+    "id": "blumgi-soccer",
+    "title": "Blumgi Soccer",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/blumgi-soccer/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPSMgCMa7NX8LLa6mh-c59939Up1jY_UMIBQ&s",
+    "category": "Sports"
+  },
+  {
+    "id": "blumgi-paintball",
+    "title": "Blumgi Paintball",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/blumgi-paintball/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/59e84a26f2a9b86580160539bd525c13/blumgi-paintball.png",
+    "category": "Action"
+  },
+  {
+    "id": "buckshot-roulette",
+    "title": "Buckshot Roulette",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/gn/205-f.html",
+    "thumbnail": "https://assets-prd.ignimgs.com/2024/02/20/buckshot-roulette-button-1708449366682.jpg",
+    "category": "Skill"
+  },
+  {
+    "id": "skribbl.io",
+    "title": "Skribbl.io",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/originals/skribbl/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqIY6UkvxlSiBfKjT-QGtw2wf7lxgbrgA7sA&s",
+    "category": "Io"
+  },
+  {
+    "id": "flip-bros",
+    "title": "Flip Bros",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/flip-bros/",
+    "thumbnail": "https://imgs.search.brave.com/KPcIEobwwHT7xf6EVZwh_WshLrqLBZ0DpR7hIuyAk6c/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9uYXJn/YW1lcy5jb20vc3Rv/cmFnZS91cGxvYWRz/L3RodW1icy9mbGlw/LWJyb3Mud2VicA",
+    "category": "Easy"
+  },
+  {
+    "id": "agar.io",
+    "title": "Agar.io",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/originals/agar/",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Agar.io_Logo.png",
+    "category": "Io"
+  },
+  {
+    "id": "chicken-merge",
+    "title": "Chicken Merge",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/chicken-merge/",
+    "thumbnail": "https://store-images.s-microsoft.com/image/apps.15106.14254133833064387.d8da7968-e50c-4415-bfc2-4b1d13b7415f.94c6eb9a-1286-4336-881b-bdb099fa4307?h=210",
+    "category": "Merge"
+  },
+  {
+    "id": "speed-king",
+    "title": "Speed King",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/speed-king/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBTSlru6w32H6aA6F0QOyDLnvXtMX2Vnb1vQ&s",
+    "category": "Easy"
+  },
+  {
+    "id": "battle-wheels",
+    "title": "Battle Wheels",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/battle-wheels/",
+    "thumbnail": "https://cdn-1.webcatalog.io/catalog/poki-battle-wheels/poki-battle-wheels-icon-filled-256.png?v=1714780518391",
+    "category": "Driving"
+  },
+  {
+    "id": "cow-bay",
+    "title": "Cow Bay",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/cow-bay/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/cbeba74384bccce06ab61ad4aa08f9d3/cow-bay.png",
+    "category": "Easy"
+  },
+  {
+    "id": "choppy-orc",
+    "title": "Choppy Orc",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/choppy-orc/",
+    "thumbnail": "https://www.speedrun.com/static/theme/6wyk4nrd/XXX_cover.png?v=dc5fcfb",
+    "category": "Action"
+  },
+  {
+    "id": "stack",
+    "title": "Stack",
+    "url": "https://play.coolmathgames.eu.org.cdn.cloudflare.net/storage/ag/arsenic/stack/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFRVDgoaMaGy5x027j5hGrJ0PF4ofqyiko1A&s",
+    "category": "Skill"
+  },
+  {
+    "id": "retro-highway",
+    "title": "Retro Highway",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/retro-highway/",
+    "thumbnail": "https://gearheadgames.com/retrohighway/images/logo.png",
+    "category": "Driving"
+  },
+  {
+    "id": "animals-volleyball",
+    "title": "Animals Volleyball",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/animals-volleyball/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSybATHl8qbwbiJyNd0jsT3GJi-xk7T75MGGA&s",
+    "category": "Sports"
+  },
+  {
+    "id": "funny-shooter-2",
+    "title": "Funny Shooter 2",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/funny-shooter-2/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqencuICLTctSmggR6ykrTEvCUpFDNNul5gg&s",
+    "category": "Action"
+  },
+  {
+    "id": "time-shooter-2",
+    "title": "Time Shooter 2",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/time-shooter-2/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQ9vvm-6jquCTDgiWqQLtZquLEOxjuHwLPQQ&s",
+    "category": "Action"
+  },
+  {
+    "id": "time-shooter-3:swat",
+    "title": "Time Shooter 3: SWAT",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/201.html",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSNGkYVUi6X4WNyXaGZXMmi9ecT1PbdFBXwUw&s",
+    "category": "Action"
+  },
+  {
+    "id": "bullet-bros",
+    "title": "Bullet Bros",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/bullet-bros/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/084675aa53d52f2fbfb09a3b7016c620/bullet-bros.png",
+    "category": "Action"
+  },
+  {
+    "id": "super-star-car",
+    "title": "Super Star Car",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/originals/superstarcar/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBU7V3ZTOKbhQW0yjgeINvpHYeb5kfKSXK8A&s",
+    "category": "Driving"
+  },
+  {
+    "id": "google-feud",
+    "title": "Google Feud",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/google-feud/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNf-fRSBxl6viZ9h-xmCiJqFrp02MSOuNKgA&s",
+    "category": "Game Show"
+  },
+  {
+    "id": "super-liquid-soccer",
+    "title": "Super Liquid Soccer",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/super-liquid-soccer/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6vNQDe-vXlvkONIC4QwsTVkIBtVCOcQezrw&s",
+    "category": "Sports"
+  },
+  {
+    "id": "crazy-cars",
+    "title": "Crazy Cars",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/crazy-cars/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/2bc8004fcbb4387908a636e2a9d9ab4a/crazy-cars.png",
+    "category": "Driving"
+  },
+  {
+    "id": "crazy-bikes",
+    "title": "Crazy Bikes",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/crazy-bikes/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/3dffba10e1aa5980e65408012b38db6d/crazy-bikes.png",
+    "category": "Driving"
+  },
+  {
+    "id": "dread-head-parkour",
+    "title": "Dreadhead Parkour",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/dreadhead-parkour/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8E64pK7_M7ZFYwTi3cDRJhguQNiRcHbdHWw&s",
+    "category": "Parkour"
+  },
+  {
+    "id": "jetpack-joyride",
+    "title": "Jetpack Joyride",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/jetpack-joyride/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMp6a83tWwzGzLQdtI12IvUwzOThFf2nMMIA&s",
+    "category": "Easy"
+  },
+  {
+    "id": "unfair-mario",
+    "title": "Unfair Mario",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/unfairmario/",
+    "thumbnail": "https://m.media-amazon.com/images/M/MV5BYjJhMGZjY2QtYWQ4YS00YmQyLTlhMjUtZGNlZTI1N2VlNGRjXkEyXkFqcGc@._V1_.jpg",
+    "category": "Meme"
+  },
+  {
+    "id": "bobble",
+    "title": "Bobble (Slime Shooter)",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/bobble/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=314,height=314,fit=cover,f=auto/2d5e417ea0fc1ef06d746b2cef691c07/bubble-shooter-lak.png",
+    "category": "Easy"
+  },
+  {
+    "id": "merge-tycoon",
+    "title": "Merge Tycoon",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/merge-tycoon/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcThskXZc-3p4TOysVLyVXQlEicyhjs_w2Ckjw&s",
+    "category": "Tycoon"
+  },
+  {
+    "id": "drift-boss",
+    "title": "Drift Boss",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/drift-boss/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSo0yoxFM9s9XzzcbOGMeo8qJ7ByGHLhBmMWQ&s",
+    "category": "Driving"
+  },
+  {
+    "id": "idle-gang",
+    "title": "Idle Gang",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/idle-gang/",
+    "thumbnail": "https://cdn-1.webcatalog.io/catalog/poki-idle-gang/poki-idle-gang-icon-filled-256.png?v=1714778346617",
+    "category": "Idle"
+  },
+  {
+    "id": "idle-farming-business",
+    "title": "Idle Farming Business",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/idle-farming-business/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFG_Zt6Zpq_TjzstN55wk6JGu0LYa-5udeuQ&s",
+    "category": "Idle"
+  },
+  {
+    "id": "idle-light-city",
+    "title": "Idle Light City",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/idle-light-city/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8vzZRcQnxOs1UJCdTHck_--DG76vFjUQzqg&s",
+    "category": "Idle"
+  },
+  {
+    "id": "idle-mining-empire",
+    "title": "Idle Mining Empire",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/idle-mining-empire/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqUJ29PiR42F8osjaXMwnQCUGU-oKAuATMYw&s",
+    "category": "Idle"
+  },
+  {
+    "id": "idle-startup-tycoon",
+    "title": "Idle Startup Tycoon",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/idle-startup-tycoon/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRKpnbB3Od8e_pjdGCS7s4xoc-xRnxvDt2taQ&s",
+    "category": "Idle"
+  },
+  {
+    "id": "idle-breakout",
+    "title": "Idle Breakout",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/idle-breakout/",
+    "thumbnail": "https://img.itch.zone/aW1nLzE4MDAyMjQucG5n/original/ZP612q.png",
+    "category": "Idle"
+  },
+  {
+    "id": "idle-dice",
+    "title": "Idle Dice",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/294.html",
+    "thumbnail": "https://img02.symbaloo.com/Ep2MkKLpWJNmBrtsVXc1qNbEyxw=/fit-in/162x162/filters:no_upscale()/smarkImages%2Fv1%2F54%2Fe9%2Fc4c7b0f6a5a604a3b9f86ab8c18a834b0fbdc7e2d78756d1ccad54ea7c1e.png",
+    "category": "Idle"
+  },
+  {
+    "id": "idle-lumber-inc",
+    "title": "Idle Lumber Inc",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/363.html",
+    "thumbnail": "https://imgs.search.brave.com/j45AbtPsIjw3Ye7U-o-b_X8Zm4cHnJeeYxFVw6wAjb0/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/MS53ZWJjYXRhbG9n/LmlvL2NhdGFsb2cv/cG9raS1pZGxlLWx1/bWJlci1pbmMvcG9r/aS1pZGxlLWx1bWJl/ci1pbmMtaWNvbi1m/aWxsZWQtMjU2LnBu/Zz92PTE3MTQ3Nzg0/Mzc2ODY",
+    "category": "Idle"
+  },
+  {
+    "id": "unicycle-hero",
+    "title": "Unicycle Hero",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/unicycle-hero/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/4089ea8322c7fe8a5416ef5ee237ea53/unicycle-hero.png",
+    "category": "Skill"
+  },
+  {
+    "id": "bit-life",
+    "title": "BitLife",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/bitlife/",
+    "thumbnail": "https://imgs.search.brave.com/RjgpZabWXpariwbVdFMYBQrPlHMvHBproRWp_S5LuiU/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9lbGlm/ZXNpbXVsYXRvci5p/by9kYXRhL2ltYWdl/L0hvd3RvcGxheUJp/dExpZmUucG5n",
+    "category": "Simulation"
+  },
+  {
+    "id": "stick-duel-battle",
+    "title": "Stick Duel Battle",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/stick-duel-battle/",
+    "thumbnail": "https://yepicdn.com/system/static/thumbs/tile_thumb/25453/thumb150_stick-duel-battle-191x191.jpg?1631274024",
+    "category": "Stickman"
+  },
+  {
+    "id": "poor-bunny",
+    "title": "Poor Bunny",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/poor-bunny/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/b879100262e0821907e97a2eaf97a2bf/poor-bunny.png",
+    "category": "Arcade"
+  },
+  {
+    "id": "poor-eddie",
+    "title": "Poor Eddie",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/poor-eddie/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=314,height=314,fit=cover,f=auto/bf83e47208822a41d35d8dc5f8fd0bb3/poor-eddie.png",
+    "category": "Easy"
+  },
+  {
+    "id": "push-your-luck",
+    "title": "Push Your Luck",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/push-your-luck/",
+    "thumbnail": "https://www.coolmathgames.com/sites/default/files/push-your-luck-game-icon.png",
+    "category": "Luck"
+  },
+  {
+    "id": "zombie-rush",
+    "title": "Zombie Rush",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/zombie-rush/",
+    "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/ce219d03b723f2d07e4d3c00d1cd104a/zombie-rush.png",
+    "category": "Action"
+  },
+  {
+    "id": "tall-man-run",
+    "title": "Tall Man Run",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/20a.html",
+    "thumbnail": "https://cdn.aptoide.com/imgs/8/3/b/83b894e9d5978bf34eb79a3d918a79c0_icon.png",
+    "category": "Easy"
+  },
+  {
+    "id": "tall.io",
+    "title": "Tall.io",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/664.html",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2ETHozgxNOnxyzyIpV8u97AT67mcJg91_NA&s",
+    "category": "Io"
+  },
+  {
+    "id": "hardware-tycoon",
+    "title": "Hardware Tycoon",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/hardware-tycoon/",
+    "thumbnail": "https://ht.poggers.ltd/icon-256.png",
+    "category": "Tycoon"
+  },
+  {
+    "id": "core-ball",
+    "title": "Core Ball",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/core-ball/",
+    "thumbnail": "https://imgs.search.brave.com/3LsnPxCaDAWQ2ZmHtLgjIMe1Fmy0TIwOiSHD3SPw9RY/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jb3Jl/YmFsbGdhbWUuY2Mv/Z2VuZXJhdGUucGhw/P3BhdGg9L3VwbG9h/ZHMvZ2FtZXMvbWFp/bi9pbWdfNjk5ZDQz/ZDMyM2EwYy5qcGcm/d2lkdGg9Mjk0Jmhl/aWdodD0yOTQ",
+    "category": "Strategy"
+  },
+  {
+    "id": "magic-tiles-3",
+    "title": "Magic Tiles 3",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/17.html",
+    "thumbnail": "https://www.metacritic.com/a/img/catalog/provider/6/12/6-1-679999-52.jpg",
+    "category": "Music"
+  },
+  {
+    "id": "draw-climber",
+    "title": "Draw Climber",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/86.html",
+    "thumbnail": "https://www.metacritic.com/a/img/catalog/provider/6/12/6-1-741604-52.jpg",
+    "category": "Easy"
+  },
+  {
+    "id": "bazooka-boy",
+    "title": "Bazooka Boy",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/gn/29.html",
+    "thumbnail": "https://img.utdstc.com/icon/365/d87/365d877af60ccb880c81f52c245d9173f5b501989a9fbe24a6d5a6e58bc0ee3d:200",
+    "category": "Action"
+  },
+  {
+    "id": "turbo-moto-racer",
+    "title": "Turbo Moto Racer",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/turbo-moto-racer/",
+    "thumbnail": "https://dinosaur-game.io/data/image/game/turbo-moto-racer.png",
+    "category": "Driving"
+  },
+  {
+    "id": "bloxorz",
+    "title": "Bloxorz",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/originals/bloxorz/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLH0EmQGEXMsxUZtYqJN0WTaht7mOxTmtXdQ&s",
+    "category": "Strategy"
+  },
+  {
+    "id": "swingo",
+    "title": "Swingo",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/swingo/",
+    "thumbnail": "https://cdn-1.webcatalog.io/catalog/poki-swingo/poki-swingo-icon-filled-256.webp?v=1714778227971",
+    "category": "Easy"
+  },
+  {
+    "id": "hexanaut.io",
+    "title": "Hexanaut.io",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/originals/hexa/",
+    "thumbnail": "https://appleworm.io/upload/imgs/hexanaut-io.jpg",
+    "category": "Io"
+  },
+  {
+    "id": "hacker-typer",
+    "title": "Hacker Typer",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/hackertype/",
+    "thumbnail": "https://cdn-1.webcatalog.io/catalog/hacker-typer/hacker-typer-icon-filled-256.png?v=1714774594665",
+    "category": "Troll"
+  },
+  {
+    "id": "toss-the-turtle",
+    "title": "Toss The Turtle",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/echo/tosstheturtle/",
+    "thumbnail": "https://img.utdstc.com/icon/484/606/4846060a53165efe3f00542543373e9ebd55335a6208195a685e945723586411:200",
+    "category": "Action"
+  },
+  {
+    "id": "double-panda",
+    "title": "Double Panda",
+    "url": "https://play.coolmathgames.eu.org/storage/ag/arsenic/double-panda/",
+    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS_86_XNGhmbt7WmAHkd67mkcs--wjCwNl_mQ&s",
+    "category": "Platformer"
+  }
+]
+  
+    
+
+    
