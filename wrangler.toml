@@ -1,6 +1,7 @@
 name = "fhsuahfkdvaqewudmfbd"
+account_id = "472d803b7eb70cc33891a91dd2ae867b"
 compatibility_date = "2026-04-15"
 
 [assets]
 directory = "./public"
-not_found_handling = "single-page-application"
+not_found_handling = "single-page-application" 
