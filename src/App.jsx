@@ -210,23 +210,26 @@ const getLaunchUrl = (game, currentSupplier) => {
     });
 
   const startTime = Date.now();
+  const gameUrl = item.url || game.url; // This handles both possible variable names
+  
   const win = window.open('about:blank', '_blank');
 
   if (win) {
-    // We write the HTML directly so there's no way it can be empty
     win.document.write(`
       <html>
-        <head><title>DO NOT REFRESH</title></head>
+        <head>
+          <title>Capybara Science - Playing</title>
+        </head>
         <body style="margin:0;padding:0;overflow:hidden;background:#000;">
           <iframe 
-            src="${game.url}" 
-            style="width:100vw;height:100vh;border:none;" 
+            src="${gameUrl}" 
+            style="width:100vw;height:100vh;border:none;display:block;" 
             allow="fullscreen">
           </iframe>
         </body>
       </html>
     `);
-    win.document.close(); // Tells the browser we are done writing
+    win.document.close();
 
     const checkInterval = setInterval(() => {
       if (win.closed) {
@@ -234,7 +237,8 @@ const getLaunchUrl = (game, currentSupplier) => {
         const duration = Math.floor((Date.now() - startTime) / 1000 / 60);
         if (duration > 0) {
           setPlaytimes(prev => {
-            const updated = { ...prev, [item.id]: (prev[item.id] || 0) + duration };
+            const id = item.id || game.id;
+            const updated = { ...prev, [id]: (prev[id] || 0) + duration };
             localStorage.setItem('capy-playtimes', JSON.stringify(updated));
             return updated;
           });
