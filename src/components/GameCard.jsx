@@ -14,7 +14,7 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
         gameWindow.document.write(`
           <html style="margin:0;padding:0;overflow:hidden;background-color:black;width:100%;height:100%;">
             <head>
-              <title>EaglercraftX 1.12</title>
+              <title>DO NOT REFRESH</title>
               <style>
                 iframe {
                   width: 100%;
