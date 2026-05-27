@@ -13,7 +13,6 @@
 		<meta property="og:image" content="favicon.png" />
 		<link type="image/png" rel="shortcut icon" href="favicon.png" />
 		
-		<!-- Look inside the stores/games/ folder for the local game engine -->
 		<script type="text/javascript" src="./bootstrap.js"></script>
 		
 		<script type="text/javascript">
