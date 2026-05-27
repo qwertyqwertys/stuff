@@ -4,8 +4,21 @@ import { Heart, Play } from 'lucide-react';
 export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorite, performanceMode }) {
   const isUtility = ['request', 'report'].includes(game.id);
   
+  // Custom check to catch Minecraft and open it smoothly without a download box
+  const handleCardClick = () => {
+    if (game.id === 'minecraft' || game.title?.includes('Minecraft')) {
+      window.location.href = '/games/';
+    } else {
+      // Runs your original launch behavior safely for every other game link
+      onLaunch(game);
+    }
+  };
+  
   return (
-    <div className={`group bg-zinc-900/40 rounded-[2rem] overflow-hidden border border-white/5 hover:border-[var(--theme)]/30 transition-all flex flex-col cursor-pointer ${performanceMode ? '' : 'shadow-lg'}`} onClick={() => onLaunch(game)}>
+    <div 
+      className={`group bg-zinc-900/40 rounded-[2rem] overflow-hidden border border-white/5 hover:border-[var(--theme)]/30 transition-all flex flex-col cursor-pointer ${performanceMode ? '' : 'shadow-lg'}`} 
+      onClick={handleCardClick}
+    >
       <div className={`relative w-full aspect-[4/3] bg-black/20 overflow-hidden transition-all duration-500 ${performanceMode ? '' : 'group-hover:shadow-[inset_0_0_var(--glow)_var(--theme)]'}`}>
         <img 
           src={game.thumbnail} 
