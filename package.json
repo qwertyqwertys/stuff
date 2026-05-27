@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "rm -rf node_modules/.vite node_modules/esbuild && npm install esbuild && vite build",
+    "build": "rm -rf node_modules/.vite node_modules/esbuild && npm install esbuild && vite build && cp -r games dist/games",
     "preview": "vite preview",
     "lint": "vite build",
     "clean": "rm -rf dist node_modules"
