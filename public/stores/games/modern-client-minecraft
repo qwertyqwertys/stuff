@@ -28,7 +28,7 @@
 					window.eaglercraftXOpts = {
 						demoMode: false,
 						container: "game_frame",
-						// Stream assets straight from your custom file host link
+						// Directly stream game data from the external Catbox link to bypass size restrictions
 						assetsURI: "https://files.catbox.moe/s5u332.epw",
 						worldsDB: "worlds",
 						servers: [
