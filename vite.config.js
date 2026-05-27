@@ -10,6 +10,8 @@ export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
     base: '/', 
+    // Forces Vite to copy your public assets (_redirects, index.html, bootstrap.js) into Cloudflare's build folder
+    publicDir: 'public',
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
