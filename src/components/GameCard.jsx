@@ -8,25 +8,8 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
     const titleLower = game.title?.toLowerCase() || '';
     const idLower = game.id?.toLowerCase() || '';
 
-    // 1. Check for Modern Client (Minecraft)
-    if (idLower === 'minecraft' || titleLower.includes('minecraft')) {
-      const gameWindow = window.open('about:blank', '_blank');
-      if (gameWindow) {
-        gameWindow.document.write(`
-          <html style="margin:0;padding:0;overflow:hidden;background-color:black;width:100%;height:100%;">
-            <head><title>EaglercraftX 1.12</title></head>
-            <body style="margin:0;padding:0;width:100%;height:100%;">
-              <iframe src="/games/" style="width:100%;height:100%;border:none;margin:0;padding:0;display:block;"></iframe>
-            </body>
-          </html>
-        `);
-        gameWindow.document.close();
-      } else {
-        window.location.href = '/games/';
-      }
-    } 
-    // 2. Check for Tuff Client (Scenario A Catbox Bypass)
-    else if (idLower === 'tuff' || titleLower.includes('tuff')) {
+    // 1. Check for Tuff Client FIRST (so it doesn't get stolen by the minecraft tag check)
+    if (idLower === 'tuff' || titleLower.includes('tuff')) {
       const gameWindow = window.open('about:blank', '_blank');
       if (gameWindow) {
         gameWindow.document.write(`
@@ -41,6 +24,23 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
       } else {
         // Fallback if popup blocker stops about:blank window
         window.location.href = 'https://files.catbox.moe/02v4vr.html';
+      }
+    } 
+    // 2. Check for Modern Client (Minecraft) SECOND
+    else if (idLower === 'minecraft' || titleLower.includes('minecraft')) {
+      const gameWindow = window.open('about:blank', '_blank');
+      if (gameWindow) {
+        gameWindow.document.write(`
+          <html style="margin:0;padding:0;overflow:hidden;background-color:black;width:100%;height:100%;">
+            <head><title>EaglercraftX 1.12</title></head>
+            <body style="margin:0;padding:0;width:100%;height:100%;">
+              <iframe src="/games/" style="width:100%;height:100%;border:none;margin:0;padding:0;display:block;"></iframe>
+            </body>
+          </html>
+        `);
+        gameWindow.document.close();
+      } else {
+        window.location.href = '/games/';
       }
     } 
     // 3. Runs original launch behavior safely for every other game link
