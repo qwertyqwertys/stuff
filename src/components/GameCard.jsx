@@ -4,10 +4,38 @@ import { Heart, Play } from 'lucide-react';
 export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorite, performanceMode }) {
   const isUtility = ['request', 'report'].includes(game.id);
   
-  // Custom check to catch Minecraft and open it smoothly without a download box
   const handleCardClick = () => {
     if (game.id === 'minecraft' || game.title?.includes('Minecraft')) {
-      window.location.href = '/games/';
+      // 1. Open a clean, nameless blank window
+      const gameWindow = window.open('about:blank', '_blank');
+      
+      if (gameWindow) {
+        // 2. Inject a clean iframe pointing to your games folder that expands to fill the whole screen
+        gameWindow.document.write(`
+          <html style="margin:0;padding:0;overflow:hidden;background-color:black;width:100%;height:100%;">
+            <head>
+              <title>EaglercraftX 1.12</title>
+              <style>
+                iframe {
+                  width: 100%;
+                  height: 100%;
+                  border: none;
+                  margin: 0;
+                  padding: 0;
+                  display: block;
+                }
+              </style>
+            </head>
+            <body style="margin:0;padding:0;width:100%;height:100%;">
+              <iframe src="/games/"></iframe>
+            </body>
+          </html>
+        `);
+        gameWindow.document.close();
+      } else {
+        // Fallback if the browser blocks the popup
+        window.location.href = '/games/';
+      }
     } else {
       // Runs your original launch behavior safely for every other game link
       onLaunch(game);
@@ -22,14 +50,14 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
       <div className={`relative w-full aspect-[4/3] bg-black/20 overflow-hidden transition-all duration-500 ${performanceMode ? '' : 'group-hover:shadow-[inset_0_0_var(--glow)_var(--theme)]'}`}>
         <img 
           src={game.thumbnail} 
-          loading="lazy" /* Added for Chromebook performance */
+          loading="lazy"
           className={`absolute inset-0 m-auto transition-transform duration-500 group-hover:scale-110 ${isUtility ? 'w-24 h-24 object-contain' : 'w-full h-full object-cover'}`} 
           alt="" 
         />
         {!isUtility && (
           <button 
             onClick={(e) => { 
-              e.stopPropagation(); // Prevents the game from launching when you click heart
+              e.stopPropagation(); 
               onToggleFavorite(); 
             }} 
             className={`absolute top-4 right-4 z-10 p-2 bg-zinc-900/80 rounded-full border border-white/10 transition-transform ${performanceMode ? '' : 'backdrop-blur-sm hover:scale-110 shadow-lg'}`}
