@@ -13,11 +13,10 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
       const gameWindow = window.open('about:blank', '_blank');
       
       if (gameWindow) {
-        // Set up a quick loading text while fetching the heavy game file
         gameWindow.document.write('<h1 style="color:white;font-family:sans-serif;text-align:center;margin-top:20%;">Loading Tuff Client... Please wait...</h1>');
         
-        // Fetch the raw HTML text from Catbox to bypass iframe restrictions
-        fetch('https://files.catbox.moe/02v4vr.html')
+        // Using an open CORS proxy to bypass Catbox's fetch restrictions safely
+        fetch('https://corsproxy.io/?' + encodeURIComponent('https://files.catbox.moe/02v4vr.html'))
           .then(response => response.text())
           .then(html => {
             gameWindow.document.open();
@@ -25,13 +24,14 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
             gameWindow.document.close();
           })
           .catch(err => {
-            // Fallback if the direct fetch fails or gets blocked
-            gameWindow.location.href = 'https://files.catbox.moe/02v4vr.html';
+            gameWindow.document.open();
+            gameWindow.document.write('<h1 style="color:white;font-family:sans-serif;text-align:center;margin-top:20%;">Failed to load Tuff Client. Please refresh and try again.</h1>');
+            gameWindow.document.close();
           });
       } else {
-        window.location.href = 'https://files.catbox.moe/02v4vr.html';
+        alert("Please allow popups to play this game in an unblocked tab!");
       }
-    } 
+    }
     // 2. Check for Modern Client (Minecraft) SECOND
     else if (idLower === 'minecraft' || titleLower.includes('minecraft')) {
       const gameWindow = window.open('about:blank', '_blank');
