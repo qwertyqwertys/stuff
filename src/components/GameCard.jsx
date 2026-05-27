@@ -8,21 +8,27 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
     const titleLower = game.title?.toLowerCase() || '';
     const idLower = game.id?.toLowerCase() || '';
 
-    // 1. Check for Tuff Client FIRST (so it doesn't get stolen by the minecraft tag check)
+    // 1. Check for Tuff Client FIRST
     if (idLower === 'tuff' || titleLower.includes('tuff')) {
       const gameWindow = window.open('about:blank', '_blank');
+      
       if (gameWindow) {
-        gameWindow.document.write(`
-          <html style="margin:0;padding:0;overflow:hidden;background-color:black;width:100%;height:100%;">
-            <head><title>Tuff Client</title></head>
-            <body style="margin:0;padding:0;width:100%;height:100%;">
-              <iframe src="https://files.catbox.moe/02v4vr.html" style="width:100%;height:100%;border:none;margin:0;padding:0;display:block;"></iframe>
-            </body>
-          </html>
-        `);
-        gameWindow.document.close();
+        // Set up a quick loading text while fetching the heavy game file
+        gameWindow.document.write('<h1 style="color:white;font-family:sans-serif;text-align:center;margin-top:20%;">Loading Tuff Client... Please wait...</h1>');
+        
+        // Fetch the raw HTML text from Catbox to bypass iframe restrictions
+        fetch('https://files.catbox.moe/02v4vr.html')
+          .then(response => response.text())
+          .then(html => {
+            gameWindow.document.open();
+            gameWindow.document.write(html);
+            gameWindow.document.close();
+          })
+          .catch(err => {
+            // Fallback if the direct fetch fails or gets blocked
+            gameWindow.location.href = 'https://files.catbox.moe/02v4vr.html';
+          });
       } else {
-        // Fallback if popup blocker stops about:blank window
         window.location.href = 'https://files.catbox.moe/02v4vr.html';
       }
     } 
