@@ -15,12 +15,16 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
       if (gameWindow) {
         gameWindow.document.write('<h1 style="color:white;font-family:sans-serif;text-align:center;margin-top:20%;">Loading Tuff Client... Please wait...</h1>');
         
-        // Using an open CORS proxy to bypass Catbox's fetch restrictions safely
-        fetch('https://corsproxy.io/?' + encodeURIComponent('https://files.catbox.moe/02v4vr.html'))
-          .then(response => response.text())
-          .then(html => {
+        // Switched to AllOrigins (completely free for live websites!)
+        fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://files.catbox.moe/02v4vr.html'))
+          .then(response => {
+            if (response.ok) return response.json();
+            throw new Error('Network response was not ok.');
+          })
+          .then(data => {
+            // AllOrigins wraps the code inside data.contents
             gameWindow.document.open();
-            gameWindow.document.write(html);
+            gameWindow.document.write(data.contents);
             gameWindow.document.close();
           })
           .catch(err => {
