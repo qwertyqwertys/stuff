@@ -33,14 +33,14 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
           <html style="margin:0;padding:0;overflow:hidden;background-color:black;width:100%;height:100%;">
             <head><title>Tuff Client</title></head>
             <body style="margin:0;padding:0;width:100%;height:100%;">
-              <iframe src="YOUR_CATBOX_LINK_HERE" style="width:100%;height:100%;border:none;margin:0;padding:0;display:block;"></iframe>
+              <iframe src="https://files.catbox.moe/02v4vr.html" style="width:100%;height:100%;border:none;margin:0;padding:0;display:block;"></iframe>
             </body>
           </html>
         `);
         gameWindow.document.close();
       } else {
         // Fallback if popup blocker stops about:blank window
-        window.location.href = 'YOUR_CATBOX_LINK_HERE';
+        window.location.href = 'https://files.catbox.moe/02v4vr.html';
       }
     } 
     // 3. Runs original launch behavior safely for every other game link
