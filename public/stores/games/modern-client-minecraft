@@ -13,34 +13,24 @@
 		<meta property="og:image" content="favicon.png" />
 		<link type="image/png" rel="shortcut icon" href="favicon.png" />
 		
-		<!-- Fixed: Added ./ to look inside the stores/games/ folder -->
+		<!-- Look inside the stores/games/ folder for the local game engine -->
 		<script type="text/javascript" src="./bootstrap.js"></script>
 		
 		<script type="text/javascript">
 			"use strict";
-			window.addEventListener("load", async function() {
+			window.addEventListener("load", function() {
 				if(window.location.href.indexOf("file:") === 0) {
 					alert("HTTP please, do not open this file locally, run a local HTTP server and load it via HTTP");
 				}else {
-
+					
 					// %%%%%%%%% launch options %%%%%%%%%%%%
-
+					
 					var relayId = Math.floor(Math.random() * 3);
-
-					// Fixed: Added ./ to the fetch requests so it finds the parts in your folder
-					var parts = await Promise.all([
-						fetch("./assets_part1.bin").then(function(r) { return r.arrayBuffer(); }),
-						fetch("./assets_part2.bin").then(function(r) { return r.arrayBuffer(); })
-					]);
-					var combined = new Uint8Array(parts[0].byteLength + parts[1].byteLength);
-					combined.set(new Uint8Array(parts[0]), 0);
-					combined.set(new Uint8Array(parts[1]), parts[0].byteLength);
-					var epwURL = URL.createObjectURL(new Blob([combined], {type: "application/octet-stream"}));
-
 					window.eaglercraftXOpts = {
 						demoMode: false,
 						container: "game_frame",
-						assetsURI: epwURL,
+						// Stream assets straight from your custom file host link
+						assetsURI: "https://files.catbox.moe/s5u332.epw",
 						worldsDB: "worlds",
 						servers: [
 							/* example: { addr: "ws://localhost:8081/", name: "Local test server" } */
@@ -51,22 +41,21 @@
 							{ addr: "wss://relay.shhnowisnottheti.me/", comment: "ayunami relay #1", primary: relayId == 2 }
 						]
 					};
-
+					
 					// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+					
 					var q = window.location.search;
 					if((typeof q === "string") && q[0] === "?" && (typeof window.URLSearchParams !== "undefined")) {
 						q = new window.URLSearchParams(q);
 						var s = q.get("server");
 						if(s) window.eaglercraftXOpts.joinServer = s;
 					}
-
+					
 					main();
-
+					
 				}
 			});
 		</script>
 	</head>
-	<body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame">
-	</body>
+	<body style="margin:0px;width:100%;height:100%;overflow:hidden;background-color:black;" id="game_frame"></body>
 </html>
