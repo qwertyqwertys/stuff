@@ -5,39 +5,46 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
   const isUtility = ['request', 'report'].includes(game.id);
   
   const handleCardClick = () => {
-    if (game.id === 'minecraft' || game.title?.includes('Minecraft')) {
-      // 1. Open a clean, nameless blank window
+    const titleLower = game.title?.toLowerCase() || '';
+    const idLower = game.id?.toLowerCase() || '';
+
+    // 1. Check for Modern Client (Minecraft)
+    if (idLower === 'minecraft' || titleLower.includes('minecraft')) {
       const gameWindow = window.open('about:blank', '_blank');
-      
       if (gameWindow) {
-        // 2. Inject a clean iframe pointing to your games folder that expands to fill the whole screen
         gameWindow.document.write(`
           <html style="margin:0;padding:0;overflow:hidden;background-color:black;width:100%;height:100%;">
-            <head>
-              <title>DO NOT REFRESH</title>
-              <style>
-                iframe {
-                  width: 100%;
-                  height: 100%;
-                  border: none;
-                  margin: 0;
-                  padding: 0;
-                  display: block;
-                }
-              </style>
-            </head>
+            <head><title>EaglercraftX 1.12</title></head>
             <body style="margin:0;padding:0;width:100%;height:100%;">
-              <iframe src="/games/"></iframe>
+              <iframe src="/games/" style="width:100%;height:100%;border:none;margin:0;padding:0;display:block;"></iframe>
             </body>
           </html>
         `);
         gameWindow.document.close();
       } else {
-        // Fallback if the browser blocks the popup
         window.location.href = '/games/';
       }
-    } else {
-      // Runs your original launch behavior safely for every other game link
+    } 
+    // 2. Check for Tuff Client (Scenario A Catbox Bypass)
+    else if (idLower === 'tuff' || titleLower.includes('tuff')) {
+      const gameWindow = window.open('about:blank', '_blank');
+      if (gameWindow) {
+        gameWindow.document.write(`
+          <html style="margin:0;padding:0;overflow:hidden;background-color:black;width:100%;height:100%;">
+            <head><title>Tuff Client</title></head>
+            <body style="margin:0;padding:0;width:100%;height:100%;">
+              <iframe src="YOUR_CATBOX_LINK_HERE" style="width:100%;height:100%;border:none;margin:0;padding:0;display:block;"></iframe>
+            </body>
+          </html>
+        `);
+        gameWindow.document.close();
+      } else {
+        // Fallback if popup blocker stops about:blank window
+        window.location.href = 'YOUR_CATBOX_LINK_HERE';
+      }
+    } 
+    // 3. Runs original launch behavior safely for every other game link
+    else {
       onLaunch(game);
     }
   };
