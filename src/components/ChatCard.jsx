@@ -69,7 +69,7 @@ export function ChatCard({ isLightMode }) {
     <div className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 ${
       isLightMode ? 'bg-white border-black/5 shadow-sm' : 'bg-[#0f0f11] border-white/5 hover:border-[var(--theme)]/50'
     } p-5 h-full flex flex-col gap-4`}>
-      
+       
       <div className="flex items-center justify-between">
         <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--theme)]">
           Chat
@@ -79,6 +79,7 @@ export function ChatCard({ isLightMode }) {
             onClick={() => setIsJoined(false)} 
             className="text-zinc-500 hover:text-[var(--theme)] p-1 hover:bg-white/5 rounded-md transition-all"
             title="Change Identity"
+            aria-label="Change chat username"
           >
             <RefreshCcw className="w-3.5 h-3.5" />
           </button>
@@ -118,20 +119,24 @@ export function ChatCard({ isLightMode }) {
             )}
           </div>
           
-          <div className="relative">
+          <div className="relative flex items-center">
             <input 
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Message..."
-              className={`w-full text-[10px] p-2 pr-8 rounded-lg border outline-none ${
+              className={`w-full text-[10px] p-2 pr-10 rounded-lg border outline-none ${
                 isLightMode ? 'bg-black/5' : 'bg-white/5 border-white/10 focus:border-[var(--theme)]'
               }`}
             />
-            <Send 
+            <button
+              type="button"
               onClick={handleSend}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--theme)] cursor-pointer" 
-            />
+              aria-label="Send message"
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-white/5 rounded-md transition-all cursor-pointer text-[var(--theme)] flex items-center justify-center"
+            >
+              <Send className="w-3 h-3" />
+            </button>
           </div>
         </div>
       )}
