@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Send, UserPlus, RefreshCcw } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
+import { ChatPrivacyModal } from './ChatPrivacyModal';
 
-// Generates a secret ID for your browser so the database knows it's you
 const getPersistentId = () => {
   let id = localStorage.getItem('capy-uid');
   if (!id) {
@@ -17,6 +17,7 @@ export function ChatCard({ isLightMode }) {
   const [isJoined, setIsJoined] = useState(!!username);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const myId = getPersistentId();
 
   useEffect(() => {
@@ -31,7 +32,6 @@ export function ChatCard({ isLightMode }) {
 
     fetchMessages();
 
-    // Listen for inserts AND updates (so names change live!)
     const channel = supabase
       .channel('realtime-messages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, 
@@ -47,7 +47,6 @@ export function ChatCard({ isLightMode }) {
     const newName = e.target.username?.value.trim() || username;
     if (!newName) return;
 
-    // This is the magic part: it finds every message with your ID and renames them
     await supabase
       .from('messages')
       .update({ username: newName })
@@ -136,6 +135,18 @@ export function ChatCard({ isLightMode }) {
           </div>
         </div>
       )}
+
+      <div className="text-center mt-1">
+        <button 
+          type="button"
+          onClick={() => setShowPrivacy(true)}
+          className="text-[9px] text-zinc-500 hover:text-zinc-400 underline tracking-wide transition-colors uppercase font-mono"
+        >
+          Privacy & Data Notice
+        </button>
+      </div>
+
+      <ChatPrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
     </div>
   );
 }
