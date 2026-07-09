@@ -69,7 +69,7 @@ export function ChatCard({ isLightMode }) {
     <div className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 ${
       isLightMode ? 'bg-white border-black/5 shadow-sm' : 'bg-[#0f0f11] border-white/5 hover:border-[var(--theme)]/50'
     } p-5 h-full flex flex-col gap-4`}>
-       
+      
       <div className="flex items-center justify-between">
         <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--theme)]">
           Chat
@@ -77,7 +77,7 @@ export function ChatCard({ isLightMode }) {
         {isJoined && (
           <button 
             onClick={() => setIsJoined(false)} 
-            className="text-zinc-500 hover:text-[var(--theme)] p-1 hover:bg-white/5 rounded-md transition-all"
+            className="text-zinc-500 hover:text-[var(--theme)] p-1 hover:bg-white/5 rounded-md transition-all outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             title="Change Identity"
             aria-label="Change chat username"
           >
@@ -95,12 +95,12 @@ export function ChatCard({ isLightMode }) {
               type="text"
               defaultValue={username}
               placeholder="Enter Custom Handle..."
-              className={`w-full text-xs p-3 rounded-xl border outline-none transition-all ${
+              className={`w-full text-xs p-3 rounded-xl border outline-none transition-all focus-visible:ring-2 focus-visible:ring-[var(--theme)] ${
                 isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10 focus:border-[var(--theme)]'
               }`}
             />
           </div>
-          <button className="w-full py-3 bg-[var(--theme)] text-black font-bold text-[10px] rounded-xl hover:scale-[1.02] active:scale-95 transition-all">
+          <button className="w-full py-3 bg-[var(--theme)] text-black font-bold text-[10px] rounded-xl hover:scale-[1.02] active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--theme)]">
             {username ? "Update Name" : "AUTHORIZE ACCESS"}
           </button>
         </form>
@@ -125,7 +125,7 @@ export function ChatCard({ isLightMode }) {
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Message..."
-              className={`w-full text-[10px] p-2 pr-10 rounded-lg border outline-none ${
+              className={`w-full text-[10px] p-2 pr-10 rounded-lg border outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] ${
                 isLightMode ? 'bg-black/5' : 'bg-white/5 border-white/10 focus:border-[var(--theme)]'
               }`}
             />
@@ -133,7 +133,7 @@ export function ChatCard({ isLightMode }) {
               type="button"
               onClick={handleSend}
               aria-label="Send message"
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-white/5 rounded-md transition-all cursor-pointer text-[var(--theme)] flex items-center justify-center"
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-white/5 rounded-md transition-all cursor-pointer text-[var(--theme)] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)]"
             >
               <Send className="w-3 h-3" />
             </button>
@@ -145,7 +145,7 @@ export function ChatCard({ isLightMode }) {
         <button 
           type="button"
           onClick={() => setShowPrivacy(true)}
-          className="text-[9px] text-zinc-500 hover:text-zinc-400 underline tracking-wide transition-colors uppercase font-mono"
+          className="text-[9px] text-zinc-500 hover:text-zinc-400 underline tracking-wide transition-colors uppercase font-mono outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] rounded px-1"
         >
           Privacy & Data Notice
         </button>
