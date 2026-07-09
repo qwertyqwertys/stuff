@@ -8,21 +8,18 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
     const titleLower = game.title?.toLowerCase() || '';
     const idLower = game.id?.toLowerCase() || '';
 
-    // 1. Check for Tuff Client FIRST
     if (idLower === 'tuff' || titleLower.includes('tuff')) {
       const gameWindow = window.open('about:blank', '_blank');
       
       if (gameWindow) {
         gameWindow.document.write('<h1 style="color:white;font-family:sans-serif;text-align:center;margin-top:20%;">Loading Tuff Client... Please wait...</h1>');
         
-        // Switched to AllOrigins (completely free for live websites!)
         fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://files.catbox.moe/02v4vr.html'))
           .then(response => {
             if (response.ok) return response.json();
             throw new Error('Network response was not ok.');
           })
           .then(data => {
-            // AllOrigins wraps the code inside data.contents
             gameWindow.document.open();
             gameWindow.document.write(data.contents);
             gameWindow.document.close();
@@ -36,7 +33,6 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
         alert("Please allow popups to play this game in an unblocked tab!");
       }
     }
-    // 2. Check for Modern Client (Minecraft) SECOND
     else if (idLower === 'minecraft' || titleLower.includes('minecraft')) {
       const gameWindow = window.open('about:blank', '_blank');
       if (gameWindow) {
@@ -53,7 +49,6 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
         window.location.href = '/games/';
       }
     } 
-    // 3. Runs original launch behavior safely for every other game link
     else {
       onLaunch(game);
     }
@@ -69,7 +64,7 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
           src={game.thumbnail} 
           loading="lazy"
           className={`absolute inset-0 m-auto transition-transform duration-500 group-hover:scale-110 ${isUtility ? 'w-24 h-24 object-contain' : 'w-full h-full object-cover'}`} 
-          alt="" 
+          alt={`${game.title} thumbnail`} 
         />
         {!isUtility && (
           <button 
@@ -77,6 +72,7 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
               e.stopPropagation(); 
               onToggleFavorite(); 
             }} 
+            aria-label={isFavorite ? `Remove ${game.title} from favorites` : `Favorite ${game.title}`}
             className={`absolute top-4 right-4 z-10 p-2 bg-zinc-900/80 rounded-full border border-white/10 transition-transform ${performanceMode ? '' : 'backdrop-blur-sm hover:scale-110 shadow-lg'}`}
           >
             <Heart 
