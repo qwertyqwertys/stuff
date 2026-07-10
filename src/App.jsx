@@ -907,17 +907,16 @@ const recentGamesData = useMemo(() => {
 </div>
 
               {canScrollRight && (
-                <div className={`absolute -right-9 z-50 flex items-center pl-12 h-full bg-gradient-to-l ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b] via-[#09090b]/80'} to-transparent pointer-events-none`}>
-                  <button 
-                    onClick={() => scrollCategories('right')}
-                    className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-                  >
-                    <ChevronRight className="w-4 h-4 text-black" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+  <div className={`absolute -right-9 z-50 flex items-center pl-12 h-full bg-gradient-to-l ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b] via-[#09090b]/80'} to-transparent pointer-events-none`}>
+    <button 
+      onClick={() => scrollCategories('right')}
+      aria-label="Scroll categories right"
+      className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+    >
+      <ChevronRight className="w-4 h-4 text-black" />
+    </button>
+  </div>
+)}
 
           <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12">
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
