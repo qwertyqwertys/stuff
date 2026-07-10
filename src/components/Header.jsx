@@ -36,6 +36,7 @@ export function Header({
             <input 
               type="text" 
               placeholder="Search games..." 
+              aria-label="Search games" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
               className={`w-full ${isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-white'} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors`} 
@@ -63,6 +64,7 @@ export function Header({
             <div className="relative flex items-center">
               <select 
                 value={supplier} 
+                aria-label="Select game source provider"
                 onChange={(e) => {
                   setSupplier(e.target.value);
                   localStorage.setItem('capy-supplier', e.target.value);
