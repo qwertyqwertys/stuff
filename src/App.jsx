@@ -899,24 +899,24 @@ const recentGamesData = useMemo(() => {
                 : isLightMode 
                   ? 'bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200' 
                   : 'bg-white/5 border-white/10 text-zinc-500 hover:bg-white/10'
-            }`}
-          >
-            {cat.name} <span className="opacity-40 ml-1">{cat.count}</span>
-          </button>
-        ))}
-</div>
-
-              {canScrollRight && (
-  <div className={`absolute -right-9 z-50 flex items-center pl-12 h-full bg-gradient-to-l ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b] via-[#09090b]/80'} to-transparent pointer-events-none`}>
-    <button 
-      onClick={() => scrollCategories('right')}
-      aria-label="Scroll categories right"
-      className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-    >
-      <ChevronRight className="w-4 h-4 text-black" />
-    </button>
+        }`}
+      >
+        {cat.name} <span className="opacity-40 ml-1">{cat.count}</span>
+      </button>
+    ))}
   </div>
-)}
+
+  {canScrollRight && (
+    <div className={`absolute -right-9 z-50 flex items-center pl-12 h-full bg-gradient-to-l ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b]/95 via-[#09090b]/80'} to-transparent pointer-events-none`}>
+      <button 
+        onClick={() => scrollCategories('right')}
+        aria-label="Scroll categories right"
+        className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+      >
+        <ChevronRight className="w-4 h-4 text-black" />
+      </button>
+    </div>
+  )}
 
           <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12">
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
