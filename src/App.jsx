@@ -904,7 +904,7 @@ const recentGamesData = useMemo(() => {
   </button>
 ))}
 </div>
-
+              
   {canScrollRight && (
     <div className={`absolute -right-9 z-50 flex items-center pl-12 h-full bg-gradient-to-l ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b]/95 via-[#09090b]/80'} to-transparent pointer-events-none`}>
       <button 
