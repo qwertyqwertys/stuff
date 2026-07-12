@@ -888,23 +888,22 @@ const recentGamesData = useMemo(() => {
   className="flex gap-2 overflow-x-auto pb-4 no-scrollbar scroll-smooth px-2 w-full"
 >
   {categoriesWithCounts.map(cat => (
-          <button 
-            key={cat.name} 
-            onClick={() => setActiveCategory(cat.name)} 
-            aria-label={`Filter games by ${cat.name}`}
-            aria-current={activeCategory === cat.name ? 'page' : undefined}
-            className={`px-4 py-2 rounded-full text-[10px] font-black uppercase border shrink-0 transition-all ${
-              activeCategory === cat.name 
-                ? 'bg-[var(--theme)] border-[var(--theme)] text-black' 
-                : isLightMode 
-                  ? 'bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200' 
-                  : 'bg-white/5 border-white/10 text-zinc-500 hover:bg-white/10'
-        }`}
-      >
-        {cat.name} <span className="opacity-40 ml-1">{cat.count}</span>
-      </button>
-    ))}
-  </div>
+  <button 
+    key={cat.name} 
+    onClick={() => setActiveCategory(cat.name)} 
+    aria-current={activeCategory === cat.name ? 'page' : undefined}
+    className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
+      activeCategory === cat.name 
+        ? 'bg-[var(--theme)] border-[var(--theme)] text-black' 
+        : isLightMode 
+          ? 'bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200' 
+          : 'bg-white/5 border-white/10 text-zinc-500 hover:bg-white/10'
+    }`}
+  >
+    {cat.name} <span className="opacity-40 ml-1">{cat.count}</span>
+  </button>
+))}
+</div>
 
   {canScrollRight && (
     <div className={`absolute -right-9 z-50 flex items-center pl-12 h-full bg-gradient-to-l ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b]/95 via-[#09090b]/80'} to-transparent pointer-events-none`}>
