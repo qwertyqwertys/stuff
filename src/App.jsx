@@ -900,7 +900,7 @@ const recentGamesData = useMemo(() => {
                           : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'
                     }`}
                   >
-                    {cat.name} <span className="opacity-40 ml-1">{cat.count}</span>
+                    {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-40'}`}>{cat.count}</span>
                   </button>
                 ))}
               </div>
