@@ -897,7 +897,7 @@ const recentGamesData = useMemo(() => {
                         ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
                         : isLightMode
                           ? 'bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200'
-                          : 'bg-white/5 border-white/10 text-zinc-500 hover:bg-white/10'
+                          : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'
                     }`}
                   >
                     {cat.name} <span className="opacity-40 ml-1">{cat.count}</span>
