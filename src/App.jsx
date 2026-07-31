@@ -780,7 +780,7 @@ const recentGamesData = useMemo(() => {
     }
   }, [supplier]); // This runs every time you change the dropdown
   
-  return (
+return (
     <div
       className={`min-h-screen pb-20 antialiased relative ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode bg-white text-zinc-900' : 'bg-[#0a0a0a] text-zinc-100'}`} 
       style={{ 
@@ -789,14 +789,18 @@ const recentGamesData = useMemo(() => {
         backgroundColor: isLightMode ? '#ffffff' : '#0a0a0a' 
       }}
     >
-      {/* Wrap your primary page content in a main landmark */}
       <main>
         <h1 className="sr-only">Capybara Science</h1>
         
-        {/* All your existing components, header, game grid, etc. stay right here */}
+        {/* Your main components (Header, Search, GameGrid, etc.) go right here inside main */}
+        
       </main>
-
-      {/* Footer can stay at the bottom or be wrapped in a <footer> tag */}
+      
+      <footer className="mt-10 py-6 text-center text-xs text-zinc-500 border-t border-white/5">
+        <p>&copy; 2026 Capybara Science. All rights reserved.</p>
+      </footer>
+    </div>
+  );
       
       {notification && (
         <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-4 duration-300">
