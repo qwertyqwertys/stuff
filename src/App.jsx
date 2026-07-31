@@ -789,6 +789,7 @@ const recentGamesData = useMemo(() => {
         backgroundColor: isLightMode ? '#ffffff' : '#0a0a0a' 
       }}
     >
+      <h1 className="sr-only">Capybara Science</h1>
       
       {notification && (
         <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-4 duration-300">
