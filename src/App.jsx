@@ -81,36 +81,34 @@ export default function App() {
   const [supplier, setSupplier] = useState(() => localStorage.getItem('capy-supplier') || 'Default');
   const [playtimes, setPlaytimes] = useState(() => JSON.parse(localStorage.getItem('capy-playtimes') || '{}'));
   const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('capy-favs') || '[]'));
-  const [themeChangeCount] = useState(() => parseInt(localStorage.getItem('capy-theme-changes') || '0'));
+  const [themeChangeCount, setThemeChangeCount] = useState(() => parseInt(localStorage.getItem('capy-theme-changes') || '0'));
   const [isChatOpen, setIsChatOpen] = useState(false);
 
- 
-  
   const userData = { playtimes: playtimes, favorites: favorites, themeChangeCount: themeChangeCount };
 
   const [achievements, setAchievements] = useState([]);
 
   // 1. The "Brain" - remembers which specific disguise you picked
-const [activeCloak, setActiveCloak] = useState(() => localStorage.getItem('capy-cloak-type') || 'google');
+  const [activeCloak, setActiveCloak] = useState(() => localStorage.getItem('capy-cloak-type') || 'google');
 
-// 2. The "Action" - updates the tab whenever activeCloak changes
-useEffect(() => {
-  const config = DISGUISE_CONFIG[activeCloak] || DISGUISE_CONFIG.google;
-  applyCloak(config);
-  localStorage.setItem('capy-cloak-type', activeCloak);
-}, [activeCloak]);
+  // 2. The "Action" - updates the tab whenever activeCloak changes
+  useEffect(() => {
+    const config = DISGUISE_CONFIG[activeCloak] || DISGUISE_CONFIG.google;
+    applyCloak(config);
+    localStorage.setItem('capy-cloak-type', activeCloak);
+  }, [activeCloak]);
 
-const gamesData = useMemo(() => {
-  const main = Array.isArray(gamesDataRaw) ? gamesDataRaw : [];
+  const gamesData = useMemo(() => {
+    const main = Array.isArray(gamesDataRaw) ? gamesDataRaw : [];
 
-  const gn = Array.isArray(gnMathDataRaw) ? gnMathDataRaw.map(game => ({
-    ...game,
-    urls: { "GN Math": game.url },
-    url: ""
-  })) : [];
+    const gn = Array.isArray(gnMathDataRaw) ? gnMathDataRaw.map(game => ({
+      ...game,
+      urls: { "GN Math": game.url },
+      url: ""
+    })) : [];
 
-  return [...main, ...gn];
-}, []);
+    return [...main, ...gn];
+  }, []);
 
   const audioRef = useRef(null);
   const categoryScrollRef = useRef(null);
@@ -145,7 +143,7 @@ const gamesData = useMemo(() => {
   const [panicUrl, setPanicUrl] = useState(() => localStorage.getItem('capy-panic-url') || 'https://google.com');
   const [panicKey, setPanicKey] = useState(() => localStorage.getItem('capy-panic-key') || '');
 
- const [recentlyPlayed, setRecentlyPlayed] = useState(() => {
+  const [recentlyPlayed, setRecentlyPlayed] = useState(() => {
     try {
       const recentKey = `capy-recent-${supplier || 'Default'}`;
       const saved = localStorage.getItem(recentKey);
@@ -179,73 +177,66 @@ const gamesData = useMemo(() => {
     }
     return id;
   });
-const getLaunchUrl = (game, currentSupplier) => {
-  // 1. Check for supplier-specific link (e.g., /stores/gn-math/date.html)
-  if (currentSupplier !== 'Default' && game.urls && game.urls[currentSupplier]) {
-    return game.urls[currentSupplier];
-  }
-  
-  // 2. Fallback to the main URL or a default file path
-  // If it's a standard link, it uses game.url. 
-  // If nothing is found, it looks for the ID.html in /stores/
-  return game.url || `/stores/${game.id}.html`;
-};
 
- const launchContent = (item) => {
+  const getLaunchUrl = (game, currentSupplier) => {
+    if (currentSupplier !== 'Default' && game.urls && game.urls[currentSupplier]) {
+      return game.urls[currentSupplier];
+    }
+    return game.url || `/stores/${game.id}.html`;
+  };
+
+  const launchContent = (item) => {
     const finalUrl = getLaunchUrl(item, supplier); 
     if (!finalUrl) return;
 
-    // --- UPDATE THIS SECTION ---
-    // This creates a unique history key like "capy-recent-GN Math"
     const recentKey = `capy-recent-${supplier}`; 
     
     setRecentlyPlayed(prev => {
       const filtered = prev.filter(id => id !== item.id);
       const updated = [item.id, ...filtered].slice(0, 4);
-      
-      // Save it to the specific supplier bucket
       localStorage.setItem(recentKey, JSON.stringify(updated));
       return updated;
     });
 
-  const startTime = Date.now();
-  const gameUrl = item.url || game.url; // This handles both possible variable names
-  
-  const win = window.open('about:blank', '_blank');
+    const startTime = Date.now();
+    const gameUrl = item.url || game.url;
+    
+    const win = window.open('about:blank', '_blank');
 
-  if (win) {
-    win.document.write(`
-      <html>
-        <head>
-          <title>DO NOT REFRESH</title>
-        </head>
-        <body style="margin:0;padding:0;overflow:hidden;background:#000;">
-          <iframe 
-            src="${gameUrl}" 
-            style="width:100vw;height:100vh;border:none;display:block;" 
-            allow="fullscreen">
-          </iframe>
-        </body>
-      </html>
-    `);
-    win.document.close();
+    if (win) {
+      win.document.write(`
+        <html>
+          <head>
+            <title>DO NOT REFRESH</title>
+          </head>
+          <body style="margin:0;padding:0;overflow:hidden;background:#000;">
+            <iframe 
+              src="${gameUrl}" 
+              style="width:100vw;height:100vh;border:none;display:block;" 
+              allow="fullscreen">
+            </iframe>
+          </body>
+        </html>
+      `);
+      win.document.close();
 
-    const checkInterval = setInterval(() => {
-      if (win.closed) {
-        clearInterval(checkInterval);
-        const duration = Math.floor((Date.now() - startTime) / 1000 / 60);
-        if (duration > 0) {
-          setPlaytimes(prev => {
-            const id = item.id || game.id;
-            const updated = { ...prev, [id]: (prev[id] || 0) + duration };
-            localStorage.setItem('capy-playtimes', JSON.stringify(updated));
-            return updated;
-          });
+      const checkInterval = setInterval(() => {
+        if (win.closed) {
+          clearInterval(checkInterval);
+          const duration = Math.floor((Date.now() - startTime) / 1000 / 60);
+          if (duration > 0) {
+            setPlaytimes(prev => {
+              const id = item.id || game.id;
+              const updated = { ...prev, [id]: (prev[id] || 0) + duration };
+              localStorage.setItem('capy-playtimes', JSON.stringify(updated));
+              return updated;
+            });
+          }
         }
-      }
-    }, 1000);
-  }
-};
+      }, 1000);
+    }
+  };
+
   // --- EMERGENCY BLACKOUT KILL SWITCH ---
   useEffect(() => {
     const checkStatus = setInterval(() => {
@@ -284,27 +275,22 @@ const getLaunchUrl = (game, currentSupplier) => {
     }
   };
 
-  const validFavoritesCount = useMemo(() => gamesData.filter(g => favorites.includes(g.id)).length, [gamesData, favorites]);
+  const categoriesWithCounts = useMemo(() => {
+    const uniqueCats = [...new Set(gamesData.map(g => g?.category).filter(Boolean))];
+    const final = [{ name: 'All', count: gamesData.length }];
+    
+    if (favorites.length > 0) {
+      final.push({ name: 'Favorites', count: favorites.length });
+    }
+    
+    uniqueCats.forEach(cat => {
+      final.push({ name: cat, count: gamesData.filter(g => g.category === cat).length });
+    });
+    
+    return final;
+  }, [gamesData, favorites]);
 
- const categoriesWithCounts = useMemo(() => {
-  const uniqueCats = [...new Set(gamesData.map(g => g?.category).filter(Boolean))];
-  const final = [{ name: 'All', count: gamesData.length }];
-  
-  // FIX 1: Change 'validFavoritesCount' to 'favorites.length'
-  if (favorites.length > 0) {
-    // FIX 2: Change the count here too
-    final.push({ name: 'Favorites', count: favorites.length });
-  }
-  
-  uniqueCats.forEach(cat => {
-    final.push({ name: cat, count: gamesData.filter(g => g.category === cat).length });
-  });
-  
-  return final;
-// FIX 3: Make sure 'favorites' is in this array so it updates live
-}, [gamesData, favorites]);
-
- useEffect(() => {
+  useEffect(() => {
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
@@ -336,7 +322,7 @@ const getLaunchUrl = (game, currentSupplier) => {
       f: topFavs,
       t: topTimes,
       p: profilePic,
-      a: achievements // Sync achievements to friends
+      a: achievements
     };
     
     return btoa(JSON.stringify(data));
@@ -483,19 +469,15 @@ const getLaunchUrl = (game, currentSupplier) => {
     }
   }, [confirmClearSettings]);
 
-  // --- NEW: STARTUP SYNC ---
-// This ensures your 0/5 becomes 1/5 as soon as the site loads
-useEffect(() => {
-  const ids = ['first_game', 'marathon', 'collector', 'capy_loyalist', 'fashionista'];
-  const alreadyEarned = ids.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+  useEffect(() => {
+    const ids = ['first_game', 'marathon', 'collector', 'capy_loyalist', 'fashionista'];
+    const alreadyEarned = ids.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+    
+    if (alreadyEarned.length > 0 && typeof setAchievements === 'function') {
+      setAchievements(alreadyEarned);
+    }
+  }, []);
   
-  if (alreadyEarned.length > 0 && typeof setAchievements === 'function') {
-    setAchievements(alreadyEarned);
-  }
-}, []); // Runs once on refresh
-  
- // --- 1. FIXED ACHIEVEMENT TRACKING ---
-  // Added a check to make sure setAchievements exists before calling it
   useEffect(() => {
     const newAchievements = [...(achievements || [])];
     let earnedNew = false;
@@ -522,9 +504,6 @@ useEffect(() => {
       setNotification("🏃 Achievement Unlocked: Marathoner!");
     }
 
-    // --- FIXED SYNC LOGIC ---
-    // 1. Update if we JUST earned a new trophy (triggers the popup)
-    // 2. Update if the list we found doesn't match the current state (fixes 0/5 on refresh)
     if (typeof setAchievements === 'function') {
       if (earnedNew || newAchievements.length !== (achievements?.length || 0)) {
         setAchievements(newAchievements);
@@ -533,7 +512,6 @@ useEffect(() => {
   }, [playtimes, favorites, themeChangeCount, achievements]);
 
   const handleBackgroundUpload = (e) => {
-    
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -621,7 +599,7 @@ useEffect(() => {
     }
   };
 
-const toggleFavorite = (id) => {
+  const toggleFavorite = (id) => {
     const stringId = String(id); 
     const isRemoving = favorites.includes(stringId);
     
@@ -644,7 +622,6 @@ const toggleFavorite = (id) => {
     localStorage.setItem('capy-theme', t.color);
     localStorage.setItem('capy-glow', t.glow);
 
-    // Track for Achievement
     setThemeChangeCount(prev => {
       const next = prev + 1;
       localStorage.setItem('capy-theme-changes', next);
@@ -688,7 +665,7 @@ const toggleFavorite = (id) => {
     return { title: customTitle || DEFAULT_TITLE, icon: customIcon || DEFAULT_ICON };
   }, [disguise, customTitle, customIcon]);
 
-useEffect(() => {
+  useEffect(() => {
     document.title = currentIdentity.title;
     let link = document.querySelector("link[rel*='icon']");
     if (!link) {
@@ -699,34 +676,29 @@ useEffect(() => {
     link.href = currentIdentity.icon;
   }, [currentIdentity]);
 
-const filteredGames = useMemo(() => {
+  const filteredGames = useMemo(() => {
     const q = (searchQuery || "").toLowerCase();
     
-    // 1. Pick the correct data source
     let sourceData = gamesDataRaw || []; 
     if (supplier === 'GN Math') {
       sourceData = gnMathDataRaw || [];
     } else if (supplier === 'Truffled') {
-      sourceData = []; // <--- THIS MAKES THE GRID EMPTY FOR TRUFFLED
+      sourceData = [];
     }
 
     return sourceData.filter(g => {
-      // 2. Search Match
       const matchesSearch = g?.title?.toLowerCase().includes(q);
       if (!matchesSearch) return false;
 
-      // 3. Supplier Logic
       if (supplier === 'GN Math') {
         return true; 
       } else if (supplier === 'Truffled') {
-        return true; // (Will return nothing anyway since sourceData is empty)
+        return true;
       } else {
-        // In Default mode, hide games that are explicitly marked for other suppliers
         const isSpecial = g.urls?.['GN Math'] || g.urls?.['GN-MATH'] || g.urls?.['Truffled'];
         if (isSpecial) return false;
       }
 
-      // 4. Category / Favorites Match
       if (activeCategory === 'Favorites') {
         return (favorites || []).includes(String(g?.id));
       }
@@ -735,7 +707,7 @@ const filteredGames = useMemo(() => {
     });
   }, [searchQuery, activeCategory, favorites, supplier, gamesDataRaw, gnMathDataRaw]);
   
-const recentGamesData = useMemo(() => {
+  const recentGamesData = useMemo(() => {
     if (!recentlyPlayed || !Array.isArray(recentlyPlayed)) return [];
     
     return recentlyPlayed
@@ -761,12 +733,9 @@ const recentGamesData = useMemo(() => {
     return decoded ? { ...friend, decoded } : friend;
   }, [friends, selectedFriendId]);
 
-  // 🔄 The "History Switcher" Fix
   useEffect(() => {
-    // 1. Wipe the screen immediately so old games from other suppliers don't "ghost"
     setRecentlyPlayed([]); 
 
-    // 2. Load the specific folder for the current dropdown selection
     const recentKey = `capy-recent-${supplier}`;
     const saved = localStorage.getItem(recentKey);
     
@@ -778,9 +747,9 @@ const recentGamesData = useMemo(() => {
       console.error("History error:", e);
       setRecentlyPlayed([]);
     }
-  }, [supplier]); // This runs every time you change the dropdown
+  }, [supplier]);
   
-return (
+  return (
     <div
       className={`min-h-screen pb-20 antialiased relative ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode bg-white text-zinc-900' : 'bg-[#0a0a0a] text-zinc-100'}`} 
       style={{ 
@@ -791,16 +760,7 @@ return (
     >
       <main>
         <h1 className="sr-only">Capybara Science</h1>
-        
-        {/* Your main components (Header, Search, GameGrid, etc.) go right here inside main */}
-        
       </main>
-      
-      <footer className="mt-10 py-6 text-center text-xs text-zinc-500 border-t border-white/5">
-        <p>&copy; 2026 Capybara Science. All rights reserved.</p>
-      </footer>
-    </div>
-  );
       
       {notification && (
         <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -836,10 +796,8 @@ return (
         />
       )}
 
-      {/* --- CHAT FULL SCREEN LOGIC START --- */}
       {isChatOpen ? (
         <div className="fixed inset-0 z-[9999] bg-[#0a0a0a] flex flex-col p-4 animate-in fade-in duration-300">
-          {/* THE X BUTTON AT TOP RIGHT */}
           <button 
             onClick={() => setIsChatOpen(false)}
             className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full z-[10000] transition-transform active:scale-95 text-white"
@@ -847,7 +805,6 @@ return (
             <X className="w-8 h-8" />
           </button>
 
-          {/* CHAT CONTENT */}
           <div className="flex-1 w-full max-w-5xl mx-auto flex items-center justify-center">
             <div className="w-full h-[85vh]">
                <ChatCard isLightMode={isLightMode} setIsChatOpen={setIsChatOpen} />
@@ -855,30 +812,28 @@ return (
           </div>
         </div>
       ) : (
-        /* --- EVERYTHING INSIDE HERE IS THE NORMAL SITE --- */
         <>
           <Header 
-  searchQuery={searchQuery} 
-  setSearchQuery={setSearchQuery}
-  supplier={supplier}       
-  setSupplier={setSupplier} 
-  time={time}
-  battery={battery}
-  profilePic={profilePic}
-  setShowSettings={setShowSettings}
-  DEFAULT_ICON={CAPY_LOGO}
-  theme={theme}   
-  onViewProfile={() => setSelectedFriendId('me')} 
-  onRandomGame={() => {
-    // Now it pulls from filteredGames so it respects your GN-MATH selection!
-    const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
-    if (playable.length > 0) {
-      launchContent(playable[Math.floor(Math.random() * playable.length)]);
-    }
-  }}
-  isChatOpen={isChatOpen}
-  setIsChatOpen={setIsChatOpen}
-/>
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery}
+            supplier={supplier}       
+            setSupplier={setSupplier} 
+            time={time}
+            battery={battery}
+            profilePic={profilePic}
+            setShowSettings={setShowSettings}
+            DEFAULT_ICON={CAPY_LOGO}
+            theme={theme}   
+            onViewProfile={() => setSelectedFriendId('me')} 
+            onRandomGame={() => {
+              const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
+              if (playable.length > 0) {
+                launchContent(playable[Math.floor(Math.random() * playable.length)]);
+              }
+            }}
+            isChatOpen={isChatOpen}
+            setIsChatOpen={setIsChatOpen}
+          />
           <div className={`${isLightMode ? 'bg-white' : 'bg-[#09090b]/90'} backdrop-blur-md px-4 pt-1.5 overflow-hidden sticky top-16 z-40 transition-colors group`}>
             <div className="max-w-7xl mx-auto relative flex items-center">
               {canScrollLeft && (
@@ -969,166 +924,152 @@ return (
           </main>
         </>
       )}
-      {/* --- CHAT LOGIC END --- */}
 
       <FriendViewModal
-  friend={selectedFriendId === 'me' ? {
-    name: displayName,
-    favs: favorites,
-    times: playtimes,
-    achievements: ['first_game', 'marathon', 'collector', 'loyal', 'styler'].filter(id => localStorage.getItem(`achievement_${id}`) === 'true')
-  } : currentFriend}
-  gamesData={gamesData}
-  ownPfp={profilePic}
-  isOwnProfile={selectedFriendId === 'me'}
-  onClose={() => setSelectedFriendId(null)}
-  myAchievements={achievements}
-/>
+        friend={selectedFriendId === 'me' ? {
+          name: displayName,
+          favs: favorites,
+          times: playtimes,
+          achievements: ['first_game', 'marathon', 'collector', 'loyal', 'styler'].filter(id => localStorage.getItem(`achievement_${id}`) === 'true')
+        } : currentFriend}
+        gamesData={gamesData}
+        ownPfp={profilePic}
+        isOwnProfile={selectedFriendId === 'me'}
+        onClose={() => setSelectedFriendId(null)}
+        myAchievements={achievements}
+      />
 
-<SettingsModal 
-  show={showSettings} 
-  onClose={() => setShowSettings(false)}
-  tracklist={tracklist} 
-  performanceMode={performanceMode}
-  setPerformanceMode={(val) => { 
-    setPerformanceMode(val); 
-    localStorage.setItem('capy-perf-mode', val);
-  }}
-  onViewOwnProfile={() => {
-    setShowSettings(false);
-    setSelectedFriendId('me');
-  }}
-  themes={THEMES}
-  applyTheme={applyTheme}
-/>
-  panicKey={panicKey}
-  setPanicKey={(val) => { setPanicKey(val); localStorage.setItem('capy-panic-key', val); }}
-  panicUrl={panicUrl}
-  setPanicUrl={(val) => { setPanicUrl(val); localStorage.setItem('capy-panic-url', val); }}
-  handleBackgroundUpload={handleBackgroundUpload}
-  handleResetBackground={handleResetBackground}
-  handleAudioUpload={handleAudioUpload}
-  handleResetMusic={handleResetMusic}
-  profilePic={profilePic}
-  handlePfpUpload={handlePfpUpload}
-  handleResetPfp={() => { setProfilePic(''); localStorage.removeItem('capy-pfp'); }}
-  handleClearSettings={handleClearSettings}
-  handleReset={handleReset}
-  confirmReset={confirmReset}
-  confirmClearSettings={confirmClearSettings}
-  bgMusic={bgMusic}
-  bgEnabled={bgEnabled}
-  volume={volume}
-  setVolume={setVolume}
-  bgOpacity={bgOpacity}
-  setBgOpacity={setBgOpacity}
-  
-  displayName={displayName}
-  setDisplayName={(val) => {
-    const nameExists = friends.some(f => f.name.toLowerCase() === val.trim().toLowerCase());
-    if (nameExists) {
-      alert("Name is already taken by a friend! Please choose a unique name.");
-      return;
-    }
-    setDisplayName(val);
-    localStorage.setItem('capy-display-name', val);
-  }}
-  
-  friendCode={friendCode}
-  fullSyncCode={fullSyncCode}
-  onImportSync={(code) => {
-    const decoded = safeDecode(code);
-    if (decoded && decoded.n) {
-      setDisplayName(decoded.n);
-      localStorage.setItem('capy-display-name', decoded.n);
-      if (decoded.p) {
-        setProfilePic(decoded.p);
-        localStorage.setItem('capy-pfp', decoded.p);
-      }
-      if (decoded.t) {
-        setTheme(decoded.t);
-        localStorage.setItem('capy-theme', decoded.t);
-      }
-      if (decoded.g) {
-        setGlowIntensity(decoded.g);
-        localStorage.setItem('capy-glow', decoded.g);
-      }
-      setNotification("Profile Synced Successfully!");
-      setTimeout(() => window.location.reload(), 1000);
-    } else {
-      alert("Invalid Sync Code!");
-    }
-  }}
-
-  friends={friends}
-  isSyncing={isSyncing}
-  disguise={disguise}
-  setDisguise={(val) => { setDisguise(val); localStorage.setItem('capy-stealth-type', val); }}
-  customTitle={customTitle}
-  setCustomTitle={(val) => { setCustomTitle(val); localStorage.setItem('capy-custom-title', val); }}
-  customIcon={customIcon}
-  setCustomIcon={(val) => { setCustomIcon(val); localStorage.setItem('capy-custom-icon', val); }}
-  
-  isLightMode={isLightMode}
-  setIsLightMode={setIsLightMode}
-
-  onAddFriend={(code) => {
-    const decodedData = safeDecode(code);
-    if (decodedData && decodedData.id) {
-      const { n: name, id: friendId } = decodedData;
-      if (name.toLowerCase() === displayName.toLowerCase()) {
-        alert("You cannot add yourself!");
-        return;
-      }
-      const otherFriends = friends.filter(f => {
-        const existingData = safeDecode(f.code);
-        return existingData?.id !== friendId;
-      });
-      const updatedFriends = [...otherFriends, { name, code: code.trim() }];
-      setFriends(updatedFriends);
-      localStorage.setItem('capy-friends', JSON.stringify(updatedFriends));
-      setNotification(`Added ${name}!`);
-    } else {
-      alert("Invalid Friend Code!");
-    }
-  }}
-  onRemoveFriend={(code) => {
-    const newFriends = friends.filter(f => f.code !== code);
-    setFriends(newFriends);
-    localStorage.setItem('capy-friends', JSON.stringify(newFriends));
-  }}
-  onViewFriend={(friend) => {
-    setSelectedFriendId(null);
-    setTimeout(() => setSelectedFriendId(friend.code), 10);
-  }}
-  onRefreshFriend={(code) => {
-      setIsSyncing(true);
-      const freshFriends = [...friends];
-      setFriends(freshFriends);
-      if (selectedFriendId === code) {
+      <SettingsModal 
+        show={showSettings} 
+        onClose={() => setShowSettings(false)}
+        tracklist={tracklist} 
+        performanceMode={performanceMode}
+        setPerformanceMode={(val) => { 
+          setPerformanceMode(val); 
+          localStorage.setItem('capy-perf-mode', val);
+        }}
+        onViewOwnProfile={() => {
+          setShowSettings(false);
+          setSelectedFriendId('me');
+        }}
+        themes={THEMES}
+        applyTheme={applyTheme}
+        panicKey={panicKey}
+        setPanicKey={(val) => { setPanicKey(val); localStorage.setItem('capy-panic-key', val); }}
+        panicUrl={panicUrl}
+        setPanicUrl={(val) => { setPanicUrl(val); localStorage.setItem('capy-panic-url', val); }}
+        handleBackgroundUpload={handleBackgroundUpload}
+        handleResetBackground={handleResetBackground}
+        handleAudioUpload={handleAudioUpload}
+        handleResetMusic={handleResetMusic}
+        profilePic={profilePic}
+        handlePfpUpload={handlePfpUpload}
+        handleResetPfp={() => { setProfilePic(''); localStorage.removeItem('capy-pfp'); }}
+        handleClearSettings={handleClearSettings}
+        handleReset={handleReset}
+        confirmReset={confirmReset}
+        confirmClearSettings={confirmClearSettings}
+        bgMusic={bgMusic}
+        bgEnabled={bgEnabled}
+        volume={volume}
+        setVolume={setVolume}
+        bgOpacity={bgOpacity}
+        setBgOpacity={setBgOpacity}
+        displayName={displayName}
+        setDisplayName={(val) => {
+          const nameExists = friends.some(f => f.name.toLowerCase() === val.trim().toLowerCase());
+          if (nameExists) {
+            alert("Name is already taken by a friend! Please choose a unique name.");
+            return;
+          }
+          setDisplayName(val);
+          localStorage.setItem('capy-display-name', val);
+        }}
+        friendCode={friendCode}
+        fullSyncCode={fullSyncCode}
+        onImportSync={(code) => {
+          const decoded = safeDecode(code);
+          if (decoded && decoded.n) {
+            setDisplayName(decoded.n);
+            localStorage.setItem('capy-display-name', decoded.n);
+            if (decoded.p) {
+              setProfilePic(decoded.p);
+              localStorage.setItem('capy-pfp', decoded.p);
+            }
+            if (decoded.t) {
+              setTheme(decoded.t);
+              localStorage.setItem('capy-theme', decoded.t);
+            }
+            if (decoded.g) {
+              setGlowIntensity(decoded.g);
+              localStorage.setItem('capy-glow', decoded.g);
+            }
+            setNotification("Profile Synced Successfully!");
+            setTimeout(() => window.location.reload(), 1000);
+          } else {
+            alert("Invalid Sync Code!");
+          }
+        }}
+        friends={friends}
+        isSyncing={isSyncing}
+        disguise={disguise}
+        setDisguise={(val) => { setDisguise(val); localStorage.setItem('capy-stealth-type', val); }}
+        customTitle={customTitle}
+        setCustomTitle={(val) => { setCustomTitle(val); localStorage.setItem('capy-custom-title', val); }}
+        customIcon={customIcon}
+        setCustomIcon={(val) => { setCustomIcon(val); localStorage.setItem('capy-custom-icon', val); }}
+        isLightMode={isLightMode}
+        setIsLightMode={setIsLightMode}
+        onAddFriend={(code) => {
+          const decodedData = safeDecode(code);
+          if (decodedData && decodedData.id) {
+            const { n: name, id: friendId } = decodedData;
+            if (name.toLowerCase() === displayName.toLowerCase()) {
+              alert("You cannot add yourself!");
+              return;
+            }
+            const otherFriends = friends.filter(f => {
+              const existingData = safeDecode(f.code);
+              return existingData?.id !== friendId;
+            });
+            const updatedFriends = [...otherFriends, { name, code: code.trim() }];
+            setFriends(updatedFriends);
+            localStorage.setItem('capy-friends', JSON.stringify(updatedFriends));
+            setNotification(`Added ${name}!`);
+          } else {
+            alert("Invalid Friend Code!");
+          }
+        }}
+        onRemoveFriend={(code) => {
+          const newFriends = friends.filter(f => f.code !== code);
+          setFriends(newFriends);
+          localStorage.setItem('capy-friends', JSON.stringify(newFriends));
+        }}
+        onViewFriend={(friend) => {
           setSelectedFriendId(null);
-          setTimeout(() => setSelectedFriendId(code), 50);
-      }
-      setTimeout(() => {
-        setIsSyncing(false);
-        setNotification("Friend view refreshed!");
-      }, 500);
-  }}
-  myAchievements={achievements}
-  activeCloak={activeCloak}
-  setActiveCloak={setActiveCloak}
-/>
+          setTimeout(() => setSelectedFriendId(friend.code), 10);
+        }}
+        onRefreshFriend={(code) => {
+            setIsSyncing(true);
+            const freshFriends = [...friends];
+            setFriends(freshFriends);
+            if (selectedFriendId === code) {
+                setSelectedFriendId(null);
+                setTimeout(() => setSelectedFriendId(code), 50);
+            }
+            setTimeout(() => {
+              setIsSyncing(false);
+              setNotification("Friend view refreshed!");
+            }, 500);
+        }}
+        myAchievements={achievements}
+        activeCloak={activeCloak}
+        setActiveCloak={setActiveCloak}
+      />
 
-<footer style={{
-  padding: '20px',
-  textAlign: 'center',
-  color: '#a1a1aa',
-  fontSize: '14px',
-  borderTop: 'none',
-  marginTop: '40px'
-}}>
-  <p>&copy; 2026 Capybara Science. All rights reserved.</p>
-</footer>
-</div>
-);
+      <footer className="mt-10 py-6 text-center text-xs text-zinc-500 border-t border-white/5">
+        <p>&copy; 2026 Capybara Science. All rights reserved.</p>
+      </footer>
+    </div>
+  );
 }
