@@ -759,7 +759,10 @@ export default function App() {
       }}
     >
       <main>
-        <h1 className="sr-only">Capybara Science</h1>
+        <h1 className="sr-only text-black bg-white">Capybara Science</h1>
+        
+        {/* Your main components (Header, Search, GameGrid, etc.) go right here inside main */}
+        
       </main>
       
       {notification && (
