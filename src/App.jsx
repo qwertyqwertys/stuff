@@ -971,32 +971,28 @@ return (
       )}
       {/* --- CHAT LOGIC END --- */}
 
-      <FriendViewModal 
-        friend={selectedFriendId === 'me' 
-          ? { 
-              name: displayName, 
-              favs: favorites, 
-              times: playtimes,
-              // IDs matched to FriendViewModal.jsx (loyal and styler)
-              achievements: ['first_game', 'marathon', 'collector', 'loyal', 'styler'].filter(id => localStorage.getItem(`achievement_${id}`) === 'true')
-            } 
-          : currentFriend
-        } 
-        gamesData={gamesData} 
-        ownPfp={profilePic} 
-        isOwnProfile={selectedFriendId === 'me'}
-        onClose={() => setSelectedFriendId(null)} 
-        myAchievements={achievements}
-      />
+      <FriendViewModal
+  friend={selectedFriendId === 'me' ? {
+    name: displayName,
+    favs: favorites,
+    times: playtimes,
+    achievements: ['first_game', 'marathon', 'collector', 'loyal', 'styler'].filter(id => localStorage.getItem(`achievement_${id}`) === 'true')
+  } : currentFriend}
+  gamesData={gamesData}
+  ownPfp={profilePic}
+  isOwnProfile={selectedFriendId === 'me'}
+  onClose={() => setSelectedFriendId(null)}
+  myAchievements={achievements}
+/>
 
-      <SettingsModal 
+<SettingsModal 
   show={showSettings} 
   onClose={() => setShowSettings(false)}
   tracklist={tracklist} 
   performanceMode={performanceMode}
   setPerformanceMode={(val) => { 
-      setPerformanceMode(val); 
-      localStorage.setItem('capy-perf-mode', val);
+    setPerformanceMode(val); 
+    localStorage.setItem('capy-perf-mode', val);
   }}
   onViewOwnProfile={() => {
     setShowSettings(false);
@@ -1004,6 +1000,7 @@ return (
   }}
   themes={THEMES}
   applyTheme={applyTheme}
+/>
   panicKey={panicKey}
   setPanicKey={(val) => { setPanicKey(val); localStorage.setItem('capy-panic-key', val); }}
   panicUrl={panicUrl}
