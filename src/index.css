@@ -1,4 +1,3 @@
-/* Updated Force-Scale index.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Fredoka:wght@600&family=Baloo+2:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
@@ -7,6 +6,7 @@
   --text-main: #f4f4f5; 
   --card-bg: #18181b;   
   --border-main: rgba(255, 255, 255, 0.1);
+  --theme: #38bdf8; 
 }
 
 .light-mode {
@@ -154,13 +154,11 @@
   scrollbar-color: var(--theme) transparent;
 }
 
-/* --- SPEED HACK --- */
 .bg-zinc-900\/40, .bg-zinc-900\/50 {
   content-visibility: auto;
   contain-intrinsic-size: 0 320px;
 }
 
-/* --- CAPYBARA CURSOR --- */
 .bg-zinc-900\/40, .bg-zinc-900\/50 {
   cursor: url('https://img.icons8.com/color/28/capybara.png'), pointer !important;
 }
@@ -171,25 +169,22 @@
 
 /* --- THE "NUCLEAR" OVERRIDE FOR STATUS BAR (TOP RIGHT) --- */
 
-/* This targets the right-aligned container and scales everything inside it */
 header div[class*="ml-auto"], 
 header .flex.items-center.gap-4.ml-auto {
   gap: 2rem !important; 
 }
 
-/* Force Font Size on all text/numbers in the right corner */
 header div[class*="ml-auto"] span,
 header div[class*="ml-auto"] p,
 header div[class*="ml-auto"] div {
   font-family: 'Baloo 2', cursive !important;
-  font-size: 1.3rem !important; /* Bumped up even more */
+  font-size: 1.3rem !important; 
   font-weight: 700 !important;
   line-height: 1 !important;
   display: inline-flex !important;
   align-items: center !important;
 }
 
-/* Force Icon Scaling (SVG and Images) */
 header div[class*="ml-auto"] svg,
 header div[class*="ml-auto"] img,
 header div[class*="ml-auto"] .lucide {
@@ -197,10 +192,9 @@ header div[class*="ml-auto"] .lucide {
   height: 28px !important;
   min-width: 28px !important;
   min-height: 28px !important;
-  stroke-width: 2.5px !important; /* Make icon lines thicker */
+  stroke-width: 2.5px !important;
 }
 
-/* Ensure the Logo (Top Left) stays Fredoka 600 */
 header .flex.items-center.gap-2 span, 
 header h1, 
 .logo-text {
