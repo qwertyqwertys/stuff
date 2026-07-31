@@ -42,13 +42,12 @@ const TROPHIES = [
 ];
 
 const THEMES = {
-  cyber: { name: 'Cyberpunk', color: '#ff0055', glow: 60 },
-  midnight: { name: 'Midnight', color: '#7c3aed', glow: 40 },
-  forest: { name: 'Forest', color: '#10b981', glow: 30 },
+  cyber: { name: 'Cyberpunk', color: '#ff6699', glow: 60 },
+  midnight: { name: 'Midnight', color: '#a78bfa', glow: 40 }, 
+  forest: { name: 'Forest', color: '#34d399', glow: 30 },
   classic: { name: 'Classic', color: DEFAULT_COLOR, glow: DEFAULT_GLOW }
 };
 
-// --- DISGUISE CONFIG ---
 const DISGUISE_CONFIG = {
   none: { 
     title: DEFAULT_TITLE, 
