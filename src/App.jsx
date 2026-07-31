@@ -789,7 +789,14 @@ const recentGamesData = useMemo(() => {
         backgroundColor: isLightMode ? '#ffffff' : '#0a0a0a' 
       }}
     >
-      <h1 className="sr-only">Capybara Science</h1>
+      {/* Wrap your primary page content in a main landmark */}
+      <main>
+        <h1 className="sr-only">Capybara Science</h1>
+        
+        {/* All your existing components, header, game grid, etc. stay right here */}
+      </main>
+
+      {/* Footer can stay at the bottom or be wrapped in a <footer> tag */}
       
       {notification && (
         <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-4 duration-300">
