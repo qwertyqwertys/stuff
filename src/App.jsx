@@ -26,7 +26,7 @@ const GOOGLE_FAVICON = "https://www.gstatic.com/images/branding/searchlogo/ico/f
 // 2. Set the Defaults using that URL
 const DEFAULT_TITLE = "Google"; 
 const DEFAULT_ICON = GOOGLE_FAVICON; // This makes the site load as Google immediately
-const DEFAULT_COLOR = '#10A5F5';
+const DEFAULT_COLOR = '#38bdf8';
 const DEFAULT_GLOW = 50;
 
 // 3. Keep your Capy Logo for the UI/Achievements
