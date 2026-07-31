@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Play } from 'lucide-react';
+import { Heart, Play } from 'lucide-react'; 
 
 export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorite, performanceMode }) {
   const isUtility = ['request', 'report'].includes(game.id);
