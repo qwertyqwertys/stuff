@@ -1110,10 +1110,10 @@ const recentGamesData = useMemo(() => {
   setActiveCloak={setActiveCloak}
 />
 
-<footer style={{ 
-  padding: '20px', 
-  textAlign: 'center', 
-  color: '#666', 
+<footer style={{
+  padding: '20px',
+  textAlign: 'center',
+  color: '#a1a1aa',
   fontSize: '14px',
   borderTop: 'none',
   marginTop: '40px'
