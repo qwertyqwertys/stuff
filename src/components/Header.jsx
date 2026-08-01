@@ -20,13 +20,13 @@ export function Header({
         <div className="flex items-center gap-2 justify-self-start">
           <img src={DEFAULT_ICON} alt="Capybara Science Logo" className="w-7 h-7 object-contain" />
           <span 
-            className="text-xl font-semibold hidden lg:block tracking-tighter"
+            className={`text-xl font-semibold hidden lg:block tracking-tighter ${isLightMode ? 'text-black' : 'text-white'}`}
             style={{ 
               fontFamily: "'Fredoka', sans-serif",
               fontWeight: 600 
             }}
           >
-            Capybara <span className="text-[var(--theme)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Science</span>
+            Capybara <span className="underline decoration-[var(--theme)] decoration-2 underline-offset-4">Science</span>
           </span>
         </div>
 
