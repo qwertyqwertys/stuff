@@ -883,44 +883,29 @@ export default function App() {
           </div>
 
           <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12">
-  <h1 className="sr-only text-black bg-white">Capybara Science</h1>
-  
-  {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
-    <section className="space-y-4">
-      <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
-        <History className="w-3 h-3 text-[var(--theme)]" />
-        Recently On
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {recentGamesData.map(game => (
-          <GameCard 
-            key={`recent-${game.id}`} 
-            game={game} 
-            onLaunch={launchContent} 
-            playtime={playtimes[game.id] ? Math.floor(playtimes[game.id]/60) + 'm' : '0m'}
-            isFavorite={favorites.includes(String(game.id))}
-            onToggleFavorite={() => toggleFavorite(game.id)}
-            performanceMode={performanceMode}
-          />
-        ))}
-      </div>
-    </section>
-  )}
-
-  <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-    {filteredGames.map(game => (
-      <GameCard 
-        key={game.id} 
-        game={game} 
-        onLaunch={launchContent} 
-        playtime={playtimes[game.id] ? Math.floor(playtimes[game.id]/60) + 'm' : '0m'}
-        isFavorite={favorites.includes(String(game.id))}
-        onToggleFavorite={() => toggleFavorite(game.id)}
-        performanceMode={performanceMode}
-      />
-    ))}
-  </section>
-</main>
+            <h1 className="sr-only text-black bg-white">Capybara Science</h1>
+            
+            {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
+              <section className="space-y-4">
+                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                  <History className="w-3 h-3 text-[var(--theme)]" />
+                  Recently On
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {recentGamesData.map(game => (
+                    <GameCard 
+                      key={`recent-${game.id}`} 
+                      game={game} 
+                      onLaunch={launchContent} 
+                      playtime={playtimes[game.id] ? Math.floor(playtimes[game.id]/60) + 'm' : '0m'}
+                      isFavorite={favorites.includes(String(game.id))}
+                      onToggleFavorite={() => toggleFavorite(game.id)}
+                      performanceMode={performanceMode}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {filteredGames.map(game => (
@@ -952,7 +937,7 @@ export default function App() {
         onClose={() => setSelectedFriendId(null)}
         myAchievements={achievements}
       />
-
+      
       <SettingsModal 
         show={showSettings} 
         onClose={() => setShowSettings(false)}
