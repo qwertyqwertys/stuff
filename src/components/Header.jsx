@@ -26,7 +26,7 @@ export function Header({
               fontWeight: 600 
             }}
           >
-            Capybara <span className="text-[var(--theme)]">Science</span>
+            Capybara <span className="text-[var(--theme)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Science</span>
           </span>
         </div>
 
