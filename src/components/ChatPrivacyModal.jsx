@@ -8,7 +8,7 @@ export function ChatPrivacyModal({ isOpen, onClose }) {
       <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6 max-w-md w-full shadow-2xl">
         <h3 className="text-xl font-bold text-white mb-4">🔒 Chat Privacy & Data Notice</h3>
         
-        <div className="space-y-3 text-zinc-300 text-sm leading-relaxed">
+        <div className="space-y-3 text-zinc-200 text-sm leading-relaxed">
           <p>
             This website uses a database to power our live chat feature. Here is how your data is handled:
           </p>
@@ -21,7 +21,7 @@ export function ChatPrivacyModal({ isOpen, onClose }) {
 
         <button 
           onClick={onClose}
-          className="mt-6 w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-2 px-4 rounded transition-colors"
+          className="mt-6 w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-2 px-4 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white"
         >
           Got it, thanks!
         </button>
