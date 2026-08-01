@@ -77,7 +77,7 @@ export function ChatCard({ isLightMode }) {
         {isJoined && (
           <button 
             onClick={() => setIsJoined(false)} 
-            className="text-zinc-300 hover:text-[var(--theme)] p-1 hover:bg-white/5 rounded-md transition-all outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="text-zinc-200 hover:text-[var(--theme)] p-1 hover:bg-white/5 rounded-md transition-all outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             title="Change Identity"
             aria-label="Change chat username"
           >
@@ -89,14 +89,14 @@ export function ChatCard({ isLightMode }) {
       {!isJoined ? (
         <form onSubmit={handleJoinOrUpdate} className="flex flex-col gap-3 my-auto">
           <div className="space-y-1">
-            <p className="text-[11px] font-medium text-zinc-300">Change Name</p>
+            <p className="text-[11px] font-medium text-zinc-200">Change Name</p>
             <input 
               name="username"
               type="text"
               defaultValue={username}
               placeholder="Enter Custom Handle..."
               className={`w-full text-xs p-3 rounded-xl border outline-none transition-all focus-visible:ring-2 focus-visible:ring-[var(--theme)] ${
-                isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10 text-zinc-100 placeholder:text-zinc-400 focus:border-[var(--theme)]'
+                isLightMode ? 'bg-black/5 border-black/10 text-black placeholder:text-zinc-500' : 'bg-white/5 border-white/10 text-zinc-100 placeholder:text-zinc-400 focus:border-[var(--theme)]'
               }`}
             />
           </div>
@@ -126,7 +126,7 @@ export function ChatCard({ isLightMode }) {
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Message..."
               className={`w-full text-[10px] p-2 pr-10 rounded-lg border outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] ${
-                isLightMode ? 'bg-black/5' : 'bg-white/5 border-white/10 text-zinc-100 placeholder:text-zinc-400 focus:border-[var(--theme)]'
+                isLightMode ? 'bg-black/5 border-black/10 text-black placeholder:text-zinc-500' : 'bg-white/5 border-white/10 text-zinc-100 placeholder:text-zinc-400 focus:border-[var(--theme)]'
               }`}
             />
             <button
@@ -145,7 +145,7 @@ export function ChatCard({ isLightMode }) {
         <button 
           type="button"
           onClick={() => setShowPrivacy(true)}
-          className="text-[9px] text-zinc-300 hover:text-zinc-100 underline tracking-wide transition-colors uppercase font-mono outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] rounded px-1"
+          className="text-[9px] text-zinc-200 hover:text-zinc-100 underline tracking-wide transition-colors uppercase font-mono outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] rounded px-1"
         >
           Privacy & Data Notice
         </button>
