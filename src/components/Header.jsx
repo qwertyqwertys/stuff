@@ -41,7 +41,7 @@ export function Header({
               aria-label="Search games" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className={`w-full ${isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-white'} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors`} 
+              className={`w-full ${isLightMode ? 'bg-black/5 border-black/10 text-black placeholder:text-zinc-500' : 'bg-white/5 border-white/10 text-white placeholder:text-zinc-400'} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors`} 
             />
             {searchQuery && (
               <button 
@@ -104,21 +104,21 @@ export function Header({
 
         <div className="flex items-center justify-end gap-4 justify-self-end">
           <div 
-            className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase text-[var(--theme)] ${isLightMode ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'} px-5 py-2 rounded-full border`}
+            className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase text-zinc-100 ${isLightMode ? 'bg-black/5 border-black/5 text-black' : 'bg-white/5 border-white/5'} px-5 py-2 rounded-full border`}
             style={{ fontFamily: "'Baloo 2', cursive" }}
           >
             <span className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" /> 
-              <span className="translate-y-[1px]">{time.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+              <Calendar className="w-4 h-4 text-[var(--theme)]" /> 
+              <span className="translate-y-[1px] font-medium">{time.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
             </span>
             <span className="flex items-center gap-2">
-              <Clock className="w-4 h-4" /> 
-              <span className="translate-y-[1px]">{time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+              <Clock className="w-4 h-4 text-[var(--theme)]" /> 
+              <span className="translate-y-[1px] font-medium">{time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
             </span>
             
             <div className="flex items-center gap-2">
               <Battery className={`w-5 h-5 ${battery.charging ? 'text-green-500 animate-pulse' : ''}`} />
-              <span className="translate-y-[1px]">{battery.level}%</span>
+              <span className="translate-y-[1px] font-medium">{battery.level}%</span>
             </div>
           </div>
           
