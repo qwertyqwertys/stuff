@@ -884,6 +884,7 @@ export default function App() {
 
           <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12">
   <h1 className="sr-only text-black bg-white">Capybara Science</h1>
+  
   {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
     <section className="space-y-4">
       <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
@@ -905,6 +906,20 @@ export default function App() {
       </div>
     </section>
   )}
+
+  <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    {filteredGames.map(game => (
+      <GameCard 
+        key={game.id} 
+        game={game} 
+        onLaunch={launchContent} 
+        playtime={playtimes[game.id] ? Math.floor(playtimes[game.id]/60) + 'm' : '0m'}
+        isFavorite={favorites.includes(String(game.id))}
+        onToggleFavorite={() => toggleFavorite(game.id)}
+        performanceMode={performanceMode}
+      />
+    ))}
+  </section>
 </main>
 
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
