@@ -20,10 +20,12 @@ export function Header({
         <div className="flex items-center gap-2 justify-self-start">
           <img src={DEFAULT_ICON} alt="Capybara Science Logo" className="w-7 h-7 object-contain" />
           <span 
-            className={`text-xl font-semibold hidden lg:block tracking-tighter ${isLightMode ? 'text-black' : 'text-white'}`}
+            className="text-xl font-semibold hidden lg:block tracking-tighter"
             style={{ 
               fontFamily: "'Fredoka', sans-serif",
-              fontWeight: 600 
+              fontWeight: 600,
+              color: isLightMode ? '#000000' : '#ffffff',
+              backgroundColor: isLightMode ? '#ffffff' : '#09090b'
             }}
           >
             Capybara Science
