@@ -69,7 +69,7 @@ export function SettingsModal({
           </h2>
           <button 
             onClick={onClose} 
-            className={`${isLightMode ? 'text-zinc-500 hover:text-black hover:bg-zinc-100' : 'text-zinc-400 hover:text-white hover:bg-white/5'} p-1 transition-all focus:outline-none rounded-lg`}
+            className={`${isLightMode ? 'text-zinc-700 hover:text-black hover:bg-zinc-100' : 'text-zinc-300 hover:text-white hover:bg-white/5'} p-1 transition-all focus:outline-none rounded-lg`}
             aria-label="Close settings"
           >
             <X className="w-6 h-6" />
@@ -80,7 +80,7 @@ export function SettingsModal({
           {/* IDENTITY & SOCIAL */}
           <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} p-4 rounded-2xl border`}>
             <div className="flex items-center justify-between">
-              <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-500' : 'text-[var(--theme)]'}`}>
+              <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
                 <Type className="w-3 h-3" /> Profile Identity
               </label>
               <button 
@@ -100,7 +100,7 @@ export function SettingsModal({
                 </label>
                 <button 
                   onClick={handleResetPfp}
-                  className={`p-3 border rounded-xl text-[9px] font-black uppercase transition-all flex flex-col items-center justify-center gap-1 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/5 border-red-500/10 text-red-500/70 hover:bg-red-500/10 hover:text-red-500'}`}
+                  className={`p-3 border rounded-xl text-[9px] font-black uppercase transition-all flex flex-col items-center justify-center gap-1 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 hover:text-red-300'}`}
                 >
                   <RotateCcw className="w-3 h-3" /> Reset Avatar
                 </button>
@@ -114,10 +114,10 @@ export function SettingsModal({
               />
               <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-black/20 border-white/5'} p-3 rounded-xl border space-y-3`}>
                 <div className="flex items-center justify-between">
-                  <p className="text-[8px] font-black text-zinc-500 uppercase leading-none">Your Friend Code</p>
+                  <p className={`text-[8px] font-black uppercase leading-none ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>Your Friend Code</p>
                   <button 
                     onClick={handleCopyCode}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'}`}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-50' : 'bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white'}`}
                   >
                     {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                     {copied ? 'Copied' : 'Copy'}
@@ -134,7 +134,7 @@ export function SettingsModal({
 
           {/* FRIENDS LIST */}
           <section className={`space-y-4 ${sectionBg} p-4 rounded-2xl border`}>
-            <label className="text-[10px] uppercase font-black text-zinc-500 tracking-widest flex items-center gap-2">
+            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
               <Users className="w-3 h-3 text-[var(--theme)]" /> Friends List
             </label>
             
@@ -157,44 +157,44 @@ export function SettingsModal({
             <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
               {friends?.length > 0 ? friends.map(friend => (
                 <div key={friend.code} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-xl border shadow-sm`}>
-                  <span title={friend.name} className="text-[10px] font-bold truncate max-w-[120px]">{friend.name}</span>
+                  <span title={friend.name} className={`text-[10px] font-bold truncate max-w-[120px] ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{friend.name}</span>
                   <div className="flex gap-1">
                     <button 
                       onClick={() => onViewFriend(friend)}
-                      className={`p-1.5 rounded-lg transition-all ${isLightMode ? 'bg-zinc-100 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 hover:bg-[var(--theme)] hover:text-black'}`}
+                      className={`p-1.5 rounded-lg transition-all ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
                     >
                       <Eye className="w-3 h-3" />
                     </button>
                     <button 
                       onClick={() => onRemoveFriend(friend.code)}
-                      className={`p-1.5 rounded-lg transition-all ${isLightMode ? 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white'}`}
+                      className={`p-1.5 rounded-lg transition-all ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'}`}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
               )) : (
-                <p className="text-[9px] text-zinc-400 text-center py-2 italic font-medium uppercase tracking-tighter">No friends added yet</p>
+                <p className={`text-[9px] text-center py-2 italic font-medium uppercase tracking-tighter ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>No friends added yet</p>
               )}
             </div>
           </section>
 
           {/* PERFORMANCE MODE */}
-          <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-yellow-50 border-yellow-100' : 'bg-yellow-500/5 border-yellow-500/10'}`}>
+          <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-yellow-50 border-yellow-200' : 'bg-yellow-500/10 border-yellow-500/20'}`}>
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] uppercase font-black text-yellow-600 tracking-widest flex items-center gap-2">
+                <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-yellow-800' : 'text-yellow-400'}`}>
                   <Cpu className="w-3 h-3" /> Performance Mode
                 </label>
                 <button 
                   onClick={() => setPerformanceMode(!performanceMode)}
-                  className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase transition-all shadow-sm ${performanceMode ? 'bg-yellow-500 text-black' : isLightMode ? 'bg-white text-zinc-400 border border-zinc-200' : 'bg-white/5 text-zinc-500 border border-white/10'}`}
+                  className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase transition-all shadow-sm ${performanceMode ? 'bg-yellow-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-300' : 'bg-white/10 text-zinc-200 border border-white/20'}`}
                 >
                   <Zap className="w-3 h-3" />
                   {performanceMode ? 'ON' : 'OFF'}
                 </button>
               </div>
-              <p className={`text-[8px] uppercase font-bold leading-tight tracking-tighter ${isLightMode ? 'text-yellow-700/60' : 'text-yellow-500/60'}`}>
+              <p className={`text-[8px] uppercase font-bold leading-tight tracking-tighter ${isLightMode ? 'text-yellow-900' : 'text-yellow-300'}`}>
                 {performanceMode 
                   ? "Music and heavy effects disabled to maximize CPU/RAM speed." 
                   : "Standard mode active. Music and visuals are enabled."}
@@ -204,7 +204,7 @@ export function SettingsModal({
 
           {/* MEDIA UPLOADS */}
           <section className={`space-y-4 ${sectionBg} p-4 rounded-2xl border`}>
-            <label className="text-[10px] uppercase font-black text-zinc-500 tracking-widest flex items-center gap-2">
+            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
               <ImageIcon className="w-3 h-3 text-[var(--theme)]" /> Custom Media
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -221,13 +221,13 @@ export function SettingsModal({
               
               <button 
                 onClick={handleResetBackground}
-                className={`p-2 border rounded-xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/5 border-red-500/10 text-red-500/70 hover:bg-red-500/10'}`}
+                className={`p-2 border rounded-xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
               >
                 <RotateCcw className="w-3 h-3" /> Reset BG
               </button>
               <button 
                 onClick={handleResetMusic}
-                className={`p-2 border rounded-xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/5 border-red-500/10 text-red-500/70 hover:bg-red-500/10'}`}
+                className={`p-2 border rounded-xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
               >
                 <RotateCcw className="w-3 h-3" /> Reset Music
               </button>
@@ -237,7 +237,7 @@ export function SettingsModal({
             {bgMusic && (
               <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
                 <div className="flex items-center justify-between">
-                  <label className="text-[9px] uppercase font-black text-zinc-400 flex items-center gap-2">
+                  <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
                     <Volume2 className="w-3 h-3 text-[var(--theme)]" /> Music Volume
                   </label>
                   <span className="text-[10px] font-mono text-[var(--theme)]">{Math.round(volume * 100)}%</span>
@@ -247,7 +247,7 @@ export function SettingsModal({
                   min="0" max="1" step="0.01"
                   value={volume} 
                   onChange={(e) => setVolume(parseFloat(e.target.value))}
-                  className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/10'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
+                  className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
                 />
               </div>
             )}
@@ -256,7 +256,7 @@ export function SettingsModal({
             {bgEnabled && !performanceMode && !bgMusic?.includes('/music/') && !bgMusic?.startsWith('data:') && (
               <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
                 <div className="flex items-center justify-between">
-                  <label className="text-[9px] uppercase font-black text-zinc-400 flex items-center gap-2">
+                  <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
                     <ImageIcon className="w-3 h-3 text-[var(--theme)]" /> BG Opacity
                   </label>
                   <span className="text-[10px] font-mono text-[var(--theme)]">{bgOpacity}%</span>
@@ -266,7 +266,7 @@ export function SettingsModal({
                   min="0" max="100" 
                   value={bgOpacity} 
                   onChange={(e) => setBgOpacity(Number(e.target.value))}
-                  className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/10'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
+                  className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
                 />
               </div>
             )}
@@ -274,7 +274,7 @@ export function SettingsModal({
 
           {/* MUSIC LIBRARY PRESETS */}
           <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'}`}>
-            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-500' : 'text-[var(--theme)]'}`}>
+            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
               <Music className="w-3 h-3" /> Music Library
             </label>
             <div className="grid grid-cols-1 gap-2">
@@ -291,16 +291,16 @@ export function SettingsModal({
                   <div className="flex items-center gap-3 truncate">
                     <div className="w-1.5 h-1.5 rounded-full bg-[var(--theme)] group-hover:shadow-[0_0_8px_var(--theme)] transition-all flex-shrink-0" />
                     <div className="flex flex-col truncate">
-                      <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>
+                      <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>
                         {song.title}
                       </span>
-                      <span className="text-[9px] font-medium text-zinc-500 uppercase tracking-tight truncate">
+                      <span className={`text-[9px] font-medium uppercase tracking-tight truncate ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>
                         {song.artist || "Unknown Artist"}
                       </span>
                     </div>
                   </div>
                   {song.isClean && (
-                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase flex-shrink-0 ${isLightMode ? 'bg-zinc-100 text-zinc-500' : 'bg-zinc-700 text-zinc-400'}`}>
+                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase flex-shrink-0 ${isLightMode ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-700 text-zinc-200'}`}>
                       Clean
                     </span>
                   )}
@@ -311,7 +311,7 @@ export function SettingsModal({
 
           {/* TAB DISGUISE SECTION */}
           <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
-            <label className="text-[10px] uppercase font-black text-zinc-500 tracking-widest flex items-center gap-2">
+            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
               <Eye className="w-3 h-3 text-[var(--theme)]" /> Tab Disguise
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -322,7 +322,7 @@ export function SettingsModal({
                   className={`p-3 border rounded-xl text-[10px] font-black uppercase transition-all shadow-sm ${
                     activeCloak === cloak 
                     ? 'bg-[var(--theme)] text-black border-[var(--theme)]' 
-                    : isLightMode ? 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white'
+                    : isLightMode ? 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-zinc-300 hover:text-white'
                   }`}
                 >
                   {cloak}
@@ -332,7 +332,7 @@ export function SettingsModal({
           </section>
 
           {/* PANIC PROTOCOL */}
-          <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-red-50 border-red-100' : 'bg-red-500/5 border-red-500/10'}`}>
+          <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-red-50 border-red-200' : 'bg-red-500/10 border-red-500/20'}`}>
             <label className="text-[10px] uppercase font-black text-red-500 tracking-widest flex items-center gap-2">
               <Ghost className="w-3 h-3" /> Panic Key
             </label>
@@ -342,11 +342,11 @@ export function SettingsModal({
                 placeholder="Press key..." 
                 value={panicKey} 
                 onKeyDown={handlePanicKeyDown}
-                className={`flex-1 border rounded-xl p-3 text-xs outline-none text-center font-mono font-bold shadow-sm ${isLightMode ? 'bg-white border-red-200 focus:ring-2 focus:ring-red-200' : 'bg-zinc-800 border-white/10 focus:border-red-500/50'}`} 
+                className={`flex-1 border rounded-xl p-3 text-xs outline-none text-center font-mono font-bold shadow-sm ${isLightMode ? 'bg-white border-red-200 text-zinc-900 focus:ring-2 focus:ring-red-200' : 'bg-zinc-800 border-white/10 text-white focus:border-red-500/50'}`} 
                 readOnly 
               />
               {panicKey && (
-                <button onClick={() => setPanicKey('')} className={`p-3 border rounded-xl shadow-sm ${isLightMode ? 'bg-white border-red-200' : 'bg-red-500/10 border-red-500/20'}`}>
+                <button onClick={() => setPanicKey('')} className={`p-3 border rounded-xl shadow-sm ${isLightMode ? 'bg-white border-red-200' : 'bg-red-500/20 border-red-500/30'}`}>
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </button>
               )}
@@ -355,7 +355,7 @@ export function SettingsModal({
 
           {/* THEMES */}
           <section className="space-y-3">
-            <label className="text-[10px] uppercase font-black text-zinc-500 tracking-widest flex items-center gap-2">
+            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
               <Palette className="w-3 h-3" /> Themes
             </label>
             
@@ -372,7 +372,7 @@ export function SettingsModal({
                 <button 
                   key={id} 
                   onClick={() => applyTheme(t)} 
-                  className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 transition-all shadow-sm ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 hover:border-[var(--theme)]'}`}
+                  className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 transition-all shadow-sm ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
                 >
                   <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: t.color }} /> {t.name}
                 </button>
