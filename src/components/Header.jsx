@@ -26,7 +26,7 @@ export function Header({
               fontWeight: 600 
             }}
           >
-            Capybara <span className="border-b-2 border-[var(--theme)] pb-0.5">Science</span>
+            Capybara Science
           </span>
         </div>
 
