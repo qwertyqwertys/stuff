@@ -77,7 +77,7 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
           >
             <Heart 
               className="w-4 h-4 transition-colors" 
-              stroke={isFavorite ? "var(--theme)" : "#71717a"} 
+              stroke={isFavorite ? "var(--theme)" : "#a1a1aa"} 
               strokeWidth={2.5} 
               fill={isFavorite ? 'var(--theme)' : 'none'} 
             />
@@ -92,9 +92,9 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
       <div className="p-5">
         <div className="flex justify-between items-start gap-2">
           <div className="font-bold text-sm truncate group-hover:text-[var(--theme)] transition-colors">{game.title}</div>
-          {!isUtility && <span className="text-[8px] text-zinc-300 font-bold bg-white/10 px-1.5 py-0.5 rounded shrink-0">{playtime}</span>}
+          {!isUtility && <span className="text-[8px] text-zinc-100 font-bold bg-white/15 px-1.5 py-0.5 rounded shrink-0">{playtime}</span>}
         </div>
-        <p className="text-[9px] text-zinc-400 uppercase font-black tracking-widest mt-1">
+        <p className="text-[9px] text-zinc-200 uppercase font-black tracking-widest mt-1">
           {game.category}
         </p>
       </div>
