@@ -116,11 +116,12 @@ export function Header({
               <span className="translate-y-[1px] font-medium">{time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
             </span>
             
-            <div className="flex items-center gap-2">
-              <Battery className={`w-5 h-5 ${battery.charging ? 'text-green-500 animate-pulse' : ''}`} />
-              <span className="translate-y-[1px] font-medium">{battery.level}%</span>
-            </div>
-          </div>
+            {battery.level !== null && (
+  <div className="flex items-center gap-2">
+    <Battery className={`w-5 h-5 ${battery.charging ? 'text-green-500 animate-pulse' : ''}`} />
+    <span className="translate-y-[1px] font-medium">{battery.level}%</span>
+  </div>
+)}
           
           <div className={`flex items-center gap-1.5 ${isLightMode ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'} rounded-full p-1 border`}>
               <button 
