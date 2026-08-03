@@ -85,11 +85,7 @@ export function SettingsModal({
 }) {
   const [friendInput, setFriendInput] = useState('');
   const [copied, setCopied] = useState(false);
-  const [hasBackground, setHasBackground] = useState(bgEnabled);
-
-  useEffect(() => {
-    setHasBackground(bgEnabled);
-  }, [bgEnabled]);
+  const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
 
   // --- CUSTOM SONG STATE VIA INDEXEDDB ---
   const [customSongs, setCustomSongs] = useState([]);
