@@ -99,7 +99,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
     }
   };
 
-  const handleUpdateName = async (id) => {
+  const handleUpdateName = async (sound) => {
     if (!editedName.trim()) {
       setErrorMsg('Sound name cannot be empty.');
       return;
@@ -109,10 +109,15 @@ export function SoundboardCard({ isLightMode, onClose }) {
     setSuccessMsg(null);
 
     try {
+      const updateData = { name: editedName.trim() };
+      if (!sound.user_id && user) {
+        updateData.user_id = user.id;
+      }
+
       const { error } = await supabase
         .from('community_sounds')
-        .update({ name: editedName.trim() })
-        .eq('id', id);
+        .update(updateData)
+        .eq('id', sound.id);
 
       if (error) throw error;
 
@@ -137,12 +142,12 @@ export function SoundboardCard({ isLightMode, onClose }) {
     setTimeout(() => setActiveSound(null), 300);
   };
 
-  const handleDelete = async (id, fileUrl) => {
+  const handleDelete = async (sound) => {
     if (!window.confirm('Are you sure you want to delete this sound for everyone?')) return;
 
     setErrorMsg(null);
     try {
-      const fileName = fileUrl.split('/').pop();
+      const fileName = sound.file_url.split('/').pop();
 
       // 1. Delete file from 'sounds' storage bucket
       const { error: storageError } = await supabase.storage
@@ -155,7 +160,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
       const { error: dbError } = await supabase
         .from('community_sounds')
         .delete()
-        .eq('id', id);
+        .eq('id', sound.id);
 
       if (dbError) throw dbError;
 
@@ -264,86 +269,91 @@ export function SoundboardCard({ isLightMode, onClose }) {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {sounds.map((sound) => (
-                  <div
-                    key={sound.id}
-                    className={`p-3 rounded-2xl border flex flex-col justify-between gap-3 transition-all ${
-                      activeSound === sound.id 
-                        ? 'border-[var(--theme)] bg-[var(--theme)]/10 scale-95 shadow-[0_0_15px_var(--theme)]' 
-                        : isLightMode 
-                          ? 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100' 
-                          : 'bg-white/5 border-white/10 hover:bg-white/10'
-                    }`}
-                  >
-                    {editingId === sound.id ? (
-                      <div className="space-y-2">
-                        <input
-                          type="text"
-                          value={editedName}
-                          onChange={(e) => setEditedName(e.target.value)}
-                          className={`w-full p-2 rounded-xl border text-xs font-bold outline-none ${
-                            isLightMode ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-black/40 border-white/20 text-white'
-                          }`}
-                        />
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleUpdateName(sound.id)}
-                            className="flex-1 py-1 px-2 rounded-lg bg-emerald-500 text-black font-black text-[10px] uppercase flex items-center justify-center gap-1"
-                          >
-                            <Check className="w-3 h-3" /> Save
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className={`flex-1 py-1 px-2 rounded-lg font-black text-[10px] uppercase ${
-                              isLightMode ? 'bg-zinc-200 text-zinc-700' : 'bg-white/10 text-zinc-300'
+                {sounds.map((sound) => {
+                  // Fixed: Show buttons if there is no user_id OR if the logged-in user matches
+                  const isOwner = !sound.user_id || (user && sound.user_id === user.id);
+
+                  return (
+                    <div
+                      key={sound.id}
+                      className={`p-3 rounded-2xl border flex flex-col justify-between gap-3 transition-all ${
+                        activeSound === sound.id 
+                          ? 'border-[var(--theme)] bg-[var(--theme)]/10 scale-95 shadow-[0_0_15px_var(--theme)]' 
+                          : isLightMode 
+                            ? 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100' 
+                            : 'bg-white/5 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      {editingId === sound.id ? (
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={editedName}
+                            onChange={(e) => setEditedName(e.target.value)}
+                            className={`w-full p-2 rounded-xl border text-xs font-bold outline-none ${
+                              isLightMode ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-black/40 border-white/20 text-white'
                             }`}
-                          >
-                            Cancel
-                          </button>
+                          />
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleUpdateName(sound)}
+                              className="flex-1 py-1 px-2 rounded-lg bg-emerald-500 text-black font-black text-[10px] uppercase flex items-center justify-center gap-1"
+                            >
+                              <Check className="w-3 h-3" /> Save
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className={`flex-1 py-1 px-2 rounded-lg font-black text-[10px] uppercase ${
+                                isLightMode ? 'bg-zinc-200 text-zinc-700' : 'bg-white/10 text-zinc-300'
+                              }`}
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="font-black text-xs uppercase tracking-tight truncate flex-1" title={sound.name}>
-                          {sound.name}
-                        </span>
-                        {user && sound.user_id === user.id && (
+                      ) : (
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-black text-xs uppercase tracking-tight truncate flex-1" title={sound.name}>
+                            {sound.name}
+                          </span>
+                          {isOwner && (
+                            <button
+                              onClick={() => {
+                                setEditingId(sound.id);
+                                setEditedName(sound.name);
+                              }}
+                              className="p-1 rounded-lg opacity-60 hover:opacity-100 transition-opacity"
+                              title="Edit Name"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => playSound(sound.id, sound.file_url)}
+                          className={`flex-1 py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1 transition-transform active:scale-95 ${
+                            isLightMode ? 'bg-zinc-900 text-white' : 'bg-white text-black'
+                          }`}
+                        >
+                          <Play className="w-3 h-3 fill-current" />
+                          Play
+                        </button>
+                        {isOwner && (
                           <button
-                            onClick={() => {
-                              setEditingId(sound.id);
-                              setEditedName(sound.name);
-                            }}
-                            className="p-1 rounded-lg opacity-60 hover:opacity-100 transition-opacity"
-                            title="Edit Name"
+                            onClick={() => handleDelete(sound)}
+                            className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
+                            title="Delete Sound for Everyone"
                           >
-                            <Pencil className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         )}
                       </div>
-                    )}
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => playSound(sound.id, sound.file_url)}
-                        className={`flex-1 py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1 transition-transform active:scale-95 ${
-                          isLightMode ? 'bg-zinc-900 text-white' : 'bg-white text-black'
-                        }`}
-                      >
-                        <Play className="w-3 h-3 fill-current" />
-                        Play
-                      </button>
-                      {user && sound.user_id === user.id && (
-                        <button
-                          onClick={() => handleDelete(sound.id, sound.file_url)}
-                          className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
-                          title="Delete Sound for Everyone"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
