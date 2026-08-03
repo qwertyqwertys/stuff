@@ -1,4 +1,4 @@
-import { Search, Dices, Calendar, Clock, Battery, UserCircle, Settings, X, MessageSquare } from 'lucide-react';
+import { Search, Dices, Calendar, Clock, Battery, UserCircle, Settings, X, MessageSquare, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function Header({ 
@@ -9,7 +9,9 @@ export function Header({
   onViewProfile,
   isLightMode,
   supplier, setSupplier,
-  isChatOpen, setIsChatOpen
+  isChatOpen, setIsChatOpen,
+  setShowSoundboard,
+  isSoundboardOpen
 }) {
   const navigate = useNavigate();
 
@@ -86,6 +88,19 @@ export function Header({
                 <span style={{ fontSize: '10px', color: 'var(--theme)', opacity: 0.9 }}>▼</span>
               </div>
             </div>
+
+            <button 
+              onClick={() => setShowSoundboard ? setShowSoundboard(prev => !prev) : null} 
+              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
+                isSoundboardOpen 
+                  ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
+                  : (isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-[var(--theme)]')
+              }`}
+              title="Toggle Soundboard"
+              aria-label="Toggle custom soundboard"
+            >
+              <Volume2 className="w-4 h-4" />
+            </button>
 
             <button 
               onClick={() => setIsChatOpen(true)} 
