@@ -6,6 +6,64 @@ import {
   Sun, Moon
 } from 'lucide-react';
 
+// --- INDEXEDDB HELPERS FOR HEAVY AUDIO FILES ---
+const openDB = () => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('CapyMusicDB', 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('songs')) {
+        db.createObjectStore('songs', { keyPath: 'id' });
+      }
+    };
+  });
+};
+
+const saveSongToIDB = async (songObj, blob) => {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction('songs', 'readwrite');
+    const store = transaction.objectStore('songs');
+    store.put({ ...songObj, blob });
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+};
+
+const loadSongsFromIDB = async () => {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction('songs', 'readonly');
+      const store = transaction.objectStore('songs');
+      const request = store.getAll();
+      request.onsuccess = () => {
+        const songs = request.result.map(song => ({
+          ...song,
+          url: URL.createObjectURL(song.blob)
+        }));
+        resolve(songs);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  } catch (e) {
+    return [];
+  }
+};
+
+const deleteSongFromIDB = async (id) => {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction('songs', 'readwrite');
+    const store = transaction.objectStore('songs');
+    store.delete(id);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+};
+
 export function SettingsModal({
   show, onClose, friendCode, displayName, setDisplayName,
   friends, onAddFriend, onViewFriend, onRemoveFriend,
@@ -27,15 +85,12 @@ export function SettingsModal({
   const [friendInput, setFriendInput] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // --- CUSTOM SONG UPLOAD & STORAGE STATE ---
-  const [customSongs, setCustomSongs] = useState(() => {
-    const saved = localStorage.getItem('capy-custom-songs');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // --- CUSTOM SONG STATE VIA INDEXEDDB ---
+  const [customSongs, setCustomSongs] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem('capy-custom-songs', JSON.stringify(customSongs));
-  }, [customSongs]);
+    loadSongsFromIDB().then(songs => setCustomSongs(songs));
+  }, []);
 
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState(null);
@@ -65,56 +120,51 @@ export function SettingsModal({
     }
   };
 
-  // --- CUSTOM AUDIO FILE SELECT & SAVE LOGIC ---
   const handleCustomAudioSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setPendingFile(file);
-    // Auto-fill file name without the extension
     setSongTitle(file.name.replace(/\.[^/.]+$/, ""));
     setArtistName('');
     setUploadModalOpen(true);
-    // Reset file input value so selecting the same file works again if needed
     e.target.value = '';
   };
 
-  const saveCustomSong = () => {
+  const saveCustomSong = async () => {
     if (!pendingFile) return;
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      const newSong = {
-        id: 'custom-' + Date.now(),
-        title: songTitle || 'Untitled Song',
-        artist: artistName || 'Unknown Artist',
-        url: uploadEvent.target.result,
-        isCustom: true
-      };
-
-      // Prepend to array so it sits at the TOP of the list
-      const updated = [newSong, ...customSongs];
-      setCustomSongs(updated);
-
-      // Play/load the song right away via handler if available
-      if (handleAudioUpload) {
-        handleAudioUpload({ presetUrl: newSong.url });
-      }
-
-      setUploadModalOpen(false);
-      setPendingFile(null);
+    
+    const newSongMeta = {
+      id: 'custom-' + Date.now(),
+      title: songTitle || 'Untitled Song',
+      artist: artistName || 'Unknown Artist',
+      isCustom: true
     };
-    reader.readAsDataURL(pendingFile);
+
+    // Save heavy file directly to IndexedDB without freezing UI
+    await saveSongToIDB(newSongMeta, pendingFile);
+    
+    const objectUrl = URL.createObjectURL(pendingFile);
+    const newSongWithUrl = { ...newSongMeta, url: objectUrl };
+
+    setCustomSongs(prev => [newSongWithUrl, ...prev]);
+
+    if (handleAudioUpload) {
+      handleAudioUpload({ presetUrl: objectUrl });
+    }
+
+    setUploadModalOpen(false);
+    setPendingFile(null);
   };
 
-  const deleteCustomSong = (id, e) => {
+  const deleteCustomSong = async (id, e) => {
     e.preventDefault();
     e.stopPropagation();
+    await deleteSongFromIDB(id);
     setCustomSongs(prev => prev.filter(song => song.id !== id));
   };
 
-  // Combine custom uploaded songs with the default tracklist (customs first)
   const fullTracklist = [...customSongs, ...(tracklist || [])];
 
-  // UI Variable Logic
   const modalBg = isLightMode ? "bg-white border-zinc-200 text-zinc-900" : "bg-zinc-900 border-white/10 text-white";
   const sectionBg = isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-white/5 border-white/5";
   const inputBg = isLightMode ? "bg-white border-zinc-300 text-black placeholder:text-zinc-400" : "bg-zinc-800 border-white/10 text-white";
@@ -278,7 +328,6 @@ export function SettingsModal({
               <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-all shadow-sm`}>
                 <Music className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                 Upload MP3
-                {/* Updated handler to capture and name custom songs */}
                 <input type="file" accept="audio/mp3,audio/*" onChange={handleCustomAudioSelect} className="hidden" />
               </label>
               
@@ -316,7 +365,7 @@ export function SettingsModal({
             )}
 
             {/* BG OPACITY SLIDER */}
-            {bgEnabled && !performanceMode && !bgMusic?.includes('/music/') && !bgMusic?.startsWith('data:') && (
+            {bgEnabled && !performanceMode && !bgMusic?.includes('/music/') && !bgMusic?.startsWith('blob:') && (
               <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
                 <div className="flex items-center justify-between">
                   <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
@@ -335,7 +384,7 @@ export function SettingsModal({
             )}
           </section>
 
-          {/* MUSIC LIBRARY PRESETS (WITH CUSTOM UPLOADS AT THE TOP) */}
+          {/* MUSIC LIBRARY PRESETS */}
           <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'}`}>
             <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
               <Music className="w-3 h-3" /> Music Library
