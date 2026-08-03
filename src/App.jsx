@@ -14,7 +14,7 @@ import { GameCard } from './components/GameCard';
 import { SettingsModal } from './components/SettingsModal';
 import { Header } from './components/Header';
 import { FriendViewModal } from './components/FriendViewModal';
-import SoundboardCard from './components/SoundboardCard';
+import { SoundboardCard } from './components/SoundboardCard';
 import { tracklist } from './components/tracklist'; 
 import { ChatCard } from './components/ChatCard';
 import { applyCloak } from './utils';
@@ -229,7 +229,7 @@ export default function App() {
     });
 
     const startTime = Date.now();
-    const gameUrl = item.url || game.url;
+    const gameUrl = finalUrl;
     
     const win = window.open('about:blank', '_blank');
 
@@ -256,7 +256,7 @@ export default function App() {
           const duration = Math.floor((Date.now() - startTime) / 1000 / 60);
           if (duration > 0) {
             setPlaytimes(prev => {
-              const id = item.id || game.id;
+              const id = item.id;
               const updated = { ...prev, [id]: (prev[id] || 0) + duration };
               localStorage.setItem('capy-playtimes', JSON.stringify(updated));
               return updated;
@@ -500,7 +500,7 @@ export default function App() {
   }, [confirmClearSettings]);
 
   useEffect(() => {
-    const ids = ['first_game', 'marathon', 'collector', 'capy_loyalist', 'fashionista'];
+    const ids = ['first_game', 'marathon', 'collector', 'loyal', 'fashionista'];
     const alreadyEarned = ids.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     
     if (alreadyEarned.length > 0 && typeof setAchievements === 'function') {
