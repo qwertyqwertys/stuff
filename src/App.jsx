@@ -14,6 +14,7 @@ import { GameCard } from './components/GameCard';
 import { SettingsModal } from './components/SettingsModal';
 import { Header } from './components/Header';
 import { FriendViewModal } from './components/FriendViewModal';
+import { SoundboardCard } from './components/SoundboardCard';
 import { tracklist } from './components/tracklist'; 
 import { ChatCard } from './components/ChatCard';
 import { applyCloak } from './utils';
@@ -83,6 +84,7 @@ export default function App() {
   const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('capy-favs') || '[]'));
   const [themeChangeCount, setThemeChangeCount] = useState(() => parseInt(localStorage.getItem('capy-theme-changes') || '0'));
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
 
   const userData = { playtimes: playtimes, favorites: favorites, themeChangeCount: themeChangeCount };
@@ -873,7 +875,19 @@ export default function App() {
             isChatOpen={isChatOpen}
             setIsChatOpen={setIsChatOpen}
           />
-          <div className={`${isLightMode ? 'bg-white' : 'bg-[#09090b]/90'} backdrop-blur-md px-4 pt-1.5 overflow-hidden sticky top-16 z-40 transition-colors group`}>
+          
+          {/* Action Bar with Soundboard Button */}
+          <div className={`${isLightMode ? 'bg-white' : 'bg-[#09090b]/90'} backdrop-blur-md px-4 py-2 border-b border-white/5 sticky top-16 z-40 transition-colors flex items-center justify-end max-w-7xl mx-auto`}>
+            <button
+              onClick={() => setIsSoundboardOpen(true)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-2xl border font-bold text-xs transition-all hover:scale-105 active:scale-95 bg-white/5 border-white/10 hover:border-[var(--theme)] text-zinc-200"
+            >
+              <Volume2 className="w-4 h-4 text-[var(--theme)]" />
+              <span className="hidden sm:inline">Soundboard</span>
+            </button>
+          </div>
+
+          <div className={`${isLightMode ? 'bg-white' : 'bg-[#09090b]/90'} backdrop-blur-md px-4 pt-1.5 overflow-hidden sticky top-28 z-40 transition-colors group`}>
             <div className="max-w-7xl mx-auto relative flex items-center">
               {canScrollLeft && (
                 <div className={`absolute left-0 z-50 flex items-center pr-12 h-full bg-gradient-to-r ${isLightMode ? 'from-white via-white/80' : 'from-[#09090b]/95 via-[#09090b]/80'} to-transparent pointer-events-none`}>
@@ -964,6 +978,16 @@ export default function App() {
             </section>
           </main>
         </>
+      )}
+
+      {/* Soundboard Modal Overlay */}
+      {isSoundboardOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <SoundboardCard 
+            isLightMode={isLightMode} 
+            onClose={() => setIsSoundboardOpen(false)} 
+          />
+        </div>
       )}
 
       <FriendViewModal
