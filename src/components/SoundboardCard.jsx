@@ -27,8 +27,9 @@ export function SoundboardCard({ isLightMode, onClose }) {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
 
+      // Fixed: query 'community_sounds' table instead of 'sounds'
       const { data, error } = await supabase
-        .from('sounds')
+        .from('community_sounds')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -54,30 +55,28 @@ export function SoundboardCard({ isLightMode, onClose }) {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-      const filePath = `sounds/${fileName}`;
 
-      // 1. Upload audio file to Supabase Storage bucket
+      // 1. Upload audio file to Supabase Storage bucket 'sounds'
       const { error: uploadError } = await supabase.storage
         .from('sounds')
-        .upload(filePath, file);
+        .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      // 2. Retrieve public URL
+      // 2. Retrieve public URL from 'sounds' bucket
       const { data: publicUrlData } = supabase.storage
-        .from('soundboard-bucket')
-        .getPublicUrl(filePath);
+        .from('sounds')
+        .getPublicUrl(fileName);
 
       const audioUrl = publicUrlData.publicUrl;
 
-      // 3. Insert record into community_sounds table
+      // 3. Insert record into community_sounds table (matching your table schema)
       const { error: dbError } = await supabase
         .from('community_sounds')
         .insert([
           {
             name: soundName.trim(),
             file_url: audioUrl,
-            file_path: filePath,
             user_id: user ? user.id : null,
           },
         ]);
@@ -108,19 +107,22 @@ export function SoundboardCard({ isLightMode, onClose }) {
     setTimeout(() => setActiveSound(null), 300);
   };
 
-  const handleDelete = async (id, filePath) => {
+  const handleDelete = async (id, fileUrl) => {
     if (!window.confirm('Are you sure you want to delete this sound?')) return;
 
     setErrorMsg(null);
     try {
-      // 1. Delete file from storage
+      // Extract the file name from the public URL to delete it from storage
+      const fileName = fileUrl.split('/').pop();
+
+      // 1. Delete file from 'sounds' storage bucket
       const { error: storageError } = await supabase.storage
-        .from('soundboard-bucket')
-        .remove([filePath]);
+        .from('sounds')
+        .remove([fileName]);
 
       if (storageError) throw storageError;
 
-      // 2. Delete record from database
+      // 2. Delete record from database table
       const { error: dbError } = await supabase
         .from('community_sounds')
         .delete()
@@ -240,7 +242,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
                       activeSound === sound.id 
                         ? 'border-[var(--theme)] bg-[var(--theme)]/10 scale-95 shadow-[0_0_15px_var(--theme)]' 
                         : isLightMode 
-                          ? 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100' 
+                          ? 'bg-zinc-0 border-zinc-200 hover:bg-zinc-100' 
                           : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }`}
                   >
@@ -259,7 +261,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
                       </button>
                       {user && sound.user_id === user.id && (
                         <button
-                          onClick={() => handleDelete(sound.id, sound.file_path)}
+                          onClick={() => handleDelete(sound.id, sound.file_url)}
                           className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
                           title="Delete Sound"
                         >
