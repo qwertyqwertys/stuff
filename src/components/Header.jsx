@@ -117,40 +117,42 @@ export function Header({
             </span>
             
             {battery.level !== null && (
-  <div className="flex items-center gap-2">
-    <Battery className={`w-5 h-5 ${battery.charging ? 'text-green-500 animate-pulse' : ''}`} />
-    <span className="translate-y-[1px] font-medium">{battery.level}%</span>
-  </div>
-)}
+              <div className="flex items-center gap-2">
+                <Battery className={`w-5 h-5 ${battery.charging ? 'text-green-500 animate-pulse' : ''}`} />
+                <span className="translate-y-[1px] font-medium">{battery.level}%</span>
+              </div>
+            )}
+          </div>
           
           <div className={`flex items-center gap-1.5 ${isLightMode ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'} rounded-full p-1 border`}>
-              <button 
-                onClick={() => onViewProfile?.()} 
-                aria-label="View user profile"
-                className="w-8 h-8 rounded-full border border-transparent hover:border-[var(--theme)] overflow-hidden bg-zinc-800 transition-all active:scale-90"
-              >
-                {profilePic ? (
-                  <img src={profilePic} className="w-full h-full object-cover" alt="User avatar" />
-                ) : (
-                  <UserCircle className="w-full h-full p-1 text-[var(--theme)]" />
-                )}
-              </button>
+            <button 
+              onClick={() => onViewProfile?.()} 
+              aria-label="View user profile"
+              className="w-8 h-8 rounded-full border border-transparent hover:border-[var(--theme)] overflow-hidden bg-zinc-800 transition-all active:scale-90"
+            >
+              {profilePic ? (
+                <img src={profilePic} className="w-full h-full object-cover" alt="User avatar" />
+              ) : (
+                <UserCircle className="w-full h-full p-1 text-[var(--theme)]" />
+              )}
+            </button>
 
-              <button 
-                onClick={() => setShowSettings(true)} 
-                aria-label="Open global dashboard settings"
-                className="p-1.5 transition-all hover:scale-110 active:rotate-90 group flex items-center justify-center"
-              >
-                <Settings 
-                  className="w-5 h-5" 
-                  style={{ 
-                    color: 'var(--theme)',
-                    filter: 'drop-shadow(0 0 8px var(--theme))'
-                  }}
-                />
-              </button>
+            <button 
+              onClick={() => setShowSettings(true)} 
+              aria-label="Open global dashboard settings"
+              className="p-1.5 transition-all hover:scale-110 active:rotate-90 group flex items-center justify-center"
+            >
+              <Settings 
+                className="w-5 h-5" 
+                style={{ 
+                  color: 'var(--theme)',
+                  filter: 'drop-shadow(0 0 8px var(--theme))'
+                }}
+              />
+            </button>
           </div>
         </div>
+
       </div>
     </header>
   );
