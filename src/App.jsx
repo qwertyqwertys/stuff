@@ -83,6 +83,7 @@ export default function App() {
   const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('capy-favs') || '[]'));
   const [themeChangeCount, setThemeChangeCount] = useState(() => parseInt(localStorage.getItem('capy-theme-changes') || '0'));
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
 
   const userData = { playtimes: playtimes, favorites: favorites, themeChangeCount: themeChangeCount };
 
@@ -123,21 +124,32 @@ export default function App() {
   const [time, setTime] = useState(new Date());
   const [battery, setBattery] = useState({ level: null, charging: false });
 
-useEffect(() => {
-  if ('getBattery' in navigator) {
-    navigator.getBattery().then(bat => {
-      const updateBattery = () => {
-        setBattery({
-          level: Math.round(bat.level * 100),
-          charging: bat.charging
-        });
-      };
-      updateBattery();
-      bat.addEventListener('levelchange', updateBattery);
-      bat.addEventListener('chargingchange', updateBattery);
-    });
-  }
-}, []);
+  const handleTogglePlay = () => {
+    if (!audioRef.current) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(err => console.log("Playback prevented:", err));
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  useEffect(() => {
+    if ('getBattery' in navigator) {
+      navigator.getBattery().then(bat => {
+        const updateBattery = () => {
+          setBattery({
+            level: Math.round(bat.level * 100),
+            charging: bat.charging
+          });
+        };
+        updateBattery();
+        bat.addEventListener('levelchange', updateBattery);
+        bat.addEventListener('chargingchange', updateBattery);
+      });
+    }
+  }, []);
 
   const [theme, setTheme] = useState(() => localStorage.getItem('capy-theme') || DEFAULT_COLOR);
   const [glowIntensity, setGlowIntensity] = useState(() => Number(localStorage.getItem('capy-glow')) || DEFAULT_GLOW);
@@ -380,20 +392,20 @@ useEffect(() => {
       audioRef.current.volume = volume;
       localStorage.setItem('capy-volume', volume.toString());
 
-      if (performanceMode) {
+      if (performanceMode || !isPlaying) {
         audioRef.current.pause();
       } else if (bgMusic) {
         audioRef.current.play().catch(() => {});
       }
     }
-  }, [volume, performanceMode, bgMusic]);
+  }, [volume, performanceMode, isPlaying, bgMusic]);
 
   useEffect(() => {
     if (audioRef.current && bgMusic) {
       audioRef.current.pause();
       audioRef.current.load();
       
-      if (!performanceMode) {
+      if (!performanceMode && isPlaying) {
         const playPromise = audioRef.current.play();
         if (playPromise !== undefined) {
           playPromise
@@ -421,19 +433,19 @@ useEffect(() => {
   
   useEffect(() => {
     const startMusic = () => {
-      if (audioRef.current && bgMusic && !performanceMode) {
+      if (audioRef.current && bgMusic && !performanceMode && isPlaying) {
         audioRef.current.play().catch(() => {});
       }
     };
 
     window.addEventListener('click', startMusic, { once: true });
     return () => window.removeEventListener('click', startMusic);
-  }, [bgMusic, performanceMode]);
+  }, [bgMusic, performanceMode, isPlaying]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (audioRef.current && bgMusic) {
-        if (document.hidden || performanceMode) {
+        if (document.hidden || performanceMode || !isPlaying) {
           audioRef.current.pause();
         } else {
           audioRef.current.play().catch(() => {});
@@ -442,7 +454,7 @@ useEffect(() => {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [bgMusic, performanceMode]);
+  }, [bgMusic, performanceMode, isPlaying]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -564,7 +576,12 @@ useEffect(() => {
     if (e && e.presetUrl) {
       setBgMusic(e.presetUrl);
       setBgEnabled(true); 
+      setIsPlaying(true);
       localStorage.setItem('capy-bg-music', e.presetUrl);
+      if (audioRef.current) {
+        audioRef.current.load();
+        audioRef.current.play().catch(err => console.log("Playback prevented:", err));
+      }
       return;
     }
 
@@ -576,7 +593,12 @@ useEffect(() => {
           const audioData = event.target.result;
           setBgMusic(audioData);
           setBgEnabled(true);
+          setIsPlaying(true);
           localStorage.setItem('capy-bg-music', audioData);
+          if (audioRef.current) {
+            audioRef.current.load();
+            audioRef.current.play().catch(err => console.log("Playback prevented:", err));
+          }
         };
         reader.readAsDataURL(file);
       }
@@ -586,6 +608,7 @@ useEffect(() => {
   const handleResetMusic = () => {
     setBgMusic('');
     setBgEnabled(false); 
+    setIsPlaying(false);
     localStorage.removeItem('capy-bg-music');
     localStorage.setItem('capy-bg-enabled', 'false');
     
@@ -802,9 +825,12 @@ useEffect(() => {
           ref={audioRef}
           src={bgMusic} 
           loop 
-          autoPlay 
+          autoPlay={isPlaying}
           onLoadedData={(e) => {
             e.target.volume = volume; 
+            if (!isPlaying) {
+              e.target.pause();
+            }
           }}
         />
       )}
@@ -1080,6 +1106,8 @@ useEffect(() => {
         myAchievements={achievements}
         activeCloak={activeCloak}
         setActiveCloak={setActiveCloak}
+        isPlaying={isPlaying}
+        onTogglePlay={handleTogglePlay}
       />
 
       <footer className="mt-10 py-6 text-center text-xs text-zinc-500 border-t border-white/5">
