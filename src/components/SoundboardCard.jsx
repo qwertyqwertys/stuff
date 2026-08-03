@@ -1,195 +1,199 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient'; // Adjust your supabase import path if needed
+import { createClient } from '@supabase/supabase-js';
 
-export function Soundboard({ onClose, isLightMode }) {
+// Initialize Supabase client
+const supabaseUrl = 'https://nilgxfmcwljqhawdrsot.supabase.co';
+const supabaseKey = 'sb_publishable_K4ZLk0KkXTe8upyl7KoTcg_wD31DQ4U';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export default function CustomSoundboard() {
   const [sounds, setSounds] = useState([]);
-  const [soundName, setSoundName] = useState('');
-  const [audioFile, setAudioFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [file, setFile] = useState(null);
+  const [soundName, setSoundName] = useState('');
+  const [user, setUser] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
 
   useEffect(() => {
     fetchUserAndSounds();
   }, []);
 
   const fetchUserAndSounds = async () => {
-    // 1. Get current logged-in user
-    const { data: { user } } = await supabase.auth.getUser();
-    setCurrentUser(user);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
 
-    // 2. Fetch sounds from Supabase
-    const { data, error } = await supabase
-      .from('community_sounds')
-      .select('*')
-      .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('community_sounds')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching sounds:', error);
-    } else {
+      if (error) throw error;
       setSounds(data || []);
+    } catch (error) {
+      console.error('Error fetching sounds:', error.message);
+      setErrorMsg('Failed to load soundboard sounds.');
     }
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!audioFile || !soundName.trim()) {
-      alert("Please provide a name and select an audio file.");
+    if (!file || !soundName.trim()) {
+      setErrorMsg('Please select an MP3 file and enter a sound name.');
       return;
     }
 
     setUploading(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Upload file to Supabase Storage bucket ('sounds')
-      const fileExt = audioFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+      const filePath = `sounds/${fileName}`;
 
+      // 1. Upload audio file to Supabase Storage bucket
       const { error: uploadError } = await supabase.storage
-        .from('sounds')
-        .upload(filePath, audioFile);
+        .from('soundboard-bucket')
+        .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // Get public URL of the uploaded file
+      // 2. Retrieve public URL
       const { data: publicUrlData } = supabase.storage
-        .from('sounds')
+        .from('soundboard-bucket')
         .getPublicUrl(filePath);
 
-      // Insert record into database with user_id
+      const audioUrl = publicUrlData.publicUrl;
+
+      // 3. Insert record into community_sounds table
       const { error: dbError } = await supabase
         .from('community_sounds')
         .insert([
-          { 
-            name: soundName.trim(), 
-            file_url: publicUrlData.publicUrl,
-            user_id: user ? user.id : null 
-          }
+          {
+            name: soundName.trim(),
+            file_url: audioUrl,
+            file_path: filePath,
+            user_id: user ? user.id : null,
+          },
         ]);
 
       if (dbError) throw dbError;
 
+      setSuccessMsg('Sound uploaded successfully!');
+      setFile(null);
       setSoundName('');
-      setAudioFile(null);
       fetchUserAndSounds();
-      alert("Sound uploaded successfully!");
     } catch (error) {
-      alert("Error uploading sound: " + error.message);
+      console.error('Upload error:', error.message);
+      setErrorMsg(`Error uploading sound: ${error.message}`);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleRename = async (soundId, currentName) => {
-    const newName = prompt("Enter a new name for your sound:", currentName);
-    if (!newName || newName.trim() === "") return;
-
-    const { error } = await supabase
-      .from('community_sounds')
-      .update({ name: newName.trim() })
-      .eq('id', soundId);
-
-    if (error) {
-      alert("Error renaming sound: " + error.message);
-    } else {
-      fetchUserAndSounds();
+  const playSound = (url) => {
+    try {
+      const audio = new Audio(url);
+      audio.play().catch((err) => console.error('Playback error:', err));
+    } catch (error) {
+      console.error('Error playing audio:', error);
     }
   };
 
-  const handleDelete = async (soundId, fileUrl) => {
-    if (!confirm("Are you sure you want to delete this sound?")) return;
+  const handleDelete = async (id, filePath) => {
+    if (!window.confirm('Are you sure you want to delete this sound?')) return;
 
-    // Extract file path from URL to delete from storage bucket
-    const path = fileUrl.split('/storage/v1/object/public/sounds/')[1];
+    setErrorMsg(null);
+    try {
+      // 1. Delete file from storage
+      const { error: storageError } = await supabase.storage
+        .from('soundboard-bucket')
+        .remove([filePath]);
 
-    if (path) {
-      await supabase.storage.from('sounds').remove([path]);
-    }
+      if (storageError) throw storageError;
 
-    const { error } = await supabase
-      .from('community_sounds')
-      .delete()
-      .eq('id', soundId);
+      // 2. Delete record from database
+      const { error: dbError } = await supabase
+        .from('community_sounds')
+        .delete()
+        .eq('id', id);
 
-    if (error) {
-      alert("Error deleting sound: " + error.message);
-    } else {
+      if (dbError) throw dbError;
+
+      setSuccessMsg('Sound deleted successfully.');
       fetchUserAndSounds();
+    } catch (error) {
+      console.error('Delete error:', error.message);
+      setErrorMsg(`Error deleting sound: ${error.message}`);
     }
   };
 
   return (
-    <div className={`p-6 max-w-4xl mx-auto ${isLightMode ? 'text-black' : 'text-white'}`}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Community Soundboard</h2>
-        {onClose && (
-          <button onClick={onClose} className="px-3 py-1 bg-zinc-700 text-white rounded-lg">Close</button>
-        )}
-      </div>
+    <div className="soundboard-container" style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+      <h2>Community Custom Soundboard</h2>
 
-      {/* Upload Form */}
-      <form onSubmit={handleUpload} className={`p-4 mb-8 rounded-xl border ${isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10'}`}>
-        <h3 className="text-lg font-semibold mb-3">Upload a Sound</h3>
-        <div className="flex flex-col gap-3">
-          <input 
-            type="text" 
-            placeholder="Sound Name" 
-            value={soundName} 
+      {errorMsg && <div style={{ color: '#dc3545', marginBottom: '10px' }}>{errorMsg}</div>}
+      {successMsg && <div style={{ color: '#28a745', marginBottom: '10px' }}>{successMsg}</div>}
+
+      <form onSubmit={handleUpload} style={{ marginBottom: '20px', background: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
+        <h3>Upload New Sound</h3>
+        <div style={{ marginBottom: '10px' }}>
+          <input
+            type="text"
+            placeholder="Sound Name"
+            value={soundName}
             onChange={(e) => setSoundName(e.target.value)}
-            className={`p-2 rounded-lg border outline-none ${isLightMode ? 'bg-white border-black/20 text-black' : 'bg-black border-white/20 text-white'}`}
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
           />
-          <input 
-            type="file" 
-            accept="audio/*" 
-            onChange={(e) => setAudioFile(e.target.files[0])}
-            className="text-sm"
-          />
-          <button 
-            type="submit" 
-            disabled={uploading}
-            className="py-2 bg-[var(--theme)] text-black font-bold rounded-lg hover:opacity-90 transition-opacity"
-          >
-            {uploading ? "Uploading..." : "Upload Sound"}
-          </button>
         </div>
+        <div style={{ marginBottom: '10px' }}>
+          <input
+            type="file"
+            accept="audio/mp3,audio/*"
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+        </div>
+        <button 
+          type="submit" 
+          disabled={uploading} 
+          style={{ padding: '8px 16px', background: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+        >
+          {uploading ? 'Uploading...' : 'Upload Sound'}
+        </button>
       </form>
 
-      {/* Sounds Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {sounds.map((sound) => {
-          const isOwner = currentUser && sound.user_id === currentUser.id;
-
-          return (
-            <div key={sound.id} className={`p-4 rounded-xl border flex flex-col justify-between gap-3 ${isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10'}`}>
+      <h3>Soundboard Library</h3>
+      {sounds.length === 0 ? (
+        <p>No sounds available yet. Upload one above!</p>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
+          {sounds.map((sound) => (
+            <div key={sound.id} style={{ border: '1px solid #ddd', padding: '12px', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
-                <h4 className="font-semibold text-lg">{sound.name}</h4>
+                <h4 style={{ margin: '0 0 10px 0', wordBreak: 'break-word' }}>{sound.name}</h4>
               </div>
-
-              <audio controls src={sound.file_url} className="w-full h-10"></audio>
-
-              {/* Show edit/delete options ONLY if the current user owns the sound */}
-              {isOwner && (
-                <div className="flex gap-2 mt-2">
-                  <button 
-                    onClick={() => handleRename(sound.id, sound.name)}
-                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                <button
+                  onClick={() => playSound(sound.file_url)}
+                  style={{ flex: 1, padding: '6px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Play
+                </button>
+                {user && sound.user_id === user.id && (
+                  <button
+                    onClick={() => handleDelete(sound.id, sound.file_path)}
+                    style={{ padding: '6px 10px', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                   >
-                    Rename
+                    X
                   </button>
-                  <button 
-                    onClick={() => handleDelete(sound.id, sound.file_url)}
-                    className="px-3 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
