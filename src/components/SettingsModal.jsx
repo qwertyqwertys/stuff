@@ -140,7 +140,6 @@ export function SettingsModal({
       isCustom: true
     };
 
-    // Save heavy file directly to IndexedDB without freezing UI
     await saveSongToIDB(newSongMeta, pendingFile);
     
     const objectUrl = URL.createObjectURL(pendingFile);
@@ -171,7 +170,7 @@ export function SettingsModal({
   const headerText = isLightMode ? "text-zinc-900" : "text-[var(--theme)]";
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60">
       <div className={`${modalBg} border p-6 rounded-3xl max-w-md w-full relative shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar`}>
         
         {/* HEADER */}
@@ -181,7 +180,7 @@ export function SettingsModal({
           </h2>
           <button 
             onClick={onClose} 
-            className={`${isLightMode ? 'text-zinc-700 hover:text-black hover:bg-zinc-100' : 'text-zinc-300 hover:text-white hover:bg-white/5'} p-1 transition-all focus:outline-none rounded-lg`}
+            className={`${isLightMode ? 'text-zinc-700 hover:text-black hover:bg-zinc-100' : 'text-zinc-300 hover:text-white hover:bg-white/5'} p-1 rounded-lg`}
             aria-label="Close settings"
           >
             <X className="w-6 h-6" />
@@ -197,7 +196,7 @@ export function SettingsModal({
               </label>
               <button 
                 onClick={onViewOwnProfile}
-                className="flex items-center gap-1.5 px-3 py-1 bg-[var(--theme)] text-black rounded-full text-[9px] font-black uppercase hover:opacity-80 transition-all shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1 bg-[var(--theme)] text-black rounded-full text-[9px] font-black uppercase hover:opacity-80"
               >
                 <Eye className="w-3 h-3" /> View My Profile
               </button>
@@ -205,14 +204,14 @@ export function SettingsModal({
 
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
-                <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-all shadow-sm`}>
+                <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)]`}>
                   <Upload className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                   Upload IMG/GIF for PFP
                   <input type="file" accept="image/*" onChange={handlePfpUpload} className="hidden" />
                 </label>
                 <button 
                   onClick={handleResetPfp}
-                  className={`p-3 border rounded-xl text-[9px] font-black uppercase transition-all flex flex-col items-center justify-center gap-1 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30 hover:text-red-300'}`}
+                  className={`p-3 border rounded-xl text-[9px] font-black uppercase flex flex-col items-center justify-center gap-1 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
                 >
                   <RotateCcw className="w-3 h-3" /> Reset Avatar
                 </button>
@@ -222,20 +221,20 @@ export function SettingsModal({
                 placeholder="Custom Display Name..." 
                 value={displayName} 
                 onChange={(e) => setDisplayName(e.target.value.slice(0, 25))}
-                className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-[var(--theme)]/20 font-bold shadow-sm`}
+                className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold`}
               />
               <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-black/20 border-white/5'} p-3 rounded-xl border space-y-3`}>
                 <div className="flex items-center justify-between">
                   <p className={`text-[8px] font-black uppercase leading-none ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>Your Friend Code</p>
                   <button 
                     onClick={handleCopyCode}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-50' : 'bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white'}`}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-200' : 'bg-white/5 text-zinc-300 hover:text-white'}`}
                   >
                     {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                     {copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
-                <div className={`${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-lg border max-h-20 overflow-y-auto no-scrollbar`}>
+                <div className={`${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-lg border max-h-20 overflow-y-auto`}>
                   <p className="text-[10px] font-mono font-black text-[var(--theme)] break-all leading-relaxed tracking-tight">
                     {friendCode}
                   </p>
@@ -256,11 +255,11 @@ export function SettingsModal({
                 placeholder="Enter friend code..." 
                 value={friendInput}
                 onChange={(e) => setFriendInput(e.target.value)}
-                className={`flex-1 ${inputBg} border rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-[var(--theme)]/20 shadow-sm`}
+                className={`flex-1 ${inputBg} border rounded-xl p-2.5 text-xs outline-none`}
               />
               <button 
                 onClick={handleAddFriend}
-                className="p-2.5 bg-[var(--theme)] text-black rounded-xl hover:opacity-80 transition-all shadow-md"
+                className="p-2.5 bg-[var(--theme)] text-black rounded-xl hover:opacity-80"
               >
                 <UserPlus className="w-4 h-4" />
               </button>
@@ -268,18 +267,18 @@ export function SettingsModal({
 
             <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
               {friends?.length > 0 ? friends.map(friend => (
-                <div key={friend.code} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-xl border shadow-sm`}>
+                <div key={friend.code} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-xl border`}>
                   <span title={friend.name} className={`text-[10px] font-bold truncate max-w-[120px] ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{friend.name}</span>
                   <div className="flex gap-1">
                     <button 
                       onClick={() => onViewFriend(friend)}
-                      className={`p-1.5 rounded-lg transition-all ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
+                      className={`p-1.5 rounded-lg ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
                     >
                       <Eye className="w-3 h-3" />
                     </button>
                     <button 
                       onClick={() => onRemoveFriend(friend.code)}
-                      className={`p-1.5 rounded-lg transition-all ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'}`}
+                      className={`p-1.5 rounded-lg ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'}`}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -300,7 +299,7 @@ export function SettingsModal({
                 </label>
                 <button 
                   onClick={() => setPerformanceMode(!performanceMode)}
-                  className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase transition-all shadow-sm ${performanceMode ? 'bg-yellow-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-300' : 'bg-white/10 text-zinc-200 border border-white/20'}`}
+                  className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase ${performanceMode ? 'bg-yellow-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-300' : 'bg-white/10 text-zinc-200 border border-white/20'}`}
                 >
                   <Zap className="w-3 h-3" />
                   {performanceMode ? 'ON' : 'OFF'}
@@ -320,12 +319,12 @@ export function SettingsModal({
               <ImageIcon className="w-3 h-3 text-[var(--theme)]" /> Custom Media
             </label>
             <div className="grid grid-cols-2 gap-2">
-              <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-all shadow-sm`}>
+              <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)]`}>
                 <Upload className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                 Upload BG IMG/GIF
                 <input type="file" accept="image/*,video/*" onChange={handleBackgroundUpload} className="hidden" />
               </label>
-              <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-all shadow-sm`}>
+              <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)]`}>
                 <Music className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                 Upload MP3
                 <input type="file" accept="audio/mp3,audio/*" onChange={handleCustomAudioSelect} className="hidden" />
@@ -333,13 +332,13 @@ export function SettingsModal({
               
               <button 
                 onClick={handleResetBackground}
-                className={`p-2 border rounded-xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
+                className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
               >
                 <RotateCcw className="w-3 h-3" /> Reset BG
               </button>
               <button 
                 onClick={handleResetMusic}
-                className={`p-2 border rounded-xl text-[9px] font-black uppercase transition-all flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
+                className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
               >
                 <RotateCcw className="w-3 h-3" /> Reset Music
               </button>
@@ -384,12 +383,12 @@ export function SettingsModal({
             )}
           </section>
 
-          {/* MUSIC LIBRARY PRESETS */}
+          {/* MUSIC LIBRARY PRESETS - OPTIMIZED FOR SCROLL PERFORMANCE */}
           <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'}`}>
             <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
               <Music className="w-3 h-3" /> Music Library
             </label>
-            <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+            <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1 will-change-scroll">
               {fullTracklist?.map((song, index) => (
                 <div
                   key={song.id || index}
@@ -398,10 +397,10 @@ export function SettingsModal({
                     e.stopPropagation();
                     handleAudioUpload({ presetUrl: song.url });
                   }}
-                  className={`p-3 border rounded-xl transition-all text-left flex items-center justify-between group relative z-10 shadow-sm cursor-pointer ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
+                  className={`p-3 border rounded-xl text-left flex items-center justify-between cursor-pointer ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
                 >
                   <div className="flex items-center gap-3 truncate mr-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--theme)] group-hover:shadow-[0_0_8px_var(--theme)] transition-all flex-shrink-0" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--theme)] flex-shrink-0" />
                     <div className="flex flex-col truncate">
                       <div className="flex items-center gap-2">
                         <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>
@@ -428,7 +427,7 @@ export function SettingsModal({
                     {song.isCustom && (
                       <button 
                         onClick={(e) => deleteCustomSong(song.id, e)}
-                        className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+                        className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
                         title="Delete custom song"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -450,10 +449,10 @@ export function SettingsModal({
                 <button
                   key={cloak}
                   onClick={() => setActiveCloak(cloak)}
-                  className={`p-3 border rounded-xl text-[10px] font-black uppercase transition-all shadow-sm ${
+                  className={`p-3 border rounded-xl text-[10px] font-black uppercase ${
                     activeCloak === cloak 
                     ? 'bg-[var(--theme)] text-black border-[var(--theme)]' 
-                    : isLightMode ? 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-zinc-300 hover:text-white'
+                    : isLightMode ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-white/5 border-white/10 text-zinc-300 hover:text-white'
                   }`}
                 >
                   {cloak}
@@ -473,11 +472,11 @@ export function SettingsModal({
                 placeholder="Press key..." 
                 value={panicKey} 
                 onKeyDown={handlePanicKeyDown}
-                className={`flex-1 border rounded-xl p-3 text-xs outline-none text-center font-mono font-bold shadow-sm ${isLightMode ? 'bg-white border-red-200 text-zinc-900 focus:ring-2 focus:ring-red-200' : 'bg-zinc-800 border-white/10 text-white focus:border-red-500/50'}`} 
+                className={`flex-1 border rounded-xl p-3 text-xs outline-none text-center font-mono font-bold ${isLightMode ? 'bg-white border-red-200 text-zinc-900' : 'bg-zinc-800 border-white/10 text-white'}`} 
                 readOnly 
               />
               {panicKey && (
-                <button onClick={() => setPanicKey('')} className={`p-3 border rounded-xl shadow-sm ${isLightMode ? 'bg-white border-red-200' : 'bg-red-500/20 border-red-500/30'}`}>
+                <button onClick={() => setPanicKey('')} className={`p-3 border rounded-xl ${isLightMode ? 'bg-white border-red-200' : 'bg-red-500/20 border-red-500/30'}`}>
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </button>
               )}
@@ -492,10 +491,10 @@ export function SettingsModal({
             
             <button 
               onClick={() => setIsLightMode(!isLightMode)}
-              className={`w-full p-3 mb-2 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all shadow-sm ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
+              className={`w-full p-3 mb-2 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
             >
               {isLightMode ? <Sun className="w-3.5 h-3.5 text-yellow-500" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />} 
-              {isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode (Refresh to apply on Desktop PC)'}
+              {isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             </button>
 
             <div className="grid grid-cols-2 gap-2">
@@ -503,9 +502,9 @@ export function SettingsModal({
                 <button 
                   key={id} 
                   onClick={() => applyTheme(t)} 
-                  className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 transition-all shadow-sm ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
+                  className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
                 >
-                  <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: t.color }} /> {t.name}
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} /> {t.name}
                 </button>
               ))}
             </div>
@@ -515,7 +514,7 @@ export function SettingsModal({
           <div className="grid grid-cols-2 gap-3 pt-4">
             <button 
               onClick={handleClearSettings} 
-              className={`p-4 rounded-2xl border transition-all text-[9px] font-black uppercase flex items-center justify-center gap-2 shadow-sm ${
+              className={`p-4 rounded-2xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 ${
                 confirmClearSettings 
                   ? 'bg-orange-500 text-black border-orange-400 animate-pulse' 
                   : 'border-orange-500/20 bg-orange-500/5 text-orange-600 hover:bg-orange-500/10'
@@ -527,7 +526,7 @@ export function SettingsModal({
 
             <button 
               onClick={handleReset} 
-              className={`p-4 rounded-2xl border transition-all text-[9px] font-black uppercase flex items-center justify-center gap-2 shadow-sm ${
+              className={`p-4 rounded-2xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 ${
                 confirmReset 
                   ? 'bg-red-500 text-black border-red-400 animate-pulse' 
                   : 'border-red-500/20 bg-red-500/5 text-red-600 hover:bg-red-500/10'
@@ -542,7 +541,7 @@ export function SettingsModal({
 
       {/* --- SUB-MODAL FOR EDITING SONG NAME & ARTIST AFTER UPLOAD --- */}
       {uploadModalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[110] p-4 backdrop-blur-md">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[110] p-4">
           <div className={`${modalBg} border p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4`}>
             <h3 className="text-lg font-bold" style={{ fontFamily: "'Baloo 2', cursive" }}>Edit Uploaded Song</h3>
             <p className="text-[10px] text-zinc-400">Customize the details for your uploaded MP3 track before adding it to the library.</p>
@@ -554,7 +553,7 @@ export function SettingsModal({
                   type="text" 
                   value={songTitle} 
                   onChange={(e) => setSongTitle(e.target.value)}
-                  className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-[var(--theme)]/20 font-bold`}
+                  className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold`}
                 />
               </div>
 
@@ -565,20 +564,20 @@ export function SettingsModal({
                   placeholder="e.g. Green Day" 
                   value={artistName} 
                   onChange={(e) => setArtistName(e.target.value)}
-                  className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-[var(--theme)]/20 font-bold`}
+                  className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold`}
                 />
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button 
                   onClick={() => setUploadModalOpen(false)} 
-                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase transition-all"
+                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={saveCustomSong} 
-                  className="px-5 py-2.5 rounded-xl bg-[var(--theme)] text-black text-[10px] font-black uppercase transition-all hover:opacity-90 shadow-md"
+                  className="px-5 py-2.5 rounded-xl bg-[var(--theme)] text-black text-[10px] font-black uppercase hover:opacity-90 shadow-md"
                 >
                   Save to Library
                 </button>
