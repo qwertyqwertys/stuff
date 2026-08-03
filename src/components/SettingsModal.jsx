@@ -180,6 +180,7 @@ export function SettingsModal({
             <ShieldAlert className={`w-5 h-5 ${isLightMode ? 'text-[var(--theme)]' : ''}`} /> System Settings
           </h2>
           <button 
+            type="button"
             onClick={onClose} 
             className={`${isLightMode ? 'text-zinc-700 hover:text-black hover:bg-zinc-100' : 'text-zinc-300 hover:text-white hover:bg-white/5'} p-1 rounded-lg`}
             aria-label="Close settings"
@@ -196,6 +197,7 @@ export function SettingsModal({
                 <Type className="w-3 h-3" /> Profile Identity
               </label>
               <button 
+                type="button"
                 onClick={onViewOwnProfile}
                 className="flex items-center gap-1.5 px-3 py-1 bg-[var(--theme)] text-black rounded-full text-[9px] font-black uppercase hover:opacity-80"
               >
@@ -211,6 +213,7 @@ export function SettingsModal({
                   <input type="file" accept="image/*" onChange={handlePfpUpload} className="hidden" />
                 </label>
                 <button 
+                  type="button"
                   onClick={handleResetPfp}
                   className={`p-3 border rounded-xl text-[9px] font-black uppercase flex flex-col items-center justify-center gap-1 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
                 >
@@ -228,6 +231,7 @@ export function SettingsModal({
                 <div className="flex items-center justify-between">
                   <p className={`text-[8px] font-black uppercase leading-none ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>Your Friend Code</p>
                   <button 
+                    type="button"
                     onClick={handleCopyCode}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-200' : 'bg-white/5 text-zinc-300 hover:text-white'}`}
                   >
@@ -259,6 +263,7 @@ export function SettingsModal({
                 className={`flex-1 ${inputBg} border rounded-xl p-2.5 text-xs outline-none`}
               />
               <button 
+                type="button"
                 onClick={handleAddFriend}
                 className="p-2.5 bg-[var(--theme)] text-black rounded-xl hover:opacity-80"
               >
@@ -272,12 +277,14 @@ export function SettingsModal({
                   <span title={friend.name} className={`text-[10px] font-bold truncate max-w-[120px] ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{friend.name}</span>
                   <div className="flex gap-1">
                     <button 
+                      type="button"
                       onClick={() => onViewFriend(friend)}
                       className={`p-1.5 rounded-lg ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
                     >
                       <Eye className="w-3 h-3" />
                     </button>
                     <button 
+                      type="button"
                       onClick={() => onRemoveFriend(friend.code)}
                       className={`p-1.5 rounded-lg ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'}`}
                     >
@@ -299,6 +306,7 @@ export function SettingsModal({
                   <Cpu className="w-3 h-3" /> Performance Mode
                 </label>
                 <button 
+                  type="button"
                   onClick={() => setPerformanceMode(!performanceMode)}
                   className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase ${performanceMode ? 'bg-yellow-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-300' : 'bg-white/10 text-zinc-200 border border-white/20'}`}
                 >
@@ -332,12 +340,14 @@ export function SettingsModal({
               </label>
               
               <button 
+                type="button"
                 onClick={handleResetBackground}
                 className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
               >
                 <RotateCcw className="w-3 h-3" /> Reset BG
               </button>
               <button 
+                type="button"
                 onClick={handleResetMusic}
                 className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
               >
@@ -354,8 +364,13 @@ export function SettingsModal({
                   </label>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={onTogglePlay || (() => {})}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (onTogglePlay) onTogglePlay();
+                      }}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer z-10 ${
                         isLightMode 
                           ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-300' 
                           : 'bg-white/10 text-zinc-200 hover:bg-white/20'
@@ -440,6 +455,7 @@ export function SettingsModal({
                     )}
                     {song.isCustom && (
                       <button 
+                        type="button"
                         onClick={(e) => deleteCustomSong(song.id, e)}
                         className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
                         title="Delete custom song"
@@ -462,6 +478,7 @@ export function SettingsModal({
               {['google', 'drive', 'classroom', 'powerschool'].map((cloak) => (
                 <button
                   key={cloak}
+                  type="button"
                   onClick={() => setActiveCloak(cloak)}
                   className={`p-3 border rounded-xl text-[10px] font-black uppercase ${
                     activeCloak === cloak 
@@ -490,7 +507,7 @@ export function SettingsModal({
                 readOnly 
               />
               {panicKey && (
-                <button onClick={() => setPanicKey('')} className={`p-3 border rounded-xl ${isLightMode ? 'bg-white border-red-200' : 'bg-red-500/20 border-red-500/30'}`}>
+                <button type="button" onClick={() => setPanicKey('')} className={`p-3 border rounded-xl ${isLightMode ? 'bg-white border-red-200' : 'bg-red-500/20 border-red-500/30'}`}>
                   <Trash2 className="w-4 h-4 text-red-500" />
                 </button>
               )}
@@ -504,6 +521,7 @@ export function SettingsModal({
             </label>
             
             <button 
+              type="button"
               onClick={() => setIsLightMode(!isLightMode)}
               className={`w-full p-3 mb-2 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
             >
@@ -515,6 +533,7 @@ export function SettingsModal({
               {Object.entries(themes || {}).map(([id, t]) => (
                 <button 
                   key={id} 
+                  type="button"
                   onClick={() => applyTheme(t)} 
                   className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
                 >
@@ -527,6 +546,7 @@ export function SettingsModal({
           {/* RESET BUTTONS */}
           <div className="grid grid-cols-2 gap-3 pt-4">
             <button 
+              type="button"
               onClick={handleClearSettings} 
               className={`p-4 rounded-2xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 ${
                 confirmClearSettings 
@@ -539,6 +559,7 @@ export function SettingsModal({
             </button>
 
             <button 
+              type="button"
               onClick={handleReset} 
               className={`p-4 rounded-2xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 ${
                 confirmReset 
@@ -584,12 +605,14 @@ export function SettingsModal({
 
               <div className="flex justify-end gap-2 pt-2">
                 <button 
+                  type="button"
                   onClick={() => setUploadModalOpen(false)} 
                   className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase"
                 >
                   Cancel
                 </button>
                 <button 
+                  type="button"
                   onClick={saveCustomSong} 
                   className="px-5 py-2.5 rounded-xl bg-[var(--theme)] text-black text-[10px] font-black uppercase hover:opacity-90 shadow-md"
                 >
