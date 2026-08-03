@@ -12,7 +12,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState(null);
   const [soundName, setSoundName] = useState('');
-  const [user, setUser] = useState(null);
+  const [myUploads, setMyUploads] = useState([]);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [activeSound, setActiveSound] = useState(null);
@@ -23,14 +23,14 @@ export function SoundboardCard({ isLightMode, onClose }) {
   const [editedName, setEditedName] = useState('');
 
   useEffect(() => {
-    fetchUserAndSounds();
+    // Load local device uploads from localStorage
+    const savedUploads = JSON.parse(localStorage.getItem('my_soundboard_uploads') || '[]');
+    setMyUploads(savedUploads);
+    fetchSounds();
   }, []);
 
-  const fetchUserAndSounds = async () => {
+  const fetchSounds = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-
       const { data, error } = await supabase
         .from('community_sounds')
         .select('*')
@@ -73,24 +73,32 @@ export function SoundboardCard({ isLightMode, onClose }) {
 
       const audioUrl = publicUrlData.publicUrl;
 
-      // 3. Insert record into community_sounds table with strict user_id linkage
-      const { error: dbError } = await supabase
+      // 3. Insert record into community_sounds table and return the new row ID
+      const { data: insertedData, error: dbError } = await supabase
         .from('community_sounds')
         .insert([
           {
             name: soundName.trim(),
             file_url: audioUrl,
-            user_id: user ? user.id : null,
           },
-        ]);
+        ])
+        .select();
 
       if (dbError) throw dbError;
+
+      // 4. Save this sound ID to local storage so this device recognizes it as its own
+      if (insertedData && insertedData[0]) {
+        const newId = insertedData[0].id;
+        const updatedUploads = [...myUploads, newId];
+        setMyUploads(updatedUploads);
+        localStorage.setItem('my_soundboard_uploads', JSON.stringify(updatedUploads));
+      }
 
       setSuccessMsg('Sound uploaded successfully!');
       setFile(null);
       setSoundName('');
       setActiveTab('library');
-      fetchUserAndSounds();
+      fetchSounds();
     } catch (error) {
       console.error('Upload error:', error.message);
       setErrorMsg(`Error uploading sound: ${error.message}`);
@@ -119,7 +127,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
       setSuccessMsg('Sound name updated successfully!');
       setEditingId(null);
       setEditedName('');
-      fetchUserAndSounds();
+      fetchSounds();
     } catch (error) {
       console.error('Update error:', error.message);
       setErrorMsg(`Error updating sound name: ${error.message}`);
@@ -159,8 +167,13 @@ export function SoundboardCard({ isLightMode, onClose }) {
 
       if (dbError) throw dbError;
 
+      // 3. Remove ID from local storage tracking
+      const updatedUploads = myUploads.filter(id => id !== sound.id);
+      setMyUploads(updatedUploads);
+      localStorage.setItem('my_soundboard_uploads', JSON.stringify(updatedUploads));
+
       setSuccessMsg('Sound deleted successfully.');
-      fetchUserAndSounds();
+      fetchSounds();
     } catch (error) {
       console.error('Delete error:', error.message);
       setErrorMsg(`Error deleting sound: ${error.message}`);
@@ -265,8 +278,8 @@ export function SoundboardCard({ isLightMode, onClose }) {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {sounds.map((sound) => {
-                  // Strict ownership check: Only true if the logged-in user matches the sound's user_id
-                  const isOwner = user && sound.user_id === user.id;
+                  // Check if this sound ID is saved in this device's localStorage
+                  const isOwner = myUploads.includes(sound.id);
 
                   return (
                     <div
