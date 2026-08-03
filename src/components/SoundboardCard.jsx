@@ -28,7 +28,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
       setUser(user);
 
       const { data, error } = await supabase
-        .from('community_sounds')
+        .from('sounds')
         .select('*')
         .order('created_at', { ascending: false });
 
