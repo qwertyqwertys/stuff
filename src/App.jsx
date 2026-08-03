@@ -14,7 +14,7 @@ import { GameCard } from './components/GameCard';
 import { SettingsModal } from './components/SettingsModal';
 import { Header } from './components/Header';
 import { FriendViewModal } from './components/FriendViewModal';
-import SoundboardCard from './components/SoundboardCard';
+import { SoundboardCard } from './components/SoundboardCard';
 import { tracklist } from './components/tracklist'; 
 import { ChatCard } from './components/ChatCard';
 import { applyCloak } from './utils';
