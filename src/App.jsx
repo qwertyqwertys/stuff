@@ -5,7 +5,7 @@ import {
   Search, Gamepad2, Play, Settings, X, ShieldAlert, 
   Clock, Dices, RotateCcw, Palette, Type, ImageIcon, 
   Link as LinkIcon, Upload, Battery, Calendar, Heart, Trash2, Ghost, Zap, Video, Music, Volume2, Power,
-  Cpu, Users, UserPlus, UserCircle, CheckCircle2, History, ChevronLeft, ChevronRight
+  Cpu, Users, UserPlus, UserCircle, CheckCircle2, History, ChevronLeft, ChevronRight, VolumeX
 } from 'lucide-react';
 
 import gamesDataRaw from './games.json';
@@ -14,23 +14,17 @@ import { GameCard } from './components/GameCard';
 import { SettingsModal } from './components/SettingsModal';
 import { Header } from './components/Header';
 import { FriendViewModal } from './components/FriendViewModal';
-import { SoundboardCard } from './components/SoundboardCard';
 import { tracklist } from './components/tracklist'; 
 import { ChatCard } from './components/ChatCard';
 import { applyCloak } from './utils';
 
 // --- CONSTANTS & CONFIGS ---
 
-// 1. Define the Google Icon URL once
 const GOOGLE_FAVICON = "https://www.gstatic.com/images/branding/searchlogo/ico/favicon.ico";
-
-// 2. Set the Defaults using that URL
 const DEFAULT_TITLE = "Google"; 
-const DEFAULT_ICON = GOOGLE_FAVICON; // This makes the site load as Google immediately
+const DEFAULT_ICON = GOOGLE_FAVICON; 
 const DEFAULT_COLOR = '#38bdf8';
 const DEFAULT_GLOW = 50;
-
-// 3. Keep your Capy Logo for the UI/Achievements
 const CAPY_LOGO = "https://img.icons8.com/color/32/capybara.png";
 
 // --- ACHIEVEMENT DEFINITIONS ---
@@ -50,26 +44,11 @@ const THEMES = {
 };
 
 const DISGUISE_CONFIG = {
-  none: { 
-    title: DEFAULT_TITLE, 
-    icon: DEFAULT_ICON 
-  },
-  google: { 
-    title: "Google", 
-    icon: GOOGLE_FAVICON 
-  },
-  drive: { 
-    title: "My Drive - Google Drive", 
-    icon: "https://ssl.gstatic.com/images/branding/product/2x/drive_2020q4_48dp.png" 
-  },
-  classroom: { 
-    title: "Home - Classroom", 
-    icon: "https://ssl.gstatic.com/classroom/favicon.png" 
-  },
-  powerschool: { 
-    title: "Grades and Attendance", 
-    icon: "https://ps.bhmsd.org/favicon.ico" 
-  }
+  none: { title: DEFAULT_TITLE, icon: DEFAULT_ICON },
+  google: { title: "Google", icon: GOOGLE_FAVICON },
+  drive: { title: "My Drive - Google Drive", icon: "https://ssl.gstatic.com/images/branding/product/2x/drive_2020q4_48dp.png" },
+  classroom: { title: "Home - Classroom", icon: "https://ssl.gstatic.com/classroom/favicon.png" },
+  powerschool: { title: "Grades and Attendance", icon: "https://ps.bhmsd.org/favicon.ico" }
 };
 
 const updateThemeVariables = (color, glow) => {
@@ -77,6 +56,84 @@ const updateThemeVariables = (color, glow) => {
   root.style.setProperty('--theme', color);
   root.style.setProperty('--glow', `${glow}px`);
 };
+
+// --- INLINED SOUNDBOARD CARD COMPONENT (Bypasses Import Errors) ---
+function SoundboardCard({ isLightMode, onClose }) {
+  const [activeSound, setActiveSound] = useState(null);
+
+  const sounds = [
+    { id: 1, name: 'Airhorn', freq: 440, type: 'sawtooth' },
+    { id: 2, name: 'Laser', freq: 880, type: 'square' },
+    { id: 3, name: 'Coin', freq: 987.77, type: 'sine' },
+    { id: 4, name: 'Power Up', freq: 523.25, type: 'triangle' },
+    { id: 5, name: 'Bass Drop', freq: 110, type: 'sawtooth' },
+    { id: 6, name: 'Glitch', freq: 300, type: 'square' }
+  ];
+
+  const playTone = (sound) => {
+    setActiveSound(sound.id);
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = sound.type;
+      osc.frequency.setValueAtTime(sound.freq, audioCtx.currentTime);
+      
+      if (sound.name === 'Laser') {
+        osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+      } else if (sound.name === 'Coin') {
+        osc.frequency.setValueAtTime(987.77, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.1);
+      }
+
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.4);
+    } catch (e) {
+      console.log("Audio context error:", e);
+    }
+
+    setTimeout(() => setActiveSound(null), 300);
+  };
+
+  return (
+    <div className={`w-full max-w-lg p-6 rounded-3xl border shadow-2xl backdrop-blur-xl ${isLightMode ? 'bg-white/90 border-zinc-200 text-zinc-900' : 'bg-zinc-900/90 border-white/10 text-zinc-100'}`}>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Volume2 className="w-5 h-5 text-[var(--theme)]" />
+          <h2 className="text-lg font-black tracking-tight">Capy Soundboard</h2>
+        </div>
+        <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {sounds.map(sound => (
+          <button
+            key={sound.id}
+            onClick={() => playTone(sound)}
+            className={`p-4 rounded-2xl font-black text-xs uppercase tracking-wider border transition-all active:scale-95 ${
+              activeSound === sound.id 
+                ? 'bg-[var(--theme)] text-black border-[var(--theme)] scale-95 shadow-[0_0_20px_var(--theme)]' 
+                : isLightMode 
+                  ? 'bg-zinc-100 border-zinc-200 hover:bg-zinc-200 text-zinc-700' 
+                  : 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300'
+            }`}
+          >
+            {sound.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [supplier, setSupplier] = useState(() => localStorage.getItem('capy-supplier') || 'Default');
@@ -90,11 +147,8 @@ export default function App() {
   const userData = { playtimes: playtimes, favorites: favorites, themeChangeCount: themeChangeCount };
 
   const [achievements, setAchievements] = useState([]);
-
-  // 1. The "Brain" - remembers which specific disguise you picked
   const [activeCloak, setActiveCloak] = useState(() => localStorage.getItem('capy-cloak-type') || 'google');
 
-  // 2. The "Action" - updates the tab whenever activeCloak changes
   useEffect(() => {
     const config = DISGUISE_CONFIG[activeCloak] || DISGUISE_CONFIG.google;
     applyCloak(config);
@@ -103,13 +157,11 @@ export default function App() {
 
   const gamesData = useMemo(() => {
     const main = Array.isArray(gamesDataRaw) ? gamesDataRaw : [];
-
     const gn = Array.isArray(gnMathDataRaw) ? gnMathDataRaw.map(game => ({
       ...game,
       urls: { "GN Math": game.url },
       url: ""
     })) : [];
-
     return [...main, ...gn];
   }, []);
 
@@ -128,7 +180,6 @@ export default function App() {
 
   const handleTogglePlay = () => {
     if (!audioRef.current) return;
-
     if (isPlaying) {
       audioRef.current.pause();
     } else {
@@ -141,10 +192,7 @@ export default function App() {
     if ('getBattery' in navigator) {
       navigator.getBattery().then(bat => {
         const updateBattery = () => {
-          setBattery({
-            level: Math.round(bat.level * 100),
-            charging: bat.charging
-          });
+          setBattery({ level: Math.round(bat.level * 100), charging: bat.charging });
         };
         updateBattery();
         bat.addEventListener('levelchange', updateBattery);
@@ -175,7 +223,7 @@ export default function App() {
 
   const [recentlyPlayed, setRecentlyPlayed] = useState(() => {
     try {
-      const recentKey = `capy-recent-${supplier || 'Default'}`;
+      const recentKey = `capy-recent-${supplier}`;
       const saved = localStorage.getItem(recentKey);
       return (saved && saved !== "undefined") ? JSON.parse(saved) : [];
     } catch (e) {
@@ -185,16 +233,11 @@ export default function App() {
   });
   
   const [performanceMode, setPerformanceMode] = useState(() => localStorage.getItem('capy-perf-mode') === 'true');
-
   const [displayName, setDisplayName] = useState(() => localStorage.getItem('capy-display-name') || 'CapyUser');
   const [profilePic, setProfilePic] = useState(() => localStorage.getItem('capy-pfp') || '');
-  
   const [friends, setFriends] = useState(() => JSON.parse(localStorage.getItem('capy-friends') || '[]'));
-  
   const [selectedFriendId, setSelectedFriendId] = useState(null);
-
   const [isSyncing, setIsSyncing] = useState(false);
-
   const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem('capy-light-mode') === 'true');
 
   const [uniqueId] = useState(() => {
@@ -267,7 +310,6 @@ export default function App() {
     }
   };
 
-  // --- EMERGENCY BLACKOUT KILL SWITCH ---
   useEffect(() => {
     const checkStatus = setInterval(() => {
       if (window.location.href.includes("carti-is-a-goat-rapper")) {
@@ -410,9 +452,7 @@ export default function App() {
       if (!performanceMode && isPlaying) {
         const playPromise = audioRef.current.play();
         if (playPromise !== undefined) {
-          playPromise
-            .then(() => console.log("Song loaded and playing!"))
-            .catch((err) => console.log("Autoplay check:", err));
+          playPromise.catch((err) => console.log("Autoplay check:", err));
         }
       }
     }
@@ -439,7 +479,6 @@ export default function App() {
         audioRef.current.play().catch(() => {});
       }
     };
-
     window.addEventListener('click', startMusic, { once: true });
     return () => window.removeEventListener('click', startMusic);
   }, [bgMusic, performanceMode, isPlaying]);
@@ -463,7 +502,6 @@ export default function App() {
       if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
         return;
       }
-
       if (panicKey && e.key === panicKey) {
         window.location.href = panicUrl.startsWith('http') ? panicUrl : `https://${panicUrl}`;
       }
@@ -502,7 +540,6 @@ export default function App() {
   useEffect(() => {
     const ids = ['first_game', 'marathon', 'collector', 'loyal', 'fashionista'];
     const alreadyEarned = ids.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
-    
     if (alreadyEarned.length > 0 && typeof setAchievements === 'function') {
       setAchievements(alreadyEarned);
     }
@@ -624,12 +661,10 @@ export default function App() {
     const file = e.target.files[0];
     if (file) {
       const maxSize = 500 * 1024; 
-
       if (file.size > maxSize) {
-        alert("File too large! Please use a GIF under 500KB so the site doesn't lag.");
+        alert("File too large! Please use a GIF under 500KB.");
         return;
       }
-
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfilePic(reader.result);
@@ -643,7 +678,6 @@ export default function App() {
   const toggleFavorite = (id) => {
     const stringId = String(id); 
     const isRemoving = favorites.includes(stringId);
-    
     const newFavs = isRemoving 
       ? favorites.filter(favId => favId !== stringId) 
       : [...favorites, stringId];
@@ -719,7 +753,6 @@ export default function App() {
 
   const filteredGames = useMemo(() => {
     const q = (searchQuery || "").toLowerCase();
-    
     let sourceData = gamesDataRaw || []; 
     if (supplier === 'GN Math') {
       sourceData = gnMathDataRaw || [];
@@ -743,14 +776,12 @@ export default function App() {
       if (activeCategory === 'Favorites') {
         return (favorites || []).includes(String(g?.id));
       }
-      
       return activeCategory === 'All' || g?.category === activeCategory;
     });
   }, [searchQuery, activeCategory, favorites, supplier, gamesDataRaw, gnMathDataRaw]);
   
   const recentGamesData = useMemo(() => {
     if (!recentlyPlayed || !Array.isArray(recentlyPlayed)) return [];
-    
     return recentlyPlayed
       .map(id => {
         const allPossibleGames = [...(gamesDataRaw || []), ...(gnMathDataRaw || [])];
@@ -760,7 +791,6 @@ export default function App() {
         if (!g) return false;
         if (supplier === 'GN Math') return true;
         if (supplier === 'Truffled') return false;
-        
         return !(g.urls?.['GN Math'] || g.urls?.['GN-MATH'] || g.urls?.['Truffled']);
       })
       .slice(0, 4); 
@@ -776,10 +806,8 @@ export default function App() {
 
   useEffect(() => {
     setRecentlyPlayed([]); 
-
     const recentKey = `capy-recent-${supplier}`;
     const saved = localStorage.getItem(recentKey);
-    
     try {
       if (saved && saved !== "undefined") {
         setRecentlyPlayed(JSON.parse(saved));
@@ -799,7 +827,6 @@ export default function App() {
         backgroundColor: isLightMode ? '#ffffff' : '#0a0a0a' 
       }}
     >
-      
       {notification && (
         <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="bg-zinc-900 border border-[var(--theme)]/50 px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center gap-3">
@@ -841,11 +868,10 @@ export default function App() {
         <div className="fixed inset-0 z-[9999] bg-[#0a0a0a] flex flex-col p-4 animate-in fade-in duration-300">
           <button 
             onClick={() => setIsChatOpen(false)}
-            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full z-[10000] transition-transform active:scale-95 text-white"
+            className="absolute top-6 right-6 p-2 bg-white/15 hover:bg-white/25 rounded-full z-[10000] transition-transform active:scale-95 text-white"
           >
             <X className="w-8 h-8" />
           </button>
-
           <div className="flex-1 w-full max-w-5xl mx-auto flex items-center justify-center">
             <div className="w-full h-[85vh]">
                <ChatCard isLightMode={isLightMode} setIsChatOpen={setIsChatOpen} />
@@ -970,7 +996,7 @@ export default function App() {
         </>
       )}
 
-      {/* Soundboard Modal Overlay */}
+      {/* Soundboard Modal Overlay (Uses Inlined Component) */}
       {isSoundboardOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <SoundboardCard 
@@ -1034,7 +1060,7 @@ export default function App() {
         setDisplayName={(val) => {
           const nameExists = friends.some(f => f.name.toLowerCase() === val.trim().toLowerCase());
           if (nameExists) {
-            alert("Name is already taken by a friend! Please choose a unique name.");
+            alert("Name is already taken by a friend!");
             return;
           }
           setDisplayName(val);
