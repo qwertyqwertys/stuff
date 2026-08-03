@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Volume2, X, Upload, Trash2, Play, Loader2 } from 'lucide-react';
+import { Volume2, X, Upload, Trash2, Play, Loader2, Pencil, Check } from 'lucide-react';
 
 // Initialize Supabase client
 const supabaseUrl = 'https://nilgxfmcwljqhawdrsot.supabase.co';
@@ -18,6 +18,10 @@ export function SoundboardCard({ isLightMode, onClose }) {
   const [activeSound, setActiveSound] = useState(null);
   const [activeTab, setActiveTab] = useState('library'); // 'library' or 'upload'
 
+  // Editing state
+  const [editingId, setEditingId] = useState(null);
+  const [editedName, setEditedName] = useState('');
+
   useEffect(() => {
     fetchUserAndSounds();
   }, []);
@@ -27,7 +31,6 @@ export function SoundboardCard({ isLightMode, onClose }) {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
 
-      // Fixed: query 'community_sounds' table instead of 'sounds'
       const { data, error } = await supabase
         .from('community_sounds')
         .select('*')
@@ -70,7 +73,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
 
       const audioUrl = publicUrlData.publicUrl;
 
-      // 3. Insert record into community_sounds table (matching your table schema)
+      // 3. Insert record into community_sounds table
       const { error: dbError } = await supabase
         .from('community_sounds')
         .insert([
@@ -96,6 +99,33 @@ export function SoundboardCard({ isLightMode, onClose }) {
     }
   };
 
+  const handleUpdateName = async (id) => {
+    if (!editedName.trim()) {
+      setErrorMsg('Sound name cannot be empty.');
+      return;
+    }
+
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      const { error } = await supabase
+        .from('community_sounds')
+        .update({ name: editedName.trim() })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setSuccessMsg('Sound name updated successfully!');
+      setEditingId(null);
+      setEditedName('');
+      fetchUserAndSounds();
+    } catch (error) {
+      console.error('Update error:', error.message);
+      setErrorMsg(`Error updating sound name: ${error.message}`);
+    }
+  };
+
   const playSound = (id, url) => {
     setActiveSound(id);
     try {
@@ -108,11 +138,10 @@ export function SoundboardCard({ isLightMode, onClose }) {
   };
 
   const handleDelete = async (id, fileUrl) => {
-    if (!window.confirm('Are you sure you want to delete this sound?')) return;
+    if (!window.confirm('Are you sure you want to delete this sound for everyone?')) return;
 
     setErrorMsg(null);
     try {
-      // Extract the file name from the public URL to delete it from storage
       const fileName = fileUrl.split('/').pop();
 
       // 1. Delete file from 'sounds' storage bucket
@@ -242,13 +271,57 @@ export function SoundboardCard({ isLightMode, onClose }) {
                       activeSound === sound.id 
                         ? 'border-[var(--theme)] bg-[var(--theme)]/10 scale-95 shadow-[0_0_15px_var(--theme)]' 
                         : isLightMode 
-                          ? 'bg-zinc-0 border-zinc-200 hover:bg-zinc-100' 
+                          ? 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100' 
                           : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }`}
                   >
-                    <span className="font-black text-xs uppercase tracking-tight truncate" title={sound.name}>
-                      {sound.name}
-                    </span>
+                    {editingId === sound.id ? (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={editedName}
+                          onChange={(e) => setEditedName(e.target.value)}
+                          className={`w-full p-2 rounded-xl border text-xs font-bold outline-none ${
+                            isLightMode ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-black/40 border-white/20 text-white'
+                          }`}
+                        />
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleUpdateName(sound.id)}
+                            className="flex-1 py-1 px-2 rounded-lg bg-emerald-500 text-black font-black text-[10px] uppercase flex items-center justify-center gap-1"
+                          >
+                            <Check className="w-3 h-3" /> Save
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className={`flex-1 py-1 px-2 rounded-lg font-black text-[10px] uppercase ${
+                              isLightMode ? 'bg-zinc-200 text-zinc-700' : 'bg-white/10 text-zinc-300'
+                            }`}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-black text-xs uppercase tracking-tight truncate flex-1" title={sound.name}>
+                          {sound.name}
+                        </span>
+                        {user && sound.user_id === user.id && (
+                          <button
+                            onClick={() => {
+                              setEditingId(sound.id);
+                              setEditedName(sound.name);
+                            }}
+                            className="p-1 rounded-lg opacity-60 hover:opacity-100 transition-opacity"
+                            title="Edit Name"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => playSound(sound.id, sound.file_url)}
@@ -263,7 +336,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
                         <button
                           onClick={() => handleDelete(sound.id, sound.file_url)}
                           className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
-                          title="Delete Sound"
+                          title="Delete Sound for Everyone"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
