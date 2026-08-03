@@ -58,7 +58,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
 
       // 1. Upload audio file to Supabase Storage bucket
       const { error: uploadError } = await supabase.storage
-        .from('soundboard-bucket')
+        .from('sounds')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
