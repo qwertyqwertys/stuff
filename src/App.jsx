@@ -121,7 +121,23 @@ export default function App() {
   const [notification, setNotification] = useState(null);
 
   const [time, setTime] = useState(new Date());
-  const [battery, setBattery] = useState({ level: 100, charging: false });
+  const [battery, setBattery] = useState({ level: null, charging: false });
+
+useEffect(() => {
+  if ('getBattery' in navigator) {
+    navigator.getBattery().then(bat => {
+      const updateBattery = () => {
+        setBattery({
+          level: Math.round(bat.level * 100),
+          charging: bat.charging
+        });
+      };
+      updateBattery();
+      bat.addEventListener('levelchange', updateBattery);
+      bat.addEventListener('chargingchange', updateBattery);
+    });
+  }
+}, []);
 
   const [theme, setTheme] = useState(() => localStorage.getItem('capy-theme') || DEFAULT_COLOR);
   const [glowIntensity, setGlowIntensity] = useState(() => Number(localStorage.getItem('capy-glow')) || DEFAULT_GLOW);
