@@ -101,19 +101,6 @@ export function Header({
             >
               <MessageSquare className="w-4 h-4" />
             </button>
-
-            <button 
-              onClick={() => setShowSoundboard ? setShowSoundboard(prev => !prev) : null} 
-              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
-                isSoundboardOpen 
-                  ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
-                  : (isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-[var(--theme)]')
-              }`}
-              title="Toggle Soundboard"
-              aria-label="Toggle custom soundboard"
-            >
-              <Volume2 className="w-4 h-4" />
-            </button>
           </div>
         </div>
 
@@ -150,6 +137,19 @@ export function Header({
               ) : (
                 <UserCircle className="w-full h-full p-1 text-[var(--theme)]" />
               )}
+            </button>
+
+            <button 
+              onClick={() => setShowSoundboard ? setShowSoundboard(prev => !prev) : null} 
+              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
+                isSoundboardOpen 
+                  ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
+                  : (isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-[var(--theme)]')
+              }`}
+              title="Toggle Soundboard"
+              aria-label="Toggle custom soundboard"
+            >
+              <Volume2 className="w-4 h-4" />
             </button>
 
             <button 
