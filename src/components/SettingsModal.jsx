@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
@@ -22,11 +22,25 @@ export function SettingsModal({
   onViewOwnProfile,
   tracklist,
   isLightMode, setIsLightMode,
-  // ADDED PROPS BELOW
   activeCloak, setActiveCloak
 }) {
   const [friendInput, setFriendInput] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // --- CUSTOM SONG UPLOAD & STORAGE STATE ---
+  const [customSongs, setCustomSongs] = useState(() => {
+    const saved = localStorage.getItem('capy-custom-songs');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('capy-custom-songs', JSON.stringify(customSongs));
+  }, [customSongs]);
+
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [pendingFile, setPendingFile] = useState(null);
+  const [songTitle, setSongTitle] = useState('');
+  const [artistName, setArtistName] = useState('');
 
   if (!show) return null;
 
@@ -51,8 +65,56 @@ export function SettingsModal({
     }
   };
 
+  // --- CUSTOM AUDIO FILE SELECT & SAVE LOGIC ---
+  const handleCustomAudioSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPendingFile(file);
+    // Auto-fill file name without the extension
+    setSongTitle(file.name.replace(/\.[^/.]+$/, ""));
+    setArtistName('');
+    setUploadModalOpen(true);
+    // Reset file input value so selecting the same file works again if needed
+    e.target.value = '';
+  };
+
+  const saveCustomSong = () => {
+    if (!pendingFile) return;
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const newSong = {
+        id: 'custom-' + Date.now(),
+        title: songTitle || 'Untitled Song',
+        artist: artistName || 'Unknown Artist',
+        url: uploadEvent.target.result,
+        isCustom: true
+      };
+
+      // Prepend to array so it sits at the TOP of the list
+      const updated = [newSong, ...customSongs];
+      setCustomSongs(updated);
+
+      // Play/load the song right away via handler if available
+      if (handleAudioUpload) {
+        handleAudioUpload({ presetUrl: newSong.url });
+      }
+
+      setUploadModalOpen(false);
+      setPendingFile(null);
+    };
+    reader.readAsDataURL(pendingFile);
+  };
+
+  const deleteCustomSong = (id, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCustomSongs(prev => prev.filter(song => song.id !== id));
+  };
+
+  // Combine custom uploaded songs with the default tracklist (customs first)
+  const fullTracklist = [...customSongs, ...(tracklist || [])];
+
   // UI Variable Logic
-  // Using higher opacity for light mode to prevent "muddiness" from background blurs
   const modalBg = isLightMode ? "bg-white border-zinc-200 text-zinc-900" : "bg-zinc-900 border-white/10 text-white";
   const sectionBg = isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-white/5 border-white/5";
   const inputBg = isLightMode ? "bg-white border-zinc-300 text-black placeholder:text-zinc-400" : "bg-zinc-800 border-white/10 text-white";
@@ -216,7 +278,8 @@ export function SettingsModal({
               <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-all shadow-sm`}>
                 <Music className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                 Upload MP3
-                <input type="file" accept="audio/*" onChange={handleAudioUpload} className="hidden" />
+                {/* Updated handler to capture and name custom songs */}
+                <input type="file" accept="audio/mp3,audio/*" onChange={handleCustomAudioSelect} className="hidden" />
               </label>
               
               <button 
@@ -272,39 +335,58 @@ export function SettingsModal({
             )}
           </section>
 
-          {/* MUSIC LIBRARY PRESETS */}
+          {/* MUSIC LIBRARY PRESETS (WITH CUSTOM UPLOADS AT THE TOP) */}
           <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'}`}>
             <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
               <Music className="w-3 h-3" /> Music Library
             </label>
-            <div className="grid grid-cols-1 gap-2">
-              {tracklist?.map((song, index) => (
-                <button
-                  key={index}
+            <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+              {fullTracklist?.map((song, index) => (
+                <div
+                  key={song.id || index}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     handleAudioUpload({ presetUrl: song.url });
                   }}
-                  className={`p-3 border rounded-xl transition-all text-left flex items-center justify-between group relative z-10 shadow-sm ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
+                  className={`p-3 border rounded-xl transition-all text-left flex items-center justify-between group relative z-10 shadow-sm cursor-pointer ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
                 >
-                  <div className="flex items-center gap-3 truncate">
+                  <div className="flex items-center gap-3 truncate mr-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-[var(--theme)] group-hover:shadow-[0_0_8px_var(--theme)] transition-all flex-shrink-0" />
                     <div className="flex flex-col truncate">
-                      <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>
-                        {song.title}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>
+                          {song.title}
+                        </span>
+                        {song.isCustom && (
+                          <span className="text-[8px] font-black bg-[var(--theme)]/20 text-[var(--theme)] px-1.5 py-0.5 rounded uppercase flex-shrink-0">
+                            Uploaded
+                          </span>
+                        )}
+                      </div>
                       <span className={`text-[9px] font-medium uppercase tracking-tight truncate ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>
                         {song.artist || "Unknown Artist"}
                       </span>
                     </div>
                   </div>
-                  {song.isClean && (
-                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase flex-shrink-0 ${isLightMode ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-700 text-zinc-200'}`}>
-                      Clean
-                    </span>
-                  )}
-                </button>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {song.isClean && !song.isCustom && (
+                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${isLightMode ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-700 text-zinc-200'}`}>
+                        Clean
+                      </span>
+                    )}
+                    {song.isCustom && (
+                      <button 
+                        onClick={(e) => deleteCustomSong(song.id, e)}
+                        className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+                        title="Delete custom song"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </section>
@@ -408,6 +490,54 @@ export function SettingsModal({
           </div>
         </div>
       </div>
+
+      {/* --- SUB-MODAL FOR EDITING SONG NAME & ARTIST AFTER UPLOAD --- */}
+      {uploadModalOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[110] p-4 backdrop-blur-md">
+          <div className={`${modalBg} border p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4`}>
+            <h3 className="text-lg font-bold" style={{ fontFamily: "'Baloo 2', cursive" }}>Edit Uploaded Song</h3>
+            <p className="text-[10px] text-zinc-400">Customize the details for your uploaded MP3 track before adding it to the library.</p>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-[9px] text-zinc-400 uppercase font-black block mb-1">Song Name</label>
+                <input 
+                  type="text" 
+                  value={songTitle} 
+                  onChange={(e) => setSongTitle(e.target.value)}
+                  className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-[var(--theme)]/20 font-bold`}
+                />
+              </div>
+
+              <div>
+                <label className="text-[9px] text-zinc-400 uppercase font-black block mb-1">Artist Name</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Green Day" 
+                  value={artistName} 
+                  onChange={(e) => setArtistName(e.target.value)}
+                  className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none focus:ring-2 focus:ring-[var(--theme)]/20 font-bold`}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button 
+                  onClick={() => setUploadModalOpen(false)} 
+                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={saveCustomSong} 
+                  className="px-5 py-2.5 rounded-xl bg-[var(--theme)] text-black text-[10px] font-black uppercase transition-all hover:opacity-90 shadow-md"
+                >
+                  Save to Library
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
