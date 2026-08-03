@@ -144,9 +144,11 @@ export function SoundboardCard({ isLightMode, onClose }) {
           <Volume2 className="w-5 h-5 text-[var(--theme)]" />
           <h2 className="text-lg font-black tracking-tight">Community Soundboard</h2>
         </div>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-          <X className="w-5 h-5" />
-        </button>
+        {onClose && (
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -186,7 +188,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
       )}
 
       {/* Main Content Body */}
-      <div className="flex-1 overflow-y-auto pr-1 no-scrollbar">
+      <div className="flex-1 overflow-y-auto pr-1">
         {activeTab === 'upload' ? (
           <form onSubmit={handleUpload} className="space-y-4">
             <div>
@@ -227,7 +229,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
           <div>
             {sounds.length === 0 ? (
               <div className="text-center py-16 text-xs uppercase tracking-widest opacity-40">
-                No sounds available yet. Upload one!
+                No sounds available yet. Upload one using the upload tab!
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -275,3 +277,5 @@ export function SoundboardCard({ isLightMode, onClose }) {
     </div>
   );
 }
+
+export default SoundboardCard;
