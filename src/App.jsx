@@ -900,7 +900,8 @@ export default function App() {
             }}
             isChatOpen={isChatOpen}
             setIsChatOpen={setIsChatOpen}
-            onOpenSoundboard={() => setIsSoundboardOpen(true)}
+            setShowSoundboard={setIsSoundboardOpen}
+            isSoundboardOpen={isSoundboardOpen}
           />
 
           <div className={`${isLightMode ? 'bg-white' : 'bg-[#09090b]/90'} backdrop-blur-md px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 transition-colors group`}>
