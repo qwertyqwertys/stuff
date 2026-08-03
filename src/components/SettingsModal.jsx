@@ -3,7 +3,7 @@ import {
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
   ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check,
-  Sun, Moon
+  Sun, Moon, Play, Pause
 } from 'lucide-react';
 
 // --- INDEXEDDB HELPERS FOR HEAVY AUDIO FILES ---
@@ -73,6 +73,7 @@ export function SettingsModal({
   handleResetBackground, handleResetMusic,
   bgEnabled, bgOpacity, setBgOpacity,
   bgMusic, volume, setVolume,
+  isPlaying, onTogglePlay,
   panicKey, setPanicKey,
   themes, applyTheme,
   handleClearSettings, confirmClearSettings,
@@ -344,14 +345,29 @@ export function SettingsModal({
               </button>
             </div>
 
-            {/* VOLUME SLIDER */}
+            {/* VOLUME & PAUSE CONTROLS */}
             {bgMusic && (
               <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
                 <div className="flex items-center justify-between">
                   <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    <Volume2 className="w-3 h-3 text-[var(--theme)]" /> Music Volume
+                    <Volume2 className="w-3 h-3 text-[var(--theme)]" /> Music Controls
                   </label>
-                  <span className="text-[10px] font-mono text-[var(--theme)]">{Math.round(volume * 100)}%</span>
+                  <div className="flex items-center gap-2">
+                    {onTogglePlay && (
+                      <button
+                        onClick={onTogglePlay}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
+                          isLightMode 
+                            ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-300' 
+                            : 'bg-white/10 text-zinc-200 hover:bg-white/20'
+                        }`}
+                      >
+                        {isPlaying !== false ? <Pause className="w-3 h-3 text-[var(--theme)]" /> : <Play className="w-3 h-3 text-[var(--theme)]" />}
+                        {isPlaying !== false ? 'Pause' : 'Play'}
+                      </button>
+                    )}
+                    <span className="text-[10px] font-mono text-[var(--theme)]">{Math.round(volume * 100)}%</span>
+                  </div>
                 </div>
                 <input 
                   type="range" 
