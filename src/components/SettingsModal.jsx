@@ -279,7 +279,7 @@ export function SettingsModal({
                     </button>
                     <button 
                       onClick={() => onRemoveFriend(friend.code)}
-                      className={`p-1.5 rounded-lg ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'}`}
+                      className={`p-1.5 rounded-lg ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white' : 'bg-red-500/20 text-red-400 hover:bg-red-500/text-white'}`}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -345,39 +345,35 @@ export function SettingsModal({
               </button>
             </div>
 
-            {/* VOLUME & PAUSE CONTROLS */}
-            {bgMusic && (
-              <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
-                <div className="flex items-center justify-between">
-                  <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    <Volume2 className="w-3 h-3 text-[var(--theme)]" /> Music Controls
-                  </label>
-                  <div className="flex items-center gap-2">
-                    {onTogglePlay && (
-                      <button
-                        onClick={onTogglePlay}
-                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
-                          isLightMode 
-                            ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-300' 
-                            : 'bg-white/10 text-zinc-200 hover:bg-white/20'
-                        }`}
-                      >
-                        {isPlaying !== false ? <Pause className="w-3 h-3 text-[var(--theme)]" /> : <Play className="w-3 h-3 text-[var(--theme)]" />}
-                        {isPlaying !== false ? 'Pause' : 'Play'}
-                      </button>
-                    )}
-                    <span className="text-[10px] font-mono text-[var(--theme)]">{Math.round(volume * 100)}%</span>
-                  </div>
+            {/* VOLUME & PLAY/PAUSE CONTROLS (ALWAYS VISIBLE) */}
+            <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
+              <div className="flex items-center justify-between">
+                <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                  <Volume2 className="w-3 h-3 text-[var(--theme)]" /> Music Controls
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onTogglePlay || (() => {})}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
+                      isLightMode 
+                        ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-300' 
+                        : 'bg-white/10 text-zinc-200 hover:bg-white/20'
+                    }`}
+                  >
+                    {isPlaying !== false ? <Pause className="w-3 h-3 text-[var(--theme)]" /> : <Play className="w-3 h-3 text-[var(--theme)]" />}
+                    {isPlaying !== false ? 'Pause' : 'Play'}
+                  </button>
+                  <span className="text-[10px] font-mono text-[var(--theme)]">{Math.round((volume ?? 1) * 100)}%</span>
                 </div>
-                <input 
-                  type="range" 
-                  min="0" max="1" step="0.01"
-                  value={volume} 
-                  onChange={(e) => setVolume(parseFloat(e.target.value))}
-                  className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
-                />
               </div>
-            )}
+              <input 
+                type="range" 
+                min="0" max="1" step="0.01"
+                value={volume ?? 1} 
+                onChange={(e) => setVolume && setVolume(parseFloat(e.target.value))}
+                className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
+              />
+            </div>
 
             {/* BG OPACITY SLIDER */}
             {bgEnabled && !performanceMode && !bgMusic?.includes('/music/') && !bgMusic?.startsWith('blob:') && (
