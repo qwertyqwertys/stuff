@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { Volume2, X, Upload, Trash2, Play, Loader2 } from 'lucide-react';
 
 // Initialize Supabase client
 const supabaseUrl = 'https://nilgxfmcwljqhawdrsot.supabase.co';
 const supabaseKey = 'sb_publishable_K4ZLk0KkXTe8upyl7KoTcg_wD31DQ4U';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export default function CustomSoundboard() {
+export function SoundboardCard({ isLightMode, onClose }) {
   const [sounds, setSounds] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState(null);
@@ -14,6 +15,8 @@ export default function CustomSoundboard() {
   const [user, setUser] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [activeSound, setActiveSound] = useState(null);
+  const [activeTab, setActiveTab] = useState('library'); // 'library' or 'upload'
 
   useEffect(() => {
     fetchUserAndSounds();
@@ -40,7 +43,7 @@ export default function CustomSoundboard() {
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!file || !soundName.trim()) {
-      setErrorMsg('Please select an MP3 file and enter a sound name.');
+      setErrorMsg('Please select an audio file and enter a sound name.');
       return;
     }
 
@@ -84,6 +87,7 @@ export default function CustomSoundboard() {
       setSuccessMsg('Sound uploaded successfully!');
       setFile(null);
       setSoundName('');
+      setActiveTab('library');
       fetchUserAndSounds();
     } catch (error) {
       console.error('Upload error:', error.message);
@@ -93,13 +97,15 @@ export default function CustomSoundboard() {
     }
   };
 
-  const playSound = (url) => {
+  const playSound = (id, url) => {
+    setActiveSound(id);
     try {
       const audio = new Audio(url);
       audio.play().catch((err) => console.error('Playback error:', err));
     } catch (error) {
       console.error('Error playing audio:', error);
     }
+    setTimeout(() => setActiveSound(null), 300);
   };
 
   const handleDelete = async (id, filePath) => {
@@ -131,69 +137,141 @@ export default function CustomSoundboard() {
   };
 
   return (
-    <div className="soundboard-container" style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h2>Community Custom Soundboard</h2>
-
-      {errorMsg && <div style={{ color: '#dc3545', marginBottom: '10px' }}>{errorMsg}</div>}
-      {successMsg && <div style={{ color: '#28a745', marginBottom: '10px' }}>{successMsg}</div>}
-
-      <form onSubmit={handleUpload} style={{ marginBottom: '20px', background: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
-        <h3>Upload New Sound</h3>
-        <div style={{ marginBottom: '10px' }}>
-          <input
-            type="text"
-            placeholder="Sound Name"
-            value={soundName}
-            onChange={(e) => setSoundName(e.target.value)}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
+    <div className={`w-full max-w-xl p-6 rounded-3xl border shadow-2xl backdrop-blur-xl flex flex-col max-h-[85vh] ${isLightMode ? 'bg-white/95 border-zinc-200 text-zinc-900' : 'bg-zinc-900/95 border-white/10 text-zinc-100'}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <Volume2 className="w-5 h-5 text-[var(--theme)]" />
+          <h2 className="text-lg font-black tracking-tight">Community Soundboard</h2>
         </div>
-        <div style={{ marginBottom: '10px' }}>
-          <input
-            type="file"
-            accept="audio/mp3,audio/*"
-            onChange={(e) => setFile(e.target.files[0])}
-          />
-        </div>
-        <button 
-          type="submit" 
-          disabled={uploading} 
-          style={{ padding: '8px 16px', background: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-        >
-          {uploading ? 'Uploading...' : 'Upload Sound'}
+        <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+          <X className="w-5 h-5" />
         </button>
-      </form>
+      </div>
 
-      <h3>Soundboard Library</h3>
-      {sounds.length === 0 ? (
-        <p>No sounds available yet. Upload one above!</p>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
-          {sounds.map((sound) => (
-            <div key={sound.id} style={{ border: '1px solid #ddd', padding: '12px', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <h4 style={{ margin: '0 0 10px 0', wordBreak: 'break-word' }}>{sound.name}</h4>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                <button
-                  onClick={() => playSound(sound.file_url)}
-                  style={{ flex: 1, padding: '6px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                >
-                  Play
-                </button>
-                {user && sound.user_id === user.id && (
-                  <button
-                    onClick={() => handleDelete(sound.id, sound.file_path)}
-                    style={{ padding: '6px 10px', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                  >
-                    X
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setActiveTab('library')}
+          className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-all ${
+            activeTab === 'library'
+              ? 'bg-[var(--theme)] text-black border-[var(--theme)]'
+              : isLightMode ? 'bg-zinc-100 border-zinc-200 text-zinc-600' : 'bg-white/5 border-white/10 text-zinc-400'
+          }`}
+        >
+          Library ({sounds.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('upload')}
+          className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider border transition-all ${
+            activeTab === 'upload'
+              ? 'bg-[var(--theme)] text-black border-[var(--theme)]'
+              : isLightMode ? 'bg-zinc-100 border-zinc-200 text-zinc-600' : 'bg-white/5 border-white/10 text-zinc-400'
+          }`}
+        >
+          Upload Sound
+        </button>
+      </div>
+
+      {/* Feedback Notifications */}
+      {errorMsg && (
+        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold">
+          {errorMsg}
         </div>
       )}
+      {successMsg && (
+        <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
+          {successMsg}
+        </div>
+      )}
+
+      {/* Main Content Body */}
+      <div className="flex-1 overflow-y-auto pr-1 no-scrollbar">
+        {activeTab === 'upload' ? (
+          <form onSubmit={handleUpload} className="space-y-4">
+            <div>
+              <label className="block text-xs font-black uppercase tracking-wider mb-2 opacity-70">Sound Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Epic Win, Airhorn..."
+                value={soundName}
+                onChange={(e) => setSoundName(e.target.value)}
+                className={`w-full p-3 rounded-xl border text-xs font-bold outline-none transition-all ${
+                  isLightMode 
+                    ? 'bg-zinc-100 border-zinc-200 focus:border-[var(--theme)] text-zinc-900' 
+                    : 'bg-white/5 border-white/10 focus:border-[var(--theme)] text-white'
+                }`}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-black uppercase tracking-wider mb-2 opacity-70">Audio File (MP3)</label>
+              <input
+                type="file"
+                accept="audio/mp3,audio/*"
+                onChange={(e) => setFile(e.target.files[0])}
+                className={`w-full p-3 rounded-xl border text-xs file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-[var(--theme)] file:text-black cursor-pointer ${
+                  isLightMode ? 'bg-zinc-100 border-zinc-200 text-zinc-700' : 'bg-white/5 border-white/10 text-zinc-300'
+                }`}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={uploading}
+              className="w-full py-3 rounded-xl bg-[var(--theme)] text-black font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95 disabled:opacity-50"
+            >
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {uploading ? 'Uploading...' : 'Upload to Community'}
+            </button>
+          </form>
+        ) : (
+          <div>
+            {sounds.length === 0 ? (
+              <div className="text-center py-16 text-xs uppercase tracking-widest opacity-40">
+                No sounds available yet. Upload one!
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {sounds.map((sound) => (
+                  <div
+                    key={sound.id}
+                    className={`p-3 rounded-2xl border flex flex-col justify-between gap-3 transition-all ${
+                      activeSound === sound.id 
+                        ? 'border-[var(--theme)] bg-[var(--theme)]/10 scale-95 shadow-[0_0_15px_var(--theme)]' 
+                        : isLightMode 
+                          ? 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100' 
+                          : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    <span className="font-black text-xs uppercase tracking-tight truncate" title={sound.name}>
+                      {sound.name}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => playSound(sound.id, sound.file_url)}
+                        className={`flex-1 py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1 transition-transform active:scale-95 ${
+                          isLightMode ? 'bg-zinc-900 text-white' : 'bg-white text-black'
+                        }`}
+                      >
+                        <Play className="w-3 h-3 fill-current" />
+                        Play
+                      </button>
+                      {user && sound.user_id === user.id && (
+                        <button
+                          onClick={() => handleDelete(sound.id, sound.file_path)}
+                          className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
+                          title="Delete Sound"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
