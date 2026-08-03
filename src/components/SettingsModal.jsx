@@ -393,7 +393,7 @@ export function SettingsModal({
             )}
 
             {/* BG OPACITY SLIDER */}
-            {bgEnabled && !performanceMode && !bgMusic?.includes('/music/') && !bgMusic?.startsWith('blob:') && (
+            {bgEnabled && !performanceMode && (
               <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
                 <div className="flex items-center justify-between">
                   <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
