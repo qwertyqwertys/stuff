@@ -16,6 +16,7 @@ import { Header } from './components/Header';
 import { FriendViewModal } from './components/FriendViewModal';
 import { tracklist } from './components/tracklist'; 
 import { ChatCard } from './components/ChatCard';
+import { SoundboardCard } from './components/SoundboardCard';
 import { applyCloak } from './utils';
 
 // --- CONSTANTS & CONFIGS ---
@@ -56,84 +57,6 @@ const updateThemeVariables = (color, glow) => {
   root.style.setProperty('--theme', color);
   root.style.setProperty('--glow', `${glow}px`);
 };
-
-// --- INLINED SOUNDBOARD CARD COMPONENT (Bypasses Import Errors) ---
-function SoundboardCard({ isLightMode, onClose }) {
-  const [activeSound, setActiveSound] = useState(null);
-
-  const sounds = [
-    { id: 1, name: 'Airhorn', freq: 440, type: 'sawtooth' },
-    { id: 2, name: 'Laser', freq: 880, type: 'square' },
-    { id: 3, name: 'Coin', freq: 987.77, type: 'sine' },
-    { id: 4, name: 'Power Up', freq: 523.25, type: 'triangle' },
-    { id: 5, name: 'Bass Drop', freq: 110, type: 'sawtooth' },
-    { id: 6, name: 'Glitch', freq: 300, type: 'square' }
-  ];
-
-  const playTone = (sound) => {
-    setActiveSound(sound.id);
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      
-      osc.type = sound.type;
-      osc.frequency.setValueAtTime(sound.freq, audioCtx.currentTime);
-      
-      if (sound.name === 'Laser') {
-        osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.3);
-      } else if (sound.name === 'Coin') {
-        osc.frequency.setValueAtTime(987.77, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.1);
-      }
-
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.4);
-    } catch (e) {
-      console.log("Audio context error:", e);
-    }
-
-    setTimeout(() => setActiveSound(null), 300);
-  };
-
-  return (
-    <div className={`w-full max-w-lg p-6 rounded-3xl border shadow-2xl backdrop-blur-xl ${isLightMode ? 'bg-white/90 border-zinc-200 text-zinc-900' : 'bg-zinc-900/90 border-white/10 text-zinc-100'}`}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Volume2 className="w-5 h-5 text-[var(--theme)]" />
-          <h2 className="text-lg font-black tracking-tight">Capy Soundboard</h2>
-        </div>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-          <X className="w-5 h-5" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {sounds.map(sound => (
-          <button
-            key={sound.id}
-            onClick={() => playTone(sound)}
-            className={`p-4 rounded-2xl font-black text-xs uppercase tracking-wider border transition-all active:scale-95 ${
-              activeSound === sound.id 
-                ? 'bg-[var(--theme)] text-black border-[var(--theme)] scale-95 shadow-[0_0_20px_var(--theme)]' 
-                : isLightMode 
-                  ? 'bg-zinc-100 border-zinc-200 hover:bg-zinc-200 text-zinc-700' 
-                  : 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300'
-            }`}
-          >
-            {sound.name}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export default function App() {
   const [supplier, setSupplier] = useState(() => localStorage.getItem('capy-supplier') || 'Default');
@@ -997,7 +920,7 @@ export default function App() {
         </>
       )}
 
-      {/* Soundboard Modal Overlay (Uses Inlined Component) */}
+      {/* Soundboard Modal Overlay (Uses Imported Component) */}
       {isSoundboardOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <SoundboardCard 
