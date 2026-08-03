@@ -85,6 +85,11 @@ export function SettingsModal({
 }) {
   const [friendInput, setFriendInput] = useState('');
   const [copied, setCopied] = useState(false);
+  const [hasBackground, setHasBackground] = useState(bgEnabled);
+
+  useEffect(() => {
+    setHasBackground(bgEnabled);
+  }, [bgEnabled]);
 
   // --- CUSTOM SONG STATE VIA INDEXEDDB ---
   const [customSongs, setCustomSongs] = useState([]);
@@ -286,7 +291,7 @@ export function SettingsModal({
                     <button 
                       type="button"
                       onClick={() => onRemoveFriend(friend.code)}
-                      className={`p-1.5 rounded-lg ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'}`}
+                      className={`p-1.5 rounded-lg ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white' : 'bg-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-white'}`}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -331,7 +336,17 @@ export function SettingsModal({
               <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)]`}>
                 <Upload className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                 Upload BG IMG/GIF
-                <input type="file" accept="image/*,video/*" onChange={handleBackgroundUpload} className="hidden" />
+                <input 
+                  type="file" 
+                  accept="image/*,video/*" 
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setHasBackground(true);
+                    }
+                    if (handleBackgroundUpload) handleBackgroundUpload(e);
+                  }} 
+                  className="hidden" 
+                />
               </label>
               <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)]`}>
                 <Music className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
@@ -341,7 +356,10 @@ export function SettingsModal({
               
               <button 
                 type="button"
-                onClick={handleResetBackground}
+                onClick={() => {
+                  setHasBackground(false);
+                  if (handleResetBackground) handleResetBackground();
+                }}
                 className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
               >
                 <RotateCcw className="w-3 h-3" /> Reset BG
@@ -355,7 +373,7 @@ export function SettingsModal({
               </button>
             </div>
 
-            {/* VOLUME & PLAY/PAUSE CONTROLS (HIDES AUTOMATICALLY WHEN MUSIC IS RESET) */}
+            {/* VOLUME & PLAY/PAUSE CONTROLS */}
             {bgMusic && (
               <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
                 <div className="flex items-center justify-between">
@@ -393,7 +411,7 @@ export function SettingsModal({
             )}
 
             {/* BG OPACITY SLIDER */}
-            {bgEnabled && !performanceMode && (
+            {hasBackground && !performanceMode && (
               <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
                 <div className="flex items-center justify-between">
                   <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
@@ -412,7 +430,7 @@ export function SettingsModal({
             )}
           </section>
 
-          {/* MUSIC LIBRARY PRESETS - OPTIMIZED FOR SCROLL PERFORMANCE */}
+          {/* MUSIC LIBRARY PRESETS */}
           <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'}`}>
             <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
               <Music className="w-3 h-3" /> Music Library
