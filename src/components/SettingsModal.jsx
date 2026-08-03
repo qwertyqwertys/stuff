@@ -87,6 +87,10 @@ export function SettingsModal({
   const [copied, setCopied] = useState(false);
   const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
 
+  useEffect(() => {
+    setHasBackground(Boolean(bgEnabled));
+  }, [bgEnabled]);
+
   // --- CUSTOM SONG STATE VIA INDEXEDDB ---
   const [customSongs, setCustomSongs] = useState([]);
 
@@ -362,7 +366,10 @@ export function SettingsModal({
               </button>
               <button 
                 type="button"
-                onClick={handleResetMusic}
+                onClick={() => {
+                  if (handleAudioUpload) handleAudioUpload({ presetUrl: null });
+                  if (handleResetMusic) handleResetMusic();
+                }}
                 className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
               >
                 <RotateCcw className="w-3 h-3" /> Reset Music
