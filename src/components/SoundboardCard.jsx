@@ -1,127 +1,194 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, Upload, Music, X } from 'lucide-react';
-import { supabase } from '../supabase'; 
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient'; // Adjust your supabase import path if needed
 
-export function SoundboardCard({ isLightMode, onClose }) {
-  const [sounds, setSounds] = useState([
-    { id: 'airhorn', name: 'Airhorn 🚨', data: 'https://www.myinstants.com/media/sounds/mlg-airhorn.mp3' },
-    { id: 'boom', name: 'Vine Boom 💥', data: 'https://www.myinstants.com/media/sounds/vine-boom.mp3' }
-  ]);
-  const [isUploading, setIsUploading] = useState(false);
-  const audioRefs = useRef({});
+export function Soundboard({ onClose, isLightMode }) {
+  const [sounds, setSounds] = useState([]);
+  const [soundName, setSoundName] = useState('');
+  const [audioFile, setAudioFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    fetchGlobalSounds();
+    fetchUserAndSounds();
   }, []);
 
-  const fetchGlobalSounds = async () => {
-    const { data, error } = await supabase.from('community_sounds').select('*');
-    if (data && !error) {
-      setSounds(prev => {
-        const defaults = prev.slice(0, 2);
-        const cloudSounds = data.map(item => ({
-          id: item.id,
-          name: item.name,
-          data: item.file_url
-        }));
-        return [...defaults, ...cloudSounds];
-      });
+  const fetchUserAndSounds = async () => {
+    // 1. Get current logged-in user
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUser(user);
+
+    // 2. Fetch sounds from Supabase
+    const { data, error } = await supabase
+      .from('community_sounds')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching sounds:', error);
+    } else {
+      setSounds(data || []);
     }
   };
 
-  const handleUploadSound = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 1024 * 1024 * 2) {
-      alert("File too large! Please use an MP3 under 2MB.");
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!audioFile || !soundName.trim()) {
+      alert("Please provide a name and select an audio file.");
       return;
     }
 
-    setIsUploading(true);
+    setUploading(true);
+
     try {
-      const fileExt = file.name.split('.').pop();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Upload file to Supabase Storage bucket ('sounds')
+      const fileExt = audioFile.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('sounds')
-        .upload(fileName, file);
+        .upload(filePath, audioFile);
 
       if (uploadError) throw uploadError;
 
+      // Get public URL of the uploaded file
       const { data: publicUrlData } = supabase.storage
         .from('sounds')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
-      const fileUrl = publicUrlData.publicUrl;
-      const soundName = file.name.replace(/\.[^/.]+$/, "");
-
+      // Insert record into database with user_id
       const { error: dbError } = await supabase
         .from('community_sounds')
-        .insert([{ name: soundName, file_url: fileUrl }]);
+        .insert([
+          { 
+            name: soundName.trim(), 
+            file_url: publicUrlData.publicUrl,
+            user_id: user ? user.id : null 
+          }
+        ]);
 
       if (dbError) throw dbError;
 
-      fetchGlobalSounds();
-    } catch (err) {
-      console.error("Error uploading sound:", err);
-      alert("Failed to upload sound to Supabase.");
+      setSoundName('');
+      setAudioFile(null);
+      fetchUserAndSounds();
+      alert("Sound uploaded successfully!");
+    } catch (error) {
+      alert("Error uploading sound: " + error.message);
     } finally {
-      setIsUploading(false);
+      setUploading(false);
     }
   };
 
-  const playSound = (id) => {
-    if (audioRefs.current[id]) {
-      audioRefs.current[id].currentTime = 0;
-      audioRefs.current[id].play().catch(err => console.log("Playback error:", err));
+  const handleRename = async (soundId, currentName) => {
+    const newName = prompt("Enter a new name for your sound:", currentName);
+    if (!newName || newName.trim() === "") return;
+
+    const { error } = await supabase
+      .from('community_sounds')
+      .update({ name: newName.trim() })
+      .eq('id', soundId);
+
+    if (error) {
+      alert("Error renaming sound: " + error.message);
+    } else {
+      fetchUserAndSounds();
+    }
+  };
+
+  const handleDelete = async (soundId, fileUrl) => {
+    if (!confirm("Are you sure you want to delete this sound?")) return;
+
+    // Extract file path from URL to delete from storage bucket
+    const path = fileUrl.split('/storage/v1/object/public/sounds/')[1];
+
+    if (path) {
+      await supabase.storage.from('sounds').remove([path]);
+    }
+
+    const { error } = await supabase
+      .from('community_sounds')
+      .delete()
+      .eq('id', soundId);
+
+    if (error) {
+      alert("Error deleting sound: " + error.message);
+    } else {
+      fetchUserAndSounds();
     }
   };
 
   return (
-    <div className={`w-full max-w-2xl p-6 rounded-3xl border shadow-2xl flex flex-col gap-6 ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-zinc-900 border-white/10 text-zinc-100'}`}>
-      <div className="flex items-center justify-between border-b border-white/5 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[var(--theme)]/10 rounded-2xl text-[var(--theme)]">
-            <Volume2 className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-lg font-black tracking-tight">Global Soundboard</h2>
-            <p className="text-xs text-zinc-500">Community shared MP3 sound effects</p>
-          </div>
-        </div>
+    <div className={`p-6 max-w-4xl mx-auto ${isLightMode ? 'text-black' : 'text-white'}`}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Community Soundboard</h2>
         {onClose && (
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+          <button onClick={onClose} className="px-3 py-1 bg-zinc-700 text-white rounded-lg">Close</button>
         )}
       </div>
 
-      <label className={`flex flex-col items-center justify-center p-6 border-2 border-dashed border-[var(--theme)]/30 hover:border-[var(--theme)] rounded-2xl bg-[var(--theme)]/5 cursor-pointer transition-all group ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-        <Upload className="w-8 h-8 text-[var(--theme)] mb-2 group-hover:scale-110 transition-transform" />
-        <span className="text-xs font-black uppercase tracking-wider">{isUploading ? 'Uploading to Cloud...' : 'Upload Public MP3'}</span>
-        <span className="text-[10px] text-zinc-500 mt-1">Everyone on the site can use it</span>
-        <input type="file" accept="audio/mp3, audio/*" onChange={handleUploadSound} className="hidden" disabled={isUploading} />
-      </label>
+      {/* Upload Form */}
+      <form onSubmit={handleUpload} className={`p-4 mb-8 rounded-xl border ${isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10'}`}>
+        <h3 className="text-lg font-semibold mb-3">Upload a Sound</h3>
+        <div className="flex flex-col gap-3">
+          <input 
+            type="text" 
+            placeholder="Sound Name" 
+            value={soundName} 
+            onChange={(e) => setSoundName(e.target.value)}
+            className={`p-2 rounded-lg border outline-none ${isLightMode ? 'bg-white border-black/20 text-black' : 'bg-black border-white/20 text-white'}`}
+          />
+          <input 
+            type="file" 
+            accept="audio/*" 
+            onChange={(e) => setAudioFile(e.target.files[0])}
+            className="text-sm"
+          />
+          <button 
+            type="submit" 
+            disabled={uploading}
+            className="py-2 bg-[var(--theme)] text-black font-bold rounded-lg hover:opacity-90 transition-opacity"
+          >
+            {uploading ? "Uploading..." : "Upload Sound"}
+          </button>
+        </div>
+      </form>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[350px] overflow-y-auto pr-1">
-        {sounds.map(sound => (
-          <div key={sound.id} className="relative group">
-            <audio ref={el => audioRefs.current[sound.id] = el} src={sound.data} preload="auto" />
-            <button
-              onClick={() => playSound(sound.id)}
-              className={`w-full p-4 rounded-2xl border text-left flex flex-col justify-between gap-3 transition-all hover:scale-[1.02] active:scale-95 ${
-                isLightMode 
-                  ? 'bg-zinc-50 border-zinc-200 hover:border-[var(--theme)]' 
-                  : 'bg-white/5 border-white/10 hover:border-[var(--theme)]'
-              }`}
-            >
-              <div className="flex items-center justify-between w-full">
-                <Music className="w-4 h-4 text-[var(--theme)]" />
+      {/* Sounds Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {sounds.map((sound) => {
+          const isOwner = currentUser && sound.user_id === currentUser.id;
+
+          return (
+            <div key={sound.id} className={`p-4 rounded-xl border flex flex-col justify-between gap-3 ${isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10'}`}>
+              <div>
+                <h4 className="font-semibold text-lg">{sound.name}</h4>
               </div>
-              <span className="text-xs font-bold truncate w-full" title={sound.name}>{sound.name}</span>
-            </button>
-          </div>
-        ))}
+
+              <audio controls src={sound.file_url} className="w-full h-10"></audio>
+
+              {/* Show edit/delete options ONLY if the current user owns the sound */}
+              {isOwner && (
+                <div className="flex gap-2 mt-2">
+                  <button 
+                    onClick={() => handleRename(sound.id, sound.name)}
+                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Rename
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(sound.id, sound.file_url)}
+                    className="px-3 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
