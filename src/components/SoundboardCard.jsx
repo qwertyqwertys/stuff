@@ -73,7 +73,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
 
       const audioUrl = publicUrlData.publicUrl;
 
-      // 3. Insert record into community_sounds table
+      // 3. Insert record into community_sounds table with strict user_id linkage
       const { error: dbError } = await supabase
         .from('community_sounds')
         .insert([
@@ -109,14 +109,9 @@ export function SoundboardCard({ isLightMode, onClose }) {
     setSuccessMsg(null);
 
     try {
-      const updateData = { name: editedName.trim() };
-      if (!sound.user_id && user) {
-        updateData.user_id = user.id;
-      }
-
       const { error } = await supabase
         .from('community_sounds')
-        .update(updateData)
+        .update({ name: editedName.trim() })
         .eq('id', sound.id);
 
       if (error) throw error;
@@ -270,8 +265,8 @@ export function SoundboardCard({ isLightMode, onClose }) {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {sounds.map((sound) => {
-                  // Fixed: Show buttons if there is no user_id OR if the logged-in user matches
-                  const isOwner = !sound.user_id || (user && sound.user_id === user.id);
+                  // Strict ownership check: Only true if the logged-in user matches the sound's user_id
+                  const isOwner = user && sound.user_id === user.id;
 
                   return (
                     <div
