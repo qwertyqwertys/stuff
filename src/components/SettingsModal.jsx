@@ -86,6 +86,7 @@ export function SettingsModal({
   const [friendInput, setFriendInput] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
+  const [isMusicReset, setIsMusicReset] = useState(false);
 
   // --- CUSTOM SONG STATE VIA INDEXEDDB ---
   const [customSongs, setCustomSongs] = useState([]);
@@ -100,6 +101,8 @@ export function SettingsModal({
   const [artistName, setArtistName] = useState('');
 
   if (!show) return null;
+
+  const effectiveBgMusic = isMusicReset ? null : bgMusic;
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(friendCode);
@@ -149,6 +152,7 @@ export function SettingsModal({
 
     setCustomSongs(prev => [newSongWithUrl, ...prev]);
 
+    setIsMusicReset(false);
     if (handleAudioUpload) {
       handleAudioUpload({ presetUrl: objectUrl });
     }
@@ -363,6 +367,7 @@ export function SettingsModal({
               <button 
                 type="button"
                 onClick={() => {
+                  setIsMusicReset(true);
                   if (handleAudioUpload) {
                     handleAudioUpload({ presetUrl: '' });
                   }
@@ -377,7 +382,7 @@ export function SettingsModal({
             </div>
 
             {/* VOLUME & PLAY/PAUSE CONTROLS */}
-            {bgMusic && (
+            {effectiveBgMusic && (
               <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
                 <div className="flex items-center justify-between">
                   <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
@@ -445,6 +450,7 @@ export function SettingsModal({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    setIsMusicReset(false);
                     handleAudioUpload({ presetUrl: song.url });
                   }}
                   className={`p-3 border rounded-xl text-left flex items-center justify-between cursor-pointer ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
