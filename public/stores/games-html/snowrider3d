@@ -9,14 +9,20 @@
     <script src="https://cdn.jsdelivr.net/gh/drippy-cat/snowrider3D@c82fe583cbffafa502b0aa3ed2da0053972e0c80/Build/UnityLoader.js"></script>
     <script>
       window.addEventListener('load', function () {
-        var gameInstance = UnityLoader.instantiate("gameContainer", "https://cdn.jsdelivr.net/gh/drippy-cat/snowrider3D@c82fe583cbffafa502b0aa3ed2da0053972e0c80/Build/SnowRider3D-gd-1.json", {
-          onProgress: UnityProgress,
-          Module: {
-            onRuntimeInitialized: function() { 
-              UnityProgress(gameInstance, "complete"); 
+        try {
+          var gameInstance = UnityLoader.instantiate("gameContainer", "https://cdn.jsdelivr.net/gh/drippy-cat/snowrider3D@c82fe583cbffafa502b0aa3ed2da0053972e0c80/Build/SnowRider3D-gd-1.json", {
+            onProgress: UnityProgress,
+            Module: {
+              onRuntimeInitialized: function() { 
+                UnityProgress(gameInstance, "complete"); 
+              },
+              print: (text) => console.log("[Unity]:", text),
+              printErr: (text) => console.error("[Unity Error]:", text)
             }
-          }
-        });
+          });
+        } catch (e) {
+          console.error("Failed to instantiate Unity game:", e);
+        }
       });
     </script>
   </head>
