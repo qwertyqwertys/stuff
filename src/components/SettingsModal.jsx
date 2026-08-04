@@ -367,7 +367,7 @@ export function SettingsModal({
               <button 
                 type="button"
                 onClick={() => {
-                  if (handleAudioUpload) handleAudioUpload({ presetUrl: null });
+                  if (handleAudioUpload) handleAudioUpload(null);
                   if (isPlaying !== false && onTogglePlay) {
                     onTogglePlay();
                   }
