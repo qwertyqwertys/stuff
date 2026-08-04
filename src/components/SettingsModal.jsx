@@ -87,6 +87,10 @@ export function SettingsModal({
   const [copied, setCopied] = useState(false);
   const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
 
+  useEffect(() => {
+    setHasBackground(Boolean(bgEnabled));
+  }, [bgEnabled]);
+
   // --- CUSTOM SONG STATE VIA INDEXEDDB ---
   const [customSongs, setCustomSongs] = useState([]);
 
@@ -365,8 +369,6 @@ export function SettingsModal({
                 onClick={() => {
                   if (handleResetMusic) {
                     handleResetMusic();
-                  } else if (handleAudioUpload) {
-                    handleAudioUpload(null);
                   }
                   if (isPlaying !== false && onTogglePlay) {
                     onTogglePlay();
