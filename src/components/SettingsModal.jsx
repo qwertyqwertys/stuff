@@ -363,11 +363,8 @@ export function SettingsModal({
               <button 
                 type="button"
                 onClick={() => {
-                  if (handleAudioUpload) {
-                    handleAudioUpload({ presetUrl: '' });
-                  }
-                  if (isPlaying !== false && onTogglePlay) {
-                    onTogglePlay();
+                  if (handleResetMusic) {
+                    handleResetMusic();
                   }
                 }}
                 className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
