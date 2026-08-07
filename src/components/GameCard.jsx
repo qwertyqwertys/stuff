@@ -11,7 +11,25 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
     if (isUtility) {
       const targetUrl = game.url || (game.urls && Object.values(game.urls)[0]);
       if (targetUrl) {
-        window.open(targetUrl, '_blank');
+        const gameWindow = window.open('about:blank', '_blank');
+        if (gameWindow) {
+          let finalFormUrl = targetUrl;
+          if (finalFormUrl.includes('docs.google.com/forms') && !finalFormUrl.includes('embedded=true')) {
+            finalFormUrl += (finalFormUrl.includes('?') ? '&' : '?') + 'embedded=true';
+          }
+          
+          gameWindow.document.write(`
+            <html style="margin:0;padding:0;overflow:hidden;background-color:black;width:100%;height:100%;">
+              <head><title>Form</title></head>
+              <body style="margin:0;padding:0;width:100%;height:100%;">
+                <iframe src="${finalFormUrl}" style="width:100%;height:100%;border:none;margin:0;padding:0;display:block;" allow="fullscreen"></iframe>
+              </body>
+            </html>
+          `);
+          gameWindow.document.close();
+        } else {
+          alert("Please allow popups to open this form in an unblocked tab!");
+        }
       }
       return;
     }
