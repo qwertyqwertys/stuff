@@ -22,7 +22,7 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
             <html style="margin:0;padding:0;overflow:hidden;background-color:black;width:100%;height:100%;">
               <head><title>Form</title></head>
               <body style="margin:0;padding:0;width:100%;height:100%;">
-                <iframe src="${finalFormUrl}" style="width:100%;height:100%;border:none;margin:0;padding:0;display:block;" allow="fullscreen"></iframe>
+                <iframe src="${finalFormUrl}" style="width:100%;height:100%;border:none;margin:0;padding:0;display:block;" sandbox="allow-scripts allow-forms allow-same-origin" allow="fullscreen"></iframe>
               </body>
             </html>
           `);
