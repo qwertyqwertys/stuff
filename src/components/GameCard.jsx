@@ -8,6 +8,14 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
     const titleLower = game.title?.toLowerCase() || '';
     const idLower = game.id?.toLowerCase() || '';
 
+    if (isUtility) {
+      const targetUrl = game.url || (game.urls && Object.values(game.urls)[0]);
+      if (targetUrl) {
+        window.open(targetUrl, '_blank');
+      }
+      return;
+    }
+
     if (idLower === 'tuff' || titleLower.includes('tuff')) {
       const gameWindow = window.open('about:blank', '_blank');
       
