@@ -181,9 +181,17 @@ export default function App() {
     return game.url || `/stores/${game.id}.html`;
   };
 
-  const launchContent = (item) => {
+ const launchContent = (item) => {
     const finalUrl = getLaunchUrl(item, supplier); 
     if (!finalUrl) return;
+
+    // Check if the item is a report/request form or external link that shouldn't be framed
+    const isSpecialForm = item.id === 'request' || item.id === 'report' || finalUrl.includes('docs.google.com') || finalUrl.includes('forms.gle');
+
+    if (isSpecialForm) {
+      window.open(finalUrl, '_blank');
+      return;
+    }
 
     const recentKey = `capy-recent-${supplier}`; 
     
