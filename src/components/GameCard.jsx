@@ -5,37 +5,7 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
   const isUtility = ['request', 'report'].includes(game.id);
   
   const handleCardClick = () => {
-    const titleLower = game.title?.toLowerCase() || '';
-    const idLower = game.id?.toLowerCase() || '';
-
-    if (idLower === 'tuff' || titleLower.includes('tuff')) {
-      const gameWindow = window.open('about:blank', '_blank');
-      
-      if (gameWindow) {
-        gameWindow.document.write('<h1 style="color:white;font-family:sans-serif;text-align:center;margin-top:20%;">Loading Tuff Client... Please wait...</h1>');
-        
-        fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://files.catbox.moe/02v4vr.html'))
-          .then(response => {
-            if (response.ok) return response.json();
-            throw new Error('Network response was not ok.');
-          })
-          .then(data => {
-            gameWindow.document.open();
-            gameWindow.document.write(data.contents);
-            gameWindow.document.close();
-          })
-          .catch(err => {
-            gameWindow.document.open();
-            gameWindow.document.write('<h1 style="color:white;font-family:sans-serif;text-align:center;margin-top:20%;">Failed to load Tuff Client. Please refresh and try again.</h1>');
-            gameWindow.document.close();
-          });
-      } else {
-        alert("Please allow popups to play this game in an unblocked tab!");
-      }
-    } 
-    else {
-      onLaunch(game);
-    }
+    onLaunch(game);
   };
   
   return (
