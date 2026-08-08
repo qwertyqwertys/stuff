@@ -86,7 +86,9 @@ export function SettingsModal({
   const [friendInput, setFriendInput] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
-  const [isMusicReset, setIsMusicReset] = useState(false);
+  
+  // Persist music reset state across page reloads
+  const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset') === 'true');
 
   // --- CUSTOM SONG STATE VIA INDEXEDDB ---
   const [customSongs, setCustomSongs] = useState([]);
@@ -152,7 +154,10 @@ export function SettingsModal({
 
     setCustomSongs(prev => [newSongWithUrl, ...prev]);
 
+    // Clear reset state since a new song is chosen
     setIsMusicReset(false);
+    localStorage.setItem('capy-music-reset', 'false');
+
     if (handleAudioUpload) {
       handleAudioUpload({ presetUrl: objectUrl });
     }
@@ -368,6 +373,7 @@ export function SettingsModal({
                 type="button"
                 onClick={() => {
                   setIsMusicReset(true);
+                  localStorage.setItem('capy-music-reset', 'true');
                   if (handleAudioUpload) {
                     handleAudioUpload({ presetUrl: '' });
                   }
@@ -451,6 +457,7 @@ export function SettingsModal({
                     e.preventDefault();
                     e.stopPropagation();
                     setIsMusicReset(false);
+                    localStorage.setItem('capy-music-reset', 'false');
                     handleAudioUpload({ presetUrl: song.url });
                   }}
                   className={`p-3 border rounded-xl text-left flex items-center justify-between cursor-pointer ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
