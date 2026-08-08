@@ -185,6 +185,11 @@ export default function App() {
     const finalUrl = getLaunchUrl(item, supplier); 
     if (!finalUrl) return;
 
+    if (item.id === 'request' || item.id === 'report') {
+      window.open(finalUrl, '_blank');
+      return;
+    }
+
     const recentKey = `capy-recent-${supplier}`; 
     
     setRecentlyPlayed(prev => {
