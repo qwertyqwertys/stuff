@@ -102,6 +102,9 @@ export function SettingsModal({
   const [songTitle, setSongTitle] = useState('');
   const [artistName, setArtistName] = useState('');
 
+  // --- COLOR PICKER PREVIOUS STATE FOR CANCELLING ---
+  const [previousColor, setPreviousColor] = useState(null);
+
   if (!show) return null;
 
   const effectiveBgMusic = isMusicReset ? null : bgMusic;
@@ -616,13 +619,21 @@ export function SettingsModal({
               ))}
             </div>
 
-            {/* Custom Color Picker Upgrade */}
+            {/* Custom Color Picker with Cancel/Revert Support */}
             <div className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}>
               <div className="flex items-center gap-2">
                 <div className="relative w-6 h-6 rounded-lg overflow-hidden border border-white/20 cursor-pointer flex items-center justify-center flex-shrink-0">
                   <input 
                     type="color" 
-                    onChange={(e) => applyTheme({ name: 'Custom', color: e.target.value })}
+                    onFocus={() => {
+                      if (!previousColor && typeof document !== 'undefined') {
+                        const current = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim() || '#38b2f6';
+                        setPreviousColor(current);
+                      }
+                    }}
+                    onChange={(e) => {
+                      applyTheme({ name: 'Custom', color: e.target.value });
+                    }}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                     defaultValue="#38b2f6"
                   />
@@ -630,7 +641,27 @@ export function SettingsModal({
                 </div>
                 <span className={`text-[10px] font-bold uppercase ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>Custom Color Picker</span>
               </div>
-              <span className="text-[10px] font-mono text-[var(--theme)]">Live Pick</span>
+              <div className="flex items-center gap-2">
+                {previousColor && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (previousColor) {
+                        applyTheme({ name: 'Custom', color: previousColor });
+                        setPreviousColor(null);
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${
+                      isLightMode 
+                        ? 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300' 
+                        : 'bg-white/10 text-zinc-200 hover:bg-white/20'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                )}
+                <span className="text-[10px] font-mono text-[var(--theme)]">Live Pick</span>
+              </div>
             </div>
           </section>
 
