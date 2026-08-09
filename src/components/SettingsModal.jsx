@@ -127,14 +127,49 @@ export function SettingsModal({
     }
   };
 
+  // --- SECURE AUDIO UPLOAD WITH TYPE & SIZE VALIDATION ---
   const handleCustomAudioSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (!file.type.startsWith('audio/') && file.type !== 'audio/mpeg') {
+      alert('Please upload a valid audio file (e.g., MP3).');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      alert('Audio file is too large. Max size is 15MB.');
+      e.target.value = '';
+      return;
+    }
+
     setPendingFile(file);
-    setSongTitle(file.name.replace(/\.[^/.]+$/, ""));
+    setSongTitle(file.name.replace(/\.[^/.]+$/, "").slice(0, 50));
     setArtistName('');
     setUploadModalOpen(true);
     e.target.value = '';
+  };
+
+  // --- SECURE BACKGROUND UPLOAD WITH TYPE & SIZE VALIDATION ---
+  const handleBackgroundChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      alert('Please upload a valid image or video file for the background.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      alert('Background file is too large. Max size is 20MB.');
+      e.target.value = '';
+      return;
+    }
+
+    setHasBackground(true);
+    if (handleBackgroundUpload) {
+      handleBackgroundUpload(e);
+    }
   };
 
   const saveCustomSong = async () => {
@@ -269,7 +304,7 @@ export function SettingsModal({
                 type="text" 
                 placeholder="Enter friend code..." 
                 value={friendInput}
-                onChange={(e) => setFriendInput(e.target.value)}
+                onChange={(e) => setFriendInput(e.target.value.slice(0, 100))}
                 className={`flex-1 ${inputBg} border rounded-xl p-2.5 text-xs outline-none`}
               />
               <button 
@@ -344,12 +379,7 @@ export function SettingsModal({
                 <input 
                   type="file" 
                   accept="image/*,video/*" 
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setHasBackground(true);
-                    }
-                    if (handleBackgroundUpload) handleBackgroundUpload(e);
-                  }} 
+                  onChange={handleBackgroundChange} 
                   className="hidden" 
                 />
               </label>
@@ -643,7 +673,7 @@ export function SettingsModal({
                 <input 
                   type="text" 
                   value={songTitle} 
-                  onChange={(e) => setSongTitle(e.target.value)}
+                  onChange={(e) => setSongTitle(e.target.value.slice(0, 50))}
                   className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold`}
                 />
               </div>
@@ -654,7 +684,7 @@ export function SettingsModal({
                   type="text" 
                   placeholder="e.g. Green Day" 
                   value={artistName} 
-                  onChange={(e) => setArtistName(e.target.value)}
+                  onChange={(e) => setArtistName(e.target.value.slice(0, 50))}
                   className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold`}
                 />
               </div>
