@@ -3,7 +3,7 @@ import {
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
   ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check,
-  Sun, Moon, Play, Pause
+  Sun, Moon, Play, Pause, Search
 } from 'lucide-react';
 
 // --- INDEXEDDB HELPERS FOR HEAVY AUDIO FILES ---
@@ -86,6 +86,7 @@ export function SettingsModal({
   const [friendInput, setFriendInput] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Persist music reset state across page reloads
   const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset') === 'true');
@@ -218,504 +219,551 @@ export function SettingsModal({
   const inputBg = isLightMode ? "bg-white border-zinc-300 text-black placeholder:text-zinc-400" : "bg-zinc-800 border-white/10 text-white";
   const headerText = isLightMode ? "text-zinc-900" : "text-[var(--theme)]";
 
+  // Helper to check if a section matches the search query
+  const matchesSearch = (keywords) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return keywords.some(kw => kw.toLowerCase().includes(q));
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div className={`${modalBg} border p-6 rounded-3xl max-w-md w-full relative shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar`}>
         
         {/* HEADER */}
-        <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-white/5'} pb-4`}>
+        <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-white/5'} pb-4 sticky top-0 ${modalBg} z-20 pt-1`}>
           <h2 className={`text-xl font-bold flex items-center gap-2 ${headerText}`}>
             <ShieldAlert className={`w-5 h-5 ${isLightMode ? 'text-[var(--theme)]' : ''}`} /> System Settings
           </h2>
           <button 
             type="button"
             onClick={onClose} 
-            className={`${isLightMode ? 'text-zinc-700 hover:text-black hover:bg-zinc-100' : 'text-zinc-300 hover:text-white hover:bg-white/5'} p-1 rounded-lg`}
+            className={`${isLightMode ? 'text-zinc-700 hover:text-black hover:bg-zinc-100' : 'text-zinc-300 hover:text-white hover:bg-white/5'} p-1 rounded-lg transition-colors`}
             aria-label="Close settings"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
+        {/* SEARCH FILTER BAR (Power User Feature) */}
+        <div className="relative">
+          <Search className={`absolute left-3 top-3 w-4 h-4 ${isLightMode ? 'text-zinc-400' : 'text-zinc-500'}`} />
+          <input
+            type="text"
+            placeholder="Type to search settings (e.g., theme, audio, danger)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`w-full pl-9 pr-4 py-2.5 ${inputBg} border rounded-xl text-xs outline-none font-medium transition-all focus:border-[var(--theme)]`}
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-3 text-[10px] font-bold uppercase opacity-60 hover:opacity-100"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
         <div className="space-y-6">
           {/* IDENTITY & SOCIAL */}
-          <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} p-4 rounded-2xl border`}>
-            <div className="flex items-center justify-between">
-              <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
-                <Type className="w-3 h-3" /> Profile Identity
-              </label>
-              <button 
-                type="button"
-                onClick={onViewOwnProfile}
-                className="flex items-center gap-1.5 px-3 py-1 bg-[var(--theme)] text-black rounded-full text-[9px] font-black uppercase hover:opacity-80"
-              >
-                <Eye className="w-3 h-3" /> View My Profile
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)]`}>
-                  <Upload className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
-                  Upload IMG/GIF for PFP
-                  <input type="file" accept="image/*" onChange={handlePfpUpload} className="hidden" />
+          {matchesSearch(['identity', 'profile', 'name', 'avatar', 'friend', 'code']) && (
+            <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} p-4 rounded-2xl border transition-all`}>
+              <div className="flex items-center justify-between">
+                <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
+                  <Type className="w-3 h-3" /> Profile Identity
                 </label>
                 <button 
                   type="button"
-                  onClick={handleResetPfp}
-                  className={`p-3 border rounded-xl text-[9px] font-black uppercase flex flex-col items-center justify-center gap-1 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
+                  onClick={onViewOwnProfile}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-[var(--theme)] text-black rounded-full text-[9px] font-black uppercase hover:opacity-80 transition-opacity"
                 >
-                  <RotateCcw className="w-3 h-3" /> Reset Avatar
+                  <Eye className="w-3 h-3" /> View My Profile
                 </button>
               </div>
-              <input 
-                type="text" 
-                placeholder="Custom Display Name..." 
-                value={displayName} 
-                onChange={(e) => setDisplayName(e.target.value.slice(0, 25))}
-                className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold`}
-              />
-              <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-black/20 border-white/5'} p-3 rounded-xl border space-y-3`}>
-                <div className="flex items-center justify-between">
-                  <p className={`text-[8px] font-black uppercase leading-none ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>Your Friend Code</p>
+
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-colors`}>
+                    <Upload className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
+                    Upload IMG/GIF for PFP
+                    <input type="file" accept="image/*" onChange={handlePfpUpload} className="hidden" />
+                  </label>
                   <button 
                     type="button"
-                    onClick={handleCopyCode}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-200' : 'bg-white/5 text-zinc-300 hover:text-white'}`}
+                    onClick={handleResetPfp}
+                    className={`p-3 border rounded-xl text-[9px] font-black uppercase flex flex-col items-center justify-center gap-1 transition-colors ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
                   >
-                    {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {copied ? 'Copied' : 'Copy'}
+                    <RotateCcw className="w-3 h-3" /> Reset Avatar
                   </button>
                 </div>
-                <div className={`${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-lg border max-h-20 overflow-y-auto`}>
-                  <p className="text-[10px] font-mono font-black text-[var(--theme)] break-all leading-relaxed tracking-tight">
-                    {friendCode}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* FRIENDS LIST */}
-          <section className={`space-y-4 ${sectionBg} p-4 rounded-2xl border`}>
-            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-              <Users className="w-3 h-3 text-[var(--theme)]" /> Friends List
-            </label>
-            
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="Enter friend code..." 
-                value={friendInput}
-                onChange={(e) => setFriendInput(e.target.value.slice(0, 100))}
-                className={`flex-1 ${inputBg} border rounded-xl p-2.5 text-xs outline-none`}
-              />
-              <button 
-                type="button"
-                onClick={handleAddFriend}
-                className="p-2.5 bg-[var(--theme)] text-black rounded-xl hover:opacity-80"
-              >
-                <UserPlus className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-              {friends?.length > 0 ? friends.map(friend => (
-                <div key={friend.code} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-xl border`}>
-                  <span title={friend.name} className={`text-[10px] font-bold truncate max-w-[120px] ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{friend.name}</span>
-                  <div className="flex gap-1 items-center">
+                <input 
+                  type="text" 
+                  placeholder="Custom Display Name..." 
+                  value={displayName} 
+                  onChange={(e) => setDisplayName(e.target.value.slice(0, 25))}
+                  className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold transition-all focus:border-[var(--theme)]`}
+                />
+                <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-black/20 border-white/5'} p-3 rounded-xl border space-y-3`}>
+                  <div className="flex items-center justify-between">
+                    <p className={`text-[8px] font-black uppercase leading-none ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>Your Friend Code</p>
                     <button 
                       type="button"
-                      onClick={() => onViewFriend(friend)}
-                      className={`p-1.5 rounded-lg ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
+                      onClick={handleCopyCode}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-200' : 'bg-white/5 text-zinc-300 hover:text-white'}`}
                     >
-                      <Eye className="w-3 h-3" />
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => onRemoveFriend(friend.code)}
-                      className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase flex items-center gap-1 ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border border-red-200' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30'}`}
-                    >
-                      <Trash2 className="w-3 h-3" /> Remove
+                      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      {copied ? 'Copied' : 'Copy'}
                     </button>
                   </div>
+                  <div className={`${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-lg border max-h-20 overflow-y-auto`}>
+                    <p className="text-[10px] font-mono font-black text-[var(--theme)] break-all leading-relaxed tracking-tight">
+                      {friendCode}
+                    </p>
+                  </div>
                 </div>
-              )) : (
-                <p className={`text-[9px] text-center py-2 italic font-medium uppercase tracking-tighter ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>No friends added yet</p>
-              )}
-            </div>
-          </section>
+              </div>
+            </section>
+          )}
 
-          {/* PERFORMANCE MODE */}
-          <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-yellow-50 border-yellow-200' : 'bg-yellow-500/10 border-yellow-500/20'}`}>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-yellow-800' : 'text-yellow-400'}`}>
-                  <Cpu className="w-3 h-3" /> Performance Mode
-                </label>
+          {/* FRIENDS LIST */}
+          {matchesSearch(['friends', 'list', 'social', 'add friend']) && (
+            <section className={`space-y-4 ${sectionBg} p-4 rounded-2xl border transition-all`}>
+              <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                <Users className="w-3 h-3 text-[var(--theme)]" /> Friends List
+              </label>
+              
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Enter friend code..." 
+                  value={friendInput}
+                  onChange={(e) => setFriendInput(e.target.value.slice(0, 100))}
+                  className={`flex-1 ${inputBg} border rounded-xl p-2.5 text-xs outline-none transition-all focus:border-[var(--theme)]`}
+                />
                 <button 
                   type="button"
-                  onClick={() => setPerformanceMode(!performanceMode)}
-                  className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase ${performanceMode ? 'bg-yellow-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-300' : 'bg-white/10 text-zinc-200 border border-white/20'}`}
+                  onClick={handleAddFriend}
+                  className="p-2.5 bg-[var(--theme)] text-black rounded-xl hover:opacity-80 transition-opacity"
                 >
-                  <Zap className="w-3 h-3" />
-                  {performanceMode ? 'ON' : 'OFF'}
+                  <UserPlus className="w-4 h-4" />
                 </button>
               </div>
-              <p className={`text-[8px] uppercase font-bold leading-tight tracking-tighter ${isLightMode ? 'text-yellow-900' : 'text-yellow-300'}`}>
-                {performanceMode 
-                  ? "Music and heavy effects disabled to maximize CPU/RAM speed." 
-                  : "Standard mode active. Music and visuals are enabled."}
-              </p>
-            </div>
-          </section>
+
+              <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                {friends?.length > 0 ? friends.map(friend => (
+                  <div key={friend.code} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-xl border`}>
+                    <span title={friend.name} className={`text-[10px] font-bold truncate max-w-[120px] ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{friend.name}</span>
+                    <div className="flex gap-1 items-center">
+                      <button 
+                        type="button"
+                        onClick={() => onViewFriend(friend)}
+                        className={`p-1.5 rounded-lg transition-colors ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
+                      >
+                        <Eye className="w-3 h-3" />
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => onRemoveFriend(friend.code)}
+                        className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border border-red-200' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30'}`}
+                      >
+                        <Trash2 className="w-3 h-3" /> Remove
+                      </button>
+                    </div>
+                  </div>
+                )) : (
+                  <p className={`text-[9px] text-center py-2 italic font-medium uppercase tracking-tighter ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>No friends added yet</p>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* PERFORMANCE MODE */}
+          {matchesSearch(['performance', 'mode', 'cpu', 'ram', 'speed']) && (
+            <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-yellow-50 border-yellow-200' : 'bg-yellow-500/10 border-yellow-500/20'}`}>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-yellow-800' : 'text-yellow-400'}`}>
+                    <Cpu className="w-3 h-3" /> Performance Mode
+                  </label>
+                  <button 
+                    type="button"
+                    onClick={() => setPerformanceMode(!performanceMode)}
+                    className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase transition-all ${performanceMode ? 'bg-yellow-500 text-black shadow-md' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-300' : 'bg-white/10 text-zinc-200 border border-white/20'}`}
+                  >
+                    <Zap className="w-3 h-3" />
+                    {performanceMode ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+                <p className={`text-[8px] uppercase font-bold leading-tight tracking-tighter ${isLightMode ? 'text-yellow-900' : 'text-yellow-300'}`}>
+                  {performanceMode 
+                    ? "Music and heavy effects disabled to maximize CPU/RAM speed." 
+                    : "Standard mode active. Music and visuals are enabled."}
+                </p>
+              </div>
+            </section>
+          )}
 
           {/* MEDIA UPLOADS */}
-          <section className={`space-y-4 ${sectionBg} p-4 rounded-2xl border`}>
-            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-              <ImageIcon className="w-3 h-3 text-[var(--theme)]" /> Custom Media
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)]`}>
-                <Upload className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
-                Upload BG IMG/GIF
-                <input 
-                  type="file" 
-                  accept="image/*,video/*" 
-                  onChange={handleBackgroundChange} 
-                  className="hidden" 
-                />
+          {matchesSearch(['media', 'background', 'audio', 'mp3', 'upload', 'image', 'video', 'music']) && (
+            <section className={`space-y-4 ${sectionBg} p-4 rounded-2xl border transition-all`}>
+              <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                <ImageIcon className="w-3 h-3 text-[var(--theme)]" /> Custom Media
               </label>
-              <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)]`}>
-                <Music className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
-                Upload MP3
-                <input type="file" accept="audio/mp3,audio/*" onChange={handleCustomAudioSelect} className="hidden" />
+              <div className="grid grid-cols-2 gap-2">
+                <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-colors`}>
+                  <Upload className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
+                  Upload BG IMG/GIF
+                  <input 
+                    type="file" 
+                    accept="image/*,video/*" 
+                    onChange={handleBackgroundChange} 
+                    className="hidden" 
+                  />
+                </label>
+                <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-colors`}>
+                  <Music className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
+                  Upload MP3
+                  <input type="file" accept="audio/mp3,audio/*" onChange={handleCustomAudioSelect} className="hidden" />
+                </label>
+                
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setHasBackground(false);
+                    if (handleResetBackground) handleResetBackground();
+                  }}
+                  className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-colors ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
+                >
+                  <RotateCcw className="w-3 h-3" /> Reset BG
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setIsMusicReset(true);
+                    localStorage.setItem('capy-music-reset', 'true');
+                    if (handleAudioUpload) {
+                      handleAudioUpload({ presetUrl: '' });
+                    }
+                    if (isPlaying !== false && onTogglePlay) {
+                      onTogglePlay();
+                    }
+                  }}
+                  className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-colors ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
+                >
+                  <RotateCcw className="w-3 h-3" /> Reset Music
+                </button>
+              </div>
+
+              {/* VOLUME & PLAY/PAUSE CONTROLS */}
+              {effectiveBgMusic && (
+                <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
+                  <div className="flex items-center justify-between">
+                    <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                      <Volume2 className="w-3 h-3 text-[var(--theme)]" /> Music Controls
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (onTogglePlay) onTogglePlay();
+                        }}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer z-10 ${
+                          isLightMode 
+                            ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-300' 
+                            : 'bg-white/10 text-zinc-200 hover:bg-white/20'
+                        }`}
+                      >
+                        {isPlaying !== false ? <Pause className="w-3 h-3 text-[var(--theme)]" /> : <Play className="w-3 h-3 text-[var(--theme)]" />}
+                        {isPlaying !== false ? 'Pause' : 'Play'}
+                      </button>
+                      <span className="text-[10px] font-mono text-[var(--theme)]">{Math.round((volume ?? 1) * 100)}%</span>
+                    </div>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" max="1" step="0.01"
+                    value={volume ?? 1} 
+                    onChange={(e) => setVolume && setVolume(parseFloat(e.target.value))}
+                    className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
+                  />
+                </div>
+              )}
+
+              {/* BG OPACITY SLIDER */}
+              {hasBackground && !performanceMode && (
+                <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
+                  <div className="flex items-center justify-between">
+                    <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                      <ImageIcon className="w-3 h-3 text-[var(--theme)]" /> BG Opacity
+                    </label>
+                    <span className="text-[10px] font-mono text-[var(--theme)]">{bgOpacity}%</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" max="100" 
+                    value={bgOpacity} 
+                    onChange={(e) => setBgOpacity(Number(e.target.value))}
+                    className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
+                  />
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* MUSIC LIBRARY PRESETS */}
+          {matchesSearch(['library', 'music', 'songs', 'tracks', 'playlist']) && (
+            <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'}`}>
+              <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
+                <Music className="w-3 h-3" /> Music Library
+              </label>
+              <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1 will-change-scroll">
+                {fullTracklist?.map((song, index) => (
+                  <div
+                    key={song.id || index}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsMusicReset(false);
+                      localStorage.setItem('capy-music-reset', 'false');
+                      handleAudioUpload({ presetUrl: song.url });
+                    }}
+                    className={`p-3 border rounded-xl text-left flex items-center justify-between cursor-pointer transition-all ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
+                  >
+                    <div className="flex items-center gap-3 truncate mr-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--theme)] flex-shrink-0" />
+                      <div className="flex flex-col truncate">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>
+                            {song.title}
+                          </span>
+                          {song.isCustom && (
+                            <span className="text-[8px] font-black bg-[var(--theme)]/20 text-[var(--theme)] px-1.5 py-0.5 rounded uppercase flex-shrink-0">
+                              Uploaded
+                            </span>
+                          )}
+                        </div>
+                        <span className={`text-[9px] font-medium uppercase tracking-tight truncate ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>
+                          {song.artist || "Unknown Artist"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {song.isClean && !song.isCustom && (
+                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${isLightMode ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-700 text-zinc-200'}`}>
+                          Clean
+                        </span>
+                      )}
+                      {song.isCustom && (
+                        <button 
+                          type="button"
+                          onClick={(e) => deleteCustomSong(song.id, e)}
+                          className="px-2 py-1 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors"
+                          title="Delete custom song track"
+                        >
+                          <Trash2 className="w-3 h-3" /> Delete Track
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* TAB DISGUISE SECTION */}
+          {matchesSearch(['disguise', 'tab', 'cloak', 'google', 'classroom', 'drive']) && (
+            <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+              <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                <Eye className="w-3 h-3 text-[var(--theme)]" /> Tab Disguise
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {['google', 'drive', 'classroom', 'powerschool'].map((cloak) => (
+                  <button
+                    key={cloak}
+                    type="button"
+                    onClick={() => setActiveCloak(cloak)}
+                    className={`p-3 border rounded-xl text-[10px] font-black uppercase transition-all ${
+                      activeCloak === cloak 
+                      ? 'bg-[var(--theme)] text-black border-[var(--theme)] shadow-md' 
+                      : isLightMode ? 'bg-white border-zinc-200 text-zinc-700 hover:border-zinc-400' : 'bg-white/5 border-white/10 text-zinc-300 hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {cloak}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* PANIC PROTOCOL */}
+          {matchesSearch(['panic', 'key', 'shortcut', 'ghost']) && (
+            <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-red-50 border-red-200' : 'bg-red-500/10 border-red-500/20'}`}>
+              <label className="text-[10px] uppercase font-black text-red-500 tracking-widest flex items-center gap-2">
+                <Ghost className="w-3 h-3" /> Panic Key
+              </label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Press key..." 
+                  value={panicKey} 
+                  onKeyDown={handlePanicKeyDown}
+                  className={`flex-1 border rounded-xl p-3 text-xs outline-none text-center font-mono font-bold ${isLightMode ? 'bg-white border-red-200 text-zinc-900' : 'bg-zinc-800 border-white/10 text-white'}`} 
+                  readOnly 
+                />
+                {panicKey && (
+                  <button type="button" onClick={() => setPanicKey('')} className={`p-3 border rounded-xl transition-colors ${isLightMode ? 'bg-white border-red-200 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 hover:bg-red-500/30'}`}>
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </button>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* ABOUT & ACCESSIBILITY SECTION */}
+          {matchesSearch(['about', 'accessibility', 'contrast']) && (
+            <section className={`space-y-2 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+              <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                <ShieldAlert className="w-3 h-3 text-[var(--theme)]" /> About & Accessibility
+              </label>
+              <p className={`text-[9px] leading-relaxed ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                This website is committed to digital accessibility. If you encounter any contrast issues with custom themes or navigation barriers, feel free to adjust your theme or reach out via repository issues.
+              </p>
+            </section>
+          )}
+
+          {/* THEMES */}
+          {matchesSearch(['themes', 'color', 'palette', 'light mode', 'dark mode']) && (
+            <section className="space-y-3">
+              <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                <Palette className="w-3 h-3" /> Themes
               </label>
               
               <button 
                 type="button"
-                onClick={() => {
-                  setHasBackground(false);
-                  if (handleResetBackground) handleResetBackground();
-                }}
-                className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
+                onClick={() => setIsLightMode(!isLightMode)}
+                className={`w-full p-3 mb-2 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
               >
-                <RotateCcw className="w-3 h-3" /> Reset BG
+                {isLightMode ? <Sun className="w-3.5 h-3.5 text-yellow-500" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />} 
+                {isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
               </button>
-              <button 
-                type="button"
-                onClick={() => {
-                  setIsMusicReset(true);
-                  localStorage.setItem('capy-music-reset', 'true');
-                  if (handleAudioUpload) {
-                    handleAudioUpload({ presetUrl: '' });
-                  }
-                  if (isPlaying !== false && onTogglePlay) {
-                    onTogglePlay();
-                  }
-                }}
-                className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
-              >
-                <RotateCcw className="w-3 h-3" /> Reset Music
-              </button>
-            </div>
 
-            {/* VOLUME & PLAY/PAUSE CONTROLS */}
-            {effectiveBgMusic && (
-              <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
-                <div className="flex items-center justify-between">
-                  <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    <Volume2 className="w-3 h-3 text-[var(--theme)]" /> Music Controls
-                  </label>
-                  <div className="flex items-center gap-2">
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(themes || {}).map(([id, t]) => (
+                  <button 
+                    key={id} 
+                    type="button"
+                    onClick={() => applyTheme(t)} 
+                    className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 transition-all ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
+                  >
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} /> {t.name}
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Color Picker with Cancel/Revert Support */}
+              <div 
+                className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) {
+                    setPreviousColor(null);
+                  }
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="relative w-6 h-6 rounded-lg overflow-hidden border border-white/20 cursor-pointer flex items-center justify-center flex-shrink-0">
+                    <input 
+                      type="color" 
+                      value={typeof document !== 'undefined' ? (getComputedStyle(document.documentElement).getPropertyValue('--theme').trim() || '#38b2f6') : '#38b2f6'}
+                      onMouseDown={() => {
+                        if (!previousColor && typeof document !== 'undefined') {
+                          const current = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim() || '#38b2f6';
+                          setPreviousColor(current);
+                        }
+                      }}
+                      onChange={(e) => {
+                        applyTheme({ name: 'Custom', color: e.target.value });
+                      }}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    <div className="w-full h-full bg-[var(--theme)]" />
+                  </div>
+                  <span className={`text-[10px] font-bold uppercase ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>Custom Color Picker</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {previousColor && (
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (onTogglePlay) onTogglePlay();
+                      onClick={() => {
+                        applyTheme({ name: 'Custom', color: previousColor });
+                        setPreviousColor(null);
                       }}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer z-10 ${
+                      className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${
                         isLightMode 
-                          ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-300' 
+                          ? 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300' 
                           : 'bg-white/10 text-zinc-200 hover:bg-white/20'
                       }`}
                     >
-                      {isPlaying !== false ? <Pause className="w-3 h-3 text-[var(--theme)]" /> : <Play className="w-3 h-3 text-[var(--theme)]" />}
-                      {isPlaying !== false ? 'Pause' : 'Play'}
+                      Cancel
                     </button>
-                    <span className="text-[10px] font-mono text-[var(--theme)]">{Math.round((volume ?? 1) * 100)}%</span>
-                  </div>
+                  )}
+                  <span className="text-[10px] font-mono text-[var(--theme)]">Live Pick</span>
                 </div>
-                <input 
-                  type="range" 
-                  min="0" max="1" step="0.01"
-                  value={volume ?? 1} 
-                  onChange={(e) => setVolume && setVolume(parseFloat(e.target.value))}
-                  className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
-                />
               </div>
-            )}
-
-            {/* BG OPACITY SLIDER */}
-            {hasBackground && !performanceMode && (
-              <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
-                <div className="flex items-center justify-between">
-                  <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    <ImageIcon className="w-3 h-3 text-[var(--theme)]" /> BG Opacity
-                  </label>
-                  <span className="text-[10px] font-mono text-[var(--theme)]">{bgOpacity}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0" max="100" 
-                  value={bgOpacity} 
-                  onChange={(e) => setBgOpacity(Number(e.target.value))}
-                  className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
-                />
-              </div>
-            )}
-          </section>
-
-          {/* MUSIC LIBRARY PRESETS */}
-          <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'}`}>
-            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
-              <Music className="w-3 h-3" /> Music Library
-            </label>
-            <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1 will-change-scroll">
-              {fullTracklist?.map((song, index) => (
-                <div
-                  key={song.id || index}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsMusicReset(false);
-                    localStorage.setItem('capy-music-reset', 'false');
-                    handleAudioUpload({ presetUrl: song.url });
-                  }}
-                  className={`p-3 border rounded-xl text-left flex items-center justify-between cursor-pointer ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
-                >
-                  <div className="flex items-center gap-3 truncate mr-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--theme)] flex-shrink-0" />
-                    <div className="flex flex-col truncate">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>
-                          {song.title}
-                        </span>
-                        {song.isCustom && (
-                          <span className="text-[8px] font-black bg-[var(--theme)]/20 text-[var(--theme)] px-1.5 py-0.5 rounded uppercase flex-shrink-0">
-                            Uploaded
-                          </span>
-                        )}
-                      </div>
-                      <span className={`text-[9px] font-medium uppercase tracking-tight truncate ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>
-                        {song.artist || "Unknown Artist"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {song.isClean && !song.isCustom && (
-                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${isLightMode ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-700 text-zinc-200'}`}>
-                        Clean
-                      </span>
-                    )}
-                    {song.isCustom && (
-                      <button 
-                        type="button"
-                        onClick={(e) => deleteCustomSong(song.id, e)}
-                        className="px-2 py-1 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors"
-                        title="Delete custom song track"
-                      >
-                        <Trash2 className="w-3 h-3" /> Delete Track
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* TAB DISGUISE SECTION */}
-          <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
-            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-              <Eye className="w-3 h-3 text-[var(--theme)]" /> Tab Disguise
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {['google', 'drive', 'classroom', 'powerschool'].map((cloak) => (
-                <button
-                  key={cloak}
-                  type="button"
-                  onClick={() => setActiveCloak(cloak)}
-                  className={`p-3 border rounded-xl text-[10px] font-black uppercase ${
-                    activeCloak === cloak 
-                    ? 'bg-[var(--theme)] text-black border-[var(--theme)]' 
-                    : isLightMode ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-white/5 border-white/10 text-zinc-300 hover:text-white'
-                  }`}
-                >
-                  {cloak}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* PANIC PROTOCOL */}
-          <section className={`space-y-4 p-4 rounded-2xl border ${isLightMode ? 'bg-red-50 border-red-200' : 'bg-red-500/10 border-red-500/20'}`}>
-            <label className="text-[10px] uppercase font-black text-red-500 tracking-widest flex items-center gap-2">
-              <Ghost className="w-3 h-3" /> Panic Key
-            </label>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="Press key..." 
-                value={panicKey} 
-                onKeyDown={handlePanicKeyDown}
-                className={`flex-1 border rounded-xl p-3 text-xs outline-none text-center font-mono font-bold ${isLightMode ? 'bg-white border-red-200 text-zinc-900' : 'bg-zinc-800 border-white/10 text-white'}`} 
-                readOnly 
-              />
-              {panicKey && (
-                <button type="button" onClick={() => setPanicKey('')} className={`p-3 border rounded-xl ${isLightMode ? 'bg-white border-red-200' : 'bg-red-500/20 border-red-500/30'}`}>
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </button>
-              )}
-            </div>
-          </section>
-
-          {/* ABOUT & ACCESSIBILITY SECTION */}
-          <section className={`space-y-2 p-4 rounded-2xl border ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
-            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-              <ShieldAlert className="w-3 h-3 text-[var(--theme)]" /> About & Accessibility
-            </label>
-            <p className={`text-[9px] leading-relaxed ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-              This website is committed to digital accessibility. If you encounter any contrast issues with custom themes or navigation barriers, feel free to adjust your theme or reach out via repository issues.
-            </p>
-          </section>
-
-          {/* THEMES */}
-          <section className="space-y-3">
-            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-              <Palette className="w-3 h-3" /> Themes
-            </label>
-            
-            <button 
-              type="button"
-              onClick={() => setIsLightMode(!isLightMode)}
-              className={`w-full p-3 mb-2 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
-            >
-              {isLightMode ? <Sun className="w-3.5 h-3.5 text-yellow-500" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />} 
-              {isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-            </button>
-
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(themes || {}).map(([id, t]) => (
-                <button 
-                  key={id} 
-                  type="button"
-                  onClick={() => applyTheme(t)} 
-                  className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
-                >
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} /> {t.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Custom Color Picker with Cancel/Revert Support */}
-            <div 
-              className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}
-              onBlur={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget)) {
-                  setPreviousColor(null);
-                }
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <div className="relative w-6 h-6 rounded-lg overflow-hidden border border-white/20 cursor-pointer flex items-center justify-center flex-shrink-0">
-                  <input 
-                    type="color" 
-                    value={typeof document !== 'undefined' ? (getComputedStyle(document.documentElement).getPropertyValue('--theme').trim() || '#38b2f6') : '#38b2f6'}
-                    onMouseDown={() => {
-                      if (!previousColor && typeof document !== 'undefined') {
-                        const current = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim() || '#38b2f6';
-                        setPreviousColor(current);
-                      }
-                    }}
-                    onChange={(e) => {
-                      applyTheme({ name: 'Custom', color: e.target.value });
-                    }}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                  <div className="w-full h-full bg-[var(--theme)]" />
-                </div>
-                <span className={`text-[10px] font-bold uppercase ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>Custom Color Picker</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {previousColor && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      applyTheme({ name: 'Custom', color: previousColor });
-                      setPreviousColor(null);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${
-                      isLightMode 
-                        ? 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300' 
-                        : 'bg-white/10 text-zinc-200 hover:bg-white/20'
-                    }`}
-                  >
-                    Cancel
-                  </button>
-                )}
-                <span className="text-[10px] font-mono text-[var(--theme)]">Live Pick</span>
-              </div>
-            </div>
-          </section>
+            </section>
+          )}
 
           {/* DANGER ZONE (RESTORE/RESET DESTRUCTIVE ACTIONS) */}
-          <section className={`space-y-3 p-4 rounded-2xl border ${isLightMode ? 'bg-red-50/50 border-red-200' : 'bg-red-500/5 border-red-500/20'}`}>
-            <label className="text-[10px] uppercase font-black text-red-500 tracking-widest flex items-center gap-2">
-              <ShieldAlert className="w-3 h-3" /> Danger Zone
-            </label>
-            <p className={`text-[9px] uppercase font-bold tracking-tighter leading-tight ${isLightMode ? 'text-red-900' : 'text-red-300'}`}>
-              Irreversible actions that clear local settings, cache, or reset app defaults.
-            </p>
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <button 
-                type="button"
-                onClick={handleClearSettings} 
-                className={`p-3 rounded-xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all ${
-                  confirmClearSettings 
-                    ? 'bg-orange-500 text-black border-orange-400 animate-pulse' 
-                    : isLightMode 
-                      ? 'border-orange-300 bg-white text-orange-700 hover:bg-orange-50' 
-                      : 'border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20'
-                }`}
-              >
-                <RotateCcw className={`w-3.5 h-3.5 ${confirmClearSettings ? 'animate-spin' : ''}`} /> 
-                {confirmClearSettings ? 'ARE YOU SURE?' : 'Clear Settings'}
-              </button>
+          {matchesSearch(['danger', 'reset', 'clear', 'factory', 'settings']) && (
+            <section className={`space-y-3 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-red-50/50 border-red-200' : 'bg-red-500/5 border-red-500/20'}`}>
+              <label className="text-[10px] uppercase font-black text-red-500 tracking-widest flex items-center gap-2">
+                <ShieldAlert className="w-3 h-3" /> Danger Zone
+              </label>
+              <p className={`text-[9px] uppercase font-bold tracking-tighter leading-tight ${isLightMode ? 'text-red-900' : 'text-red-300'}`}>
+                Irreversible actions that clear local settings, cache, or reset app defaults.
+              </p>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <button 
+                  type="button"
+                  onClick={handleClearSettings} 
+                  className={`p-3 rounded-xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all ${
+                    confirmClearSettings 
+                      ? 'bg-orange-500 text-black border-orange-400 animate-pulse' 
+                      : isLightMode 
+                        ? 'border-orange-300 bg-white text-orange-700 hover:bg-orange-50' 
+                        : 'border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20'
+                  }`}
+                >
+                  <RotateCcw className={`w-3.5 h-3.5 ${confirmClearSettings ? 'animate-spin' : ''}`} /> 
+                  {confirmClearSettings ? 'ARE YOU SURE?' : 'Clear Settings'}
+                </button>
 
-              <button 
-                type="button"
-                onClick={handleReset} 
-                className={`p-3 rounded-xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all ${
-                  confirmReset 
-                    ? 'bg-red-500 text-black border-red-400 animate-pulse' 
-                    : isLightMode 
-                      ? 'border-red-300 bg-white text-red-600 hover:bg-red-500 hover:text-white' 
-                      : 'border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/30 hover:text-white'
-                }`}
-              >
-                <RotateCcw className={`w-4 h-4 ${confirmReset ? 'animate-spin' : ''}`} />
-                {confirmReset ? 'ARE YOU SURE?' : 'Factory Reset'}
-              </button>
-            </div>
-          </section>
+                <button 
+                  type="button"
+                  onClick={handleReset} 
+                  className={`p-3 rounded-xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all ${
+                    confirmReset 
+                      ? 'bg-red-500 text-black border-red-400 animate-pulse' 
+                      : isLightMode 
+                        ? 'border-red-300 bg-white text-red-600 hover:bg-red-500 hover:text-white' 
+                        : 'border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/30 hover:text-white'
+                  }`}
+                >
+                  <RotateCcw className={`w-4 h-4 ${confirmReset ? 'animate-spin' : ''}`} />
+                  {confirmReset ? 'ARE YOU SURE?' : 'Factory Reset'}
+                </button>
+              </div>
+            </section>
+          )}
         </div>
       </div>
 
       {/* --- SUB-MODAL FOR EDITING SONG NAME & ARTIST AFTER UPLOAD --- */}
       {uploadModalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[110] p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
           <div className={`${modalBg} border p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4`}>
             <h3 className="text-lg font-bold" style={{ fontFamily: "'Baloo 2', cursive" }}>Edit Uploaded Song</h3>
             <p className="text-[10px] text-zinc-400">Customize the details for your uploaded MP3 track before adding it to the library.</p>
@@ -746,14 +794,14 @@ export function SettingsModal({
                 <button 
                   type="button"
                   onClick={() => setUploadModalOpen(false)} 
-                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase"
+                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase transition-colors"
                 >
                   Cancel
                 </button>
                 <button 
                   type="button"
                   onClick={saveCustomSong} 
-                  className="px-5 py-2.5 rounded-xl bg-[var(--theme)] text-black text-[10px] font-black uppercase hover:opacity-90 shadow-md"
+                  className="px-5 py-2.5 rounded-xl bg-[var(--theme)] text-black text-[10px] font-black uppercase hover:opacity-90 shadow-md transition-opacity"
                 >
                   Save to Library
                 </button>
