@@ -177,100 +177,72 @@
   {
     "id": "gunspin",
     "title": "GunSpin",
-    "url": "https://a.luminsdk.com/g/1786297882-4-ajZ-4Cu_jKibWmvM26aaaVOPF1zYDZBoaKHZvUlOE/quasar/webgl/gs/",
+    "url": "https://bind.strongson.com/games/gunspin/index.html",
     "thumbnail": "https://images.dwncdn.net/images/t_app-icon-l/p/39d0a468-21ab-466d-a65b-5585c02dd7ad/15864794/gunspin-logo",
     "category": "Arcade"
   },
   {
     "id": "rooftop-snipers",
-    "title": "Rooftop Snipers (down)",
-    "url": "https://google.com",
+    "title": "Rooftop Snipers",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/rooftop-snipers/",
     "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=314,height=314,fit=cover,f=auto/c127771edb0e821e4109b7058ae3f094/rooftop-snipers.jpeg",
     "category": "Action"
   },
   {
-    "id": "paper.io-(fake)",
-    "title": "Paper.io (fake & down)",
-    "url": "https://google.com",
-    "thumbnail": "https://i.pinimg.com/736x/33/48/8a/33488a03a8ec1fb8f79d4800e5d17dcf.jpg",
-    "category": "Io"
-  },
-  {
     "id": "paper.io-2",
-    "title": "Paper.io 2 (down)",
-    "url": "https://google.com",
+    "title": "Paper.io 2",
+    "url": "https://bind.strongson.com/games/paperio2/index.html",
     "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYI9XuUUZ774KqnfuXSPm1EwXtccJo5q_mng&s",
     "category": "Io"
   },
   {
     "id": "tiny-fishing",
-    "title": "Tiny Fishing (down)",
-    "url": "https://google.com",
+    "title": "Tiny Fishing",
+    "url": "https://bind.strongson.com/games/tiny-fishing/index.html",
     "thumbnail": "https://www.virlan.co/unblocked-games/wp-content/uploads/2024/02/tiny-fishing.jpg",
     "category": "Skill"
   },
   {
     "id": "baldi's-basics",
-    "title": "Baldi's Basics (down)",
-    "url": "https://google.com",
+    "title": "Baldi's Basics",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/baldis-basics/",
     "thumbnail": "https://fontmeme.com/images/badis-basics-font.png",
     "category": "Skill"
   },
   {
     "id": "bloons-td",
-    "title": "Bloons TD (down)",
-    "url": "https://google.com",
+    "title": "Bloons TD",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/flash/game/bloons-td-1.html",
     "thumbnail": "https://imgs.crazygames.com/auto-covers/bloons-tower-defense_1x1.jpg?format=auto&quality=70&metadata=none",
     "category": "Strategy"
   },
   {
     "id": "bloons-td-2",
-    "title": "Bloons TD 2 (down)",
-    "url": "https://google.com",
+    "title": "Bloons TD 2",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/flash/game/bloons-td-2.html",
     "thumbnail": "https://assets-prd.ignimgs.com/2024/04/26/bloonstd2-1714172517746.jpg",
     "category": "Strategy"
   },
   {
-    "id": "dune",
-    "title": "Dune (down)",
-    "url": "https://google.com",
-    "thumbnail": "https://cdn.aptoide.com/imgs/0/f/a/0faa6de9c6fbd892baa4732fc67f980a_screen.png",
-    "category": "Skill"
-  },
-  {
     "id": "poly-track",
-    "title": "PolyTrack (down)",
-    "url": "https:/google.com",
+    "title": "PolyTrack",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/polytrack/",
     "thumbnail": "https://cdn2.steamgriddb.com/thumb/9442e15eadaf27455b8b4f25dbc1f182.jpg",
     "category": "Driving"
   },
   {
     "id": "level-devil",
-    "title": "Level Devil (down)",
-    "url": "https://google.com",
+    "title": "Level Devil",
+    "url": "https://bind.strongson.com/games/lvldevil/index.html",
     "thumbnail": "https://store-images.s-microsoft.com/image/apps.10593.14411882092909650.e59c3c06-872a-420e-9804-eb29fddbff61.77661cd9-b4c3-4816-bc9a-019ff9af1073?h=210",
     "category": "Platformer"
   },
   {
     "id": "block-blast",
-    "title": "Block Blast (fake & down)",
-    "url": "https://google.com",
+    "title": "Block Blast (fake)",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/blockblast/",
     "thumbnail": "https://dn720704.ca.archive.org/0/items/Block_Blast_1.0.0_ios_10.0/appstore_icon_1742084968.jpg",
     "category": "Puzzle"
-  },
-  {
-    "id": "ice-dodo",
-    "title": "Ice Dodo (down)",
-    "url": "https://google.com",
-    "thumbnail": "https://imgs.crazygames.com/auto-covers/ice-dodo_1x1?format=auto&quality=70&metadata=none",
-    "category": "Arcade"
-  },
-  {
-    "id": "iron-snout",
-    "title": "Iron Snout (down)",
-    "url": "https://google.com",
-    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-6nDGbtMIOccbg4-1DTYccv-HLjE4URbxqw&s",
-    "category": "Action"
   },
   {
     "id": "bacon-may-die",
@@ -288,22 +260,15 @@
   },
   {
     "id": "line-rider",
-    "title": "Line Rider (down)",
-    "url": "https://google.com",
+    "title": "Line Rider",
+    "url": "https://bind.strongson.com/games/linerider/index.html",
     "thumbnail": "https://upload.wikimedia.org/wikipedia/en/thumb/5/5a/Bosh.svg/250px-Bosh.svg.png",
     "category": "Creative"
   },
   {
-    "id": "spacebar-clicker",
-    "title": "Spacebar Clicker (down)",
-    "url": "https://google.com",
-    "thumbnail": "https://1games.io/data/image/game/spacebar-clicker/banner/spacebar-clicker.png",
-    "category": "Idle"
-  },
-  {
     "id": "tube-jumpers",
-    "title": "Tube Jumpers (down)",
-    "url": "https://google.com",
+    "title": "Tube Jumpers",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/tube-jumpers/",
     "thumbnail": "https://cdn-1.webcatalog.io/catalog/poki-tube-jumpers/poki-tube-jumpers-icon-filled-256.png?v=1714779575173",
     "category": "Action"
   },
@@ -379,29 +344,22 @@
   },
   {
     "id": "crossy-road",
-    "title": "Crossy Road (down)",
-    "url": "https://google.com",
+    "title": "Crossy Road",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/crossyroad/",
     "thumbnail": "https://upload.wikimedia.org/wikipedia/en/7/71/Crossy_Road_icon.jpeg",
     "category": "Arcade"
   },
   {
-    "id": "draw-joust",
-    "title": "Draw Joust (down)",
-    "url": "https://google.com",
-    "thumbnail": "https://www.metacritic.com/a/img/catalog/provider/6/12/6-1-748295-52.jpg",
-    "category": "Action"
-  },
-  {
     "id": "super-hot",
-    "title": "SUPERHOT (down)",
-    "url": "https://google.com",
+    "title": "SUPERHOT",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/super-hot/",
     "thumbnail": "https://i.kickstarter.com/assets/011/609/376/9118166d49e15455e574b7b5c20d2a96_original.png?anim=false&fit=cover&gravity=auto&height=873&origin=ugc&q=92&v=1463685320&width=1552&sig=Efko%2B7rQH7l6LdYUzUZSyASZ4r0cAhRqWLCibHOnYpA%3D",
     "category": "Action"
   },
   {
     "id": "geometry-dash",
-    "title": "Geometry Dash (down)",
-    "url": "https://google.com",
+    "title": "Geometry Dash",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/gdlite/",
     "thumbnail": "https://assets-prd.ignimgs.com/2021/12/14/geometrydash-1639510868467.jpg",
     "category": "Skill"
   },
@@ -428,57 +386,57 @@
   },
   {
     "id": "doodle-jump",
-    "title": "Doodle Jump (down)",
-    "url": "https://google.com",
+    "title": "Doodle Jump",
+    "url": "https://bind.strongson.com/gamefile/Doodle%20Jump.html",
     "thumbnail": "https://assets-prd.ignimgs.com/2022/03/16/doodlejump-1647405974576.jpg",
     "category": "Arcade"
   },
   {
     "id": "doge-miner",
-    "title": "Doge Miner (down)",
-    "url": "https://google.com",
+    "title": "Doge Miner",
+    "url": "https://bind.strongson.com/gamefile/Doge%20Miner.html",
     "thumbnail": "https://www.dolldivine.com/images/doge-coin-miner-game.png",
     "category": "Idle"
   },
   {
     "id": "slow-roads",
-    "title": "Slow Roads (down)",
-    "url": "https://google.com",
+    "title": "Slow Roads",
+    "url": "https://bind.strongson.com/games/slowroads/index.html",
     "thumbnail": "https://cdn-1.webcatalog.io/catalog/slow-roads/slow-roads-icon-filled-256.png?v=1714780308395",
     "category": "Driving"
   },
   {
     "id": "subway-surfers",
-    "title": "Subway Surfers (down)",
-    "url": "https://google.com",
+    "title": "Subway Surfers",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/cdn/projects/subway-surfers/",
     "thumbnail": "https://img.poki-cdn.com/cdn-cgi/image/q=78,scq=50,width=1200,height=1200,fit=cover,f=png/7f4c7dc492227ec127a47e4b3197754e/subway-surfers.png",
     "category": "Runner"
   },
   {
     "id": "n-gon",
-    "title": "n-gon (down)",
-    "url": "https://google.com",
+    "title": "n-gon",
+    "url": "https://bind.strongson.com/games/n-gon/index.html",
     "thumbnail": "https://img.itch.zone/aW1hZ2UvNTE5MDkwLzEyMzMyODU5LnBuZw==/original/RGApqj.png",
     "category": "Action"
   },
   {
     "id": "csgo-clicker",
-    "title": "CSGO Clicker (down)",
-    "url": "https://google.com",
+    "title": "CSGO Clicker",
+    "url": "https://bind.strongson.com/games/csgo-clicker/index.html",
     "thumbnail": "https://avatars.githubusercontent.com/u/39322951?s=280&v=4",
     "category": "Idle"
   },
   {
     "id": "1v1.lol",
-    "title": "1v1.LOL (down)",
-    "url": "https://google.com",
+    "title": "1v1.LOL",
+    "url": "https://bind.strongson.com/gamefile/1v1.html",
     "thumbnail": "https://assets.about.me/background/users/u/n/b/unblockedgame1v1lol_1722245404_678.jpg",
     "category": "Action"
   },
   {
     "id": "2048",
-    "title": "2048 (down)",
-    "url": "https://google.com",
+    "title": "2048",
+    "url": "https://bind.strongson.com/games/2048/index.html",
     "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/1/18/2048_logo.svg",
     "category": "Puzzle"
   },
@@ -491,31 +449,24 @@
   },
   {
     "id": "getting-over-it",
-    "title": "Getting Over It (down)",
-    "url": "https://google.com",
+    "title": "Getting Over It",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/gettingoverit/index.html",
     "thumbnail": "https://sm.ign.com/ign_nl/cover/g/getting-ov/getting-over-it-with-bennett-foddy_z7y4.jpg",
     "category": "Skill"
   },
   {
     "id": "achievement-unlocked",
-    "title": "Achievement Unlocked (down)",
-    "url": "https://google.com",
+    "title": "Achievement Unlocked",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/flash/game/achunlocked.html",
     "thumbnail": "https://a.silvergames.com/j/b/achievement-unlocked.jpg",
     "category": "Platformer"
   },
   {
     "id": "solitaire",
-    "title": "Solitaire (down)",
-    "url": "https://google.com",
+    "title": "Solitaire",
+    "url": "https://bind.strongson.com/games/solitaire/index.html",
     "thumbnail": "https://cdn.jim-nielsen.com/ios/512/solitaire-2022-02-03.png?rf=1024",
     "category": "Puzzle"
-  },
-  {
-    "id": "tag",
-    "title": "Tag (down)",
-    "url": "https://google.com",
-    "thumbnail": "https://icc-games.com/wp-content/uploads/2025/09/Tag-Unblocked.webp",
-    "category": "Action"
   },
   {
     "id": "yohoho.io",
