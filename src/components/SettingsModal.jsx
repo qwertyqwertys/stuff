@@ -615,6 +615,23 @@ export function SettingsModal({
                 </button>
               ))}
             </div>
+
+            {/* Custom Color Picker Upgrade */}
+            <div className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}>
+              <div className="flex items-center gap-2">
+                <div className="relative w-6 h-6 rounded-lg overflow-hidden border border-white/20 cursor-pointer flex items-center justify-center flex-shrink-0">
+                  <input 
+                    type="color" 
+                    onChange={(e) => applyTheme({ name: 'Custom', color: e.target.value })}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    defaultValue="#38b2f6"
+                  />
+                  <div className="w-full h-full bg-[var(--theme)]" />
+                </div>
+                <span className={`text-[10px] font-bold uppercase ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>Custom Color Picker</span>
+              </div>
+              <span className="text-[10px] font-mono text-[var(--theme)]">Live Pick</span>
+            </div>
           </section>
 
           {/* DANGER ZONE (RESTORE/RESET DESTRUCTIVE ACTIONS) */}
