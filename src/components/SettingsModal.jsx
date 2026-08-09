@@ -3,7 +3,7 @@ import {
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
   ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check,
-  Sun, Moon, Play, Pause, Search
+  Sun, Moon, Play, Pause, Search, Loader2
 } from 'lucide-react';
 
 // --- INDEXEDDB HELPERS FOR HEAVY AUDIO FILES ---
@@ -84,15 +84,16 @@ export function SettingsModal({
   activeCloak, setActiveCloak
 }) {
   const [friendInput, setFriendInput] = useState('');
+  const [friendInputError, setFriendInputError] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Use deferred value for search query to prevent input lag
+  // Use deferred value for search query to prevent input lag[cite: 8]
   const deferredSearchQuery = useDeferredValue(searchQuery);
   
-  // Persist music reset state across page reloads
-  const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset') === 'true');
+  // Persist music reset state across page reloads[cite: 8]
+  const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset'] === 'true');
 
   // --- CUSTOM SONG STATE VIA INDEXEDDB ---
   const [customSongs, setCustomSongs] = useState([]);
@@ -105,6 +106,7 @@ export function SettingsModal({
   const [pendingFile, setPendingFile] = useState(null);
   const [songTitle, setSongTitle] = useState('');
   const [artistName, setArtistName] = useState('');
+  const [isSavingSong, setIsSavingSong] = useState(false);
 
   // --- COLOR PICKER PREVIOUS STATE FOR CANCELLING ---
   const [previousColor, setPreviousColor] = useState(null);
@@ -119,11 +121,16 @@ export function SettingsModal({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleAddFriend = () => {
-    if (friendInput.trim()) {
-      onAddFriend(friendInput.trim());
-      setFriendInput(''); 
+  // Live validation pattern instead of disabling the button
+  const handleAddFriendClick = () => {
+    if (!friendInput.trim()) {
+      setFriendInputError('Please enter a valid friend code first.');
+      document.getElementById('friend-code-input')?.focus();
+      return;
     }
+    setFriendInputError('');
+    onAddFriend(friendInput.trim());
+    setFriendInput(''); 
   };
 
   const handlePanicKeyDown = (e) => {
@@ -180,32 +187,37 @@ export function SettingsModal({
   };
 
   const saveCustomSong = async () => {
-    if (!pendingFile) return;
+    if (!pendingFile || isSavingSong) return;
+    setIsSavingSong(true);
     
-    const newSongMeta = {
-      id: 'custom-' + Date.now(),
-      title: songTitle || 'Untitled Song',
-      artist: artistName || 'Unknown Artist',
-      isCustom: true
-    };
+    try {
+      const newSongMeta = {
+        id: 'custom-' + Date.now(),
+        title: songTitle || 'Untitled Song',
+        artist: artistName || 'Unknown Artist',
+        isCustom: true
+      };
 
-    await saveSongToIDB(newSongMeta, pendingFile);
-    
-    const objectUrl = URL.createObjectURL(pendingFile);
-    const newSongWithUrl = { ...newSongMeta, url: objectUrl };
+      await saveSongToIDB(newSongMeta, pendingFile);
+      
+      const objectUrl = URL.createObjectURL(pendingFile);
+      const newSongWithUrl = { ...newSongMeta, url: objectUrl };
 
-    setCustomSongs(prev => [newSongWithUrl, ...prev]);
+      setCustomSongs(prev => [newSongWithUrl, ...prev]);
 
-    // Clear reset state since a new song is chosen
-    setIsMusicReset(false);
-    localStorage.setItem('capy-music-reset', 'false');
+      // Clear reset state since a new song is chosen[cite: 8]
+      setIsMusicReset(false);
+      localStorage.setItem('capy-music-reset', 'false');
 
-    if (handleAudioUpload) {
-      handleAudioUpload({ presetUrl: objectUrl });
+      if (handleAudioUpload) {
+        handleAudioUpload({ presetUrl: objectUrl });
+      }
+
+      setUploadModalOpen(false);
+      setPendingFile(null);
+    } finally {
+      setIsSavingSong(false);
     }
-
-    setUploadModalOpen(false);
-    setPendingFile(null);
   };
 
   const deleteCustomSong = async (id, e) => {
@@ -222,7 +234,7 @@ export function SettingsModal({
   const inputBg = isLightMode ? "bg-white border-zinc-300 text-black placeholder:text-zinc-400" : "bg-zinc-800 border-white/10 text-white";
   const headerText = isLightMode ? "text-zinc-900" : "text-[var(--theme)]";
 
-  // Helper to check if a section matches the deferred search query
+  // Helper to check if a section matches the deferred search query[cite: 8]
   const matchesSearch = (keywords) => {
     if (!deferredSearchQuery.trim()) return true;
     const q = deferredSearchQuery.toLowerCase();
@@ -241,7 +253,7 @@ export function SettingsModal({
           <button 
             type="button"
             onClick={onClose} 
-            className={`${isLightMode ? 'text-zinc-700 hover:text-black hover:bg-zinc-100' : 'text-zinc-300 hover:text-white hover:bg-white/5'} p-1 rounded-lg transition-colors`}
+            className={`${isLightMode ? 'text-zinc-700 hover:text-black hover:bg-zinc-100' : 'text-zinc-300 hover:text-white hover:bg-white/5'} p-1 rounded-lg transition-colors focus:ring-2 focus:ring-[var(--theme)] outline-none`}
             aria-label="Close settings"
           >
             <X className="w-6 h-6" />
@@ -256,15 +268,16 @@ export function SettingsModal({
             <Search className={`absolute left-3 top-3 w-4 h-4 ${isLightMode ? 'text-zinc-400' : 'text-zinc-500'}`} />
             <input
               type="text"
-              placeholder="Type to search settings (e.g., theme, audio, danger)..."
+              placeholder="Type to search settings (e.g., theme, audio, danger)..."[cite: 8]
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full pl-9 pr-4 py-2.5 ${inputBg} border rounded-xl text-xs outline-none font-medium transition-all focus:border-[var(--theme)]`}
+              className={`w-full pl-9 pr-4 py-2.5 ${inputBg} border rounded-xl text-xs outline-none font-medium transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
             />
             {searchQuery && (
               <button 
+                type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-3 text-[10px] font-bold uppercase opacity-60 hover:opacity-100"
+                className="absolute right-3 top-3 text-[10px] font-bold uppercase opacity-60 hover:opacity-100 focus:outline-none"
               >
                 Clear
               </button>
@@ -282,7 +295,7 @@ export function SettingsModal({
                   <button 
                     type="button"
                     onClick={onViewOwnProfile}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-[var(--theme)] text-black rounded-full text-[9px] font-black uppercase hover:opacity-80 transition-opacity"
+                    className="flex items-center gap-1.5 px-3 py-1 bg-[var(--theme)] text-black rounded-full text-[9px] font-black uppercase hover:opacity-80 transition-opacity focus:ring-2 focus:ring-offset-1 focus:ring-[var(--theme)] outline-none"
                   >
                     <Eye className="w-3 h-3" /> View My Profile
                   </button>
@@ -298,17 +311,17 @@ export function SettingsModal({
                     <button 
                       type="button"
                       onClick={handleResetPfp}
-                      className={`p-3 border rounded-xl text-[9px] font-black uppercase flex flex-col items-center justify-center gap-1 transition-colors ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
+                      className={`p-3 border rounded-xl text-[9px] font-black uppercase flex flex-col items-center justify-center gap-1 transition-colors focus:ring-2 focus:ring-red-400 outline-none ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
                     >
                       <RotateCcw className="w-3 h-3" /> Reset Avatar
                     </button>
                   </div>
                   <input 
                     type="text" 
-                    placeholder="Custom Display Name..." 
+                    placeholder="Custom Display Name..."[cite: 8]
                     value={displayName} 
                     onChange={(e) => setDisplayName(e.target.value.slice(0, 25))}
-                    className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold transition-all focus:border-[var(--theme)]`}
+                    className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
                   />
                   <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-black/20 border-white/5'} p-3 rounded-xl border space-y-3`}>
                     <div className="flex items-center justify-between">
@@ -316,7 +329,7 @@ export function SettingsModal({
                       <button 
                         type="button"
                         onClick={handleCopyCode}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-200' : 'bg-white/5 text-zinc-300 hover:text-white'}`}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all outline-none focus:ring-2 focus:ring-[var(--theme)] ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-200' : 'bg-white/5 text-zinc-300 hover:text-white'}`}
                       >
                         {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                         {copied ? 'Copied' : 'Copy'}
@@ -339,21 +352,30 @@ export function SettingsModal({
                   <Users className="w-3 h-3 text-[var(--theme)]" /> Friends List
                 </label>
                 
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    placeholder="Enter friend code..." 
-                    value={friendInput}
-                    onChange={(e) => setFriendInput(e.target.value.slice(0, 100))}
-                    className={`flex-1 ${inputBg} border rounded-xl p-2.5 text-xs outline-none transition-all focus:border-[var(--theme)]`}
-                  />
-                  <button 
-                    type="button"
-                    onClick={handleAddFriend}
-                    className="p-2.5 bg-[var(--theme)] text-black rounded-xl hover:opacity-80 transition-opacity"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                  </button>
+                <div className="space-y-1">
+                  <div className="flex gap-2">
+                    <input 
+                      id="friend-code-input"
+                      type="text" 
+                      placeholder="Enter friend code..."[cite: 8]
+                      value={friendInput}
+                      onChange={(e) => {
+                        setFriendInput(e.target.value.slice(0, 100));
+                        if (friendInputError) setFriendInputError('');
+                      }}
+                      className={`flex-1 ${inputBg} border rounded-xl p-2.5 text-xs outline-none transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
+                    />
+                    <button 
+                      type="button"
+                      onClick={handleAddFriendClick}
+                      className="p-2.5 bg-[var(--theme)] text-black rounded-xl hover:opacity-80 transition-opacity focus:ring-2 focus:ring-offset-1 focus:ring-[var(--theme)] outline-none"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {friendInputError && (
+                    <p className="text-[9px] text-red-500 font-bold px-1">{friendInputError}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
@@ -364,14 +386,14 @@ export function SettingsModal({
                         <button 
                           type="button"
                           onClick={() => onViewFriend(friend)}
-                          className={`p-1.5 rounded-lg transition-colors ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
+                          className={`p-1.5 rounded-lg transition-colors outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
                         >
                           <Eye className="w-3 h-3" />
                         </button>
                         <button 
                           type="button"
                           onClick={() => onRemoveFriend(friend.code)}
-                          className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border border-red-200' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30'}`}
+                          className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border border-red-200' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30'}`}
                         >
                           <Trash2 className="w-3 h-3" /> Remove
                         </button>
@@ -395,7 +417,7 @@ export function SettingsModal({
                     <button 
                       type="button"
                       onClick={() => setPerformanceMode(!performanceMode)}
-                      className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase transition-all ${performanceMode ? 'bg-yellow-500 text-black shadow-md' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-300' : 'bg-white/10 text-zinc-200 border border-white/20'}`}
+                      className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase transition-all outline-none focus:ring-2 focus:ring-yellow-400 ${performanceMode ? 'bg-yellow-500 text-black shadow-md' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-300' : 'bg-white/10 text-zinc-200 border border-white/20'}`}
                     >
                       <Zap className="w-3 h-3" />
                       {performanceMode ? 'ON' : 'OFF'}
@@ -403,7 +425,7 @@ export function SettingsModal({
                   </div>
                   <p className={`text-[8px] uppercase font-bold leading-tight tracking-tighter ${isLightMode ? 'text-yellow-900' : 'text-yellow-300'}`}>
                     {performanceMode 
-                      ? "Music and heavy effects disabled to maximize CPU/RAM speed." 
+                      ? "Music and heavy effects disabled to maximize CPU/RAM speed."[cite: 8]
                       : "Standard mode active. Music and visuals are enabled."}
                   </p>
                 </div>
@@ -439,7 +461,7 @@ export function SettingsModal({
                       setHasBackground(false);
                       if (handleResetBackground) handleResetBackground();
                     }}
-                    className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-colors ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
+                    className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-colors outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
                   >
                     <RotateCcw className="w-3 h-3" /> Reset BG
                   </button>
@@ -455,7 +477,7 @@ export function SettingsModal({
                         onTogglePlay();
                       }
                     }}
-                    className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-colors ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
+                    className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-colors outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
                   >
                     <RotateCcw className="w-3 h-3" /> Reset Music
                   </button>
@@ -476,7 +498,7 @@ export function SettingsModal({
                             e.stopPropagation();
                             if (onTogglePlay) onTogglePlay();
                           }}
-                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer z-10 ${
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer z-10 outline-none focus:ring-1 focus:ring-[var(--theme)] ${
                             isLightMode 
                               ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-300' 
                               : 'bg-white/10 text-zinc-200 hover:bg-white/20'
@@ -567,7 +589,7 @@ export function SettingsModal({
                           <button 
                             type="button"
                             onClick={(e) => deleteCustomSong(song.id, e)}
-                            className="px-2 py-1 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors"
+                            className="px-2 py-1 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors outline-none focus:ring-1 focus:ring-red-400"
                             title="Delete custom song track"
                           >
                             <Trash2 className="w-3 h-3" /> Delete Track
@@ -592,7 +614,7 @@ export function SettingsModal({
                       key={cloak}
                       type="button"
                       onClick={() => setActiveCloak(cloak)}
-                      className={`p-3 border rounded-xl text-[10px] font-black uppercase transition-all ${
+                      className={`p-3 border rounded-xl text-[10px] font-black uppercase transition-all outline-none focus:ring-2 focus:ring-[var(--theme)] ${
                         activeCloak === cloak 
                         ? 'bg-[var(--theme)] text-black border-[var(--theme)] shadow-md' 
                         : isLightMode ? 'bg-white border-zinc-200 text-zinc-700 hover:border-zinc-400' : 'bg-white/5 border-white/10 text-zinc-300 hover:text-white hover:border-white/20'
@@ -614,14 +636,14 @@ export function SettingsModal({
                 <div className="flex gap-2">
                   <input 
                     type="text" 
-                    placeholder="Press key..." 
+                    placeholder="Press key..."[cite: 8]
                     value={panicKey} 
                     onKeyDown={handlePanicKeyDown}
                     className={`flex-1 border rounded-xl p-3 text-xs outline-none text-center font-mono font-bold ${isLightMode ? 'bg-white border-red-200 text-zinc-900' : 'bg-zinc-800 border-white/10 text-white'}`} 
                     readOnly 
                   />
                   {panicKey && (
-                    <button type="button" onClick={() => setPanicKey('')} className={`p-3 border rounded-xl transition-colors ${isLightMode ? 'bg-white border-red-200 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 hover:bg-red-500/30'}`}>
+                    <button type="button" onClick={() => setPanicKey('')} className={`p-3 border rounded-xl transition-colors outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-white border-red-200 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 hover:bg-red-500/30'}`}>
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </button>
                   )}
@@ -651,7 +673,7 @@ export function SettingsModal({
                 <button 
                   type="button"
                   onClick={() => setIsLightMode(!isLightMode)}
-                  className={`w-full p-3 mb-2 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
+                  className={`w-full p-3 mb-2 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all outline-none focus:ring-2 focus:ring-[var(--theme)] ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
                 >
                   {isLightMode ? <Sun className="w-3.5 h-3.5 text-yellow-500" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />} 
                   {isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
@@ -663,14 +685,14 @@ export function SettingsModal({
                       key={id} 
                       type="button"
                       onClick={() => applyTheme(t)} 
-                      className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 transition-all ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
+                      className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 transition-all outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
                     >
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} /> {t.name}
                     </button>
                   ))}
                 </div>
 
-                {/* Custom Color Picker with Cancel/Revert Support and Lag-Free Dragging */}
+                {/* Custom Color Picker with Cancel/Revert Support and Lag-Free Dragging[cite: 8] */}
                 <div 
                   className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}
                   onBlur={(e) => {
@@ -692,7 +714,7 @@ export function SettingsModal({
                         }}
                         onChange={(e) => {
                           const val = e.target.value;
-                          // Instantly update DOM CSS variable directly for lag-free dragging
+                          // Instantly update DOM CSS variable directly for lag-free dragging[cite: 8]
                           if (typeof document !== 'undefined') {
                             document.documentElement.style.setProperty('--theme', val);
                           }
@@ -714,7 +736,7 @@ export function SettingsModal({
                           applyTheme({ name: 'Custom', color: previousColor });
                           setPreviousColor(null);
                         }}
-                        className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${
+                        className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors outline-none focus:ring-1 focus:ring-zinc-400 ${
                           isLightMode 
                             ? 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300' 
                             : 'bg-white/10 text-zinc-200 hover:bg-white/20'
@@ -736,13 +758,13 @@ export function SettingsModal({
                   <ShieldAlert className="w-3 h-3" /> Danger Zone
                 </label>
                 <p className={`text-[9px] uppercase font-bold tracking-tighter leading-tight ${isLightMode ? 'text-red-900' : 'text-red-300'}`}>
-                  Irreversible actions that clear local settings, cache, or reset app defaults.
+                  Irreversible actions that clear local settings, cache, or reset app defaults.[cite: 8]
                 </p>
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <button 
                     type="button"
                     onClick={handleClearSettings} 
-                    className={`p-3 rounded-xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all ${
+                    className={`p-3 rounded-xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all outline-none focus:ring-2 focus:ring-orange-400 ${
                       confirmClearSettings 
                         ? 'bg-orange-500 text-black border-orange-400 animate-pulse' 
                         : isLightMode 
@@ -757,7 +779,7 @@ export function SettingsModal({
                   <button 
                     type="button"
                     onClick={handleReset} 
-                    className={`p-3 rounded-xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all ${
+                    className={`p-3 rounded-xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all outline-none focus:ring-2 focus:ring-red-400 ${
                       confirmReset 
                         ? 'bg-red-500 text-black border-red-400 animate-pulse' 
                         : isLightMode 
@@ -808,16 +830,23 @@ export function SettingsModal({
                 <button 
                   type="button"
                   onClick={() => setUploadModalOpen(false)} 
-                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase transition-colors outline-none focus:ring-1 focus:ring-zinc-400"
                 >
                   Cancel
                 </button>
                 <button 
                   type="button"
                   onClick={saveCustomSong} 
-                  className="px-5 py-2.5 rounded-xl bg-[var(--theme)] text-black text-[10px] font-black uppercase hover:opacity-90 shadow-md transition-opacity"
+                  aria-busy={isSavingSong}
+                  className="px-5 py-2.5 rounded-xl bg-[var(--theme)] text-black text-[10px] font-black uppercase hover:opacity-90 shadow-md transition-opacity flex items-center gap-2 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--theme)]"
                 >
-                  Save to Library
+                  {isSavingSong ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    "Save to Library"
+                  )}
                 </button>
               </div>
             </div>
