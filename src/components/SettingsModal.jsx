@@ -548,6 +548,16 @@ export function SettingsModal({
             </div>
           </section>
 
+          {/* ABOUT & ACCESSIBILITY SECTION */}
+          <section className={`space-y-2 p-4 rounded-2xl border ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+            <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+              <ShieldAlert className="w-3 h-3 text-[var(--theme)]" /> About & Accessibility
+            </label>
+            <p className={`text-[9px] leading-relaxed ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+              This app is committed to digital accessibility. If you encounter any contrast issues with custom themes or navigation barriers, feel free to adjust your theme or reach out via repository issues.
+            </p>
+          </section>
+
           {/* THEMES */}
           <section className="space-y-3">
             <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
