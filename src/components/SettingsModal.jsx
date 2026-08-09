@@ -625,22 +625,17 @@ export function SettingsModal({
                 <div className="relative w-6 h-6 rounded-lg overflow-hidden border border-white/20 cursor-pointer flex items-center justify-center flex-shrink-0">
                   <input 
                     type="color" 
-                    onFocus={() => {
+                    value={typeof document !== 'undefined' ? (getComputedStyle(document.documentElement).getPropertyValue('--theme').trim() || '#38b2f6') : '#38b2f6'}
+                    onMouseDown={() => {
                       if (!previousColor && typeof document !== 'undefined') {
                         const current = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim() || '#38b2f6';
                         setPreviousColor(current);
                       }
                     }}
-                    onBlur={() => {
-                      setTimeout(() => {
-                        setPreviousColor(null);
-                      }, 150);
-                    }}
                     onChange={(e) => {
                       applyTheme({ name: 'Custom', color: e.target.value });
                     }}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    defaultValue="#38b2f6"
                   />
                   <div className="w-full h-full bg-[var(--theme)]" />
                 </div>
@@ -650,12 +645,9 @@ export function SettingsModal({
                 {previousColor && (
                   <button
                     type="button"
-                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
-                      if (previousColor) {
-                        applyTheme({ name: 'Custom', color: previousColor });
-                        setPreviousColor(null);
-                      }
+                      applyTheme({ name: 'Custom', color: previousColor });
+                      setPreviousColor(null);
                     }}
                     className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors ${
                       isLightMode 
@@ -669,7 +661,6 @@ export function SettingsModal({
                 <span className="text-[10px] font-mono text-[var(--theme)]">Live Pick</span>
               </div>
             </div>
-          </section>
 
           {/* DANGER ZONE (RESTORE/RESET DESTRUCTIVE ACTIONS) */}
           <section className={`space-y-3 p-4 rounded-2xl border ${isLightMode ? 'bg-red-50/50 border-red-200' : 'bg-red-500/5 border-red-500/20'}`}>
