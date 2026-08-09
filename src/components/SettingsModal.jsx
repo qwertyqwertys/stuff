@@ -268,7 +268,7 @@ export function SettingsModal({
             <Search className={`absolute left-3 top-3 w-4 h-4 ${isLightMode ? 'text-zinc-400' : 'text-zinc-500'}`} />
             <input
               type="text"
-              placeholder="Type to search settings (e.g., theme, audio, danger)..."[cite: 8]
+              placeholder="Type to search settings (e.g., theme, audio, danger)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full pl-9 pr-4 py-2.5 ${inputBg} border rounded-xl text-xs outline-none font-medium transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
