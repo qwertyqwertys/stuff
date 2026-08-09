@@ -554,7 +554,7 @@ export function SettingsModal({
               <ShieldAlert className="w-3 h-3 text-[var(--theme)]" /> About & Accessibility
             </label>
             <p className={`text-[9px] leading-relaxed ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-              This app is committed to digital accessibility. If you encounter any contrast issues with custom themes or navigation barriers, feel free to adjust your theme or reach out via repository issues.
+              This website is committed to digital accessibility. If you encounter any contrast issues with custom themes or navigation barriers, feel free to adjust your theme or reach out via repository issues.
             </p>
           </section>
 
