@@ -285,7 +285,7 @@ export function SettingsModal({
               {friends?.length > 0 ? friends.map(friend => (
                 <div key={friend.code} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-xl border`}>
                   <span title={friend.name} className={`text-[10px] font-bold truncate max-w-[120px] ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{friend.name}</span>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 items-center">
                     <button 
                       type="button"
                       onClick={() => onViewFriend(friend)}
@@ -296,9 +296,9 @@ export function SettingsModal({
                     <button 
                       type="button"
                       onClick={() => onRemoveFriend(friend.code)}
-                      className={`p-1.5 rounded-lg ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white' : 'bg-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-white'}`}
+                      className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase flex items-center gap-1 ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border border-red-200' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30'}`}
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3 h-3" /> Remove
                     </button>
                   </div>
                 </div>
@@ -491,10 +491,10 @@ export function SettingsModal({
                       <button 
                         type="button"
                         onClick={(e) => deleteCustomSong(song.id, e)}
-                        className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
-                        title="Delete custom song"
+                        className="px-2 py-1 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors"
+                        title="Delete custom song track"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3 h-3" /> Delete Track
                       </button>
                     )}
                   </div>
@@ -587,34 +587,46 @@ export function SettingsModal({
             </div>
           </section>
 
-          {/* RESET BUTTONS */}
-          <div className="grid grid-cols-2 gap-3 pt-4">
-            <button 
-              type="button"
-              onClick={handleClearSettings} 
-              className={`p-4 rounded-2xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 ${
-                confirmClearSettings 
-                  ? 'bg-orange-500 text-black border-orange-400 animate-pulse' 
-                  : 'border-orange-500/20 bg-orange-500/5 text-orange-600 hover:bg-orange-500/10'
-              }`}
-            >
-              <RotateCcw className={`w-3.5 h-3.5 ${confirmClearSettings ? 'animate-spin' : ''}`} /> 
-              {confirmClearSettings ? 'ARE YOU SURE?' : 'Clear Settings'}
-            </button>
+          {/* DANGER ZONE (RESTORE/RESET DESTRUCTIVE ACTIONS) */}
+          <section className={`space-y-3 p-4 rounded-2xl border ${isLightMode ? 'bg-red-50/50 border-red-200' : 'bg-red-500/5 border-red-500/20'}`}>
+            <label className="text-[10px] uppercase font-black text-red-500 tracking-widest flex items-center gap-2">
+              <ShieldAlert className="w-3 h-3" /> Danger Zone
+            </label>
+            <p className={`text-[9px] uppercase font-bold tracking-tighter leading-tight ${isLightMode ? 'text-red-900' : 'text-red-300'}`}>
+              Irreversible actions that clear local settings, cache, or reset app defaults.
+            </p>
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <button 
+                type="button"
+                onClick={handleClearSettings} 
+                className={`p-3 rounded-xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all ${
+                  confirmClearSettings 
+                    ? 'bg-orange-500 text-black border-orange-400 animate-pulse' 
+                    : isLightMode 
+                      ? 'border-orange-300 bg-white text-orange-700 hover:bg-orange-50' 
+                      : 'border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20'
+                }`}
+              >
+                <RotateCcw className={`w-3.5 h-3.5 ${confirmClearSettings ? 'animate-spin' : ''}`} /> 
+                {confirmClearSettings ? 'ARE YOU SURE?' : 'Clear Settings'}
+              </button>
 
-            <button 
-              type="button"
-              onClick={handleReset} 
-              className={`p-4 rounded-2xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 ${
-                confirmReset 
-                  ? 'bg-red-500 text-black border-red-400 animate-pulse' 
-                  : 'border-red-500/20 bg-red-500/5 text-red-600 hover:bg-red-500/10'
-              }`}
-            >
-              <RotateCcw className={`w-4 h-4 ${confirmReset ? 'animate-spin' : ''}`} />
-              {confirmReset ? 'ARE YOU SURE?' : 'Factory Reset'}
-            </button>
-          </div>
+              <button 
+                type="button"
+                onClick={handleReset} 
+                className={`p-3 rounded-xl border text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all ${
+                  confirmReset 
+                    ? 'bg-red-500 text-black border-red-400 animate-pulse' 
+                    : isLightMode 
+                      ? 'border-red-300 bg-white text-red-600 hover:bg-red-500 hover:text-white' 
+                      : 'border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/30 hover:text-white'
+                }`}
+              >
+                <RotateCcw className={`w-4 h-4 ${confirmReset ? 'animate-spin' : ''}`} />
+                {confirmReset ? 'ARE YOU SURE?' : 'Factory Reset'}
+              </button>
+            </div>
+          </section>
         </div>
       </div>
 
