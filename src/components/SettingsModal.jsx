@@ -631,6 +631,11 @@ export function SettingsModal({
                         setPreviousColor(current);
                       }
                     }}
+                    onBlur={() => {
+                      setTimeout(() => {
+                        setPreviousColor(null);
+                      }, 150);
+                    }}
                     onChange={(e) => {
                       applyTheme({ name: 'Custom', color: e.target.value });
                     }}
@@ -645,6 +650,7 @@ export function SettingsModal({
                 {previousColor && (
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       if (previousColor) {
                         applyTheme({ name: 'Custom', color: previousColor });
