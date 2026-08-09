@@ -620,7 +620,14 @@ export function SettingsModal({
             </div>
 
             {/* Custom Color Picker with Cancel/Revert Support */}
-            <div className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}>
+            <div 
+              className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget)) {
+                  setPreviousColor(null);
+                }
+              }}
+            >
               <div className="flex items-center gap-2">
                 <div className="relative w-6 h-6 rounded-lg overflow-hidden border border-white/20 cursor-pointer flex items-center justify-center flex-shrink-0">
                   <input 
