@@ -89,10 +89,10 @@ export function SettingsModal({
   const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Use deferred value for search query to prevent input lag[cite: 8]
+  // Use deferred value for search query to prevent input lag
   const deferredSearchQuery = useDeferredValue(searchQuery);
   
-  // Persist music reset state across page reloads[cite: 8]
+  // Persist music reset state across page reloads
   const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset') === 'true');
   
   // --- CUSTOM SONG STATE VIA INDEXEDDB ---
@@ -205,7 +205,7 @@ export function SettingsModal({
 
       setCustomSongs(prev => [newSongWithUrl, ...prev]);
 
-      // Clear reset state since a new song is chosen[cite: 8]
+      // Clear reset state since a new song is chosen
       setIsMusicReset(false);
       localStorage.setItem('capy-music-reset', 'false');
 
@@ -234,7 +234,7 @@ export function SettingsModal({
   const inputBg = isLightMode ? "bg-white border-zinc-300 text-black placeholder:text-zinc-400" : "bg-zinc-800 border-white/10 text-white";
   const headerText = isLightMode ? "text-zinc-900" : "text-[var(--theme)]";
 
-  // Helper to check if a section matches the deferred search query[cite: 8]
+  // Helper to check if a section matches the deferred search query
   const matchesSearch = (keywords) => {
     if (!deferredSearchQuery.trim()) return true;
     const q = deferredSearchQuery.toLowerCase();
@@ -318,7 +318,7 @@ export function SettingsModal({
                   </div>
                   <input 
                     type="text" 
-                    placeholder="Custom Display Name..."[cite: 8]
+                    placeholder="Custom Display Name..."
                     value={displayName} 
                     onChange={(e) => setDisplayName(e.target.value.slice(0, 25))}
                     className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
@@ -357,7 +357,7 @@ export function SettingsModal({
                     <input 
                       id="friend-code-input"
                       type="text" 
-                      placeholder="Enter friend code..."[cite: 8]
+                      placeholder="Enter friend code..."
                       value={friendInput}
                       onChange={(e) => {
                         setFriendInput(e.target.value.slice(0, 100));
@@ -425,7 +425,7 @@ export function SettingsModal({
                   </div>
                   <p className={`text-[8px] uppercase font-bold leading-tight tracking-tighter ${isLightMode ? 'text-yellow-900' : 'text-yellow-300'}`}>
                     {performanceMode 
-                      ? "Music and heavy effects disabled to maximize CPU/RAM speed."[cite: 8]
+                      ? "Music and heavy effects disabled to maximize CPU/RAM speed."
                       : "Standard mode active. Music and visuals are enabled."}
                   </p>
                 </div>
@@ -636,7 +636,7 @@ export function SettingsModal({
                 <div className="flex gap-2">
                   <input 
                     type="text" 
-                    placeholder="Press key..."[cite: 8]
+                    placeholder="Press key..."
                     value={panicKey} 
                     onKeyDown={handlePanicKeyDown}
                     className={`flex-1 border rounded-xl p-3 text-xs outline-none text-center font-mono font-bold ${isLightMode ? 'bg-white border-red-200 text-zinc-900' : 'bg-zinc-800 border-white/10 text-white'}`} 
@@ -692,7 +692,7 @@ export function SettingsModal({
                   ))}
                 </div>
 
-                {/* Custom Color Picker with Cancel/Revert Support and Lag-Free Dragging[cite: 8] */}
+                {/* Custom Color Picker with Cancel/Revert Support and Lag-Free Dragging */}
                 <div 
                   className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}
                   onBlur={(e) => {
@@ -714,7 +714,7 @@ export function SettingsModal({
                         }}
                         onChange={(e) => {
                           const val = e.target.value;
-                          // Instantly update DOM CSS variable directly for lag-free dragging[cite: 8]
+                          // Instantly update DOM CSS variable directly for lag-free dragging
                           if (typeof document !== 'undefined') {
                             document.documentElement.style.setProperty('--theme', val);
                           }
@@ -758,7 +758,7 @@ export function SettingsModal({
                   <ShieldAlert className="w-3 h-3" /> Danger Zone
                 </label>
                 <p className={`text-[9px] uppercase font-bold tracking-tighter leading-tight ${isLightMode ? 'text-red-900' : 'text-red-300'}`}>
-                  Irreversible actions that clear local settings, cache, or reset app defaults.[cite: 8]
+                  Irreversible actions that clear local settings, cache, or reset app defaults.
                 </p>
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <button 
@@ -784,7 +784,7 @@ export function SettingsModal({
                         ? 'bg-red-500 text-black border-red-400 animate-pulse' 
                         : isLightMode 
                           ? 'border-red-300 bg-white text-red-600 hover:bg-red-500 hover:text-white' 
-                          : 'border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/30 hover:text-white'
+                          : 'border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-white'
                     }`}
                   >
                     <RotateCcw className={`w-4 h-4 ${confirmReset ? 'animate-spin' : ''}`} />
