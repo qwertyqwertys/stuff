@@ -93,8 +93,8 @@ export function SettingsModal({
   const deferredSearchQuery = useDeferredValue(searchQuery);
   
   // Persist music reset state across page reloads[cite: 8]
-  const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset'] === 'true');
-
+  const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset') === 'true');
+  
   // --- CUSTOM SONG STATE VIA INDEXEDDB ---
   const [customSongs, setCustomSongs] = useState([]);
 
