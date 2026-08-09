@@ -661,6 +661,7 @@ export function SettingsModal({
                 <span className="text-[10px] font-mono text-[var(--theme)]">Live Pick</span>
               </div>
             </div>
+          </section>
 
           {/* DANGER ZONE (RESTORE/RESET DESTRUCTIVE ACTIONS) */}
           <section className={`space-y-3 p-4 rounded-2xl border ${isLightMode ? 'bg-red-50/50 border-red-200' : 'bg-red-500/5 border-red-500/20'}`}>
