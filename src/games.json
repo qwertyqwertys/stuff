@@ -148,8 +148,8 @@
   },
   {
     "id": "ovo",
-    "title": "OvO (down)",
-    "url": "https://google.com",
+    "title": "OvO",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/cdn/projects/ovo/",
     "thumbnail": "/assets/ovo.jpg",
     "category": "Platformer"
   },
@@ -162,8 +162,8 @@
   },
   {
     "id": "retro-bowl",
-    "title": "Retro Bowl (down)",
-    "url": "https://google.com",
+    "title": "Retro Bowl",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/retro-bowl/",
     "thumbnail": "/assets/retrobowl.jpg",
     "category": "Sports"
   },
@@ -175,9 +175,9 @@
     "category": "Sports"
   },
   {
-    "id": "gun-spin",
-    "title": "GunSpin (down)",
-    "url": "https://google.com",
+    "id": "gunspin",
+    "title": "GunSpin",
+    "url": "https://a.luminsdk.com/g/1786297882-4-ajZ-4Cu_jKibWmvM26aaaVOPF1zYDZBoaKHZvUlOE/quasar/webgl/gs/",
     "thumbnail": "https://images.dwncdn.net/images/t_app-icon-l/p/39d0a468-21ab-466d-a65b-5585c02dd7ad/15864794/gunspin-logo",
     "category": "Arcade"
   },
