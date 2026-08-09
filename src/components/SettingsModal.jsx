@@ -108,7 +108,8 @@ export function SettingsModal({
 
   if (!show) return null;
 
-  const effectiveBgMusic = isMusicReset ? null : bgMusic;
+  const fullTracklist = [...customSongs, ...(tracklist || [])];
+  const effectiveBgMusic = isMusicReset ? null : (bgMusic || fullTracklist.length > 0);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(friendCode);
@@ -212,8 +213,6 @@ export function SettingsModal({
     setCustomSongs(prev => prev.filter(song => song.id !== id));
   };
 
-  const fullTracklist = [...customSongs, ...(tracklist || [])];
-
   const modalBg = isLightMode ? "bg-white border-zinc-200 text-zinc-900" : "bg-zinc-900 border-white/10 text-white";
   const sectionBg = isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-white/5 border-white/5";
   const inputBg = isLightMode ? "bg-white border-zinc-300 text-black placeholder:text-zinc-400" : "bg-zinc-800 border-white/10 text-white";
@@ -231,7 +230,7 @@ export function SettingsModal({
       <div className={`${modalBg} border rounded-3xl max-w-md w-full relative shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}>
         
         {/* HEADER */}
-        <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-white/5'} px-6 pt-6 pb-4 ${modalBg} z-20 flex-shrink-0`}>
+        <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-white/5'} px-6 py-4 sticky top-0 ${modalBg} z-20 flex-shrink-0`}>
           <h2 className={`text-xl font-bold flex items-center gap-2 ${headerText}`}>
             <ShieldAlert className={`w-5 h-5 ${isLightMode ? 'text-[var(--theme)]' : ''}`} /> System Settings
           </h2>
@@ -245,8 +244,8 @@ export function SettingsModal({
           </button>
         </div>
 
-        {/* SCROLLABLE CONTENT BODY */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar">
+        {/* SCROLLABLE BODY CONTAINER */}
+        <div className="overflow-y-auto custom-scrollbar p-6 space-y-6 flex-1">
           
           {/* SEARCH FILTER BAR (Power User Feature) */}
           <div className="relative">
