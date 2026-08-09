@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useDeferredValue } from 'react';
 import { 
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
@@ -88,6 +88,9 @@ export function SettingsModal({
   const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Use deferred value for search query to prevent input lag
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  
   // Persist music reset state across page reloads
   const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset') === 'true');
 
@@ -108,8 +111,7 @@ export function SettingsModal({
 
   if (!show) return null;
 
-  const fullTracklist = [...customSongs, ...(tracklist || [])];
-  const effectiveBgMusic = isMusicReset ? null : (bgMusic || fullTracklist.length > 0);
+  const effectiveBgMusic = isMusicReset ? null : bgMusic;
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(friendCode);
@@ -213,15 +215,17 @@ export function SettingsModal({
     setCustomSongs(prev => prev.filter(song => song.id !== id));
   };
 
+  const fullTracklist = [...customSongs, ...(tracklist || [])];
+
   const modalBg = isLightMode ? "bg-white border-zinc-200 text-zinc-900" : "bg-zinc-900 border-white/10 text-white";
   const sectionBg = isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-white/5 border-white/5";
   const inputBg = isLightMode ? "bg-white border-zinc-300 text-black placeholder:text-zinc-400" : "bg-zinc-800 border-white/10 text-white";
   const headerText = isLightMode ? "text-zinc-900" : "text-[var(--theme)]";
 
-  // Helper to check if a section matches the search query
+  // Helper to check if a section matches the deferred search query
   const matchesSearch = (keywords) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
+    if (!deferredSearchQuery.trim()) return true;
+    const q = deferredSearchQuery.toLowerCase();
     return keywords.some(kw => kw.toLowerCase().includes(q));
   };
 
@@ -230,7 +234,7 @@ export function SettingsModal({
       <div className={`${modalBg} border rounded-3xl max-w-md w-full relative shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}>
         
         {/* HEADER */}
-        <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-white/5'} px-6 py-4 sticky top-0 ${modalBg} z-20 flex-shrink-0`}>
+        <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-white/5'} px-6 pt-6 pb-4 ${modalBg} z-20 flex-shrink-0`}>
           <h2 className={`text-xl font-bold flex items-center gap-2 ${headerText}`}>
             <ShieldAlert className={`w-5 h-5 ${isLightMode ? 'text-[var(--theme)]' : ''}`} /> System Settings
           </h2>
@@ -244,10 +248,10 @@ export function SettingsModal({
           </button>
         </div>
 
-        {/* SCROLLABLE BODY CONTAINER */}
-        <div className="overflow-y-auto custom-scrollbar p-6 space-y-6 flex-1">
+        {/* SCROLLABLE CONTENT BODY */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar">
           
-          {/* SEARCH FILTER BAR (Power User Feature) */}
+          {/* SEARCH FILTER BAR */}
           <div className="relative">
             <Search className={`absolute left-3 top-3 w-4 h-4 ${isLightMode ? 'text-zinc-400' : 'text-zinc-500'}`} />
             <input
@@ -666,7 +670,7 @@ export function SettingsModal({
                   ))}
                 </div>
 
-                {/* Custom Color Picker with Cancel/Revert Support */}
+                {/* Custom Color Picker with Cancel/Revert Support and Lag-Free Dragging */}
                 <div 
                   className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}
                   onBlur={(e) => {
@@ -687,6 +691,13 @@ export function SettingsModal({
                           }
                         }}
                         onChange={(e) => {
+                          const val = e.target.value;
+                          // Instantly update DOM CSS variable directly for lag-free dragging
+                          if (typeof document !== 'undefined') {
+                            document.documentElement.style.setProperty('--theme', val);
+                          }
+                        }}
+                        onBlur={(e) => {
                           applyTheme({ name: 'Custom', color: e.target.value });
                         }}
                         className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
