@@ -77,44 +77,16 @@
     "category": "Horror"
   },
   {
-    "id": "clash-royale",
-    "title": "Clash Royale (fake)",
-    "url": "https://velara.turbo-education.com/assets/games/clashofvikings.html",
-    "thumbnail": "/assets/clashroyale.jpg",
-    "category": "Strategy"
-  },
-  {
-    "id": "cluster-rush",
-    "title": "Cluster Rush",
-    "url": "https://velara.turbo-education.com/assets/games/clusterrush.html",
-    "thumbnail": "/assets/clusterrush.png",
-    "category": "Platformer"
-  },
-  {
     "id": "snowrider-3d",
     "title": "Snow Rider 3d",
-    "url": "https://velara.turbo-education.com/assets/games/snowrider3d.html",
+    "url": "https://bind.strongson.com/games/snowrider3D-main/index.html",
     "thumbnail": "/assets/snowrider3d.png",
     "category": "Arcade"
   },
   {
-    "id": "race-survival-king",
-    "title": "Race Survival King",
-    "url": "https://velara.turbo-education.com/assets/games/survivalrace.html",
-    "thumbnail": "/assets/racesurvivalking.png",
-    "category": "Survival"
-  },
-  {
-    "id": "stickman-hook",
-    "title": "Stickman Hook",
-    "url": "https://velara.turbo-education.com/assets/games/stickmanhook.html",
-    "thumbnail": "/assets/stickmanhook.jpg",
-    "category": "Platformer"
-  },
-  {
     "id": "slope",
     "title": "Slope",
-    "url": "https://classroom.drama.teacher.reading.campus.internationalbdg.com/equations/slope/index.html",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/slope/",
     "thumbnail": "/assets/slope.png",
     "category": "Arcade"
   },
@@ -135,14 +107,14 @@
   {
     "id": "eggy-car",
     "title": "Eggy Car",
-    "url": "https://velara.turbo-education.com/assets/games/eggycar.html",
+    "url": "https://bind.strongson.com/gamefile/eggycar.html",
     "thumbnail": "/assets/eggycar.png",
     "category": "Skill"
   },
   {
     "id": "drive-mad",
     "title": "Drive Mad",
-    "url": "https://inf63892.themathdoctors.org/ugs-games/cldrivemady.html",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/cdn/projects/drive-mad/",
     "thumbnail": "/assets/drivemad.png",
     "category": "Driving"
   },
@@ -156,7 +128,7 @@
   {
     "id": "monkey-mart",
     "title": "Monkey Mart",
-    "url": "https://velara.turbo-education.com/assets/games/monkeymart.html",
+    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/monkey-mart/",
     "thumbnail": "/assets/monkeymart.png",
     "category": "Casual"
   },
@@ -170,7 +142,7 @@
   {
     "id": "retro-bowl-college",
     "title": "Retro Bowl College",
-    "url": "https://velara.turbo-education.com/assets/games/retrobowlcollege.html",
+    "url": "https://qwlfsylkvsimcf.salavat.ru/misc/retrobowlcollege/",
     "thumbnail": "https://www.semfirms.com/sites/default/files/images/retro-bowl-college-favicon.png",
     "category": "Sports"
   },
