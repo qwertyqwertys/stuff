@@ -21,6 +21,9 @@ jobs:
           npm install
           npm run build
 
+      - name: Strip heavy music files for Neocities
+        run: rm -rf dist/music dist/stores/games-html dist/stores/gn-math
+
       - name: Deploy to Neocities
         uses: bcomnes/deploy-to-neocities@v1
         with:
