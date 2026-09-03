@@ -16,7 +16,7 @@ export function Header({
   const navigate = useNavigate();
 
   return (
-    <header className={`${isLightMode ? 'bg-white text-black' : 'bg-[#09090b] text-white'} h-16 flex items-center px-4 sticky top-0 z-50 transition-colors`}>
+    <header className={`bg-transparent h-16 flex items-center px-4 sticky top-0 z-50 transition-colors ${isLightMode ? 'text-black' : 'text-white'}`}>
       <div className="max-w-7xl mx-auto w-full grid grid-cols-3 items-center">
         
         <div className="flex items-center gap-2 justify-self-start">
@@ -26,8 +26,8 @@ export function Header({
             style={{ 
               fontFamily: "'Fredoka', sans-serif",
               fontWeight: 600,
-              color: isLightMode ? '#000000' : '#ffffff',
-              backgroundColor: isLightMode ? '#ffffff' : '#09090b'
+              color: isLightMode ? '#000000' : '#ffffff'
+              /* Removed the solid backgroundColor here so it stays transparent */
             }}
           >
             Capybara Science
@@ -43,7 +43,7 @@ export function Header({
               aria-label="Search games" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className={`w-full ${isLightMode ? 'bg-black/5 border-black/10 text-black placeholder:text-zinc-500' : 'bg-white/5 border-white/10 text-white placeholder:text-zinc-400'} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors`} 
+              className={`w-full ${isLightMode ? 'bg-black/5 border-black/10 text-black placeholder:text-zinc-500' : 'bg-white/5 border-white/10 text-white placeholder:text-zinc-400'} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors backdrop-blur-sm`} 
             />
             {searchQuery && (
               <button 
@@ -59,7 +59,7 @@ export function Header({
           <button 
             onClick={onRandomGame} 
             aria-label="Play a random game"
-            className={`p-2 ${isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10'} border rounded-full text-[var(--theme)] hover:bg-[var(--theme)] hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-rgb),0.1)]`}
+            className={`p-2 ${isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10'} border rounded-full text-[var(--theme)] hover:bg-[var(--theme)] hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-rgb),0.1)] backdrop-blur-sm`}
           >
             <Dices className="w-5 h-5" />
           </button>
@@ -73,7 +73,7 @@ export function Header({
                   setSupplier(e.target.value);
                   localStorage.setItem('capy-supplier', e.target.value);
                 }}
-                className={`text-xs font-bold uppercase py-2.5 pl-4 pr-10 rounded-xl border transition-all outline-none cursor-pointer appearance-none ${
+                className={`text-xs font-bold uppercase py-2.5 pl-4 pr-10 rounded-xl border transition-all outline-none cursor-pointer appearance-none backdrop-blur-sm ${
                   isLightMode 
                     ? 'bg-black/5 border-black/10 text-black' 
                     : 'bg-white/5 border-white/10 text-white'
@@ -91,7 +91,7 @@ export function Header({
 
             <button 
               onClick={() => setIsChatOpen(prev => !prev)} 
-              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
+              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 backdrop-blur-sm ${
                 isChatOpen 
                   ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
                   : (isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-[var(--theme)]')
@@ -104,7 +104,7 @@ export function Header({
 
             <button 
               onClick={() => setShowSoundboard ? setShowSoundboard(prev => !prev) : null} 
-              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
+              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 backdrop-blur-sm ${
                 isSoundboardOpen 
                   ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
                   : (isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-[var(--theme)]')
@@ -119,7 +119,7 @@ export function Header({
 
         <div className="flex items-center justify-end gap-4 justify-self-end">
           <div 
-            className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase text-zinc-100 ${isLightMode ? 'bg-black/5 border-black/5 text-black' : 'bg-white/5 border-white/5'} px-5 py-2 rounded-full border`}
+            className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase text-zinc-100 ${isLightMode ? 'bg-black/5 border-black/5 text-black' : 'bg-white/5 border-white/5'} px-5 py-2 rounded-full border backdrop-blur-sm`}
             style={{ fontFamily: "'Baloo 2', cursive" }}
           >
             <span className="flex items-center gap-2">
@@ -139,7 +139,7 @@ export function Header({
             )}
           </div>
           
-          <div className={`flex items-center gap-1.5 ${isLightMode ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'} rounded-full p-1 border`}>
+          <div className={`flex items-center gap-1.5 ${isLightMode ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'} rounded-full p-1 border backdrop-blur-sm`}>
             <button 
               onClick={() => onViewProfile?.()} 
               aria-label="View user profile"
