@@ -27,7 +27,6 @@ export function Header({
               fontFamily: "'Fredoka', sans-serif",
               fontWeight: 600,
               color: isLightMode ? '#000000' : '#ffffff'
-              /* Removed the solid backgroundColor here so it stays transparent */
             }}
           >
             Capybara Science
@@ -43,7 +42,7 @@ export function Header({
               aria-label="Search games" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className={`w-full ${isLightMode ? 'bg-black/5 border-black/10 text-black placeholder:text-zinc-500' : 'bg-white/5 border-white/10 text-white placeholder:text-zinc-400'} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors backdrop-blur-sm`} 
+              className={`w-full ${isLightMode ? 'bg-black/5 border-black/10 text-black placeholder:text-zinc-500' : 'bg-white/5 border-white/10 text-white placeholder:text-zinc-400'} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors`} 
             />
             {searchQuery && (
               <button 
@@ -59,7 +58,7 @@ export function Header({
           <button 
             onClick={onRandomGame} 
             aria-label="Play a random game"
-            className={`p-2 ${isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10'} border rounded-full text-[var(--theme)] hover:bg-[var(--theme)] hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-rgb),0.1)] backdrop-blur-sm`}
+            className={`p-2 ${isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10'} border rounded-full text-[var(--theme)] hover:bg-[var(--theme)] hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-rgb),0.1)]`}
           >
             <Dices className="w-5 h-5" />
           </button>
@@ -73,7 +72,7 @@ export function Header({
                   setSupplier(e.target.value);
                   localStorage.setItem('capy-supplier', e.target.value);
                 }}
-                className={`text-xs font-bold uppercase py-2.5 pl-4 pr-10 rounded-xl border transition-all outline-none cursor-pointer appearance-none backdrop-blur-sm ${
+                className={`text-xs font-bold uppercase py-2.5 pl-4 pr-10 rounded-xl border transition-all outline-none cursor-pointer appearance-none ${
                   isLightMode 
                     ? 'bg-black/5 border-black/10 text-black' 
                     : 'bg-white/5 border-white/10 text-white'
@@ -91,7 +90,7 @@ export function Header({
 
             <button 
               onClick={() => setIsChatOpen(prev => !prev)} 
-              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 backdrop-blur-sm ${
+              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
                 isChatOpen 
                   ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
                   : (isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-[var(--theme)]')
@@ -104,7 +103,7 @@ export function Header({
 
             <button 
               onClick={() => setShowSoundboard ? setShowSoundboard(prev => !prev) : null} 
-              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 backdrop-blur-sm ${
+              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
                 isSoundboardOpen 
                   ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
                   : (isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-[var(--theme)]')
@@ -119,7 +118,7 @@ export function Header({
 
         <div className="flex items-center justify-end gap-4 justify-self-end">
           <div 
-            className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase text-zinc-100 ${isLightMode ? 'bg-black/5 border-black/5 text-black' : 'bg-white/5 border-white/5'} px-5 py-2 rounded-full border backdrop-blur-sm`}
+            className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase text-zinc-100 ${isLightMode ? 'bg-black/5 border-black/5 text-black' : 'bg-white/5 border-white/5'} px-5 py-2 rounded-full border`}
             style={{ fontFamily: "'Baloo 2', cursive" }}
           >
             <span className="flex items-center gap-2">
@@ -139,7 +138,7 @@ export function Header({
             )}
           </div>
           
-          <div className={`flex items-center gap-1.5 ${isLightMode ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'} rounded-full p-1 border backdrop-blur-sm`}>
+          <div className={`flex items-center gap-1.5 ${isLightMode ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'} rounded-full p-1 border`}>
             <button 
               onClick={() => onViewProfile?.()} 
               aria-label="View user profile"
