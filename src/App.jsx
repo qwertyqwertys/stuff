@@ -30,11 +30,11 @@ const CAPY_LOGO = "https://img.icons8.com/color/32/capybara.png";
 
 // --- ACHIEVEMENT DEFINITIONS ---
 const TROPHIES = [
-  { id: 'first_game', name: 'First Blood', desc: 'Play your first game', icon: 'ЁЯОп' },
-  { id: 'marathon', name: 'Marathoner', desc: 'Play for over 1 hour total', icon: 'ЁЯПГ' },
-  { id: 'collector', name: 'The Collector', desc: 'Favorite 10 different games', icon: 'тнР' },
-  { id: 'loyal', name: 'Capy-Loyalist', desc: 'Play one game for 30 mins', icon: 'ЁЯСС' },
-  { id: 'styler', name: 'Fashionista', desc: 'Change your theme 5 times', icon: 'ЁЯОи' }
+  { id: 'first_game', name: 'First Blood', desc: 'Play your first game', icon: '🎮' },
+  { id: 'marathon', name: 'Marathoner', desc: 'Play for over 1 hour total', icon: '🏃' },
+  { id: 'collector', name: 'The Collector', desc: 'Favorite 10 different games', icon: '⭐' },
+  { id: 'loyal', name: 'Capy-Loyalist', desc: 'Play one game for 30 mins', icon: '📜' },
+  { id: 'styler', name: 'Fashionista', desc: 'Change your theme 5 times', icon: '🎨' }
 ];
 
 const THEMES = {
@@ -483,7 +483,7 @@ export default function App() {
       if (!localStorage.getItem('achievement_first_game')) {
         localStorage.setItem('achievement_first_game', 'true');
         checkAndAdd('first_game');
-        setNotification("ЁЯОп Achievement Unlocked: First Blood!");
+        setNotification("🎮 Achievement Unlocked: First Blood!");
       }
     }
 
@@ -491,7 +491,7 @@ export default function App() {
     if (totalTime >= 3600 && !localStorage.getItem('achievement_marathon')) {
       localStorage.setItem('achievement_marathon', 'true');
       checkAndAdd('marathon');
-      setNotification("ЁЯПГ Achievement Unlocked: Marathoner!");
+      setNotification("🏃 Achievement Unlocked: Marathoner!");
     }
 
     if (typeof setAchievements === 'function') {
@@ -743,11 +743,10 @@ export default function App() {
   
   return (
     <div
-      className={`min-h-screen pb-20 antialiased relative ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode bg-white text-zinc-900' : 'bg-[#0a0a0a] text-zinc-100'}`} 
+      className={`min-h-screen pb-20 antialiased relative ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
       style={{ 
         '--theme': theme, 
-        '--glow': `${performanceMode ? 0 : glowIntensity}px`,
-        backgroundColor: isLightMode ? '#ffffff' : '#0a0a0a' 
+        '--glow': `${performanceMode ? 0 : glowIntensity}px`
       }}
     >
       {notification && (
@@ -827,10 +826,11 @@ export default function App() {
             isSoundboardOpen={isSoundboardOpen}
           />
 
-          <div className={`${isLightMode ? 'bg-white/80' : 'bg-transparent'} backdrop-blur-md px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 transition-colors group`}>
+          {/* Category Bar Wrapper */}
+          <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group">
             <div className="max-w-7xl mx-auto relative flex items-center">
               {canScrollLeft && (
-                <div className={`absolute left-0 z-50 flex items-center pr-12 h-full bg-gradient-to-r ${isLightMode ? 'from-white via-white/80' : 'from-black/60 via-black/30'} to-transparent pointer-events-none`}>
+                <div className="absolute left-0 z-50 flex items-center pr-12 h-full bg-transparent pointer-events-none">
                   <button
                     onClick={() => scrollCategories('left')}
                     aria-label="Scroll categories left"
@@ -855,8 +855,8 @@ export default function App() {
                       activeCategory === cat.name
                         ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
                         : isLightMode
-                          ? 'bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200'
-                          : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'
+                          ? 'bg-zinc-100/80 border-zinc-200 text-zinc-600 hover:bg-zinc-200'
+                          : 'bg-white/10 border-white/10 text-zinc-300 hover:bg-white/20'
                     }`}
                   >
                     {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-40'}`}>{cat.count}</span>
@@ -865,7 +865,7 @@ export default function App() {
               </div>
 
               {canScrollRight && (
-                <div className={`absolute -right-9 z-50 flex items-center pl-12 h-full bg-gradient-to-l ${isLightMode ? 'from-white via-white/80' : 'from-black/60 via-black/30'} to-transparent pointer-events-none`}>
+                <div className="absolute -right-9 z-50 flex items-center pl-12 h-full bg-transparent pointer-events-none">
                   <button 
                     onClick={() => scrollCategories('right')}
                     aria-label="Scroll categories right"
@@ -920,7 +920,7 @@ export default function App() {
         </>
       )}
 
-      {/* Soundboard Modal Overlay (Uses Imported Component) */}
+      {/* Soundboard Modal Overlay */}
       {isSoundboardOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <SoundboardCard 
