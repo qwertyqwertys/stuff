@@ -21,13 +21,6 @@
     "category": "Arcade"
   },
   {
-    "id": "thisis-sand",
-    "title": "This Is Sand",
-    "url": "https://thisissand.com/",
-    "thumbnail": "/assets/thisissand.jpg",
-    "category": "Creative"
-  },
-  {
     "id": "cookie-clicker",
     "title": "Cookie Clicker",
     "url": "/stores/games-html/cookie-clicker.html",
