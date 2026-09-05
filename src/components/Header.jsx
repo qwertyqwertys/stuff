@@ -142,7 +142,7 @@ export function Header({
             <button 
               onClick={() => onViewProfile?.()} 
               aria-label="View user profile"
-              className="w-8 h-8 rounded-full border border-transparent hover:border-[var(--theme)] overflow-hidden bg-zinc-800 transition-all active:scale-90"
+              className="w-8 h-8 rounded-full border border-transparent hover:border-[var(--theme)] overflow-hidden transition-all active:scale-90"
             >
               {profilePic ? (
                 <img src={profilePic} className="w-full h-full object-cover" alt="User avatar" />
@@ -171,3 +171,4 @@ export function Header({
     </header>
   );
 }
+```[cite: 3]
