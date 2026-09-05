@@ -30,10 +30,10 @@ const CAPY_LOGO = "https://img.icons8.com/color/32/capybara.png";
 
 // --- ACHIEVEMENT DEFINITIONS ---
 const TROPHIES = [
-  { id: 'first_game', name: 'First Blood', desc: 'Play your first game', icon: '🎮' },
-  { id: 'marathon', name: 'Marathoner', desc: 'Play for over 1 hour total', icon: '🏃' },
+  { id: 'first_game', name: 'First Blood', desc: 'Play your first game', icon: '🏆' },
+  { id: 'marathon', name: 'Marathoner', desc: 'Play for over 1 hour total', icon: '⏱️' },
   { id: 'collector', name: 'The Collector', desc: 'Favorite 10 different games', icon: '⭐' },
-  { id: 'loyal', name: 'Capy-Loyalist', desc: 'Play one game for 30 mins', icon: '📜' },
+  { id: 'loyal', name: 'Capy-Loyalist', desc: 'Play one game for 30 mins', icon: '🦫' },
   { id: 'styler', name: 'Fashionista', desc: 'Change your theme 5 times', icon: '🎨' }
 ];
 
@@ -48,7 +48,7 @@ const DISGUISE_CONFIG = {
   none: { title: DEFAULT_TITLE, icon: DEFAULT_ICON },
   google: { title: "Google", icon: GOOGLE_FAVICON },
   drive: { title: "My Drive - Google Drive", icon: "https://ssl.gstatic.com/images/branding/product/2x/drive_2020q4_48dp.png" },
-  classroom: { title: "Home - Classroom", icon: "https://ssl.gstatic.com/classroom/favicon.png" },
+  classroom: { title: "Home - Classroom", icon: "https://www.gstatic.com/classroom/favicon.png" },
   powerschool: { title: "Grades and Attendance", icon: "https://ps.bhmsd.org/favicon.ico" }
 };
 
@@ -59,6 +59,7 @@ const updateThemeVariables = (color, glow) => {
 };
 
 export default function App() {
+  const [showTitle, setShowTitle] = useState(() => localStorage.getItem('skipTitleScreen') !== 'true');
   const [supplier, setSupplier] = useState(() => localStorage.getItem('capy-supplier') || 'Default');
   const [playtimes, setPlaytimes] = useState(() => JSON.parse(localStorage.getItem('capy-playtimes') || '{}'));
   const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('capy-favs') || '[]'));
@@ -483,7 +484,7 @@ export default function App() {
       if (!localStorage.getItem('achievement_first_game')) {
         localStorage.setItem('achievement_first_game', 'true');
         checkAndAdd('first_game');
-        setNotification("🎮 Achievement Unlocked: First Blood!");
+        setNotification("🏆 Achievement Unlocked: First Blood!");
       }
     }
 
@@ -491,7 +492,7 @@ export default function App() {
     if (totalTime >= 3600 && !localStorage.getItem('achievement_marathon')) {
       localStorage.setItem('achievement_marathon', 'true');
       checkAndAdd('marathon');
-      setNotification("🏃 Achievement Unlocked: Marathoner!");
+      setNotification("⏱️ Achievement Unlocked: Marathoner!");
     }
 
     if (typeof setAchievements === 'function') {
@@ -749,334 +750,391 @@ export default function App() {
         '--glow': `${performanceMode ? 0 : glowIntensity}px`
       }}
     >
-      {notification && (
-        <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="bg-zinc-900 border border-[var(--theme)]/50 px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-[var(--theme)]" />
-            <span className="text-xs font-black uppercase tracking-tight">{notification}</span>
-          </div>
-        </div>
-      )}
-
-      {bgEnabled && !performanceMode && (
-        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ opacity: bgOpacity / 100 }}>
-          {backgroundVideo ? (
-            <video key={backgroundVideo} autoPlay muted loop playsInline className="w-full h-full object-cover">
-              <source src={backgroundVideo} />
-            </video>
-          ) : backgroundImage ? (
-            <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }} />
-          ) : null}
-        </div>
-      )}
-
-      {bgMusic && !performanceMode && (
-        <audio 
-          key={bgMusic} 
-          ref={audioRef}
-          src={bgMusic} 
-          loop 
-          autoPlay={isPlaying}
-          onLoadedData={(e) => {
-            e.target.volume = volume; 
-            if (!isPlaying) {
-              e.target.pause();
-            }
-          }}
-        />
-      )}
-
-      {isChatOpen ? (
-        <div className="fixed inset-0 z-[9999] bg-[#0a0a0a] flex flex-col p-4 animate-in fade-in duration-300">
-          <button 
-            onClick={() => setIsChatOpen(false)}
-            className="absolute top-6 right-6 p-2 bg-white/15 hover:bg-white/25 rounded-full z-[10000] transition-transform active:scale-95 text-white"
-          >
-            <X className="w-8 h-8" />
-          </button>
-          <div className="flex-1 w-full max-w-5xl mx-auto flex items-center justify-center">
-            <div className="w-full h-[85vh]">
-               <ChatCard isLightMode={isLightMode} setIsChatOpen={setIsChatOpen} />
+      {showTitle ? (
+        <div className="fixed inset-0 z-[99999] bg-zinc-950 flex flex-col items-center justify-center p-6 text-white select-none animate-in fade-in duration-500" style={{ '--theme': theme }}>
+          <div className="max-w-md w-full bg-zinc-900/80 border border-[var(--theme)]/40 p-8 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-xl flex flex-col items-center text-center space-y-6">
+            <div className="w-20 h-20 rounded-2xl bg-[var(--theme)]/20 border border-[var(--theme)] flex items-center justify-center shadow-[0_0_20px_var(--theme)]">
+              <Gamepad2 className="w-10 h-10 text-[var(--theme)] animate-pulse" />
             </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-black tracking-tight uppercase">Capybara Science</h1>
+              <p className="text-xs text-zinc-400 font-medium">Your ultimate unblocked gaming hub & dashboard.</p>
+            </div>
+
+            <div className="w-full space-y-3 text-left">
+              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Enter Your Display Name</label>
+              <input 
+                type="text" 
+                value={displayName} 
+                onChange={(e) => {
+                  setDisplayName(e.target.value);
+                  localStorage.setItem('capy-display-name', e.target.value);
+                }}
+                placeholder="CapyUser"
+                maxLength={20}
+                className="w-full bg-zinc-950/80 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--theme)] transition-all font-bold"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 w-full text-left pt-1">
+              <input 
+                type="checkbox" 
+                id="skipTitleCheckbox"
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    localStorage.setItem('skipTitleScreen', 'true');
+                  } else {
+                    localStorage.removeItem('skipTitleScreen');
+                  }
+                }}
+                className="w-4 h-4 accent-[var(--theme)] rounded cursor-pointer"
+              />
+              <label htmlFor="skipTitleCheckbox" className="text-xs text-zinc-400 font-medium cursor-pointer select-none">
+                Skip this title screen next time
+              </label>
+            </div>
+
+            <button 
+              onClick={() => setShowTitle(false)}
+              className="w-full py-4 bg-[var(--theme)] text-black font-black uppercase tracking-widest text-xs rounded-2xl shadow-lg transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Play className="w-4 h-4 fill-current" />
+              Launch App
+            </button>
           </div>
         </div>
       ) : (
         <>
-          <Header 
-            searchQuery={searchQuery} 
-            setSearchQuery={setSearchQuery}
-            supplier={supplier}       
-            setSupplier={setSupplier} 
-            time={time}
-            battery={battery}
-            profilePic={profilePic}
-            setShowSettings={setShowSettings}
-            DEFAULT_ICON={CAPY_LOGO}
-            theme={theme}   
-            onViewProfile={() => setSelectedFriendId('me')} 
-            onRandomGame={() => {
-              const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
-              if (playable.length > 0) {
-                launchContent(playable[Math.floor(Math.random() * playable.length)]);
-              }
-            }}
-            isChatOpen={isChatOpen}
-            setIsChatOpen={setIsChatOpen}
-            setShowSoundboard={setIsSoundboardOpen}
-            isSoundboardOpen={isSoundboardOpen}
-          />
+          {notification && (
+            <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="bg-zinc-900 border border-[var(--theme)]/50 px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-[var(--theme)]" />
+                <span className="text-xs font-black uppercase tracking-tight">{notification}</span>
+              </div>
+            </div>
+          )}
 
-          {/* Category Bar Wrapper */}
-          <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group">
-            <div className="max-w-7xl mx-auto relative flex items-center">
-              {canScrollLeft && (
-                <div className="absolute left-0 z-50 flex items-center pr-12 h-full bg-transparent pointer-events-none">
-                  <button
-                    onClick={() => scrollCategories('left')}
-                    aria-label="Scroll categories left"
-                    className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-                  >
-                    <ChevronLeft className="w-4 h-4 text-black" />
-                  </button>
-                </div>
-              )}
+          {bgEnabled && !performanceMode && (
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ opacity: bgOpacity / 100 }}>
+              {backgroundVideo ? (
+                <video key={backgroundVideo} autoPlay muted loop playsInline className="w-full h-full object-cover">
+                  <source src={backgroundVideo} />
+                </video>
+              ) : backgroundImage ? (
+                <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }} />
+              ) : null}
+            </div>
+          )}
 
-              <div
-                ref={categoryScrollRef}
-                onScroll={checkScroll}
-                className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-2 w-full"
+          {bgMusic && !performanceMode && (
+            <audio 
+              key={bgMusic} 
+              ref={audioRef}
+              src={bgMusic} 
+              loop 
+              autoPlay={isPlaying}
+              onLoadedData={(e) => {
+                e.target.volume = volume; 
+                if (!isPlaying) {
+                  e.target.pause();
+                }
+              }}
+            />
+          )}
+
+          {isChatOpen ? (
+            <div className="fixed inset-0 z-[9999] bg-[#0a0a0a] flex flex-col p-4 animate-in fade-in duration-300">
+              <button 
+                onClick={() => setIsChatOpen(false)}
+                className="absolute top-6 right-6 p-2 bg-white/15 hover:bg-white/25 rounded-full z-[10000] transition-transform active:scale-95 text-white"
               >
-                {categoriesWithCounts.map(cat => (
-                  <button
-                    key={cat.name}
-                    onClick={() => setActiveCategory(cat.name)}
-                    aria-current={activeCategory === cat.name ? 'page' : undefined}
-                    className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
-                      activeCategory === cat.name
-                        ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
-                        : isLightMode
-                          ? 'bg-zinc-100/80 border-zinc-200 text-zinc-600 hover:bg-zinc-200'
-                          : 'bg-white/10 border-white/10 text-zinc-300 hover:bg-white/20'
-                    }`}
+                <X className="w-8 h-8" />
+              </button>
+              <div className="flex-1 w-full max-w-5xl mx-auto flex items-center justify-center">
+                <div className="w-full h-[85vh]">
+                   <ChatCard isLightMode={isLightMode} setIsChatOpen={setIsChatOpen} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Header 
+                searchQuery={searchQuery} 
+                setSearchQuery={setSearchQuery}
+                supplier={supplier}       
+                setSupplier={setSupplier} 
+                time={time}
+                battery={battery}
+                profilePic={profilePic}
+                setShowSettings={setShowSettings}
+                DEFAULT_ICON={CAPY_LOGO}
+                theme={theme}   
+                onViewProfile={() => setSelectedFriendId('me')} 
+                onRandomGame={() => {
+                  const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
+                  if (playable.length > 0) {
+                    launchContent(playable[Math.floor(Math.random() * playable.length)]);
+                  }
+                }}
+                isChatOpen={isChatOpen}
+                setIsChatOpen={setIsChatOpen}
+                setShowSoundboard={setIsSoundboardOpen}
+                isSoundboardOpen={isSoundboardOpen}
+              />
+
+              {/* Category Bar Wrapper */}
+              <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group">
+                <div className="max-w-7xl mx-auto relative flex items-center">
+                  {canScrollLeft && (
+                    <div className="absolute left-0 z-50 flex items-center pr-12 h-full bg-transparent pointer-events-none">
+                      <button
+                        onClick={() => scrollCategories('left')}
+                        aria-label="Scroll categories left"
+                        className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+                      >
+                        <ChevronLeft className="w-4 h-4 text-black" />
+                      </button>
+                    </div>
+                  )}
+
+                  <div
+                    ref={categoryScrollRef}
+                    onScroll={checkScroll}
+                    className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-2 w-full"
                   >
-                    {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-40'}`}>{cat.count}</span>
-                  </button>
-                ))}
+                    {categoriesWithCounts.map(cat => (
+                      <button
+                        key={cat.name}
+                        onClick={() => setActiveCategory(cat.name)}
+                        aria-current={activeCategory === cat.name ? 'page' : undefined}
+                        className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
+                          activeCategory === cat.name
+                            ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
+                            : isLightMode
+                              ? 'bg-zinc-100/80 border-zinc-200 text-zinc-600 hover:bg-zinc-200'
+                              : 'bg-white/10 border-white/10 text-zinc-300 hover:bg-white/20'
+                        }`}
+                      >
+                        {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-40'}`}>{cat.count}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {canScrollRight && (
+                    <div className="absolute -right-9 z-50 flex items-center pl-12 h-full bg-transparent pointer-events-none">
+                      <button 
+                        onClick={() => scrollCategories('right')}
+                        aria-label="Scroll categories right"
+                        className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+                      >
+                        <ChevronRight className="w-4 h-4 text-black" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {canScrollRight && (
-                <div className="absolute -right-9 z-50 flex items-center pl-12 h-full bg-transparent pointer-events-none">
-                  <button 
-                    onClick={() => scrollCategories('right')}
-                    aria-label="Scroll categories right"
-                    className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-                  >
-                    <ChevronRight className="w-4 h-4 text-black" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+              <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12">
+                <h1 className="sr-only text-black bg-white">Capybara Science</h1>
+                
+                {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
+                  <section className="space-y-4">
+                    <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                      <History className="w-3 h-3 text-[var(--theme)]" />
+                      Recently On
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                      {recentGamesData.map(game => (
+                        <GameCard 
+                          key={`recent-${game.id}`} 
+                          game={game} 
+                          onLaunch={launchContent} 
+                          playtime={playtimes[game.id] ? Math.floor(playtimes[game.id]/60) + 'm' : '0m'}
+                          isFavorite={favorites.includes(String(game.id))}
+                          onToggleFavorite={() => toggleFavorite(game.id)}
+                          performanceMode={performanceMode}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
 
-          <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12">
-            <h1 className="sr-only text-black bg-white">Capybara Science</h1>
-            
-            {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
-              <section className="space-y-4">
-                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                  <History className="w-3 h-3 text-[var(--theme)]" />
-                  Recently On
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {recentGamesData.map(game => (
+                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {filteredGames.map(game => (
                     <GameCard 
-                      key={`recent-${game.id}`} 
+                      key={game.id} 
                       game={game} 
                       onLaunch={launchContent} 
                       playtime={playtimes[game.id] ? Math.floor(playtimes[game.id]/60) + 'm' : '0m'}
-                      isFavorite={favorites.includes(String(game.id))}
+                      isFavorite={favorites.includes(String(game.id))} 
                       onToggleFavorite={() => toggleFavorite(game.id)}
                       performanceMode={performanceMode}
                     />
                   ))}
-                </div>
-              </section>
-            )}
+                </section>
+              </main>
+            </>
+          )}
 
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {filteredGames.map(game => (
-                <GameCard 
-                  key={game.id} 
-                  game={game} 
-                  onLaunch={launchContent} 
-                  playtime={playtimes[game.id] ? Math.floor(playtimes[game.id]/60) + 'm' : '0m'}
-                  isFavorite={favorites.includes(String(game.id))} 
-                  onToggleFavorite={() => toggleFavorite(game.id)}
-                  performanceMode={performanceMode}
-                />
-              ))}
-            </section>
-          </main>
+          {/* Soundboard Modal Overlay */}
+          {isSoundboardOpen && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+              <SoundboardCard 
+                isLightMode={isLightMode} 
+                onClose={() => setIsSoundboardOpen(false)} 
+              />
+            </div>
+          )}
+
+          <FriendViewModal
+            friend={selectedFriendId === 'me' ? {
+              name: displayName,
+              favs: favorites,
+              times: playtimes,
+              achievements: ['first_game', 'marathon', 'collector', 'loyal', 'styler'].filter(id => localStorage.getItem(`achievement_${id}`) === 'true')
+            } : currentFriend}
+            gamesData={gamesData}
+            ownPfp={profilePic}
+            isOwnProfile={selectedFriendId === 'me'}
+            onClose={() => setSelectedFriendId(null)}
+            myAchievements={achievements}
+          />
+          
+          <SettingsModal 
+            show={showSettings} 
+            onClose={() => setShowSettings(false)}
+            tracklist={tracklist} 
+            performanceMode={performanceMode}
+            setPerformanceMode={(val) => { 
+              setPerformanceMode(val); 
+              localStorage.setItem('capy-perf-mode', val);
+            }}
+            onViewOwnProfile={() => {
+              setShowSettings(false);
+              setSelectedFriendId('me');
+            }}
+            themes={THEMES}
+            applyTheme={applyTheme}
+            panicKey={panicKey}
+            setPanicKey={(val) => { setPanicKey(val); localStorage.setItem('capy-panic-key', val); }}
+            panicUrl={panicUrl}
+            setPanicUrl={(val) => { setPanicUrl(val); localStorage.setItem('capy-panic-url', val); }}
+            handleBackgroundUpload={handleBackgroundUpload}
+            handleResetBackground={handleResetBackground}
+            handleAudioUpload={handleAudioUpload}
+            handleResetMusic={handleResetMusic}
+            profilePic={profilePic}
+            handlePfpUpload={handlePfpUpload}
+            handleResetPfp={() => { setProfilePic(''); localStorage.removeItem('capy-pfp'); }}
+            handleClearSettings={handleClearSettings}
+            handleReset={handleReset}
+            confirmReset={confirmReset}
+            confirmClearSettings={confirmClearSettings}
+            bgMusic={bgMusic}
+            bgEnabled={bgEnabled}
+            volume={volume}
+            setVolume={setVolume}
+            bgOpacity={bgOpacity}
+            setBgOpacity={setBgOpacity}
+            displayName={displayName}
+            setDisplayName={(val) => {
+              const nameExists = friends.some(f => f.name.toLowerCase() === val.trim().toLowerCase());
+              if (nameExists) {
+                alert("Name is already taken by a friend!");
+                return;
+              }
+              setDisplayName(val);
+              localStorage.setItem('capy-display-name', val);
+            }}
+            friendCode={friendCode}
+            fullSyncCode={fullSyncCode}
+            onImportSync={(code) => {
+              const decoded = safeDecode(code);
+              if (decoded && decoded.n) {
+                setDisplayName(decoded.n);
+                localStorage.setItem('capy-display-name', decoded.n);
+                if (decoded.p) {
+                  setProfilePic(decoded.p);
+                  localStorage.setItem('capy-pfp', decoded.p);
+                }
+                if (decoded.t) {
+                  setTheme(decoded.t);
+                  localStorage.setItem('capy-theme', decoded.t);
+                }
+                if (decoded.g) {
+                  setGlowIntensity(decoded.g);
+                  localStorage.setItem('capy-glow', decoded.g);
+                }
+                setNotification("Profile Synced Successfully!");
+                setTimeout(() => window.location.reload(), 1000);
+              } else {
+                alert("Invalid Sync Code!");
+              }
+            }}
+            friends={friends}
+            isSyncing={isSyncing}
+            disguise={disguise}
+            setDisguise={(val) => { setDisguise(val); localStorage.setItem('capy-stealth-type', val); }}
+            customTitle={customTitle}
+            setCustomTitle={(val) => { setCustomTitle(val); localStorage.setItem('capy-custom-title', val); }}
+            customIcon={customIcon}
+            setCustomIcon={(val) => { setCustomIcon(val); localStorage.setItem('capy-custom-icon', val); }}
+            isLightMode={isLightMode}
+            setIsLightMode={setIsLightMode}
+            onAddFriend={(code) => {
+              const decodedData = safeDecode(code);
+              if (decodedData && decodedData.id) {
+                const { n: name, id: friendId } = decodedData;
+                if (name.toLowerCase() === displayName.toLowerCase()) {
+                  alert("You cannot add yourself!");
+                  return;
+                }
+                const otherFriends = friends.filter(f => {
+                  const existingData = safeDecode(f.code);
+                  return existingData?.id !== friendId;
+                });
+                const updatedFriends = [...otherFriends, { name, code: code.trim() }];
+                setFriends(updatedFriends);
+                localStorage.setItem('capy-friends', JSON.stringify(updatedFriends));
+                setNotification(`Added ${name}!`);
+              } else {
+                alert("Invalid Friend Code!");
+              }
+            }}
+            onRemoveFriend={(code) => {
+              const newFriends = friends.filter(f => f.code !== code);
+              setFriends(newFriends);
+              localStorage.setItem('capy-friends', JSON.stringify(newFriends));
+            }}
+            onViewFriend={(friend) => {
+              setSelectedFriendId(null);
+              setTimeout(() => setSelectedFriendId(friend.code), 10);
+            }}
+            onRefreshFriend={(code) => {
+                setIsSyncing(true);
+                const freshFriends = [...friends];
+                setFriends(freshFriends);
+                if (selectedFriendId === code) {
+                    setSelectedFriendId(null);
+                    setTimeout(() => setSelectedFriendId(code), 50);
+                }
+                setTimeout(() => {
+                  setIsSyncing(false);
+                  setNotification("Friend view refreshed!");
+                }, 500);
+            }}
+            myAchievements={achievements}
+            activeCloak={activeCloak}
+            setActiveCloak={setActiveCloak}
+            isPlaying={isPlaying}
+            onTogglePlay={handleTogglePlay}
+          />
+
+          <footer className="mt-10 py-6 text-center text-xs text-zinc-500 border-t border-white/5">
+            <p>&copy; 2026 Capybara Science. All rights reserved.</p>
+          </footer>
         </>
       )}
-
-      {/* Soundboard Modal Overlay */}
-      {isSoundboardOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <SoundboardCard 
-            isLightMode={isLightMode} 
-            onClose={() => setIsSoundboardOpen(false)} 
-          />
-        </div>
-      )}
-
-      <FriendViewModal
-        friend={selectedFriendId === 'me' ? {
-          name: displayName,
-          favs: favorites,
-          times: playtimes,
-          achievements: ['first_game', 'marathon', 'collector', 'loyal', 'styler'].filter(id => localStorage.getItem(`achievement_${id}`) === 'true')
-        } : currentFriend}
-        gamesData={gamesData}
-        ownPfp={profilePic}
-        isOwnProfile={selectedFriendId === 'me'}
-        onClose={() => setSelectedFriendId(null)}
-        myAchievements={achievements}
-      />
-      
-      <SettingsModal 
-        show={showSettings} 
-        onClose={() => setShowSettings(false)}
-        tracklist={tracklist} 
-        performanceMode={performanceMode}
-        setPerformanceMode={(val) => { 
-          setPerformanceMode(val); 
-          localStorage.setItem('capy-perf-mode', val);
-        }}
-        onViewOwnProfile={() => {
-          setShowSettings(false);
-          setSelectedFriendId('me');
-        }}
-        themes={THEMES}
-        applyTheme={applyTheme}
-        panicKey={panicKey}
-        setPanicKey={(val) => { setPanicKey(val); localStorage.setItem('capy-panic-key', val); }}
-        panicUrl={panicUrl}
-        setPanicUrl={(val) => { setPanicUrl(val); localStorage.setItem('capy-panic-url', val); }}
-        handleBackgroundUpload={handleBackgroundUpload}
-        handleResetBackground={handleResetBackground}
-        handleAudioUpload={handleAudioUpload}
-        handleResetMusic={handleResetMusic}
-        profilePic={profilePic}
-        handlePfpUpload={handlePfpUpload}
-        handleResetPfp={() => { setProfilePic(''); localStorage.removeItem('capy-pfp'); }}
-        handleClearSettings={handleClearSettings}
-        handleReset={handleReset}
-        confirmReset={confirmReset}
-        confirmClearSettings={confirmClearSettings}
-        bgMusic={bgMusic}
-        bgEnabled={bgEnabled}
-        volume={volume}
-        setVolume={setVolume}
-        bgOpacity={bgOpacity}
-        setBgOpacity={setBgOpacity}
-        displayName={displayName}
-        setDisplayName={(val) => {
-          const nameExists = friends.some(f => f.name.toLowerCase() === val.trim().toLowerCase());
-          if (nameExists) {
-            alert("Name is already taken by a friend!");
-            return;
-          }
-          setDisplayName(val);
-          localStorage.setItem('capy-display-name', val);
-        }}
-        friendCode={friendCode}
-        fullSyncCode={fullSyncCode}
-        onImportSync={(code) => {
-          const decoded = safeDecode(code);
-          if (decoded && decoded.n) {
-            setDisplayName(decoded.n);
-            localStorage.setItem('capy-display-name', decoded.n);
-            if (decoded.p) {
-              setProfilePic(decoded.p);
-              localStorage.setItem('capy-pfp', decoded.p);
-            }
-            if (decoded.t) {
-              setTheme(decoded.t);
-              localStorage.setItem('capy-theme', decoded.t);
-            }
-            if (decoded.g) {
-              setGlowIntensity(decoded.g);
-              localStorage.setItem('capy-glow', decoded.g);
-            }
-            setNotification("Profile Synced Successfully!");
-            setTimeout(() => window.location.reload(), 1000);
-          } else {
-            alert("Invalid Sync Code!");
-          }
-        }}
-        friends={friends}
-        isSyncing={isSyncing}
-        disguise={disguise}
-        setDisguise={(val) => { setDisguise(val); localStorage.setItem('capy-stealth-type', val); }}
-        customTitle={customTitle}
-        setCustomTitle={(val) => { setCustomTitle(val); localStorage.setItem('capy-custom-title', val); }}
-        customIcon={customIcon}
-        setCustomIcon={(val) => { setCustomIcon(val); localStorage.setItem('capy-custom-icon', val); }}
-        isLightMode={isLightMode}
-        setIsLightMode={setIsLightMode}
-        onAddFriend={(code) => {
-          const decodedData = safeDecode(code);
-          if (decodedData && decodedData.id) {
-            const { n: name, id: friendId } = decodedData;
-            if (name.toLowerCase() === displayName.toLowerCase()) {
-              alert("You cannot add yourself!");
-              return;
-            }
-            const otherFriends = friends.filter(f => {
-              const existingData = safeDecode(f.code);
-              return existingData?.id !== friendId;
-            });
-            const updatedFriends = [...otherFriends, { name, code: code.trim() }];
-            setFriends(updatedFriends);
-            localStorage.setItem('capy-friends', JSON.stringify(updatedFriends));
-            setNotification(`Added ${name}!`);
-          } else {
-            alert("Invalid Friend Code!");
-          }
-        }}
-        onRemoveFriend={(code) => {
-          const newFriends = friends.filter(f => f.code !== code);
-          setFriends(newFriends);
-          localStorage.setItem('capy-friends', JSON.stringify(newFriends));
-        }}
-        onViewFriend={(friend) => {
-          setSelectedFriendId(null);
-          setTimeout(() => setSelectedFriendId(friend.code), 10);
-        }}
-        onRefreshFriend={(code) => {
-            setIsSyncing(true);
-            const freshFriends = [...friends];
-            setFriends(freshFriends);
-            if (selectedFriendId === code) {
-                setSelectedFriendId(null);
-                setTimeout(() => setSelectedFriendId(code), 50);
-            }
-            setTimeout(() => {
-              setIsSyncing(false);
-              setNotification("Friend view refreshed!");
-            }, 500);
-        }}
-        myAchievements={achievements}
-        activeCloak={activeCloak}
-        setActiveCloak={setActiveCloak}
-        isPlaying={isPlaying}
-        onTogglePlay={handleTogglePlay}
-      />
-
-      <footer className="mt-10 py-6 text-center text-xs text-zinc-500 border-t border-white/5">
-        <p>&copy; 2026 Capybara Science. All rights reserved.</p>
-      </footer>
     </div>
   );
 }
