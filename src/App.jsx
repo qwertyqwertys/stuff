@@ -903,7 +903,7 @@ export default function App() {
               <section className="space-y-4">
                 <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
                   <History className="w-3 h-3 text-[var(--theme)]" />
-                  Recently On
+                  Recently Played
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {recentGamesData.map(game => (
