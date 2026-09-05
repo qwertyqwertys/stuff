@@ -728,14 +728,9 @@ export default function App() {
         const allPossibleGames = [...(gamesDataRaw || []), ...(gnMathDataRaw || [])];
         return allPossibleGames.find(g => String(g.id) === String(id));
       })
-      .filter(g => {
-        if (!g) return false;
-        if (supplier === 'GN Math') return true;
-        if (supplier === 'Truffled') return false;
-        return !(g.urls?.['GN Math'] || g.urls?.['GN-MATH'] || g.urls?.['Truffled']);
-      })
+      .filter(Boolean)
       .slice(0, 4); 
-  }, [recentlyPlayed, gamesDataRaw, gnMathDataRaw, supplier]);
+  }, [recentlyPlayed, gamesDataRaw, gnMathDataRaw]);
 
   const currentFriend = useMemo(() => {
     if (!selectedFriendId || selectedFriendId === 'me') return null;
@@ -1066,7 +1061,7 @@ export default function App() {
         onRemoveFriend={(code) => {
           const newFriends = friends.filter(f => f.code !== code);
           setFriends(newFriends);
-          localStorage.setItem('capy-friends', JSON.stringify(newFriends));
+            localStorage.setItem('capy-friends', JSON.stringify(newFriends));
         }}
         onViewFriend={(friend) => {
           setSelectedFriendId(null);
