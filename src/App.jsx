@@ -25,8 +25,7 @@ const GOOGLE_FAVICON = "https://www.gstatic.com/images/branding/searchlogo/ico/f
 const DEFAULT_TITLE = "Google"; 
 const DEFAULT_ICON = GOOGLE_FAVICON; 
 const DEFAULT_COLOR = '#38bdf8';
-const DEFAULT_GLOW = 50;
-const CAPY_LOGO = "https://img.icons8.com/color/32/capybara.png";
+const DEFAULT_GLOW = 0; // Removed harsh vibe-coded glow by default
 
 // --- ACHIEVEMENT DEFINITIONS ---
 const TROPHIES = [
@@ -38,9 +37,9 @@ const TROPHIES = [
 ];
 
 const THEMES = {
-  cyber: { name: 'Cyberpunk', color: '#ff6699', glow: 60 },
-  midnight: { name: 'Midnight', color: '#a78bfa', glow: 40 }, 
-  forest: { name: 'Forest', color: '#34d399', glow: 30 },
+  cyber: { name: 'Cyberpunk', color: '#f43f5e', glow: 0 },
+  midnight: { name: 'Midnight', color: '#8b5cf6', glow: 0 }, 
+  forest: { name: 'Forest', color: '#10b981', glow: 0 },
   classic: { name: 'Classic', color: DEFAULT_COLOR, glow: DEFAULT_GLOW }
 };
 
@@ -67,6 +66,10 @@ export default function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
+
+  // Persistent Theme Initialization Fix
+  const [theme, setTheme] = useState(() => localStorage.getItem('capy-theme') || DEFAULT_COLOR);
+  const [glowIntensity, setGlowIntensity] = useState(() => Number(localStorage.getItem('capy-glow')) || DEFAULT_GLOW);
 
   const userData = { playtimes: playtimes, favorites: favorites, themeChangeCount: themeChangeCount };
 
@@ -125,15 +128,10 @@ export default function App() {
     }
   }, []);
 
-  const [theme, setTheme] = useState(() => localStorage.getItem('capy-theme') || DEFAULT_COLOR);
-  const [glowIntensity, setGlowIntensity] = useState(() => Number(localStorage.getItem('capy-glow')) || DEFAULT_GLOW);
-  
   useEffect(() => {
-    const savedTheme = localStorage.getItem('capy-theme') || DEFAULT_COLOR;
-    const savedGlow = Number(localStorage.getItem('capy-glow')) || DEFAULT_GLOW;
-    document.documentElement.style.setProperty('--theme', savedTheme);
-    document.documentElement.style.setProperty('--glow', `${savedGlow}px`);
-  }, []);
+    document.documentElement.style.setProperty('--theme', theme);
+    document.documentElement.style.setProperty('--glow', `${glowIntensity}px`);
+  }, [theme, glowIntensity]);
 
   const [disguise, setDisguise] = useState(() => localStorage.getItem('capy-stealth-type') || 'none');
   const [customTitle, setCustomTitle] = useState(() => localStorage.getItem('capy-custom-title') || '');
@@ -214,7 +212,7 @@ export default function App() {
           <head>
             <title>DO NOT REFRESH</title>
           </head>
-          <body style="margin:0;padding:0;overflow:hidden;background:#000;">
+          <body style="margin:0;padding:0;overflow:hidden;background:#09090b;">
             <iframe 
               src="${gameUrl}" 
               style="width:100vw;height:100vh;border:none;display:block;" 
@@ -487,7 +485,7 @@ export default function App() {
       if (!localStorage.getItem('achievement_first_game')) {
         localStorage.setItem('achievement_first_game', 'true');
         checkAndAdd('first_game');
-        setNotification("🏆 Achievement Unlocked: First Blood!");
+        setNotification("Achievement unlocked: First Blood");
       }
     }
 
@@ -495,7 +493,7 @@ export default function App() {
     if (totalTime >= 3600 && !localStorage.getItem('achievement_marathon')) {
       localStorage.setItem('achievement_marathon', 'true');
       checkAndAdd('marathon');
-      setNotification("⏱️ Achievement Unlocked: Marathoner!");
+      setNotification("Achievement unlocked: Marathoner");
     }
 
     if (typeof setAchievements === 'function') {
@@ -589,14 +587,14 @@ export default function App() {
     if (file) {
       const maxSize = 500 * 1024; 
       if (file.size > maxSize) {
-        alert("File too large! Please use a GIF under 500KB.");
+        alert("File too large! Please use an image under 500KB.");
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfilePic(reader.result);
         localStorage.setItem('capy-pfp', reader.result);
-        setNotification("Profile Picture Updated!");
+        setNotification("Profile picture updated");
       };
       reader.readAsDataURL(file);
     }
@@ -641,7 +639,7 @@ export default function App() {
       window.location.reload();
     } else {
       setConfirmReset(true);
-      setNotification("Warning: This will delete ALL customization, favorites, friends, and stats!");
+      setNotification("Warning: This will delete all customization, favorites, friends, and stats.");
     }
   };
 
@@ -658,7 +656,7 @@ export default function App() {
       window.location.reload();
     } else {
       setConfirmClearSettings(true);
-      setNotification("Warning: This will reset all your settings to default!");
+      setNotification("Warning: This will reset all settings to default.");
     }
   };
 
@@ -747,27 +745,27 @@ export default function App() {
   
   return (
     <div
-      className={`min-h-screen pb-20 antialiased relative ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
+      className={`min-h-screen pb-20 antialiased relative bg-[#09090b] ${performanceMode ? '' : 'transition-colors duration-200'} ${isLightMode ? 'light-mode text-zinc-900 bg-zinc-50' : 'text-zinc-100'}`} 
       style={{ 
         '--theme': theme, 
         '--glow': `${performanceMode ? 0 : glowIntensity}px`
       }}
     >
       {showTitle ? (
-        <div className="fixed inset-0 z-[99999] bg-zinc-950 flex flex-col items-center justify-center p-6 text-white select-none animate-in fade-in duration-500" style={{ '--theme': theme }}>
-          <div className="max-w-sm w-full flex flex-col items-center text-center space-y-6 relative">
+        <div className="fixed inset-0 z-[99999] bg-[#09090b] flex flex-col items-center justify-center p-6 text-zinc-100 select-none animate-in fade-in duration-300">
+          <div className="max-w-md w-full bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-8 flex flex-col items-center text-center shadow-2xl backdrop-blur-md">
             
-            <div className="w-24 h-24 rounded-3xl bg-[var(--theme)]/15 border border-[var(--theme)]/50 flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
-              <img src={CAPY_LOGO} alt="Capybara Logo" className="w-14 h-14 object-contain" />
+            <div className="w-20 h-20 rounded-2xl bg-zinc-800/60 border border-zinc-700/60 flex items-center justify-center mb-6">
+              <span className="text-4xl select-none" role="img" aria-label="Capybara">🦫</span>
             </div>
 
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--theme)]">Welcome to</span>
-              <h1 className="text-3xl font-black tracking-tight uppercase">Capybara Science</h1>
+            <div className="space-y-1 mb-8">
+              <span className="text-xs font-semibold tracking-wide text-zinc-400 uppercase">Welcome to</span>
+              <h1 className="text-2xl font-bold tracking-tight text-white">Capybara Science</h1>
             </div>
 
-            <div className="w-full space-y-3 text-left bg-zinc-900/60 p-4 rounded-2xl border border-white/5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Your Display Name</label>
+            <div className="w-full space-y-2 text-left mb-6">
+              <label className="text-xs font-medium text-zinc-400">Display Name</label>
               <input 
                 type="text" 
                 value={displayName} 
@@ -777,11 +775,11 @@ export default function App() {
                 }}
                 placeholder="CapyUser"
                 maxLength={20}
-                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--theme)] transition-all font-bold shadow-inner"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--theme)] transition-colors"
               />
             </div>
 
-            <div className="flex items-center gap-3 w-full text-left px-1">
+            <div className="flex items-center gap-3 w-full text-left mb-8 px-1">
               <input 
                 type="checkbox" 
                 id="skipTitleCheckbox"
@@ -792,16 +790,16 @@ export default function App() {
                     localStorage.removeItem('skipTitleScreen');
                   }
                 }}
-                className="w-4 h-4 accent-[var(--theme)] rounded cursor-pointer"
+                className="w-4 h-4 accent-[var(--theme)] rounded cursor-pointer bg-zinc-950 border-zinc-800"
               />
-              <label htmlFor="skipTitleCheckbox" className="text-xs text-zinc-400 font-medium cursor-pointer select-none hover:text-zinc-200 transition-colors">
+              <label htmlFor="skipTitleCheckbox" className="text-xs text-zinc-400 cursor-pointer select-none hover:text-zinc-300">
                 Skip this title screen next time
               </label>
             </div>
 
             <button 
               onClick={() => setShowTitle(false)}
-              className="w-full py-4 bg-[var(--theme)] text-black font-black uppercase tracking-widest text-xs rounded-2xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 bg-[var(--theme)] text-zinc-950 font-semibold text-sm rounded-xl transition-all hover:opacity-95 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer shadow-sm"
             >
               <Play className="w-4 h-4 fill-current" />
               Go to Home Page
@@ -811,10 +809,10 @@ export default function App() {
       ) : (
         <>
           {notification && (
-            <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-4 duration-300">
-              <div className="bg-zinc-900 border border-[var(--theme)]/50 px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[var(--theme)]" />
-                <span className="text-xs font-black uppercase tracking-tight">{notification}</span>
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-3 duration-200">
+              <div className="bg-zinc-900 border border-zinc-800 px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2.5 text-zinc-200">
+                <CheckCircle2 className="w-4 h-4 text-[var(--theme)] shrink-0" />
+                <span className="text-xs font-medium">{notification}</span>
               </div>
             </div>
           )}
@@ -848,12 +846,12 @@ export default function App() {
           )}
 
           {isChatOpen ? (
-            <div className="fixed inset-0 z-[9999] bg-[#0a0a0a] flex flex-col p-4 animate-in fade-in duration-300">
+            <div className="fixed inset-0 z-[9999] bg-[#09090b] flex flex-col p-4 animate-in fade-in duration-200">
               <button 
                 onClick={() => setIsChatOpen(false)}
-                className="absolute top-6 right-6 p-2 bg-white/15 hover:bg-white/25 rounded-full z-[10000] transition-transform active:scale-95 text-white"
+                className="absolute top-6 right-6 p-2 bg-zinc-800 hover:bg-zinc-700 rounded-full z-[10000] transition-colors text-zinc-300"
               >
-                <X className="w-8 h-8" />
+                <X className="w-5 h-5" />
               </button>
               <div className="flex-1 w-full max-w-5xl mx-auto flex items-center justify-center">
                 <div className="w-full h-[85vh]">
@@ -895,9 +893,9 @@ export default function App() {
                       <button
                         onClick={() => scrollCategories('left')}
                         aria-label="Scroll categories left"
-                        className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+                        className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-full shadow-md transition-colors border border-zinc-700 pointer-events-auto"
                       >
-                        <ChevronLeft className="w-4 h-4 text-black" />
+                        <ChevronLeft className="w-4 h-4" />
                       </button>
                     </div>
                   )}
@@ -912,12 +910,12 @@ export default function App() {
                         key={cat.name}
                         onClick={() => setActiveCategory(cat.name)}
                         aria-current={activeCategory === cat.name ? 'page' : undefined}
-                        className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-medium border shrink-0 transition-colors ${
                           activeCategory === cat.name
-                            ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
+                            ? 'bg-[var(--theme)] border-[var(--theme)] text-zinc-950 font-semibold'
                             : isLightMode
-                              ? 'bg-zinc-100/80 border-zinc-200 text-zinc-600 hover:bg-zinc-200'
-                              : 'bg-white/10 border-white/10 text-zinc-300 hover:bg-white/20'
+                              ? 'bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-zinc-200'
+                              : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:bg-zinc-800/80 hover:text-zinc-200'
                         }`}
                       >
                         {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-40'}`}>{cat.count}</span>
@@ -926,29 +924,29 @@ export default function App() {
                   </div>
 
                   {canScrollRight && (
-                    <div className="absolute -right-9 z-50 flex items-center pl-12 h-full bg-transparent pointer-events-none">
+                    <div className="absolute -right-2 z-50 flex items-center pl-12 h-full bg-transparent pointer-events-none">
                       <button 
                         onClick={() => scrollCategories('right')}
                         aria-label="Scroll categories right"
-                        className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+                        className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-full shadow-md transition-colors border border-zinc-700 pointer-events-auto"
                       >
-                        <ChevronRight className="w-4 h-4 text-black" />
+                        <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
                   )}
                 </div>
               </div>
 
-              <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12">
-                <h1 className="sr-only text-black bg-white">Capybara Science</h1>
+              <main className="max-w-7xl mx-auto px-4 mt-6 space-y-10">
+                <h1 className="sr-only">Capybara Science</h1>
                 
                 {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
-                  <section className="space-y-4">
-                    <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                      <History className="w-3 h-3 text-[var(--theme)]" />
-                      Recently On
+                  <section className="space-y-3">
+                    <div className={`flex items-center gap-2 text-xs font-semibold tracking-wide uppercase ${isLightMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                      <History className="w-3.5 h-3.5 text-[var(--theme)]" />
+                      Recently Played
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                       {recentGamesData.map(game => (
                         <GameCard 
                           key={`recent-${game.id}`} 
@@ -964,7 +962,7 @@ export default function App() {
                   </section>
                 )}
 
-                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {filteredGames.map(game => (
                     <GameCard 
                       key={game.id} 
@@ -983,7 +981,7 @@ export default function App() {
 
           {/* Soundboard Modal Overlay */}
           {isSoundboardOpen && (
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
               <SoundboardCard 
                 isLightMode={isLightMode} 
                 onClose={() => setIsSoundboardOpen(false)} 
@@ -1070,7 +1068,7 @@ export default function App() {
                   setGlowIntensity(decoded.g);
                   localStorage.setItem('capy-glow', decoded.g);
                 }
-                setNotification("Profile Synced Successfully!");
+                setNotification("Profile synced successfully");
                 setTimeout(() => window.location.reload(), 1000);
               } else {
                 alert("Invalid Sync Code!");
@@ -1101,7 +1099,7 @@ export default function App() {
                 const updatedFriends = [...otherFriends, { name, code: code.trim() }];
                 setFriends(updatedFriends);
                 localStorage.setItem('capy-friends', JSON.stringify(updatedFriends));
-                setNotification(`Added ${name}!`);
+                setNotification(`Added ${name}`);
               } else {
                 alert("Invalid Friend Code!");
               }
@@ -1125,7 +1123,7 @@ export default function App() {
                 }
                 setTimeout(() => {
                   setIsSyncing(false);
-                  setNotification("Friend view refreshed!");
+                  setNotification("Friend view refreshed");
                 }, 500);
             }}
             myAchievements={achievements}
@@ -1135,7 +1133,7 @@ export default function App() {
             onTogglePlay={handleTogglePlay}
           />
 
-          <footer className="mt-10 py-6 text-center text-xs text-zinc-500 border-t border-white/5">
+          <footer className="mt-12 py-6 text-center text-xs text-zinc-500 border-t border-zinc-800/40">
             <p>&copy; 2026 Capybara Science. All rights reserved.</p>
           </footer>
         </>
