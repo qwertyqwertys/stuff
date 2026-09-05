@@ -751,18 +751,22 @@ export default function App() {
       }}
     >
       {showTitle ? (
-        <div className="fixed inset-0 z-[99999] bg-zinc-950 flex flex-col items-center justify-center p-6 text-white select-none animate-in fade-in duration-500" style={{ '--theme': theme }}>
-          <div className="max-w-md w-full bg-zinc-900/80 border border-[var(--theme)]/40 p-8 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-xl flex flex-col items-center text-center space-y-6">
-            <div className="w-20 h-20 rounded-2xl bg-[var(--theme)]/20 border border-[var(--theme)] flex items-center justify-center shadow-[0_0_20px_var(--theme)]">
-              <Gamepad2 className="w-10 h-10 text-[var(--theme)] animate-pulse" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-black tracking-tight uppercase">Capybara Science</h1>
-              <p className="text-xs text-zinc-400 font-medium">Your ultimate unblocked gaming hub & dashboard.</p>
+        <div className="fixed inset-0 z-[99999] bg-zinc-950/90 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-white select-none animate-in fade-in duration-500" style={{ '--theme': theme }}>
+          <div className="max-w-md w-full bg-zinc-900/90 border border-[var(--theme)]/40 p-8 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.9)] backdrop-blur-xl flex flex-col items-center text-center space-y-6 relative overflow-hidden">
+            <div className="absolute -top-24 -left-24 w-48 h-48 bg-[var(--theme)]/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-[var(--theme)]/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div className="w-24 h-24 rounded-3xl bg-[var(--theme)]/15 border border-[var(--theme)]/50 flex items-center justify-center shadow-[0_0_30px_var(--theme)] transform hover:scale-105 transition-transform duration-300">
+              <img src={CAPY_LOGO} alt="Capybara Logo" className="w-14 h-14 object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
             </div>
 
-            <div className="w-full space-y-3 text-left">
-              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Enter Your Display Name</label>
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--theme)]">Welcome to</span>
+              <h1 className="text-3xl font-black tracking-tight uppercase">Capybara Science</h1>
+            </div>
+
+            <div className="w-full space-y-3 text-left bg-zinc-950/40 p-4 rounded-2xl border border-white/5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Your Display Name</label>
               <input 
                 type="text" 
                 value={displayName} 
@@ -772,11 +776,11 @@ export default function App() {
                 }}
                 placeholder="CapyUser"
                 maxLength={20}
-                className="w-full bg-zinc-950/80 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--theme)] transition-all font-bold"
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--theme)] transition-all font-bold shadow-inner"
               />
             </div>
 
-            <div className="flex items-center gap-3 w-full text-left pt-1">
+            <div className="flex items-center gap-3 w-full text-left px-1">
               <input 
                 type="checkbox" 
                 id="skipTitleCheckbox"
@@ -789,14 +793,14 @@ export default function App() {
                 }}
                 className="w-4 h-4 accent-[var(--theme)] rounded cursor-pointer"
               />
-              <label htmlFor="skipTitleCheckbox" className="text-xs text-zinc-400 font-medium cursor-pointer select-none">
+              <label htmlFor="skipTitleCheckbox" className="text-xs text-zinc-400 font-medium cursor-pointer select-none hover:text-zinc-200 transition-colors">
                 Skip this title screen next time
               </label>
             </div>
 
             <button 
               onClick={() => setShowTitle(false)}
-              className="w-full py-4 bg-[var(--theme)] text-black font-black uppercase tracking-widest text-xs rounded-2xl shadow-lg transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-4 bg-[var(--theme)] text-black font-black uppercase tracking-widest text-xs rounded-2xl shadow-[0_0_20px_var(--theme)]/30 transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_var(--theme)]/50 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Play className="w-4 h-4 fill-current" />
               Launch App
