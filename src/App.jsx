@@ -728,9 +728,14 @@ export default function App() {
         const allPossibleGames = [...(gamesDataRaw || []), ...(gnMathDataRaw || [])];
         return allPossibleGames.find(g => String(g.id) === String(id));
       })
-      .filter(Boolean)
+      .filter(g => {
+        if (!g) return false;
+        if (supplier === 'GN Math') return true;
+        if (supplier === 'Truffled') return false;
+        return !(g.urls?.['GN Math'] || g.urls?.['GN-MATH'] || g.urls?.['Truffled']);
+      })
       .slice(0, 4); 
-  }, [recentlyPlayed, gamesDataRaw, gnMathDataRaw]);
+  }, [recentlyPlayed, gamesDataRaw, gnMathDataRaw, supplier]);
 
   const currentFriend = useMemo(() => {
     if (!selectedFriendId || selectedFriendId === 'me') return null;
@@ -898,7 +903,7 @@ export default function App() {
               <section className="space-y-4">
                 <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
                   <History className="w-3 h-3 text-[var(--theme)]" />
-                  Recently Played
+                  Recently On
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {recentGamesData.map(game => (
@@ -1061,7 +1066,7 @@ export default function App() {
         onRemoveFriend={(code) => {
           const newFriends = friends.filter(f => f.code !== code);
           setFriends(newFriends);
-            localStorage.setItem('capy-friends', JSON.stringify(newFriends));
+          localStorage.setItem('capy-friends', JSON.stringify(newFriends));
         }}
         onViewFriend={(friend) => {
           setSelectedFriendId(null);
