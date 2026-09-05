@@ -25,7 +25,7 @@ const GOOGLE_FAVICON = "https://www.gstatic.com/images/branding/searchlogo/ico/f
 const DEFAULT_TITLE = "Google"; 
 const DEFAULT_ICON = GOOGLE_FAVICON; 
 const DEFAULT_COLOR = '#38bdf8';
-const DEFAULT_GLOW = 0; // Removed harsh vibe-coded glow by default
+const DEFAULT_GLOW = 0;
 
 // --- ACHIEVEMENT DEFINITIONS ---
 const TROPHIES = [
@@ -752,11 +752,27 @@ export default function App() {
       }}
     >
       {showTitle ? (
-        <div className="fixed inset-0 z-[99999] bg-[#09090b] flex flex-col items-center justify-center p-6 text-zinc-100 select-none animate-in fade-in duration-300">
-          <div className="max-w-md w-full bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-8 flex flex-col items-center text-center shadow-2xl backdrop-blur-md">
+        <div 
+          className="fixed inset-0 z-[99999] bg-[#09090b] flex flex-col items-center justify-center p-6 text-zinc-100 select-none animate-in fade-in duration-300 bg-cover bg-center"
+          style={{ cursor: 'default', pointerEvents: 'auto' }}
+        >
+          {/* Background Funny Capybara Image with Dark Overlay */}
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <div 
+              className="absolute inset-0 bg-cover bg-center filter brightness-90 scale-105"
+              style={{ backgroundImage: `url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh_CapybaraPlaceholder/s2048/Capybara-with-open-mouth-698301070.jpg')` }}
+            />
+            <div className="absolute inset-0 bg-zinc-950/85 backdrop-blur-[2px]" />
+          </div>
+
+          {/* Title Card Container */}
+          <div className="relative z-10 max-w-md w-full bg-zinc-900/75 border border-zinc-800/80 rounded-2xl p-8 flex flex-col items-center text-center shadow-2xl backdrop-blur-md" style={{ cursor: 'default' }}>
             
-            <div className="w-20 h-20 rounded-2xl bg-zinc-800/60 border border-zinc-700/60 flex items-center justify-center mb-6">
-              <span className="text-4xl select-none" role="img" aria-label="Capybara">🦫</span>
+            {/* Logo replacement */}
+            <div className="w-20 h-20 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center mb-6 overflow-hidden shadow-inner">
+              <div className="w-12 h-12 rounded-xl bg-[var(--theme)] flex items-center justify-center text-zinc-950 font-black text-2xl shadow-sm">
+                🦫
+              </div>
             </div>
 
             <div className="space-y-1 mb-8">
@@ -776,6 +792,7 @@ export default function App() {
                 placeholder="CapyUser"
                 maxLength={20}
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--theme)] transition-colors"
+                style={{ cursor: 'text' }}
               />
             </div>
 
@@ -800,10 +817,25 @@ export default function App() {
             <button 
               onClick={() => setShowTitle(false)}
               className="w-full py-3.5 bg-[var(--theme)] text-zinc-950 font-semibold text-sm rounded-xl transition-all hover:opacity-95 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+              style={{ cursor: 'pointer' }}
             >
               <Play className="w-4 h-4 fill-current" />
               Go to Home Page
             </button>
+          </div>
+
+          {/* Formal Image Credit in Bottom Right */}
+          <div className="absolute bottom-4 right-4 z-20 text-[11px] text-zinc-400/80 bg-zinc-950/70 backdrop-blur-md px-3.5 py-2 rounded-xl border border-zinc-800/60 shadow-lg" style={{ cursor: 'default' }}>
+            <span>Background image: <em>Capybara Facts Habitat</em> courtesy of Animals World (</span>
+            <a 
+              href="https://animals-world5.blogspot.com" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="underline text-zinc-300 hover:text-white transition-colors"
+            >
+              animals-world5.blogspot.com
+            </a>
+            <span>)</span>
           </div>
         </div>
       ) : (
@@ -870,7 +902,7 @@ export default function App() {
                 battery={battery}
                 profilePic={profilePic}
                 setShowSettings={setShowSettings}
-                DEFAULT_ICON={CAPY_LOGO}
+                DEFAULT_ICON={DEFAULT_ICON}
                 theme={theme}   
                 onViewProfile={() => setSelectedFriendId('me')} 
                 onRandomGame={() => {
