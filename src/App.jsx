@@ -30,10 +30,10 @@ const CAPY_LOGO = "https://img.icons8.com/color/32/capybara.png";
 
 // --- ACHIEVEMENT DEFINITIONS ---
 const TROPHIES = [
-  { id: 'first_game', name: 'First Blood', desc: 'Play your first game', icon: '🎮' },
-  { id: 'marathon', name: 'Marathoner', desc: 'Play for over 1 hour total', icon: '🏃' },
+  { id: 'first_game', name: 'First Blood', desc: 'Play your first game', icon: '🏆' },
+  { id: 'marathon', name: 'Marathoner', desc: 'Play for over 1 hour total', icon: '⏱️' },
   { id: 'collector', name: 'The Collector', desc: 'Favorite 10 different games', icon: '⭐' },
-  { id: 'loyal', name: 'Capy-Loyalist', desc: 'Play one game for 30 mins', icon: '📜' },
+  { id: 'loyal', name: 'Capy-Loyalist', desc: 'Play one game for 30 mins', icon: '🎮' },
   { id: 'styler', name: 'Fashionista', desc: 'Change your theme 5 times', icon: '🎨' }
 ];
 
@@ -48,7 +48,7 @@ const DISGUISE_CONFIG = {
   none: { title: DEFAULT_TITLE, icon: DEFAULT_ICON },
   google: { title: "Google", icon: GOOGLE_FAVICON },
   drive: { title: "My Drive - Google Drive", icon: "https://ssl.gstatic.com/images/branding/product/2x/drive_2020q4_48dp.png" },
-  classroom: { title: "Home - Classroom", icon: "https://ssl.gstatic.com/classroom/favicon.png" },
+  classroom: { title: "Home - Classroom", icon: "https://www.gstatic.com/classroom/favicon.png" },
   powerschool: { title: "Grades and Attendance", icon: "https://ps.bhmsd.org/favicon.ico" }
 };
 
@@ -77,6 +77,19 @@ export default function App() {
     applyCloak(config);
     localStorage.setItem('capy-cloak-type', activeCloak);
   }, [activeCloak]);
+
+  // Clean up soundboard/extra audio instantly when closed
+  useEffect(() => {
+    if (!isSoundboardOpen) {
+      const audios = document.querySelectorAll('audio');
+      audios.forEach(audio => {
+        if (audio !== audioRef.current) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      });
+    }
+  }, [isSoundboardOpen]);
 
   const gamesData = useMemo(() => {
     const main = Array.isArray(gamesDataRaw) ? gamesDataRaw : [];
@@ -483,7 +496,7 @@ export default function App() {
       if (!localStorage.getItem('achievement_first_game')) {
         localStorage.setItem('achievement_first_game', 'true');
         checkAndAdd('first_game');
-        setNotification("🎮 Achievement Unlocked: First Blood!");
+        setNotification("🏆 Achievement Unlocked: First Blood!");
       }
     }
 
@@ -491,7 +504,7 @@ export default function App() {
     if (totalTime >= 3600 && !localStorage.getItem('achievement_marathon')) {
       localStorage.setItem('achievement_marathon', 'true');
       checkAndAdd('marathon');
-      setNotification("🏃 Achievement Unlocked: Marathoner!");
+      setNotification("⏱️ Achievement Unlocked: Marathoner!");
     }
 
     if (typeof setAchievements === 'function') {
