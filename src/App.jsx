@@ -367,6 +367,11 @@ export default function App() {
     localStorage.setItem('capy-volume', volume.toString());
   }, [volume]);
 
+  // Persist background opacity changes
+  useEffect(() => {
+    localStorage.setItem('capy-bg-opacity', bgOpacity.toString());
+  }, [bgOpacity]);
+
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
