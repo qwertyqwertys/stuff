@@ -127,6 +127,14 @@ export default function App() {
 
   const [theme, setTheme] = useState(() => localStorage.getItem('capy-theme') || DEFAULT_COLOR);
   const [glowIntensity, setGlowIntensity] = useState(() => Number(localStorage.getItem('capy-glow')) || DEFAULT_GLOW);
+  
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('capy-theme') || DEFAULT_COLOR;
+    const savedGlow = Number(localStorage.getItem('capy-glow')) || DEFAULT_GLOW;
+    document.documentElement.style.setProperty('--theme', savedTheme);
+    document.documentElement.style.setProperty('--glow', `${savedGlow}px`);
+  }, []);
+
   const [disguise, setDisguise] = useState(() => localStorage.getItem('capy-stealth-type') || 'none');
   const [customTitle, setCustomTitle] = useState(() => localStorage.getItem('capy-custom-title') || '');
   const [customIcon, setCustomIcon] = useState(() => localStorage.getItem('capy-custom-icon') || '');
@@ -336,11 +344,6 @@ export default function App() {
     };
     return btoa(unescape(encodeURIComponent(JSON.stringify(data)))).replace(/=/g, '');
   }, [displayName, uniqueId, profilePic, theme, glowIntensity, favorites, achievements]);
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('capy-theme') || DEFAULT_COLOR;
-    document.documentElement.style.setProperty('--theme', savedTheme);
-  }, []);
 
   useEffect(() => {
     if (isLightMode) {
@@ -751,13 +754,11 @@ export default function App() {
       }}
     >
       {showTitle ? (
-        <div className="fixed inset-0 z-[99999] bg-zinc-950/90 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-white select-none animate-in fade-in duration-500" style={{ '--theme': theme }}>
-          <div className="max-w-md w-full bg-zinc-900/90 border border-[var(--theme)]/40 p-8 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.9)] backdrop-blur-xl flex flex-col items-center text-center space-y-6 relative overflow-hidden">
-            <div className="absolute -top-24 -left-24 w-48 h-48 bg-[var(--theme)]/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-[var(--theme)]/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="fixed inset-0 z-[99999] bg-zinc-950 flex flex-col items-center justify-center p-6 text-white select-none animate-in fade-in duration-500" style={{ '--theme': theme }}>
+          <div className="max-w-sm w-full flex flex-col items-center text-center space-y-6 relative">
             
-            <div className="w-24 h-24 rounded-3xl bg-[var(--theme)]/15 border border-[var(--theme)]/50 flex items-center justify-center shadow-[0_0_30px_var(--theme)] transform hover:scale-105 transition-transform duration-300">
-              <img src={CAPY_LOGO} alt="Capybara Logo" className="w-14 h-14 object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
+            <div className="w-24 h-24 rounded-3xl bg-[var(--theme)]/15 border border-[var(--theme)]/50 flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
+              <img src={CAPY_LOGO} alt="Capybara Logo" className="w-14 h-14 object-contain" />
             </div>
 
             <div className="space-y-1">
@@ -765,7 +766,7 @@ export default function App() {
               <h1 className="text-3xl font-black tracking-tight uppercase">Capybara Science</h1>
             </div>
 
-            <div className="w-full space-y-3 text-left bg-zinc-950/40 p-4 rounded-2xl border border-white/5">
+            <div className="w-full space-y-3 text-left bg-zinc-900/60 p-4 rounded-2xl border border-white/5">
               <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Your Display Name</label>
               <input 
                 type="text" 
@@ -800,10 +801,10 @@ export default function App() {
 
             <button 
               onClick={() => setShowTitle(false)}
-              className="w-full py-4 bg-[var(--theme)] text-black font-black uppercase tracking-widest text-xs rounded-2xl shadow-[0_0_20px_var(--theme)]/30 transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_var(--theme)]/50 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-4 bg-[var(--theme)] text-black font-black uppercase tracking-widest text-xs rounded-2xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Play className="w-4 h-4 fill-current" />
-              Launch App
+              Go to Home Page
             </button>
           </div>
         </div>
