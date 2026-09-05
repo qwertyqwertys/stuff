@@ -171,4 +171,3 @@ export function Header({
     </header>
   );
 }
-```[cite: 3]
