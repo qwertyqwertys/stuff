@@ -147,7 +147,13 @@ export default function App() {
   const [backgroundVideo, setBackgroundVideo] = useState(() => localStorage.getItem('capy-bg-video') || '');
   const [bgOpacity, setBgOpacity] = useState(() => Number(localStorage.getItem('capy-bg-opacity')) || 50);
   
-  const [bgMusic, setBgMusic] = useState(() => localStorage.getItem('capy-bg-music') || '');
+  // FIXED: Only load saved music if background music is actively enabled
+  const [bgMusic, setBgMusic] = useState(() => {
+    const isEnabled = localStorage.getItem('capy-bg-enabled') === 'true';
+    const savedMusic = localStorage.getItem('capy-bg-music');
+    return (isEnabled && savedMusic) ? savedMusic : '';
+  });
+
   const [volume, setVolume] = useState(() => {
     const saved = localStorage.getItem('capy-volume');
     return saved !== null ? Number(saved) : 0.5;
