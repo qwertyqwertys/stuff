@@ -777,7 +777,7 @@ export default function App() {
       )}
 
       {bgEnabled && !performanceMode && (
-        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ opacity: bgOpacity / 100 }}>
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ opacity: Math.min(100, bgOpacity) / 100 }}>
           {backgroundVideo ? (
             <video key={backgroundVideo} autoPlay muted loop playsInline className="w-full h-full object-cover">
               <source src={backgroundVideo} />
@@ -900,8 +900,8 @@ export default function App() {
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
-              <section className="space-y-4">
-                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+              <section className={`space-y-4 p-6 rounded-3xl border shadow-2xl ${isLightMode ? 'bg-white/80 backdrop-blur-md border-zinc-200/80' : 'bg-black/60 backdrop-blur-md border-white/10'}`}>
+                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-700' : 'text-zinc-200'}`}>
                   <History className="w-3 h-3 text-[var(--theme)]" />
                   Recently On
                 </div>
