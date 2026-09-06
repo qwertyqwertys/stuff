@@ -78,7 +78,6 @@ export default function App() {
     localStorage.setItem('capy-cloak-type', activeCloak);
   }, [activeCloak]);
 
-  // Clean up soundboard/extra audio instantly when closed
   useEffect(() => {
     if (!isSoundboardOpen) {
       const audios = document.querySelectorAll('audio');
@@ -367,7 +366,6 @@ export default function App() {
     localStorage.setItem('capy-volume', volume.toString());
   }, [volume]);
 
-  // Persist background opacity changes
   useEffect(() => {
     localStorage.setItem('capy-bg-opacity', bgOpacity.toString());
   }, [bgOpacity]);
@@ -771,13 +769,13 @@ export default function App() {
         <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="bg-zinc-900 border border-[var(--theme)]/50 px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-[var(--theme)]" />
-            <span className="text-xs font-black uppercase tracking-tight">{notification}</span>
+            <span className="text-xs font-black uppercase tracking-tight text-white">{notification}</span>
           </div>
         </div>
       )}
 
       {bgEnabled && !performanceMode && (
-        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ opacity: Math.min(100, bgOpacity) / 100 }}>
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ opacity: bgOpacity / 100 }}>
           {backgroundVideo ? (
             <video key={backgroundVideo} autoPlay muted loop playsInline className="w-full h-full object-cover">
               <source src={backgroundVideo} />
@@ -873,11 +871,11 @@ export default function App() {
                       activeCategory === cat.name
                         ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
                         : isLightMode
-                          ? 'bg-zinc-100/80 border-zinc-200 text-zinc-600 hover:bg-zinc-200'
-                          : 'bg-white/10 border-white/10 text-zinc-300 hover:bg-white/20'
+                          ? 'bg-zinc-100/90 border-zinc-200 text-zinc-800 hover:bg-zinc-200'
+                          : 'bg-zinc-900/90 border-white/20 text-white hover:bg-zinc-800'
                     }`}
                   >
-                    {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-40'}`}>{cat.count}</span>
+                    {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-70'}`}>{cat.count}</span>
                   </button>
                 ))}
               </div>
@@ -900,9 +898,9 @@ export default function App() {
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
-              <section className={`space-y-4 p-6 rounded-3xl border shadow-2xl ${isLightMode ? 'bg-white/80 backdrop-blur-md border-zinc-200/80' : 'bg-black/60 backdrop-blur-md border-white/10'}`}>
-                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${isLightMode ? 'text-zinc-700' : 'text-zinc-200'}`}>
-                  <History className="w-3 h-3 text-[var(--theme)]" />
+              <section className="space-y-4">
+                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                  <History className="w-3.5 h-3.5 text-[var(--theme)]" />
                   Recently On
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -1092,7 +1090,7 @@ export default function App() {
         onTogglePlay={handleTogglePlay}
       />
 
-      <footer className="mt-10 py-6 text-center text-xs text-zinc-500 border-t border-white/5">
+      <footer className="mt-10 py-6 text-center text-xs text-zinc-300 border-t border-white/5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
         <p>&copy; 2026 Capybara Science. All rights reserved.</p>
       </footer>
     </div>
