@@ -11,12 +11,17 @@ export function Header({
   supplier, setSupplier,
   isChatOpen, setIsChatOpen,
   setShowSoundboard,
-  isSoundboardOpen
+  isSoundboardOpen,
+  isHeaderLight
 }) {
   const navigate = useNavigate();
 
+  const textColorClass = isLightMode || isHeaderLight ? 'text-zinc-900' : 'text-zinc-100';
+  const containerBgClass = isLightMode || isHeaderLight ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10';
+  const placeholderClass = isLightMode || isHeaderLight ? 'placeholder:text-zinc-500' : 'placeholder:text-zinc-400';
+
   return (
-    <header className={`bg-transparent h-16 flex items-center px-4 sticky top-0 z-50 transition-colors ${isLightMode ? 'text-black' : 'text-white'}`}>
+    <header className={`bg-transparent h-16 flex items-center px-4 sticky top-0 z-50 transition-colors ${textColorClass}`}>
       <div className="max-w-7xl mx-auto w-full grid grid-cols-3 items-center">
         
         <div className="flex items-center gap-2 justify-self-start">
@@ -26,7 +31,7 @@ export function Header({
             style={{ 
               fontFamily: "'Fredoka', sans-serif",
               fontWeight: 600,
-              color: isLightMode ? '#000000' : '#ffffff'
+              color: isLightMode || isHeaderLight ? '#000000' : '#ffffff'
             }}
           >
             Capybara Science
@@ -35,14 +40,14 @@ export function Header({
 
         <div className="flex items-center justify-center gap-3 w-full justify-self-center">
           <div className="relative w-full max-w-[280px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isLightMode || isHeaderLight ? 'text-zinc-600' : 'text-zinc-400'}`} />
             <input 
               type="text" 
               placeholder="Search games..." 
               aria-label="Search games" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className={`w-full ${isLightMode ? 'bg-black/5 border-black/10 text-black placeholder:text-zinc-500' : 'bg-white/5 border-white/10 text-white placeholder:text-zinc-400'} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors`} 
+              className={`w-full ${containerBgClass} ${textColorClass} ${placeholderClass} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors`} 
             />
             {searchQuery && (
               <button 
@@ -58,7 +63,7 @@ export function Header({
           <button 
             onClick={onRandomGame} 
             aria-label="Play a random game"
-            className={`p-2 ${isLightMode ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10'} border rounded-full text-[var(--theme)] hover:bg-[var(--theme)] hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-rgb),0.1)]`}
+            className={`p-2 ${containerBgClass} border rounded-full text-[var(--theme)] hover:bg-[var(--theme)] hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-rgb),0.1)]`}
           >
             <Dices className="w-5 h-5" />
           </button>
@@ -72,11 +77,7 @@ export function Header({
                   setSupplier(e.target.value);
                   localStorage.setItem('capy-supplier', e.target.value);
                 }}
-                className={`text-xs font-bold uppercase py-2.5 pl-4 pr-10 rounded-xl border transition-all outline-none cursor-pointer appearance-none ${
-                  isLightMode 
-                    ? 'bg-black/5 border-black/10 text-black' 
-                    : 'bg-white/5 border-white/10 text-white'
-                } focus:border-[var(--theme)]`}
+                className={`text-xs font-bold uppercase py-2.5 pl-4 pr-10 rounded-xl border transition-all outline-none cursor-pointer appearance-none ${containerBgClass} ${textColorClass}`}
                 style={{ fontFamily: "'Baloo 2', cursive" }}
               >
                 <option value="Default" className="bg-[#09090b] text-white">Capybara Science</option>
@@ -93,7 +94,7 @@ export function Header({
               className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
                 isChatOpen 
                   ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
-                  : (isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-[var(--theme)]')
+                  : `${containerBgClass} text-[var(--theme)]`
               }`}
               title="Toggle Chat"
               aria-label="Toggle chat sidebar"
@@ -106,7 +107,7 @@ export function Header({
               className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
                 isSoundboardOpen 
                   ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
-                  : (isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-[var(--theme)]')
+                  : `${containerBgClass} text-[var(--theme)]`
               }`}
               title="Toggle Soundboard"
               aria-label="Toggle custom soundboard"
@@ -118,7 +119,7 @@ export function Header({
 
         <div className="flex items-center justify-end gap-4 justify-self-end">
           <div 
-            className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase text-zinc-100 ${isLightMode ? 'bg-black/5 border-black/5 text-black' : 'bg-white/5 border-white/5'} px-5 py-2 rounded-full border`}
+            className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase ${textColorClass} ${containerBgClass} px-5 py-2 rounded-full border`}
             style={{ fontFamily: "'Baloo 2', cursive" }}
           >
             <span className="flex items-center gap-2">
@@ -138,7 +139,7 @@ export function Header({
             )}
           </div>
           
-          <div className={`flex items-center gap-1.5 ${isLightMode ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'} rounded-full p-1 border`}>
+          <div className={`flex items-center gap-1.5 ${containerBgClass} rounded-full p-1 border`}>
             <button 
               onClick={() => onViewProfile?.()} 
               aria-label="View user profile"
