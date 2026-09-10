@@ -169,30 +169,30 @@
 
 /* --- THE "NUCLEAR" OVERRIDE FOR STATUS BAR (TOP RIGHT) --- */
 
-header div[class*="ml-auto"], 
-header .flex.items-center.gap-4.ml-auto {
-  gap: 2rem !important; 
+header div[class*="justify-self-end"], 
+header .flex.items-center.justify-end {
+  gap: 1.5rem !important; 
 }
 
-header div[class*="ml-auto"] span,
-header div[class*="ml-auto"] p,
-header div[class*="ml-auto"] div {
+header div[class*="justify-self-end"] span,
+header div[class*="justify-self-end"] p,
+header div[class*="justify-self-end"] div {
   font-family: 'Baloo 2', cursive !important;
-  font-size: 1.3rem !important; 
+  font-size: 0.95rem !important; 
   font-weight: 700 !important;
   line-height: 1 !important;
   display: inline-flex !important;
   align-items: center !important;
 }
 
-header div[class*="ml-auto"] svg,
-header div[class*="ml-auto"] img,
-header div[class*="ml-auto"] .lucide {
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  min-height: 28px !important;
-  stroke-width: 2.5px !important;
+header div[class*="justify-self-end"] svg,
+header div[class*="justify-self-end"] img,
+header div[class*="justify-self-end"] .lucide {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  stroke-width: 2.2px !important;
 }
 
 header .flex.items-center.gap-2 span, 
