@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import gamesData from './games.json';
 import { useAchievements } from './hooks/useAchievements.js';
+import { useBackgroundContrast } from './hooks/useBackgroundContrast.js';
 import { 
   Search, Gamepad2, Play, Settings, X, ShieldAlert, 
   Clock, Dices, RotateCcw, Palette, Type, ImageIcon, 
@@ -146,6 +147,9 @@ export default function App() {
   const [backgroundImage, setBackgroundImage] = useState(() => localStorage.getItem('capy-bg-image') || '');
   const [backgroundVideo, setBackgroundVideo] = useState(() => localStorage.getItem('capy-bg-video') || '');
   const [bgOpacity, setBgOpacity] = useState(() => Number(localStorage.getItem('capy-bg-opacity')) || 50);
+  
+  // Dynamic background luminance hook for light/dark top contrast adjustment
+  const isHeaderLight = useBackgroundContrast(backgroundImage, bgEnabled);
   
   // FIXED: Only load saved music if background music is actively enabled
   const [bgMusic, setBgMusic] = useState(() => {
@@ -846,6 +850,8 @@ export default function App() {
             setIsChatOpen={setIsChatOpen}
             setShowSoundboard={setIsSoundboardOpen}
             isSoundboardOpen={isSoundboardOpen}
+            isHeaderLight={isHeaderLight}
+            isLightMode={isLightMode}
           />
 
           {/* Category Bar Wrapper */}
@@ -876,7 +882,7 @@ export default function App() {
                     className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
                       activeCategory === cat.name
                         ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
-                        : isLightMode
+                        : isLightMode || isHeaderLight
                           ? 'bg-zinc-100/90 border-zinc-200 text-zinc-800 hover:bg-zinc-200'
                           : 'bg-zinc-900/90 border-white/20 text-white hover:bg-zinc-800'
                     }`}
@@ -905,7 +911,7 @@ export default function App() {
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
               <section className="space-y-4">
-                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isHeaderLight && !isLightMode ? 'text-zinc-900' : 'text-white'}`}>
                   <History className="w-3.5 h-3.5 text-[var(--theme)]" />
                   Recently On
                 </div>
@@ -1096,7 +1102,7 @@ export default function App() {
         onTogglePlay={handleTogglePlay}
       />
 
-      <footer className="mt-10 py-6 text-center text-xs text-zinc-300 border-t border-white/5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+      <footer className={`mt-10 py-6 text-center text-xs border-t border-white/5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isHeaderLight && !isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
         <p>&copy; 2026 Capybara Science. All rights reserved.</p>
       </footer>
     </div>
