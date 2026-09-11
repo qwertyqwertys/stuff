@@ -148,8 +148,8 @@ export default function App() {
   const [backgroundVideo, setBackgroundVideo] = useState(() => localStorage.getItem('capy-bg-video') || '');
   const [bgOpacity, setBgOpacity] = useState(() => Number(localStorage.getItem('capy-bg-opacity')) || 50);
   
-  // Dynamic background luminance hook for light/dark top contrast adjustment
-  const isHeaderLight = useBackgroundContrast(backgroundImage, bgEnabled);
+  // Apply header contrast and visibility effect across all backgrounds when enabled
+  const isHeaderLight = bgEnabled;
   
   const [bgMusic, setBgMusic] = useState(() => {
     const isEnabled = localStorage.getItem('capy-bg-enabled') === 'true';
