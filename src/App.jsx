@@ -148,12 +148,8 @@ export default function App() {
   const [backgroundVideo, setBackgroundVideo] = useState(() => localStorage.getItem('capy-bg-video') || '');
   const [bgOpacity, setBgOpacity] = useState(() => Number(localStorage.getItem('capy-bg-opacity')) || 50);
   
-  const isHeaderLight = useBackgroundContrast({
-    bgEnabled,
-    backgroundImage,
-    backgroundVideo,
-    sampleArea: 'top'
-  });
+  // Dynamic background luminance hook for light/dark top contrast adjustment
+  const isHeaderLight = useBackgroundContrast(backgroundImage, bgEnabled);
   
   const [bgMusic, setBgMusic] = useState(() => {
     const isEnabled = localStorage.getItem('capy-bg-enabled') === 'true';
@@ -383,6 +379,7 @@ export default function App() {
     localStorage.setItem('capy-bg-opacity', bgOpacity.toString());
   }, [bgOpacity]);
 
+  // Automatically pause music when Performance Mode is enabled
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -417,6 +414,7 @@ export default function App() {
     }
   }, [notification]);
 
+  // Disable heavy animations and glow effects when performanceMode is active
   useEffect(() => {
     if (performanceMode) {
       updateThemeVariables(theme, 0); 
@@ -787,6 +785,7 @@ export default function App() {
         </div>
       )}
 
+      {/* Heavy animations and background elements are automatically hidden when performanceMode is enabled */}
       {bgEnabled && !performanceMode && (
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ opacity: bgOpacity / 100 }}>
           {backgroundVideo ? (
@@ -799,6 +798,7 @@ export default function App() {
         </div>
       )}
 
+      {/* Background music automatically pauses when performanceMode is active */}
       {bgMusic && (
         <audio 
           key={bgMusic} 
@@ -831,34 +831,31 @@ export default function App() {
         </div>
       ) : (
         <>
-          {/* Header Container with Contrast Wrapper */}
-          <div className="sticky top-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-white/10 shadow-lg">
-            <Header 
-              searchQuery={searchQuery} 
-              setSearchQuery={setSearchQuery}
-              supplier={supplier}       
-              setSupplier={setSupplier} 
-              time={time}
-              battery={battery}
-              profilePic={profilePic}
-              setShowSettings={setShowSettings}
-              DEFAULT_ICON={CAPY_LOGO}
-              theme={theme}   
-              onViewProfile={() => setSelectedFriendId('me')} 
-              onRandomGame={() => {
-                const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
-                if (playable.length > 0) {
-                  launchContent(playable[Math.floor(Math.random() * playable.length)]);
-                }
-              }}
-              isChatOpen={isChatOpen}
-              setIsChatOpen={setIsChatOpen}
-              setShowSoundboard={setIsSoundboardOpen}
-              isSoundboardOpen={isSoundboardOpen}
-              isHeaderLight={isHeaderLight}
-              isLightMode={isLightMode}
-            />
-          </div>
+          <Header 
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery}
+            supplier={supplier}       
+            setSupplier={setSupplier} 
+            time={time}
+            battery={battery}
+            profilePic={profilePic}
+            setShowSettings={setShowSettings}
+            DEFAULT_ICON={CAPY_LOGO}
+            theme={theme}   
+            onViewProfile={() => setSelectedFriendId('me')} 
+            onRandomGame={() => {
+              const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
+              if (playable.length > 0) {
+                launchContent(playable[Math.floor(Math.random() * playable.length)]);
+              }
+            }}
+            isChatOpen={isChatOpen}
+            setIsChatOpen={setIsChatOpen}
+            setShowSoundboard={setIsSoundboardOpen}
+            isSoundboardOpen={isSoundboardOpen}
+            isHeaderLight={isHeaderLight}
+            isLightMode={isLightMode}
+          />
 
           {/* Category Bar Wrapper */}
           <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group">
@@ -1108,7 +1105,7 @@ export default function App() {
         onTogglePlay={handleTogglePlay}
       />
 
-      <footer className={`mt-10 py-6 text-center text-xs border-t border-white/5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isLightMode || isHeaderLight ? 'text-zinc-800' : 'text-zinc-300'}`}>
+      <footer className={`mt-10 py-6 text-center text-xs border-t border-white/5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isHeaderLight && !isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
         <p>&copy; 2026 Capybara Science. All rights reserved.</p>
       </footer>
     </div>
