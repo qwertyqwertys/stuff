@@ -497,7 +497,7 @@ export function SettingsModal({
 
                 {/* VOLUME & PLAY/PAUSE CONTROLS */}
                 {effectiveBgMusic && (
-                  <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
+                  <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3 ${performanceMode ? 'opacity-50 pointer-events-none' : ''}`}>
                     <div className="flex items-center justify-between">
                       <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
                         <Volume2 className="w-3 h-3 text-[var(--theme)]" /> Music Controls
@@ -505,6 +505,7 @@ export function SettingsModal({
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
+                          disabled={performanceMode}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -526,6 +527,7 @@ export function SettingsModal({
                       type="range" 
                       min="0" max="1" step="0.01"
                       value={volume ?? 1} 
+                      disabled={performanceMode}
                       onChange={(e) => setVolume && setVolume(parseFloat(e.target.value))}
                       className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
                     />
@@ -555,7 +557,7 @@ export function SettingsModal({
 
             {/* MUSIC LIBRARY PRESETS */}
             {matchesSearch(['library', 'music', 'songs', 'tracks', 'playlist']) && (
-              <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'}`}>
+              <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} ${performanceMode ? 'opacity-50 pointer-events-none' : ''}`}>
                 <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
                   <Music className="w-3 h-3" /> Music Library
                 </label>
@@ -564,6 +566,7 @@ export function SettingsModal({
                     <div
                       key={song.id || index}
                       onClick={(e) => {
+                        if (performanceMode) return;
                         e.preventDefault();
                         e.stopPropagation();
                         setIsMusicReset(false);
