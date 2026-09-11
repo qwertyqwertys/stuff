@@ -148,7 +148,6 @@ export default function App() {
   const [backgroundVideo, setBackgroundVideo] = useState(() => localStorage.getItem('capy-bg-video') || '');
   const [bgOpacity, setBgOpacity] = useState(() => Number(localStorage.getItem('capy-bg-opacity')) || 50);
   
-  // Use the hook to dynamically evaluate background brightness at the top header section[cite: 4]
   const isHeaderLight = useBackgroundContrast({
     bgEnabled,
     backgroundImage,
@@ -832,31 +831,34 @@ export default function App() {
         </div>
       ) : (
         <>
-          <Header 
-            searchQuery={searchQuery} 
-            setSearchQuery={setSearchQuery}
-            supplier={supplier}       
-            setSupplier={setSupplier} 
-            time={time}
-            battery={battery}
-            profilePic={profilePic}
-            setShowSettings={setShowSettings}
-            DEFAULT_ICON={CAPY_LOGO}
-            theme={theme}   
-            onViewProfile={() => setSelectedFriendId('me')} 
-            onRandomGame={() => {
-              const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
-              if (playable.length > 0) {
-                launchContent(playable[Math.floor(Math.random() * playable.length)]);
-              }
-            }}
-            isChatOpen={isChatOpen}
-            setIsChatOpen={setIsChatOpen}
-            setShowSoundboard={setIsSoundboardOpen}
-            isSoundboardOpen={isSoundboardOpen}
-            isHeaderLight={isHeaderLight}
-            isLightMode={isLightMode}
-          />
+          {/* Header Container with Contrast Wrapper */}
+          <div className="sticky top-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-white/10 shadow-lg">
+            <Header 
+              searchQuery={searchQuery} 
+              setSearchQuery={setSearchQuery}
+              supplier={supplier}       
+              setSupplier={setSupplier} 
+              time={time}
+              battery={battery}
+              profilePic={profilePic}
+              setShowSettings={setShowSettings}
+              DEFAULT_ICON={CAPY_LOGO}
+              theme={theme}   
+              onViewProfile={() => setSelectedFriendId('me')} 
+              onRandomGame={() => {
+                const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
+                if (playable.length > 0) {
+                  launchContent(playable[Math.floor(Math.random() * playable.length)]);
+                }
+              }}
+              isChatOpen={isChatOpen}
+              setIsChatOpen={setIsChatOpen}
+              setShowSoundboard={setIsSoundboardOpen}
+              isSoundboardOpen={isSoundboardOpen}
+              isHeaderLight={isHeaderLight}
+              isLightMode={isLightMode}
+            />
+          </div>
 
           {/* Category Bar Wrapper */}
           <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group">
