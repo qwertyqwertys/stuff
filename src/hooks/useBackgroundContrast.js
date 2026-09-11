@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-export function useBackgroundContrast(backgroundImage, bgEnabled) {
+export function useBackgroundContrast({ backgroundImage, bgEnabled, backgroundVideo }) {
   const [isHeaderLight, setIsHeaderLight] = useState(false);
 
   useEffect(() => {
-    if (!bgEnabled || !backgroundImage || backgroundImage.startsWith('video/')) {
+    if (!bgEnabled || !backgroundImage || backgroundVideo) {
       setIsHeaderLight(false);
       return;
     }
@@ -40,7 +40,7 @@ export function useBackgroundContrast(backgroundImage, bgEnabled) {
         console.error("Canvas sampling error:", e);
       }
     };
-  }, [backgroundImage, bgEnabled]);
+  }, [backgroundImage, bgEnabled, backgroundVideo]);
 
   return isHeaderLight;
 }
