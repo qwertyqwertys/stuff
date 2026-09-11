@@ -148,6 +148,7 @@ export default function App() {
   const [backgroundVideo, setBackgroundVideo] = useState(() => localStorage.getItem('capy-bg-video') || '');
   const [bgOpacity, setBgOpacity] = useState(() => Number(localStorage.getItem('capy-bg-opacity')) || 50);
   
+  // Connect isHeaderLight to bgEnabled so header text dynamically darkens when custom backgrounds are active
   const isHeaderLight = bgEnabled;
   
   const [bgMusic, setBgMusic] = useState(() => {
@@ -826,84 +827,81 @@ export default function App() {
         </div>
       ) : (
         <>
-          {/* STICKY HEADER WRAPPER WITH SOLID BACKDROP TO GUARANTEE READABILITY AGAINST ANY BACKGROUND */}
-          <div className={`sticky top-0 z-50 ${isLightMode ? 'bg-white/95 border-zinc-200' : 'bg-zinc-950/95 border-white/10'} backdrop-blur-xl border-b shadow-2xl`}>
-            <Header 
-              searchQuery={searchQuery} 
-              setSearchQuery={setSearchQuery}
-              supplier={supplier}       
-              setSupplier={setSupplier} 
-              time={time}
-              battery={battery}
-              profilePic={profilePic}
-              setShowSettings={setShowSettings}
-              DEFAULT_ICON={CAPY_LOGO}
-              theme={theme}   
-              onViewProfile={() => setSelectedFriendId('me')} 
-              onRandomGame={() => {
-                const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
-                if (playable.length > 0) {
-                  launchContent(playable[Math.floor(Math.random() * playable.length)]);
-                }
-              }}
-              isChatOpen={isChatOpen}
-              setIsChatOpen={setIsChatOpen}
-              setShowSoundboard={setIsSoundboardOpen}
-              isSoundboardOpen={isSoundboardOpen}
-              isHeaderLight={false}
-              isLightMode={isLightMode}
-            />
+          <Header 
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery}
+            supplier={supplier}       
+            setSupplier={setSupplier} 
+            time={time}
+            battery={battery}
+            profilePic={profilePic}
+            setShowSettings={setShowSettings}
+            DEFAULT_ICON={CAPY_LOGO}
+            theme={theme}   
+            onViewProfile={() => setSelectedFriendId('me')} 
+            onRandomGame={() => {
+              const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
+              if (playable.length > 0) {
+                launchContent(playable[Math.floor(Math.random() * playable.length)]);
+              }
+            }}
+            isChatOpen={isChatOpen}
+            setIsChatOpen={setIsChatOpen}
+            setShowSoundboard={setIsSoundboardOpen}
+            isSoundboardOpen={isSoundboardOpen}
+            isHeaderLight={isHeaderLight}
+            isLightMode={isLightMode}
+          />
 
-            {/* Category Bar Wrapper */}
-            <div className="px-4 pt-2 pb-3 overflow-hidden">
-              <div className="max-w-7xl mx-auto relative flex items-center">
-                {canScrollLeft && (
-                  <div className="absolute left-0 z-50 flex items-center pr-12 h-full bg-transparent pointer-events-none">
-                    <button
-                      onClick={() => scrollCategories('left')}
-                      aria-label="Scroll categories left"
-                      className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-                    >
-                      <ChevronLeft className="w-4 h-4 text-black" />
-                    </button>
-                  </div>
-                )}
-
-                <div
-                  ref={categoryScrollRef}
-                  onScroll={checkScroll}
-                  className="flex gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth px-2 w-full"
-                >
-                  {categoriesWithCounts.map(cat => (
-                    <button
-                      key={cat.name}
-                      onClick={() => setActiveCategory(cat.name)}
-                      aria-current={activeCategory === cat.name ? 'page' : undefined}
-                      className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
-                        activeCategory === cat.name
-                          ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-lg shadow-[var(--theme)]/20'
-                          : isLightMode
-                            ? 'bg-zinc-100 border-zinc-200 text-zinc-800 hover:bg-zinc-200'
-                            : 'bg-zinc-900 border-white/10 text-white hover:bg-zinc-800'
-                      }`}
-                    >
-                      {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-70'}`}>{cat.count}</span>
-                    </button>
-                  ))}
+          {/* Category Bar Wrapper */}
+          <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group">
+            <div className="max-w-7xl mx-auto relative flex items-center">
+              {canScrollLeft && (
+                <div className="absolute left-0 z-50 flex items-center pr-12 h-full bg-transparent pointer-events-none">
+                  <button
+                    onClick={() => scrollCategories('left')}
+                    aria-label="Scroll categories left"
+                    className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-black" />
+                  </button>
                 </div>
+              )}
 
-                {canScrollRight && (
-                  <div className="absolute -right-9 z-50 flex items-center pl-12 h-full bg-transparent pointer-events-none">
-                    <button 
-                      onClick={() => scrollCategories('right')}
-                      aria-label="Scroll categories right"
-                      className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-                    >
-                      <ChevronRight className="w-4 h-4 text-black" />
-                    </button>
-                  </div>
-                )}
+              <div
+                ref={categoryScrollRef}
+                onScroll={checkScroll}
+                className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-2 w-full"
+              >
+                {categoriesWithCounts.map(cat => (
+                  <button
+                    key={cat.name}
+                    onClick={() => setActiveCategory(cat.name)}
+                    aria-current={activeCategory === cat.name ? 'page' : undefined}
+                    className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
+                      activeCategory === cat.name
+                        ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
+                        : isLightMode || isHeaderLight
+                          ? 'bg-zinc-100/90 border-zinc-200 text-zinc-800 hover:bg-zinc-200'
+                          : 'bg-zinc-900/90 border-white/20 text-white hover:bg-zinc-800'
+                    }`}
+                  >
+                    {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-70'}`}>{cat.count}</span>
+                  </button>
+                ))}
               </div>
+
+              {canScrollRight && (
+                <div className="absolute -right-9 z-50 flex items-center pl-12 h-full bg-transparent pointer-events-none">
+                  <button 
+                    onClick={() => scrollCategories('right')}
+                    aria-label="Scroll categories right"
+                    className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+                  >
+                    <ChevronRight className="w-4 h-4 text-black" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -912,7 +910,7 @@ export default function App() {
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
               <section className="space-y-4">
-                <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isLightMode ? 'text-zinc-900' : 'text-white'}`}>
+                <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isHeaderLight && !isLightMode ? 'text-zinc-900' : 'text-white'}`}>
                   <History className="w-3.5 h-3.5 text-[var(--theme)]" />
                   Recently On
                 </div>
