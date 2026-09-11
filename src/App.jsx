@@ -148,8 +148,13 @@ export default function App() {
   const [backgroundVideo, setBackgroundVideo] = useState(() => localStorage.getItem('capy-bg-video') || '');
   const [bgOpacity, setBgOpacity] = useState(() => Number(localStorage.getItem('capy-bg-opacity')) || 50);
   
-  // Connect isHeaderLight to bgEnabled so header text dynamically darkens when custom backgrounds are active
-  const isHeaderLight = bgEnabled;
+  // Use the hook to dynamically evaluate background brightness at the top header section
+  const isHeaderLight = useBackgroundContrast({
+    bgEnabled,
+    backgroundImage,
+    backgroundVideo,
+    sampleArea: 'top'
+  });
   
   const [bgMusic, setBgMusic] = useState(() => {
     const isEnabled = localStorage.getItem('capy-bg-enabled') === 'true';
