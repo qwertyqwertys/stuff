@@ -167,7 +167,7 @@
   cursor: url('https://img.icons8.com/color/28/test-tube.png'), pointer !important;
 }
 
-/* --- THE "NUCLEAR" OVERRIDE FOR STATUS BAR (TOP RIGHT) --- */
+/* --- STATUS BAR TEXT & SPACING OVERRIDES --- */
 
 header div[class*="justify-self-end"], 
 header .flex.items-center.justify-end {
@@ -183,16 +183,6 @@ header div[class*="justify-self-end"] div {
   line-height: 1 !important;
   display: inline-flex !important;
   align-items: center !important;
-}
-
-header div[class*="justify-self-end"] svg,
-header div[class*="justify-self-end"] img,
-header div[class*="justify-self-end"] .lucide {
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px !important;
-  min-height: 20px !important;
-  stroke-width: 2.2px !important;
 }
 
 header .flex.items-center.gap-2 span, 
