@@ -151,7 +151,6 @@ export default function App() {
   // Dynamic background luminance hook for light/dark top contrast adjustment
   const isHeaderLight = useBackgroundContrast(backgroundImage, bgEnabled);
   
-  // FIXED: Only load saved music if background music is actively enabled
   const [bgMusic, setBgMusic] = useState(() => {
     const isEnabled = localStorage.getItem('capy-bg-enabled') === 'true';
     const savedMusic = localStorage.getItem('capy-bg-music');
@@ -380,6 +379,7 @@ export default function App() {
     localStorage.setItem('capy-bg-opacity', bgOpacity.toString());
   }, [bgOpacity]);
 
+  // Automatically pause music when Performance Mode is enabled
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -414,6 +414,7 @@ export default function App() {
     }
   }, [notification]);
 
+  // Disable heavy animations and glow effects when performanceMode is active
   useEffect(() => {
     if (performanceMode) {
       updateThemeVariables(theme, 0); 
@@ -566,7 +567,7 @@ export default function App() {
       setBgEnabled(true); 
       setIsPlaying(true);
       localStorage.setItem('capy-bg-music', e.presetUrl);
-      if (audioRef.current) {
+      if (audioRef.current && !performanceMode) {
         audioRef.current.load();
         audioRef.current.play().catch(err => console.log("Playback prevented:", err));
       }
@@ -583,7 +584,7 @@ export default function App() {
           setBgEnabled(true);
           setIsPlaying(true);
           localStorage.setItem('capy-bg-music', audioData);
-          if (audioRef.current) {
+          if (audioRef.current && !performanceMode) {
             audioRef.current.load();
             audioRef.current.play().catch(err => console.log("Playback prevented:", err));
           }
@@ -784,6 +785,7 @@ export default function App() {
         </div>
       )}
 
+      {/* Heavy animations and background elements are automatically hidden when performanceMode is enabled */}
       {bgEnabled && !performanceMode && (
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ opacity: bgOpacity / 100 }}>
           {backgroundVideo ? (
@@ -796,16 +798,17 @@ export default function App() {
         </div>
       )}
 
-      {bgMusic && !performanceMode && (
+      {/* Background music automatically pauses when performanceMode is active */}
+      {bgMusic && (
         <audio 
           key={bgMusic} 
           ref={audioRef}
           src={bgMusic} 
           loop 
-          autoPlay={isPlaying}
+          autoPlay={isPlaying && !performanceMode}
           onLoadedData={(e) => {
             e.target.volume = volume; 
-            if (!isPlaying) {
+            if (!isPlaying || performanceMode) {
               e.target.pause();
             }
           }}
