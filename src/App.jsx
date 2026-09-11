@@ -148,7 +148,7 @@ export default function App() {
   const [backgroundVideo, setBackgroundVideo] = useState(() => localStorage.getItem('capy-bg-video') || '');
   const [bgOpacity, setBgOpacity] = useState(() => Number(localStorage.getItem('capy-bg-opacity')) || 50);
   
-  // Use the hook to dynamically evaluate background brightness at the top header section
+  // Use the hook to dynamically evaluate background brightness at the top header section[cite: 4]
   const isHeaderLight = useBackgroundContrast({
     bgEnabled,
     backgroundImage,
@@ -1106,7 +1106,7 @@ export default function App() {
         onTogglePlay={handleTogglePlay}
       />
 
-      <footer className={`mt-10 py-6 text-center text-xs border-t border-white/5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+      <footer className={`mt-10 py-6 text-center text-xs border-t border-white/5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isLightMode || isHeaderLight ? 'text-zinc-800' : 'text-zinc-300'}`}>
         <p>&copy; 2026 Capybara Science. All rights reserved.</p>
       </footer>
     </div>
