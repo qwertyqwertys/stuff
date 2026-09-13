@@ -259,9 +259,9 @@
     "category": "Action"
   },
   {
-    "id": "geometry-dash",
-    "title": "Geometry Dash",
-    "url": "https://xn--68ja2bjb6b6c1ea6n6586bf9xa0k0e3pze.xyz/stuff/selfhosted/gdlite/",
+    "id": "geometry-dash-lite",
+    "title": "Geometry Dash Lite",
+    "url": "/stores/games-html/geometry-dash-lite.html",
     "thumbnail": "https://assets-prd.ignimgs.com/2021/12/14/geometrydash-1639510868467.jpg",
     "category": "Skill"
   },
