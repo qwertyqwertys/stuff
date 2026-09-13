@@ -385,13 +385,6 @@
     "category": "Action"
   },
   {
-    "id": "dread-head-parkour",
-    "title": "Dreadhead Parkour",
-    "url": "https://bind.strongson.com/gamefile/dread.html",
-    "thumbnail": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8E64pK7_M7ZFYwTi3cDRJhguQNiRcHbdHWw&s",
-    "category": "Parkour"
-  },
-  {
     "id": "jetpack-joyride",
     "title": "Jetpack Joyride",
     "url": "https://bind.strongson.com/games/jetpackjoyride/index.html",
