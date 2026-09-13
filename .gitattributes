@@ -3,3 +3,4 @@ track filter=lfs diff=lfs merge=lfs -text
 *.wasm filter=lfs diff=lfs merge=lfs -text
 *.pck filter=lfs diff=lfs merge=lfs -text
 git filter=lfs diff=lfs merge=lfs -text
+public/stores/games-html/minecraft-tuff-client filter=lfs diff=lfs merge=lfs -text
