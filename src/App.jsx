@@ -50,7 +50,7 @@ const DISGUISE_CONFIG = {
   google: { title: "Google", icon: GOOGLE_FAVICON },
   drive: { title: "My Drive - Google Drive", icon: "https://ssl.gstatic.com/images/branding/product/2x/drive_2020q4_48dp.png" },
   classroom: { title: "Home - Classroom", icon: "https://www.gstatic.com/classroom/favicon.png" },
-  powerschool: { title: "Grades and Attendance", icon: "https://ps.bhmsd.org/favicon.ico" }
+  powerschool: { title: "Grades and Attendance", icon: "https://caisps.powerschool.com/favicon.ico" }
 };
 
 const updateThemeVariables = (color, glow) => {
