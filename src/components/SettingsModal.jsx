@@ -1,68 +1,11 @@
-import React, { useState, useEffect, useDeferredValue } from 'react';
+import React, { useState, useEffect, useDeferredValue, useRef } from 'react';
 import { 
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
   ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check,
   Sun, Moon, Play, Pause, Search, Loader2
 } from 'lucide-react';
-
-// --- INDEXEDDB HELPERS FOR HEAVY AUDIO FILES ---
-const openDB = () => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('CapyMusicDB', 1);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains('songs')) {
-        db.createObjectStore('songs', { keyPath: 'id' });
-      }
-    };
-  });
-};
-
-const saveSongToIDB = async (songObj, blob) => {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction('songs', 'readwrite');
-    const store = transaction.objectStore('songs');
-    store.put({ ...songObj, blob });
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
-};
-
-const loadSongsFromIDB = async () => {
-  try {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction('songs', 'readonly');
-      const store = transaction.objectStore('songs');
-      const request = store.getAll();
-      request.onsuccess = () => {
-        const songs = request.result.map(song => ({
-          ...song,
-          url: URL.createObjectURL(song.blob)
-        }));
-        resolve(songs);
-      };
-      request.onerror = () => reject(request.error);
-    });
-  } catch (e) {
-    return [];
-  }
-};
-
-const deleteSongFromIDB = async (id) => {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction('songs', 'readwrite');
-    const store = transaction.objectStore('songs');
-    store.delete(id);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
-};
+import { saveSongToIDB, loadSongsFromIDB, deleteSongFromIDB } from '../utils/db';
 
 export function SettingsModal({
   show, onClose, friendCode, displayName, setDisplayName,
@@ -95,6 +38,9 @@ export function SettingsModal({
   // Persist music reset state across page reloads
   const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset') === 'true');
 
+  // Modal reference for accessibility focus trapping
+  const modalRef = useRef(null);
+
   // Enforce music reset state on open/mount if saved in localStorage
   useEffect(() => {
     if (show && localStorage.getItem('capy-music-reset') === 'true') {
@@ -109,10 +55,58 @@ export function SettingsModal({
   
   // --- CUSTOM SONG STATE VIA INDEXEDDB ---
   const [customSongs, setCustomSongs] = useState([]);
+  const customSongsRef = useRef(customSongs);
+
+  useEffect(() => {
+    customSongsRef.current = customSongs;
+  }, [customSongs]);
 
   useEffect(() => {
     loadSongsFromIDB().then(songs => setCustomSongs(songs));
+    
+    // Cleanup active object URLs on modal unmount to prevent memory leaks
+    return () => {
+      customSongsRef.current.forEach(song => {
+        if (song.url) URL.revokeObjectURL(song.url);
+      });
+    };
   }, []);
+
+  // --- FOCUS TRAPPING & ESCAPE KEY LISTENER ---
+  useEffect(() => {
+    if (!show) return;
+    const modalElement = modalRef.current;
+    if (!modalElement) return;
+
+    const focusableElements = modalElement.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement?.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement?.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+
+    firstElement?.focus();
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [show, onClose]);
 
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState(null);
@@ -133,7 +127,6 @@ export function SettingsModal({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Live validation pattern instead of disabling the button
   const handleAddFriendClick = () => {
     if (!friendInput.trim()) {
       setFriendInputError('Please enter a valid friend code first.');
@@ -198,6 +191,7 @@ export function SettingsModal({
     }
   };
 
+  // --- SAFE SAVING TO INDEXEDDB WITH QUOTA / PRIVATE MODE CATCH ---
   const saveCustomSong = async () => {
     if (!pendingFile || isSavingSong) return;
     setIsSavingSong(true);
@@ -210,14 +204,19 @@ export function SettingsModal({
         isCustom: true
       };
 
-      await saveSongToIDB(newSongMeta, pendingFile);
+      try {
+        await saveSongToIDB(newSongMeta, pendingFile);
+      } catch (err) {
+        alert("Storage failed. If you are in Safari Private Mode or storage quota is full, custom audio saving is restricted.");
+        setIsSavingSong(false);
+        return;
+      }
       
       const objectUrl = URL.createObjectURL(pendingFile);
       const newSongWithUrl = { ...newSongMeta, url: objectUrl };
 
       setCustomSongs(prev => [newSongWithUrl, ...prev]);
 
-      // Clear reset state since a new song is chosen
       setIsMusicReset(false);
       localStorage.setItem('capy-music-reset', 'false');
 
@@ -232,9 +231,16 @@ export function SettingsModal({
     }
   };
 
+  // --- DELETE SONG WITH IMMEDIATE OBJECT URL REVOCATION ---
   const deleteCustomSong = async (id, e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const songToDelete = customSongs.find(s => s.id === id);
+    if (songToDelete && songToDelete.url) {
+      URL.revokeObjectURL(songToDelete.url);
+    }
+
     await deleteSongFromIDB(id);
     setCustomSongs(prev => prev.filter(song => song.id !== id));
   };
@@ -246,7 +252,6 @@ export function SettingsModal({
   const inputBg = isLightMode ? "bg-white border-zinc-300 text-black placeholder:text-zinc-400" : "bg-zinc-800 border-white/10 text-white";
   const headerText = isLightMode ? "text-zinc-900" : "text-[var(--theme)]";
 
-  // Helper to check if a section matches the deferred search query
   const matchesSearch = (keywords) => {
     if (!deferredSearchQuery.trim()) return true;
     const q = deferredSearchQuery.toLowerCase();
@@ -255,11 +260,17 @@ export function SettingsModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className={`${modalBg} border rounded-3xl max-w-md w-full relative shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}>
+      <div 
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+        className={`${modalBg} border rounded-3xl max-w-md w-full relative shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}
+      >
         
         {/* HEADER */}
         <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-white/5'} px-6 pt-6 pb-4 ${modalBg} z-20 flex-shrink-0`}>
-          <h2 className={`text-xl font-bold flex items-center gap-2 ${headerText}`}>
+          <h2 id="settings-title" className={`text-xl font-bold flex items-center gap-2 ${headerText}`}>
             <ShieldAlert className={`w-5 h-5 ${isLightMode ? 'text-[var(--theme)]' : ''}`} /> System Settings
           </h2>
           <button 
@@ -729,7 +740,6 @@ export function SettingsModal({
                         }}
                         onChange={(e) => {
                           const val = e.target.value;
-                          // Instantly update DOM CSS variable directly for lag-free dragging
                           if (typeof document !== 'undefined') {
                             document.documentElement.style.setProperty('--theme', val);
                           }
@@ -766,7 +776,7 @@ export function SettingsModal({
               </section>
             )}
 
-            {/* DANGER ZONE (RESTORE/RESET DESTRUCTIVE ACTIONS) */}
+            {/* DANGER ZONE */}
             {matchesSearch(['danger', 'reset', 'clear', 'factory', 'settings']) && (
               <section className={`space-y-3 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-red-50/50 border-red-200' : 'bg-red-500/5 border-red-500/20'}`}>
                 <label className="text-[10px] uppercase font-black text-red-500 tracking-widest flex items-center gap-2">
