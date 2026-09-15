@@ -202,6 +202,13 @@ export default function App() {
     return game.url || `/stores/${game.id}.html`;
   };
 
+  const handleClearRecent = () => {
+    const recentKey = `capy-recent-${supplier}`;
+    localStorage.removeItem(recentKey);
+    setRecentlyPlayed([]);
+    setNotification("Recently Played history cleared!");
+  };
+
   const launchContent = (item) => {
     const finalUrl = getLaunchUrl(item, supplier); 
     if (!finalUrl) return;
@@ -914,9 +921,17 @@ export default function App() {
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
               <section className="space-y-4">
-                <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isHeaderLight && !isLightMode ? 'text-zinc-900' : 'text-white'}`}>
-                  <History className="w-3.5 h-3.5 text-[var(--theme)]" />
-                  Recently On
+                <div className="flex items-center justify-between">
+                  <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isHeaderLight && !isLightMode ? 'text-zinc-900' : 'text-white'}`}>
+                    <History className="w-3.5 h-3.5 text-[var(--theme)]" />
+                    Recently On
+                  </div>
+                  <button 
+                    onClick={handleClearRecent}
+                    className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-md transition-all border border-white/10 active:scale-95"
+                  >
+                    Clear History
+                  </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {recentGamesData.map(game => (
