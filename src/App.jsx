@@ -29,6 +29,13 @@ const DEFAULT_COLOR = '#38bdf8';
 const DEFAULT_GLOW = 50;
 const CAPY_LOGO = "https://img.icons8.com/color/32/capybara.png";
 
+// --- PLAYTIME FORMATTER ---
+const formatPlaytime = (seconds) => {
+  if (!seconds) return '0m';
+  if (seconds < 60) return `${seconds}s`;
+  return `${Math.floor(seconds / 60)}m`;
+};
+
 // --- ACHIEVEMENT DEFINITIONS ---
 const TROPHIES = [
   { id: 'first_game', name: 'First Blood', desc: 'Play your first game', icon: '🏆' },
@@ -938,7 +945,7 @@ export default function App() {
                       key={`recent-${game.id}`} 
                       game={game} 
                       onLaunch={launchContent} 
-                      playtime={playtimes[game.id] ? Math.floor((playtimes[game.id] || 0) / 60) + 'm' : '0m'}
+                      playtime={formatPlaytime(playtimes[game.id])}
                       isFavorite={favorites.includes(String(game.id))}
                       onToggleFavorite={() => toggleFavorite(game.id)}
                       performanceMode={performanceMode}
@@ -954,7 +961,7 @@ export default function App() {
                   key={game.id} 
                   game={game} 
                   onLaunch={launchContent} 
-                  playtime={playtimes[game.id] ? Math.floor((playtimes[game.id] || 0) / 60) + 'm' : '0m'}
+                  playtime={formatPlaytime(playtimes[game.id])}
                   isFavorite={favorites.includes(String(game.id))} 
                   onToggleFavorite={() => toggleFavorite(game.id)}
                   performanceMode={performanceMode}
