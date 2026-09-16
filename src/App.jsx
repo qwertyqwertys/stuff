@@ -222,6 +222,7 @@ export default function App() {
     setNotification("Recently Played history cleared!");
   };
 
+  // Bulletproof Playtime Session Tracker using LocalStorage Heartbeats
   const launchContent = (item) => {
     const finalUrl = getLaunchUrl(item, supplier); 
     if (!finalUrl) return;
@@ -239,6 +240,13 @@ export default function App() {
     const win = window.open('about:blank', '_blank');
 
     if (win) {
+      const startTime = Date.now();
+      localStorage.setItem('capy-active-session', JSON.stringify({
+        gameId: item.id,
+        startTime: startTime,
+        lastHeartbeat: startTime
+      }));
+
       win.document.write(`
         <html>
           <head>
@@ -250,44 +258,65 @@ export default function App() {
               style="width:100vw;height:100vh;border:none;display:block;" 
               allow="fullscreen">
             </iframe>
+            <script>
+              // Send heartbeat every second from the active foreground tab
+              setInterval(() => {
+                try {
+                  const session = JSON.parse(localStorage.getItem('capy-active-session') || '{}');
+                  if (session.startTime) {
+                    session.lastHeartbeat = Date.now();
+                    localStorage.setItem('capy-active-session', JSON.stringify(session));
+                  }
+                } catch(e) {}
+              }, 1000);
+
+              // Auto-close if the main window closes
+              setInterval(() => {
+                if (window.opener && window.opener.closed) {
+                  window.close();
+                }
+              }, 2000);
+            </script>
           </body>
         </html>
       `);
       win.document.close();
+    }
+  };
 
-      const startTime = Date.now();
-      let lastRecordedTime = startTime;
-
-      // Track playtime accurately using timestamp deltas to bypass background tab throttling
-      const intervalId = setInterval(() => {
-        if (win.closed) {
-          clearInterval(intervalId);
-          const now = Date.now();
-          const sessionSeconds = Math.floor((now - lastRecordedTime) / 1000);
+  // Monitor active game session heartbeat in the main app
+  useEffect(() => {
+    const checkSession = () => {
+      const rawSession = localStorage.getItem('capy-active-session');
+      if (!rawSession) return;
+      try {
+        const session = JSON.parse(rawSession);
+        const now = Date.now();
+        // If heartbeat stopped for more than 3 seconds, the game window was closed
+        if (now - session.lastHeartbeat > 3000) {
+          const sessionSeconds = Math.floor((session.lastHeartbeat - session.startTime) / 1000);
           if (sessionSeconds > 0) {
             setPlaytimes(prev => {
-              const id = item.id;
+              const id = session.gameId;
               const updated = { ...prev, [id]: (prev[id] || 0) + sessionSeconds };
               localStorage.setItem('capy-playtimes', JSON.stringify(updated));
               return updated;
             });
           }
-        } else {
-          const now = Date.now();
-          const elapsedSinceLast = Math.floor((now - lastRecordedTime) / 1000);
-          if (elapsedSinceLast >= 5) {
-            lastRecordedTime = now;
-            setPlaytimes(prev => {
-              const id = item.id;
-              const updated = { ...prev, [id]: (prev[id] || 0) + elapsedSinceLast };
-              localStorage.setItem('capy-playtimes', JSON.stringify(updated));
-              return updated;
-            });
-          }
+          localStorage.removeItem('capy-active-session');
         }
-      }, 1000);
-    }
-  };
+      } catch (e) {
+        console.error("Session check error:", e);
+      }
+    };
+
+    const intervalId = setInterval(checkSession, 1000);
+    window.addEventListener('focus', checkSession);
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', checkSession);
+    };
+  }, []);
  
   useEffect(() => {
     const checkStatus = setInterval(() => {
