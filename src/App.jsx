@@ -386,19 +386,31 @@ export default function App() {
     localStorage.setItem('capy-bg-opacity', bgOpacity.toString());
   }, [bgOpacity]);
 
-  // Automatically pause music when Performance Mode is enabled
+  // Unified Performance Mode & Resource Manager Effect
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    if (performanceMode) {
+      root.style.setProperty('--glow', '0px');
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    } else {
+      root.style.setProperty('--glow', `${glowIntensity}px`);
+      if (bgMusic && isPlaying && audioRef.current) {
+        audioRef.current.play().catch(() => {});
+      }
+    }
+    
+    localStorage.setItem('capy-perf-mode', performanceMode);
+  }, [performanceMode, glowIntensity, bgMusic, isPlaying]);
+
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
       localStorage.setItem('capy-volume', volume.toString());
-
-      if (performanceMode || !isPlaying) {
-        audioRef.current.pause();
-      } else if (bgMusic) {
-        audioRef.current.play().catch(() => {});
-      }
     }
-  }, [volume, performanceMode, isPlaying, bgMusic]);
+  }, [volume]);
 
   useEffect(() => {
     if (audioRef.current && bgMusic) {
@@ -420,15 +432,6 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [notification]);
-
-  // Disable heavy animations and glow effects when performanceMode is active
-  useEffect(() => {
-    if (performanceMode) {
-      updateThemeVariables(theme, 0); 
-    } else {
-      updateThemeVariables(theme, glowIntensity);
-    }
-  }, [performanceMode, theme, glowIntensity]);
   
   useEffect(() => {
     const startMusic = () => {
@@ -792,7 +795,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Heavy animations and background elements are automatically hidden when performanceMode is enabled */}
       {bgEnabled && !performanceMode && (
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ opacity: bgOpacity / 100 }}>
           {backgroundVideo ? (
@@ -805,7 +807,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Background music automatically pauses when performanceMode is active */}
       {bgMusic && (
         <audio 
           key={bgMusic} 
@@ -864,8 +865,8 @@ export default function App() {
             isLightMode={isLightMode}
           />
 
-          {/* Category Bar Wrapper */}
-          <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group">
+          {/* Category Bar Wrapper with explicit relative stacking */}
+          <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
             <div className="max-w-7xl mx-auto relative flex items-center">
               {canScrollLeft && (
                 <div className="absolute left-0 z-50 flex items-center pr-12 h-full bg-transparent pointer-events-none">
@@ -916,7 +917,8 @@ export default function App() {
             </div>
           </div>
 
-          <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12">
+          {/* Main content wrapper with explicit relative z-10 stacking context */}
+          <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12 relative z-10">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
