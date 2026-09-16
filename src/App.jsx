@@ -59,11 +59,18 @@ const updateThemeVariables = (color, glow) => {
   root.style.setProperty('--glow', `${glow}px`);
 };
 
-// Helper function to format playtime into seconds or minutes dynamically
+// Helper function to format playtime dynamically into seconds, minutes, and hours
 const formatPlaytime = (seconds) => {
   if (!seconds || seconds <= 0) return '0s';
   if (seconds < 60) return `${seconds}s`;
-  return `${Math.floor(seconds / 60)}m`;
+  
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+
+  if (hrs > 0) {
+    return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+  }
+  return `${mins}m`;
 };
 
 export default function App() {
