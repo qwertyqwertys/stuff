@@ -59,6 +59,13 @@ const updateThemeVariables = (color, glow) => {
   root.style.setProperty('--glow', `${glow}px`);
 };
 
+// Helper function to format playtime into seconds or minutes dynamically
+const formatPlaytime = (seconds) => {
+  if (!seconds || seconds <= 0) return '0s';
+  if (seconds < 60) return `${seconds}s`;
+  return `${Math.floor(seconds / 60)}m`;
+};
+
 export default function App() {
   const [supplier, setSupplier] = useState(() => localStorage.getItem('capy-supplier') || 'Default');
   const [playtimes, setPlaytimes] = useState(() => JSON.parse(localStorage.getItem('capy-playtimes') || '{}'));
@@ -241,19 +248,19 @@ export default function App() {
       `);
       win.document.close();
 
-      // Increment playtime live every 5 seconds while the window is open
+      // Increment playtime live every 1 second (+1 second) while the window is open
       const intervalId = setInterval(() => {
         if (win.closed) {
           clearInterval(intervalId);
         } else {
           setPlaytimes(prev => {
             const id = item.id;
-            const updated = { ...prev, [id]: (prev[id] || 0) + 5 };
+            const updated = { ...prev, [id]: (prev[id] || 0) + 1 };
             localStorage.setItem('capy-playtimes', JSON.stringify(updated));
             return updated;
           });
         }
-      }, 5000);
+      }, 1000);
     }
   };
  
@@ -934,7 +941,7 @@ export default function App() {
                       key={`recent-${game.id}`} 
                       game={game} 
                       onLaunch={launchContent} 
-                      playtime={playtimes[game.id] ? Math.floor((playtimes[game.id] || 0) / 60) + 'm' : '0m'}
+                      playtime={formatPlaytime(playtimes[game.id])}
                       isFavorite={favorites.includes(String(game.id))}
                       onToggleFavorite={() => toggleFavorite(game.id)}
                       performanceMode={performanceMode}
@@ -950,7 +957,7 @@ export default function App() {
                   key={game.id} 
                   game={game} 
                   onLaunch={launchContent} 
-                  playtime={playtimes[game.id] ? Math.floor((playtimes[game.id] || 0) / 60) + 'm' : '0m'}
+                  playtime={formatPlaytime(playtimes[game.id])}
                   isFavorite={favorites.includes(String(game.id))} 
                   onToggleFavorite={() => toggleFavorite(game.id)}
                   performanceMode={performanceMode}
