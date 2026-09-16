@@ -87,6 +87,9 @@ export default function App() {
   const [achievements, setAchievements] = useState([]);
   const [activeCloak, setActiveCloak] = useState(() => localStorage.getItem('capy-cloak-type') || 'google');
 
+  // Ref to track active gameplay session state securely in memory
+  const activeSessionRef = useRef(null);
+
   useEffect(() => {
     const config = DISGUISE_CONFIG[activeCloak] || DISGUISE_CONFIG.google;
     applyCloak(config);
@@ -222,7 +225,19 @@ export default function App() {
     setNotification("Recently Played history cleared!");
   };
 
-  // Bulletproof Playtime Session Tracker using LocalStorage Heartbeats
+  // Finalize active session and save playtime to state & localStorage
+  const finalizeSession = (gameId, lastHeartbeatTime, startTime) => {
+    const sessionSeconds = Math.floor((lastHeartbeatTime - startTime) / 1000);
+    if (sessionSeconds > 0) {
+      setPlaytimes(prev => {
+        const updated = { ...prev, [gameId]: (prev[gameId] || 0) + sessionSeconds };
+        localStorage.setItem('capy-playtimes', JSON.stringify(updated));
+        return updated;
+      });
+    }
+  };
+
+  // Bulletproof Playtime Session Tracker using window.opener.postMessage
   const launchContent = (item) => {
     const finalUrl = getLaunchUrl(item, supplier); 
     if (!finalUrl) return;
@@ -241,11 +256,11 @@ export default function App() {
 
     if (win) {
       const startTime = Date.now();
-      localStorage.setItem('capy-active-session', JSON.stringify({
+      activeSessionRef.current = {
         gameId: item.id,
         startTime: startTime,
         lastHeartbeat: startTime
-      }));
+      };
 
       win.document.write(`
         <html>
@@ -259,23 +274,23 @@ export default function App() {
               allow="fullscreen">
             </iframe>
             <script>
-              // Send heartbeat every second from the active foreground tab
+              // Send heartbeat via postMessage to bypass storage blocking in about:blank
               setInterval(() => {
                 try {
-                  const session = JSON.parse(localStorage.getItem('capy-active-session') || '{}');
-                  if (session.startTime) {
-                    session.lastHeartbeat = Date.now();
-                    localStorage.setItem('capy-active-session', JSON.stringify(session));
+                  if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({ type: 'CAPY_HEARTBEAT', gameId: '${item.id}' }, '*');
                   }
                 } catch(e) {}
               }, 1000);
 
-              // Auto-close if the main window closes
-              setInterval(() => {
-                if (window.opener && window.opener.closed) {
-                  window.close();
-                }
-              }, 2000);
+              // Notify main window when closing tab
+              window.addEventListener('unload', () => {
+                try {
+                  if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({ type: 'CAPY_GAME_CLOSED', gameId: '${item.id}' }, '*');
+                  }
+                } catch(e) {}
+              });
             </script>
           </body>
         </html>
@@ -284,37 +299,44 @@ export default function App() {
     }
   };
 
-  // Monitor active game session heartbeat in the main app
+  // Listen for postMessage heartbeats and session termination from game tabs
   useEffect(() => {
-    const checkSession = () => {
-      const rawSession = localStorage.getItem('capy-active-session');
-      if (!rawSession) return;
-      try {
-        const session = JSON.parse(rawSession);
-        const now = Date.now();
-        // If heartbeat stopped for more than 3 seconds, the game window was closed
-        if (now - session.lastHeartbeat > 3000) {
-          const sessionSeconds = Math.floor((session.lastHeartbeat - session.startTime) / 1000);
-          if (sessionSeconds > 0) {
-            setPlaytimes(prev => {
-              const id = session.gameId;
-              const updated = { ...prev, [id]: (prev[id] || 0) + sessionSeconds };
-              localStorage.setItem('capy-playtimes', JSON.stringify(updated));
-              return updated;
-            });
-          }
-          localStorage.removeItem('capy-active-session');
+    const handleMessage = (event) => {
+      if (!event.data) return;
+      const { type, gameId } = event.data;
+
+      if (type === 'CAPY_HEARTBEAT') {
+        if (!activeSessionRef.current || activeSessionRef.current.gameId !== gameId) {
+          activeSessionRef.current = {
+            gameId,
+            startTime: Date.now(),
+            lastHeartbeat: Date.now()
+          };
+        } else {
+          activeSessionRef.current.lastHeartbeat = Date.now();
         }
-      } catch (e) {
-        console.error("Session check error:", e);
+      } else if (type === 'CAPY_GAME_CLOSED') {
+        if (activeSessionRef.current && activeSessionRef.current.gameId === gameId) {
+          finalizeSession(gameId, activeSessionRef.current.lastHeartbeat, activeSessionRef.current.startTime);
+          activeSessionRef.current = null;
+        }
       }
     };
 
-    const intervalId = setInterval(checkSession, 1000);
-    window.addEventListener('focus', checkSession);
+    window.addEventListener('message', handleMessage);
+
+    // Watchdog timer to catch abrupt tab closures if unload event fails
+    const watchdog = setInterval(() => {
+      const session = activeSessionRef.current;
+      if (session && Date.now() - session.lastHeartbeat > 3000) {
+        finalizeSession(session.gameId, session.lastHeartbeat, session.startTime);
+        activeSessionRef.current = null;
+      }
+    }, 1000);
+
     return () => {
-      clearInterval(intervalId);
-      window.removeEventListener('focus', checkSession);
+      window.removeEventListener('message', handleMessage);
+      clearInterval(watchdog);
     };
   }, []);
  
