@@ -255,17 +255,35 @@ export default function App() {
       `);
       win.document.close();
 
-      // Increment playtime live every 1 second (+1 second) while the window is open
+      const startTime = Date.now();
+      let lastRecordedTime = startTime;
+
+      // Track playtime accurately using timestamp deltas to bypass background tab throttling
       const intervalId = setInterval(() => {
         if (win.closed) {
           clearInterval(intervalId);
+          const now = Date.now();
+          const sessionSeconds = Math.floor((now - lastRecordedTime) / 1000);
+          if (sessionSeconds > 0) {
+            setPlaytimes(prev => {
+              const id = item.id;
+              const updated = { ...prev, [id]: (prev[id] || 0) + sessionSeconds };
+              localStorage.setItem('capy-playtimes', JSON.stringify(updated));
+              return updated;
+            });
+          }
         } else {
-          setPlaytimes(prev => {
-            const id = item.id;
-            const updated = { ...prev, [id]: (prev[id] || 0) + 1 };
-            localStorage.setItem('capy-playtimes', JSON.stringify(updated));
-            return updated;
-          });
+          const now = Date.now();
+          const elapsedSinceLast = Math.floor((now - lastRecordedTime) / 1000);
+          if (elapsedSinceLast >= 5) {
+            lastRecordedTime = now;
+            setPlaytimes(prev => {
+              const id = item.id;
+              const updated = { ...prev, [id]: (prev[id] || 0) + elapsedSinceLast };
+              localStorage.setItem('capy-playtimes', JSON.stringify(updated));
+              return updated;
+            });
+          }
         }
       }, 1000);
     }
