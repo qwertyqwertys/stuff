@@ -29,13 +29,6 @@ const DEFAULT_COLOR = '#38bdf8';
 const DEFAULT_GLOW = 50;
 const CAPY_LOGO = "https://img.icons8.com/color/32/capybara.png";
 
-// --- PLAYTIME FORMATTER ---
-const formatPlaytime = (seconds) => {
-  if (!seconds) return '0m';
-  if (seconds < 60) return `${seconds}s`;
-  return `${Math.floor(seconds / 60)}m`;
-};
-
 // --- ACHIEVEMENT DEFINITIONS ---
 const TROPHIES = [
   { id: 'first_game', name: 'First Blood', desc: 'Play your first game', icon: '🏆' },
@@ -228,9 +221,7 @@ export default function App() {
       return updated;
     });
 
-    const startTime = Date.now();
     const gameUrl = finalUrl;
-    
     const win = window.open('about:blank', '_blank');
 
     if (win) {
@@ -250,21 +241,19 @@ export default function App() {
       `);
       win.document.close();
 
-      const checkInterval = setInterval(() => {
+      // Increment playtime live every 5 seconds while the window is open
+      const intervalId = setInterval(() => {
         if (win.closed) {
-          clearInterval(checkInterval);
-          // Track elapsed time in seconds for accurate updates
-          const durationSec = Math.floor((Date.now() - startTime) / 1000);
-          if (durationSec > 0) {
-            setPlaytimes(prev => {
-              const id = item.id;
-              const updated = { ...prev, [id]: (prev[id] || 0) + durationSec };
-              localStorage.setItem('capy-playtimes', JSON.stringify(updated));
-              return updated;
-            });
-          }
+          clearInterval(intervalId);
+        } else {
+          setPlaytimes(prev => {
+            const id = item.id;
+            const updated = { ...prev, [id]: (prev[id] || 0) + 5 };
+            localStorage.setItem('capy-playtimes', JSON.stringify(updated));
+            return updated;
+          });
         }
-      }, 1000);
+      }, 5000);
     }
   };
  
@@ -945,7 +934,7 @@ export default function App() {
                       key={`recent-${game.id}`} 
                       game={game} 
                       onLaunch={launchContent} 
-                      playtime={formatPlaytime(playtimes[game.id])}
+                      playtime={playtimes[game.id] ? Math.floor((playtimes[game.id] || 0) / 60) + 'm' : '0m'}
                       isFavorite={favorites.includes(String(game.id))}
                       onToggleFavorite={() => toggleFavorite(game.id)}
                       performanceMode={performanceMode}
@@ -961,7 +950,7 @@ export default function App() {
                   key={game.id} 
                   game={game} 
                   onLaunch={launchContent} 
-                  playtime={formatPlaytime(playtimes[game.id])}
+                  playtime={playtimes[game.id] ? Math.floor((playtimes[game.id] || 0) / 60) + 'm' : '0m'}
                   isFavorite={favorites.includes(String(game.id))} 
                   onToggleFavorite={() => toggleFavorite(game.id)}
                   performanceMode={performanceMode}
