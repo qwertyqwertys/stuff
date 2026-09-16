@@ -46,7 +46,12 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
       <div className="p-5">
         <div className="flex justify-between items-start gap-2">
           <div className="font-bold text-sm truncate group-hover:text-[var(--theme)] transition-colors">{game.title}</div>
-          {!isUtility && <span className="text-[8px] text-zinc-100 font-bold bg-white/15 px-1.5 py-0.5 rounded shrink-0">{playtime}</span>}
+          {/* Automatically shows 0m for unplayed games or tracks active time for all games */}
+          {!isUtility && (
+            <span className="text-[8px] text-zinc-100 font-bold bg-white/15 px-1.5 py-0.5 rounded shrink-0">
+              {playtime || '0m'}
+            </span>
+          )}
         </div>
         <p className="text-[9px] text-zinc-200 uppercase font-black tracking-widest mt-1">
           {game.category}
