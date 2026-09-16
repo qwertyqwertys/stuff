@@ -148,7 +148,6 @@ export default function App() {
   const [backgroundVideo, setBackgroundVideo] = useState(() => localStorage.getItem('capy-bg-video') || '');
   const [bgOpacity, setBgOpacity] = useState(() => Number(localStorage.getItem('capy-bg-opacity')) || 50);
   
-  // Dynamic background luminance hook for light/dark top contrast adjustment
   const isHeaderLight = useBackgroundContrast(backgroundImage, bgEnabled);
   
   const [bgMusic, setBgMusic] = useState(() => {
@@ -247,11 +246,12 @@ export default function App() {
       const checkInterval = setInterval(() => {
         if (win.closed) {
           clearInterval(checkInterval);
-          const duration = Math.floor((Date.now() - startTime) / 1000 / 60);
-          if (duration > 0) {
+          // Track elapsed time in seconds for accurate updates
+          const durationSec = Math.floor((Date.now() - startTime) / 1000);
+          if (durationSec > 0) {
             setPlaytimes(prev => {
               const id = item.id;
-              const updated = { ...prev, [id]: (prev[id] || 0) + duration };
+              const updated = { ...prev, [id]: (prev[id] || 0) + durationSec };
               localStorage.setItem('capy-playtimes', JSON.stringify(updated));
               return updated;
             });
@@ -386,7 +386,6 @@ export default function App() {
     localStorage.setItem('capy-bg-opacity', bgOpacity.toString());
   }, [bgOpacity]);
 
-  // Unified Performance Mode & Resource Manager Effect
   useEffect(() => {
     const root = document.documentElement;
     
@@ -865,7 +864,6 @@ export default function App() {
             isLightMode={isLightMode}
           />
 
-          {/* Category Bar Wrapper with explicit relative stacking */}
           <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
             <div className="max-w-7xl mx-auto relative flex items-center">
               {canScrollLeft && (
@@ -917,7 +915,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Main content wrapper with explicit relative z-10 stacking context */}
           <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12 relative z-10">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
@@ -941,7 +938,7 @@ export default function App() {
                       key={`recent-${game.id}`} 
                       game={game} 
                       onLaunch={launchContent} 
-                      playtime={playtimes[game.id] ? Math.floor(playtimes[game.id]/60) + 'm' : '0m'}
+                      playtime={playtimes[game.id] ? Math.floor((playtimes[game.id] || 0) / 60) + 'm' : '0m'}
                       isFavorite={favorites.includes(String(game.id))}
                       onToggleFavorite={() => toggleFavorite(game.id)}
                       performanceMode={performanceMode}
@@ -957,7 +954,7 @@ export default function App() {
                   key={game.id} 
                   game={game} 
                   onLaunch={launchContent} 
-                  playtime={playtimes[game.id] ? Math.floor(playtimes[game.id]/60) + 'm' : '0m'}
+                  playtime={playtimes[game.id] ? Math.floor((playtimes[game.id] || 0) / 60) + 'm' : '0m'}
                   isFavorite={favorites.includes(String(game.id))} 
                   onToggleFavorite={() => toggleFavorite(game.id)}
                   performanceMode={performanceMode}
@@ -968,7 +965,6 @@ export default function App() {
         </>
       )}
 
-      {/* Soundboard Modal Overlay */}
       {isSoundboardOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <SoundboardCard 
