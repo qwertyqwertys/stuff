@@ -453,6 +453,13 @@
     "url": "/stores/games-html/google-baseball.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.gstatic.com%2Fmarketing-cms%2F58%2F02%2F0e5531774177bd36df300f55717c%2Fxx.png&f=1&nofb=1&ipt=cda59393d04436feb4b02e0a18783ca0304c951ee392a82d76bb72c3f819dad6",
     "category": "Sports"
+  },
+  {
+    "id": "google-dino",
+    "title": "Google Dino",
+    "url": "/stores/games-html/google-dino.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fplay-lh.googleusercontent.com%2FiiIJq5JmLFYNI1bVz4IBHyoXs508JcEzHhOgau69bnveF9Wat51-ax9LMPVOlneKwqg&f=1&nofb=1&ipt=5924423d5c3a758a4ca95602f67032e534dc823de6847130cc2bb8f980e38c49",
+    "category": "Runner"
   }
 ]
   
