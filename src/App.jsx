@@ -223,9 +223,38 @@ export default function App() {
   };
 
   const launchContent = (item) => {
-    const finalUrl = getLaunchUrl(item, supplier); 
-    if (!finalUrl) return;
+    const rawUrl = getLaunchUrl(item, supplier); 
+    if (!rawUrl) return;
 
+    // 1. Safe Base64 Decode Check
+    let finalUrl = rawUrl;
+    const isDirectUrl = 
+      rawUrl.startsWith('http://') || 
+      rawUrl.startsWith('https://') || 
+      rawUrl.startsWith('/') || 
+      rawUrl.startsWith('./');
+
+    if (!isDirectUrl) {
+      try {
+        finalUrl = atob(rawUrl);
+      } catch (e) {
+        console.error("Base64 decode failed, using raw URL instead:", e);
+        finalUrl = rawUrl;
+      }
+    }
+
+    // 2. Handle APK Downloads
+    if (item.type === 'apk' || finalUrl.toLowerCase().endsWith('.apk')) {
+      const link = document.createElement('a');
+      link.href = finalUrl;
+      link.download = `${item.title || 'game'}.apk`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return; // Do not open about:blank window for APK files
+    }
+
+    // 3. Standard Web Games (about:blank popup)
     const recentKey = `capy-recent-${supplier}`; 
     
     setRecentlyPlayed(prev => {
@@ -235,7 +264,6 @@ export default function App() {
       return updated;
     });
 
-    const gameUrl = finalUrl;
     const win = window.open('about:blank', '_blank');
 
     if (win) {
@@ -246,7 +274,7 @@ export default function App() {
           </head>
           <body style="margin:0;padding:0;overflow:hidden;background:#000;">
             <iframe 
-              src="${gameUrl}" 
+              src="${finalUrl}" 
               style="width:100vw;height:100vh;border:none;display:block;" 
               allow="fullscreen">
             </iframe>
