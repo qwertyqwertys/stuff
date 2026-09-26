@@ -446,6 +446,13 @@
     "url": "/stores/games-html/crazy-cattle-3d.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcrazycattle3dgithub.io%2Fdata%2Fimage%2Fcrazy-cattle-3d-online.png&f=1&nofb=1&ipt=341d2ef3a508f1915ef268a49a8f8fd5257af4c506568dda91f8764ba2382274",
     "category": "Action"
+  },
+  {
+    "id": "google-baseball",
+    "title": "Google Baseball",
+    "url": "/stores/games-html/google-baseball.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.gstatic.com%2Fmarketing-cms%2F58%2F02%2F0e5531774177bd36df300f55717c%2Fxx.png&f=1&nofb=1&ipt=cda59393d04436feb4b02e0a18783ca0304c951ee392a82d76bb72c3f819dad6",
+    "category": "Sports"
   }
 ]
   
