@@ -243,18 +243,13 @@ export default function App() {
       }
     }
 
-    // 2. Handle APK Downloads
-    if (item.type === 'apk' || finalUrl.toLowerCase().endsWith('.apk')) {
-      const link = document.createElement('a');
-      link.href = finalUrl;
-      link.download = `${item.title || 'game'}.apk`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      return; // Do not open about:blank window for APK files
+    // 2. Wrap APK Files in Online Web Emulator (No File Download)
+    const isApk = item.type === 'apk' || finalUrl.toLowerCase().endsWith('.apk');
+    if (isApk) {
+      finalUrl = `https://www.apkonline.net/runapk/runapk.html?app=${encodeURIComponent(finalUrl)}`;
     }
 
-    // 3. Standard Web Games (about:blank popup)
+    // 3. Update History
     const recentKey = `capy-recent-${supplier}`; 
     
     setRecentlyPlayed(prev => {
@@ -264,6 +259,7 @@ export default function App() {
       return updated;
     });
 
+    // 4. Launch Game in Web Popup
     const win = window.open('about:blank', '_blank');
 
     if (win) {
