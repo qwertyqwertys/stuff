@@ -223,33 +223,9 @@ export default function App() {
   };
 
   const launchContent = (item) => {
-    const rawUrl = getLaunchUrl(item, supplier); 
-    if (!rawUrl) return;
+    const finalUrl = getLaunchUrl(item, supplier); 
+    if (!finalUrl) return;
 
-    // 1. Safe Base64 Decode Check
-    let finalUrl = rawUrl;
-    const isDirectUrl = 
-      rawUrl.startsWith('http://') || 
-      rawUrl.startsWith('https://') || 
-      rawUrl.startsWith('/') || 
-      rawUrl.startsWith('./');
-
-    if (!isDirectUrl) {
-      try {
-        finalUrl = atob(rawUrl);
-      } catch (e) {
-        console.error("Base64 decode failed, using raw URL instead:", e);
-        finalUrl = rawUrl;
-      }
-    }
-
-    // 2. Wrap APK Files in Online Web Emulator (No File Download)
-    const isApk = item.type === 'apk' || finalUrl.toLowerCase().endsWith('.apk');
-    if (isApk) {
-      finalUrl = `https://www.apkonline.net/runapk/runapk.html?app=${encodeURIComponent(finalUrl)}`;
-    }
-
-    // 3. Update History
     const recentKey = `capy-recent-${supplier}`; 
     
     setRecentlyPlayed(prev => {
@@ -259,7 +235,7 @@ export default function App() {
       return updated;
     });
 
-    // 4. Launch Game in Web Popup
+    const gameUrl = finalUrl;
     const win = window.open('about:blank', '_blank');
 
     if (win) {
@@ -270,7 +246,7 @@ export default function App() {
           </head>
           <body style="margin:0;padding:0;overflow:hidden;background:#000;">
             <iframe 
-              src="${finalUrl}" 
+              src="${gameUrl}" 
               style="width:100vw;height:100vh;border:none;display:block;" 
               allow="fullscreen">
             </iframe>
