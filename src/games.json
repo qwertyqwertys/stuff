@@ -474,6 +474,13 @@
     "url": "/stores/games-html/bit-planes.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimages.rocketgames.io%2Fuploads%2Fgames%2Fb%2Fbit-planes%2Fbit-planes.16800f.jpg%3Fw%3D204%26dpr%3D2&f=1&nofb=1&ipt=4ee13acc21bb117297797725c2b95eb76042f813ec35b67b903ca406938d88ae",
     "category": "Arcade"
+  },
+  {
+    "id": "ice-dodo",
+    "title": "Ice Dodo",
+    "url": "/stores/games-html/ice-dodo.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimgs.crazygames.com%2Fice-dodo%2F20210513074352%2Fice-dodo-cover%3Fmetadata%3Dnone%26quality%3D40%26width%3D1200%26height%3D630%26fit%3Dcrop&f=1&nofb=1&ipt=c27f63c4201d831346f4a486e259ce9012a6a13468cf07320552c8b9042c8ef8",
+    "category": "Arcade"
   }
 ]
   
