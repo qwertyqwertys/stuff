@@ -488,8 +488,16 @@
     "url": "/stores/games-html/johnny-upgrade.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimgs2.dab3games.com%2Fjohnny-upgrade-game.png&f=1&nofb=1&ipt=7029fad8bbe750bbe04165af1db3133f91912324427b3eb332be85123b1b430b",
     "category": "Platformer"
+  },
+  {
+    "id": "just-fall-lol",
+    "title": "Just Fall LOL",
+    "url": "/stores/games-html/just-fall-lol.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fjustfall.gitlab.io%2Fimages%2Fjust-fall.png&f=1&nofb=1&ipt=9c6e07a870a366bf90080f3ce5489eefa850073cfc6a4630de5ac48ac450231d",
+    "category": "Action"
   }
 ]
+
 
 
   
