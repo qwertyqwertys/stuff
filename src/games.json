@@ -495,8 +495,16 @@
     "url": "/stores/games-html/just-fall-lol.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fjustfall.gitlab.io%2Fimages%2Fjust-fall.png&f=1&nofb=1&ipt=9c6e07a870a366bf90080f3ce5489eefa850073cfc6a4630de5ac48ac450231d",
     "category": "Action"
+  },
+  {
+    "id": "kour.io",
+    "title": "Kour.io",
+    "url": "/stores/games-html/kour.io.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fspace-waves.co%2Fdata%2Fimage%2Fgame%2Fkour-io%2Fkour-io.jpg&f=1&nofb=1&ipt=bf1af47d40dc62458522c9020217e0a07b4d5d2bc6c97ea2f82017985035d071",
+    "category": "Action"
   }
 ]
+
 
 
 
