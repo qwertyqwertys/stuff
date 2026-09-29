@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useBackgroundContrast } from './hooks/useBackgroundContrast.js';
 import { 
   X, CheckCircle2, ChevronLeft, ChevronRight, History 
@@ -1139,6 +1139,26 @@ function MainDashboard() {
   );
 }
 
+// --- 404 NOT FOUND COMPONENT ---
+function NotFound() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center bg-zinc-950 text-white font-sans">
+      <div className="text-8xl mb-4">🦫</div>
+      <h1 className="text-6xl font-black text-[var(--theme,#38bdf8)] mb-2">404</h1>
+      <h2 className="text-xl font-bold uppercase tracking-wide mb-2">Page Not Found</h2>
+      <p className="text-zinc-400 text-sm max-w-sm mb-6">
+        Looks like you wandered into unknown territory.
+      </p>
+      <Link 
+        to="/" 
+        className="px-6 py-3 bg-[var(--theme,#38bdf8)] text-black font-black uppercase text-xs rounded-full shadow-lg hover:opacity-90 transition-all active:scale-95"
+      >
+        Return to Dashboard
+      </Link>
+    </div>
+  );
+}
+
 // --- APP ENTRY ROUTER ---
 export default function App() {
   return (
@@ -1146,11 +1166,8 @@ export default function App() {
       {/* Primary Dashboard / Home Route */}
       <Route path="/" element={<MainDashboard />} />
 
-      {/* 
-        WILDCARD CATCH-ALL ROUTE
-        Placed strictly at the very bottom of the <Routes> list
-      */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all 404 Route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
