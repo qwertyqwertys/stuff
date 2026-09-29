@@ -1,12 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import gamesData from './games.json';
-import { useAchievements } from './hooks/useAchievements.js';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useBackgroundContrast } from './hooks/useBackgroundContrast.js';
 import { 
-  Search, Gamepad2, Play, Settings, X, ShieldAlert, 
-  Clock, Dices, RotateCcw, Palette, Type, ImageIcon, 
-  Link as LinkIcon, Upload, Battery, Calendar, Heart, Trash2, Ghost, Zap, Video, Music, Volume2, Power,
-  Cpu, Users, UserPlus, UserCircle, CheckCircle2, History, ChevronLeft, ChevronRight, VolumeX
+  X, CheckCircle2, ChevronLeft, ChevronRight, History 
 } from 'lucide-react';
 
 import gamesDataRaw from './games.json';
@@ -59,7 +55,6 @@ const updateThemeVariables = (color, glow) => {
   root.style.setProperty('--glow', `${glow}px`);
 };
 
-// Helper function to format playtime dynamically into seconds, minutes, and hours
 const formatPlaytime = (seconds) => {
   if (!seconds || seconds <= 0) return '0s';
   if (seconds < 60) return `${seconds}s`;
@@ -73,7 +68,8 @@ const formatPlaytime = (seconds) => {
   return `${mins}m`;
 };
 
-export default function App() {
+// Main App Layout & Dashboard Component
+function MainDashboard() {
   const [supplier, setSupplier] = useState(() => localStorage.getItem('capy-supplier') || 'Default');
   const [playtimes, setPlaytimes] = useState(() => JSON.parse(localStorage.getItem('capy-playtimes') || '{}'));
   const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('capy-favs') || '[]'));
@@ -82,10 +78,10 @@ export default function App() {
   const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
 
-  const userData = { playtimes: playtimes, favorites: favorites, themeChangeCount: themeChangeCount };
-
   const [achievements, setAchievements] = useState([]);
   const [activeCloak, setActiveCloak] = useState(() => localStorage.getItem('capy-cloak-type') || 'google');
+
+  const activeIntervals = useRef([]);
 
   useEffect(() => {
     const config = DISGUISE_CONFIG[activeCloak] || DISGUISE_CONFIG.google;
@@ -255,7 +251,6 @@ export default function App() {
       `);
       win.document.close();
 
-      // Increment playtime live every 1 second (+1 second) while the window is open
       const intervalId = setInterval(() => {
         if (win.closed) {
           clearInterval(intervalId);
@@ -268,24 +263,16 @@ export default function App() {
           });
         }
       }, 1000);
+      activeIntervals.current.push(intervalId);
     }
   };
- 
+
   useEffect(() => {
-    const checkStatus = setInterval(() => {
-      if (window.location.href.includes("carti-is-a-goat-rapper")) {
-        document.body.innerHTML = `
-          <div style="background:black; color:black; height:100vh; width:100vw; position:fixed; top:0; left:0; z-index:999999; cursor:default;">
-            Site Closed
-          </div>
-        `;
-        document.body.style.backgroundColor = "black";
-        clearInterval(checkStatus);
-      }
-    }, 1000); 
-    return () => clearInterval(checkStatus);
+    return () => {
+      activeIntervals.current.forEach(clearInterval);
+    };
   }, []);
-  
+
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
@@ -358,7 +345,7 @@ export default function App() {
       a: achievements
     };
     
-    return btoa(JSON.stringify(data));
+    return btoa(unescape(encodeURIComponent(JSON.stringify(data)))).replace(/=/g, '');
   }, [displayName, uniqueId, favorites, playtimes, profilePic, achievements]);
 
   const fullSyncCode = useMemo(() => {
@@ -507,9 +494,9 @@ export default function App() {
   }, [confirmClearSettings]);
 
   useEffect(() => {
-    const ids = ['first_game', 'marathon', 'collector', 'loyal', 'fashionista'];
+    const ids = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
     const alreadyEarned = ids.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
-    if (alreadyEarned.length > 0 && typeof setAchievements === 'function') {
+    if (alreadyEarned.length > 0) {
       setAchievements(alreadyEarned);
     }
   }, []);
@@ -540,10 +527,27 @@ export default function App() {
       setNotification("⏱️ Achievement Unlocked: Marathoner!");
     }
 
-    if (typeof setAchievements === 'function') {
-      if (earnedNew || newAchievements.length !== (achievements?.length || 0)) {
-        setAchievements(newAchievements);
-      }
+    if (favorites.length >= 10 && !localStorage.getItem('achievement_collector')) {
+      localStorage.setItem('achievement_collector', 'true');
+      checkAndAdd('collector');
+      setNotification("⭐ Achievement Unlocked: The Collector!");
+    }
+
+    if (themeChangeCount >= 5 && !localStorage.getItem('achievement_styler')) {
+      localStorage.setItem('achievement_styler', 'true');
+      checkAndAdd('styler');
+      setNotification("🎨 Achievement Unlocked: Fashionista!");
+    }
+
+    const hasLoyal = Object.values(playtimes || {}).some(time => time >= 1800);
+    if (hasLoyal && !localStorage.getItem('achievement_loyal')) {
+      localStorage.setItem('achievement_loyal', 'true');
+      checkAndAdd('loyal');
+      setNotification("🎮 Achievement Unlocked: Capy-Loyalist!");
+    }
+
+    if (earnedNew || newAchievements.length !== (achievements?.length || 0)) {
+      setAchievements(newAchievements);
     }
   }, [playtimes, favorites, themeChangeCount, achievements]);
 
@@ -786,7 +790,7 @@ export default function App() {
       setRecentlyPlayed([]);
     }
   }, [supplier]);
-  
+
   return (
     <div
       className={`min-h-screen pb-20 antialiased relative ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
@@ -1132,5 +1136,21 @@ export default function App() {
         <p>&copy; 2026 Capybara Science. All rights reserved.</p>
       </footer>
     </div>
+  );
+}
+
+// --- APP ENTRY ROUTER ---
+export default function App() {
+  return (
+    <Routes>
+      {/* Primary Dashboard / Home Route */}
+      <Route path="/" element={<MainDashboard />} />
+
+      {/* 
+        WILDCARD CATCH-ALL ROUTE
+        Placed strictly at the very bottom of the <Routes> list
+      */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
