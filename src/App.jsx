@@ -1143,11 +1143,10 @@ function MainDashboard() {
 function NotFound() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center bg-zinc-950 text-white font-sans">
-      <div className="text-8xl mb-4">🦫</div>
       <h1 className="text-6xl font-black text-[var(--theme,#38bdf8)] mb-2">404</h1>
       <h2 className="text-xl font-bold uppercase tracking-wide mb-2">Page Not Found</h2>
       <p className="text-zinc-400 text-sm max-w-sm mb-6">
-        Looks like you wandered into unknown territory.
+        you prob changed the url, and now you are here lol
       </p>
       <Link 
         to="/" 
