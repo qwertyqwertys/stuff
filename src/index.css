@@ -1,3 +1,4 @@
+/* Baloo 2 */
 @font-face {
   font-family: 'Baloo 2';
   font-style: normal;
@@ -22,6 +23,16 @@
   src: url('/fonts/baloo-2-v23-latin-800.woff2') format('woff2');
 }
 
+/* Fredoka */
+@font-face {
+  font-family: 'Fredoka';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/fredoka-v14-latin-600.woff2') format('woff2');
+}
+
+/* Inter */
 @font-face {
   font-family: 'Inter';
   font-style: normal;
@@ -54,6 +65,7 @@
   src: url('/fonts/inter-v20-latin-700.woff2') format('woff2');
 }
 
+/* JetBrains Mono */
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;
@@ -237,7 +249,6 @@
 .bg-zinc-900\/40:active, .bg-zinc-900\/50:active {
   cursor: url('https://img.icons8.com/color/28/test-tube.png'), pointer !important;
 }
-
 
 header div[class*="justify-self-end"], 
 header .flex.items-center.justify-end {
