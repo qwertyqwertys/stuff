@@ -29,7 +29,7 @@
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('/fonts/fredoka-v14-latin-600.woff2') format('woff2');
+  src: url('/fonts/fredoka-v17-latin-600.woff2') format('woff2');
 }
 
 /* Inter */
@@ -250,6 +250,8 @@
   cursor: url('https://img.icons8.com/color/28/test-tube.png'), pointer !important;
 }
 
+/* --- STATUS BAR TEXT & SPACING OVERRIDES --- */
+
 header div[class*="justify-self-end"], 
 header .flex.items-center.justify-end {
   gap: 1.5rem !important; 
@@ -260,7 +262,7 @@ header div[class*="justify-self-end"] p,
 header div[class*="justify-self-end"] div {
   font-family: 'Baloo 2', cursive !important;
   font-size: 0.95rem !important; 
-  font-weight: 700 !important;
+  font-weight: 600 !important; /* Matches downloaded Baloo 2 weight */
   line-height: 1 !important;
   display: inline-flex !important;
   align-items: center !important;
