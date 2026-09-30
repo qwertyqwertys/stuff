@@ -6,7 +6,141 @@ import {
   Sun, Moon, Play, Pause, Search, Loader2, Crop
 } from 'lucide-react';
 import { saveSongToIDB, loadSongsFromIDB, deleteSongFromIDB } from '../utils/db';
-// Updated to handle both default and named exports cleanly
+
+// --- INTERACTIVE AVATAR CROPPER SUB-COMPONENT ---
+function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
+  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imgRef = useRef(null);
+
+  if (!show || !imageSrc) return null;
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setOffset({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleSaveCrop = () => {
+    const canvas = document.createElement('canvas');
+    const size = 300; // Output high-res 300x300 avatar
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    if (!imgRef.current) return;
+
+    const img = imgRef.current;
+    
+    // Create circular clip mask
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.clip();
+
+    // Calculate scale factor relative to the 208px preview circle
+    const scaleFactor = size / 208;
+    
+    ctx.save();
+    ctx.translate(size / 2 + offset.x * scaleFactor, size / 2 + offset.y * scaleFactor);
+    ctx.scale(zoom * scaleFactor, zoom * scaleFactor);
+    
+    // Render centered cropped image
+    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+    ctx.restore();
+
+    const croppedUrl = canvas.toDataURL('image/png');
+    onSave(croppedUrl);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 select-none animate-fadeIn">
+      <div className={`p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-2xl border ${isLightMode ? 'bg-white text-zinc-900 border-zinc-200' : 'bg-zinc-900 text-white border-white/10'}`}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold flex items-center gap-2">
+            <Crop className="w-4 h-4 text-[var(--theme)]" /> Adjust Avatar
+          </h3>
+          <button type="button" onClick={onClose} className="p-1 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* CROP VIEWPORT */}
+        <div 
+          className="relative w-52 h-52 mx-auto rounded-full overflow-hidden border-4 border-[var(--theme)] cursor-grab active:cursor-grabbing bg-zinc-950 flex items-center justify-center shadow-inner"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          <img 
+            ref={imgRef}
+            src={imageSrc} 
+            alt="Crop preview" 
+            draggable={false}
+            style={{
+              transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+              maxWidth: 'none',
+              maxHeight: '100%',
+              objectFit: 'contain',
+              transition: isDragging ? 'none' : 'transform 0.05s ease-out'
+            }}
+          />
+        </div>
+
+        {/* ZOOM SLIDER CONTROLS */}
+        <div className="space-y-1 pt-2">
+          <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400">
+            <span>Zoom Scale</span>
+            <span>{Math.round(zoom * 100)}%</span>
+          </div>
+          <input 
+            type="range" 
+            min="0.5" 
+            max="3" 
+            step="0.05" 
+            value={zoom} 
+            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            className="w-full h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[var(--theme)]"
+          />
+        </div>
+
+        <p className="text-[9px] text-center text-zinc-400 font-medium">
+          Drag image to reposition • Use slider to zoom
+        </p>
+
+        {/* ACTION BUTTONS */}
+        <div className="flex justify-end gap-2 pt-2">
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold uppercase transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            onClick={handleSaveCrop} 
+            className="px-5 py-2 rounded-xl bg-[var(--theme)] text-black text-xs font-bold uppercase hover:opacity-90 transition-opacity shadow-md"
+          >
+            Save Avatar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function SettingsModal({
   show, onClose, friendCode, displayName, setDisplayName,
@@ -37,7 +171,7 @@ export function SettingsModal({
   const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset') === 'true');
 
   const modalRef = useRef(null);
-  const pfpInputRef = useRef(null); // Ref for file input
+  const pfpInputRef = useRef(null);
 
   // --- AVATAR CROPPER STATE ---
   const [cropperOpen, setCropperOpen] = useState(false);
@@ -872,7 +1006,7 @@ export function SettingsModal({
         {uploadModalOpen && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
             <div className={`${modalBg} border p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4`}>
-              <h3 className="text-lg font-bold" style={{ fontFamily: "'Baloo 2', cursive" }}>Edit Uploaded Song</h3>
+              <h3 className="text-lg font-bold">Edit Uploaded Song</h3>
               <p className="text-[10px] text-zinc-400">Customize the details for your uploaded MP3 track before adding it to the library.</p>
               
               <div className="space-y-3">
@@ -927,7 +1061,7 @@ export function SettingsModal({
       </div>
 
       {/* --- AVATAR CROPPER MODAL SUB-COMPONENT --- */}
-      {cropperOpen && imageToCrop && AvatarCropperModal && (
+      {cropperOpen && imageToCrop && (
         <AvatarCropperModal
           show={cropperOpen}
           imageSrc={imageToCrop}
