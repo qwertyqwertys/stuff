@@ -661,42 +661,50 @@ function MainDashboard() {
     }
   };
 
-  const handlePfpUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const maxSize = 10 * 1024 * 1024; // 10 MB
-      if (file.size > maxSize) {
-        alert("File too large! Please use an image or GIF under 10MB.");
-        return;
+  // Upload or update PFP and sync across all Supabase chat messages in real time
+const handlePfpUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const newPfp = reader.result;
+      setProfilePic(newPfp);
+      localStorage.setItem('capy-pfp', newPfp);
+      localStorage.setItem('capy-avatar', newPfp);
+
+      const myId = localStorage.getItem('capy-uid');
+      if (myId) {
+        // Automatically update all existing messages for everyone online
+        await supabase
+          .from('messages')
+          .update({ avatar_url: newPfp })
+          .eq('user_id', myId);
       }
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          const newPfp = reader.result;
-          setProfilePic(newPfp);
-          localStorage.setItem('capy-pfp', newPfp);
-          setNotification("Profile Picture Updated!");
 
-          // 1. Update all past messages in Supabase with the new avatar
-          const myId = localStorage.getItem('capy-uid');
-          if (myId) {
-            await supabase
-              .from('messages')
-              .update({ avatar_url: newPfp })
-              .eq('user_id', myId);
-          }
+      window.dispatchEvent(new Event('capy-pfp-updated'));
+    };
+    reader.readAsDataURL(file);
+  }
+};
 
-          // 2. Trigger custom event so ChatCard re-fetches immediately
-          window.dispatchEvent(new Event('capy-pfp-updated'));
+// Delete/Reset PFP and clear avatar across Supabase chat messages automatically
+const handleResetPfp = async () => {
+  setProfilePic('');
+  localStorage.removeItem('capy-pfp');
+  localStorage.removeItem('capy-avatar');
 
-        } catch (err) {
-          alert("This image is too large for local browser storage. Please select a slightly smaller image (under 4-5MB).");
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const myId = localStorage.getItem('capy-uid');
+  if (myId) {
+    // Sets avatar_url to null so all connected clients revert to the default avatar
+    await supabase
+      .from('messages')
+      .update({ avatar_url: null })
+      .eq('user_id', myId);
+  }
 
+  window.dispatchEvent(new Event('capy-pfp-updated'));
+};
+  
   const toggleFavorite = (id) => {
     const stringId = String(id); 
     const isRemoving = favorites.includes(stringId);
