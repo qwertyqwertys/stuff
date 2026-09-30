@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, UserPlus, RefreshCcw } from 'lucide-react'; 
+import { Send, RefreshCcw } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 
@@ -17,6 +17,19 @@ function formatTimestamp(isoString) {
   });
 }
 
+// Default circular blue avatar matching the profile page
+function DefaultAvatar() {
+  return (
+    <div className="w-8 h-8 rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center flex-shrink-0 overflow-hidden">
+      <svg className="w-5 h-5 text-[#22d3ee]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="9" r="3" />
+        <path d="M6.5 17.5c1.2-2 3.3-3 5.5-3s4.3 1 5.5 3" />
+      </svg>
+    </div>
+  );
+}
+
 const getPersistentId = () => {
   let id = localStorage.getItem('capy-uid');
   if (!id) {
@@ -24,6 +37,14 @@ const getPersistentId = () => {
     localStorage.setItem('capy-uid', id);
   }
   return id;
+};
+
+// Gets stored avatar from Capybara Science profile settings
+const getStoredAvatar = () => {
+  return localStorage.getItem('capy-avatar') || 
+         localStorage.getItem('capy-pfp') || 
+         localStorage.getItem('user-avatar') || 
+         '';
 };
 
 export function ChatCard({ isLightMode }) {
@@ -34,16 +55,17 @@ export function ChatCard({ isLightMode }) {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const myId = getPersistentId();
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      const { data } = await supabase
-        .from('messages')
-        .select('*')
-        .order('created_at', { ascending: true })
-        .limit(50);
-      if (data) setMessages(data);
-    };
+  // Helper to fetch latest messages
+  const fetchMessages = async () => {
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: true })
+      .limit(50);
+    if (data) setMessages(data);
+  };
 
+  useEffect(() => {
     fetchMessages();
 
     const channel = supabase
@@ -61,21 +83,33 @@ export function ChatCard({ isLightMode }) {
     const newName = e.target.username?.value.trim() || username;
     if (!newName) return;
 
+    const currentAvatar = getStoredAvatar();
+
+    // Update all past messages from this user with new name and avatar
     await supabase
       .from('messages')
-      .update({ username: newName })
+      .update({ username: newName, avatar_url: currentAvatar })
       .eq('user_id', myId);
 
     localStorage.setItem('capy-username', newName);
     setUsername(newName);
     setIsJoined(true);
+
+    await fetchMessages();
   };
 
   const handleSend = async () => {
     if (!text.trim()) return;
+    const currentAvatar = getStoredAvatar();
+
     await supabase
       .from('messages')
-      .insert([{ username, content: text, user_id: myId }]);
+      .insert([{ 
+        username, 
+        content: text, 
+        user_id: myId,
+        avatar_url: currentAvatar 
+      }]);
     setText('');
   };
 
@@ -120,19 +154,37 @@ export function ChatCard({ isLightMode }) {
         </form>
       ) : (
         <div className="flex flex-col h-full gap-3">
-          <div className={`flex-1 overflow-y-auto rounded-xl p-3 text-[10px] font-mono ${isLightMode ? 'bg-black/5' : 'bg-black/45'}`}>
+          <div className={`flex-1 overflow-y-auto rounded-xl p-3 text-[11px] font-sans space-y-3 ${isLightMode ? 'bg-black/5' : 'bg-black/45'}`}>
             {messages.length === 0 ? (
-              <div className="text-zinc-300 italic">Waiting for Messages</div>
+              <div className="text-zinc-300 italic text-[10px] font-mono">Waiting for Messages</div>
             ) : (
               messages.map((m, i) => (
-                <div key={m.id || i} className="mb-1 text-left flex items-baseline gap-1.5 flex-wrap">
-                  <span className="text-[var(--theme)] font-bold">{m.username}</span>
-                  <span className="text-[9px] text-zinc-400 font-sans">
-                    {formatTimestamp(m.created_at)}
-                  </span>
-                  <span className={isLightMode ? 'text-black ml-1' : 'text-zinc-100 ml-1'}>
-                    {m.content}
-                  </span>
+                <div key={m.id || i} className="flex items-start gap-2.5 text-left">
+                  {/* Profile Picture / Avatar */}
+                  {m.avatar_url ? (
+                    <img 
+                      src={m.avatar_url} 
+                      alt={m.username} 
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-white/10"
+                    />
+                  ) : (
+                    <DefaultAvatar />
+                  )}
+
+                  {/* Message Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[var(--theme)] font-bold text-xs">
+                        {m.username}
+                      </span>
+                      <span className="text-[9px] text-zinc-400 font-sans">
+                        {formatTimestamp(m.created_at)}
+                      </span>
+                    </div>
+                    <p className={`mt-0.5 text-xs break-words leading-relaxed ${isLightMode ? 'text-black' : 'text-zinc-100'}`}>
+                      {m.content}
+                    </p>
+                  </div>
                 </div>
               ))
             )}
