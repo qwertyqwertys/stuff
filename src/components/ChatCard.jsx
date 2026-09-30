@@ -126,7 +126,7 @@ export function ChatCard({ isLightMode }) {
             ) : (
               messages.map((m, i) => (
                 <div key={m.id || i} className="mb-1 text-left flex items-baseline gap-1.5 flex-wrap">
-                  <span className="text-[var(--theme)] font-bold">«{m.username}»</span>
+                  <span className="text-[var(--theme)] font-bold">{m.username}</span>
                   <span className="text-[9px] text-zinc-400 font-sans">
                     {formatTimestamp(m.created_at)}
                   </span>
