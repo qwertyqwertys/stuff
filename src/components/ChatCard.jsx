@@ -3,6 +3,20 @@ import { Send, UserPlus, RefreshCcw } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 
+// Helper function to format timestamps as M/D/YY, h:mm AM/PM
+function formatTimestamp(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  return date.toLocaleString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: '2-digit',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+}
+
 const getPersistentId = () => {
   let id = localStorage.getItem('capy-uid');
   if (!id) {
@@ -111,9 +125,14 @@ export function ChatCard({ isLightMode }) {
               <div className="text-zinc-300 italic">Waiting for Messages</div>
             ) : (
               messages.map((m, i) => (
-                <div key={m.id || i} className="mb-1 text-left">
-                  <span className="text-[var(--theme)] font-bold">{m.username}:</span> 
-                  <span className={isLightMode ? 'text-black' : 'text-zinc-100'}> {m.content}</span>
+                <div key={m.id || i} className="mb-1 text-left flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-[var(--theme)] font-bold">«{m.username}»</span>
+                  <span className="text-[9px] text-zinc-400 font-sans">
+                    {formatTimestamp(m.created_at)}
+                  </span>
+                  <span className={isLightMode ? 'text-black ml-1' : 'text-zinc-100 ml-1'}>
+                    {m.content}
+                  </span>
                 </div>
               ))
             )}
