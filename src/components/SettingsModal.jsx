@@ -2,7 +2,7 @@ import React, { useState, useEffect, useDeferredValue, useRef } from 'react';
 import { 
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
-  ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check,
+  ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check, 
   Sun, Moon, Play, Pause, Search, Loader2, Crop
 } from 'lucide-react';
 import { saveSongToIDB, loadSongsFromIDB, deleteSongFromIDB } from '../utils/db';
