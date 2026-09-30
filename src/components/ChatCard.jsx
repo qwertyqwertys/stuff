@@ -30,9 +30,14 @@ function DefaultAvatar() {
   );
 }
 
-// Avatar image with fallback handling
+// Avatar image with fallback handling and automatic state reset on src changes
 function UserAvatar({ src, alt }) {
   const [hasError, setHasError] = useState(false);
+
+  // Automatically reset the error state whenever the avatar URL changes or is deleted
+  useEffect(() => {
+    setHasError(false);
+  }, [src]);
 
   if (!src || hasError) {
     return <DefaultAvatar />;
@@ -122,13 +127,14 @@ export function ChatCard({ isLightMode }) {
 
     const currentAvatar = getStoredAvatar();
 
-    // Update all past messages from this user with new name and avatar
+    // Update all past messages from this user with new name and avatar (or null if reset)
     await supabase
       .from('messages')
-      .update({ username: newName, avatar_url: currentAvatar })
+      .update({ username: newName, avatar_url: currentAvatar || null })
       .eq('user_id', myId);
 
     localStorage.setItem('capy-username', newName);
+    localStorage.setItem('capy-display-name', newName);
     setUsername(newName);
     setIsJoined(true);
 
@@ -145,7 +151,7 @@ export function ChatCard({ isLightMode }) {
         username, 
         content: text.trim(), 
         user_id: myId,
-        avatar_url: currentAvatar 
+        avatar_url: currentAvatar || null 
       }]);
     setText('');
   };
