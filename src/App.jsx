@@ -4,6 +4,7 @@ import { useBackgroundContrast } from './hooks/useBackgroundContrast.js';
 import { 
   X, CheckCircle2, ChevronLeft, ChevronRight, History 
 } from 'lucide-react';
+import { supabase } from './supabaseClient';
 
 import gamesDataRaw from './games.json';
 import gnMathDataRaw from './gn-math-games.json';
@@ -661,26 +662,40 @@ function MainDashboard() {
   };
 
   const handlePfpUpload = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const maxSize = 10 * 1024 * 1024; // 10 MB
-    if (file.size > maxSize) {
-      alert("File too large! Please use an image or GIF under 10MB.");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      try {
-        setProfilePic(reader.result);
-        localStorage.setItem('capy-pfp', reader.result);
-        setNotification("Profile Picture Updated!");
-      } catch (err) {
-        alert("This image is too large for local browser storage. Please select a slightly smaller image (under 4-5MB).");
+    const file = e.target.files[0];
+    if (file) {
+      const maxSize = 10 * 1024 * 1024; // 10 MB
+      if (file.size > maxSize) {
+        alert("File too large! Please use an image or GIF under 10MB.");
+        return;
       }
-    };
-    reader.readAsDataURL(file);
-  }
-};
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const newPfp = reader.result;
+          setProfilePic(newPfp);
+          localStorage.setItem('capy-pfp', newPfp);
+          setNotification("Profile Picture Updated!");
+
+          // 1. Update all past messages in Supabase with the new avatar
+          const myId = localStorage.getItem('capy-uid');
+          if (myId) {
+            await supabase
+              .from('messages')
+              .update({ avatar_url: newPfp })
+              .eq('user_id', myId);
+          }
+
+          // 2. Trigger custom event so ChatCard re-fetches immediately
+          window.dispatchEvent(new Event('capy-pfp-updated'));
+
+        } catch (err) {
+          alert("This image is too large for local browser storage. Please select a slightly smaller image (under 4-5MB).");
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const toggleFavorite = (id) => {
     const stringId = String(id); 
