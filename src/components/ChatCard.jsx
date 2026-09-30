@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Send, RefreshCcw } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
@@ -30,6 +30,24 @@ function DefaultAvatar() {
   );
 }
 
+// Avatar image with fallback handling
+function UserAvatar({ src, alt }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (!src || hasError) {
+    return <DefaultAvatar />;
+  }
+
+  return (
+    <img 
+      src={src} 
+      alt={alt || 'User avatar'} 
+      onError={() => setHasError(true)}
+      className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-white/10"
+    />
+  );
+}
+
 const getPersistentId = () => {
   let id = localStorage.getItem('capy-uid');
   if (!id) {
@@ -48,11 +66,15 @@ const getStoredAvatar = () => {
 };
 
 export function ChatCard({ isLightMode }) {
-  const [username, setUsername] = useState(localStorage.getItem('capy-username') || '');
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name') || '';
+  });
   const [isJoined, setIsJoined] = useState(!!username);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [showPrivacy, setShowPrivacy] = useState(false);
+  
+  const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
   // Helper to fetch latest messages
@@ -68,6 +90,7 @@ export function ChatCard({ isLightMode }) {
   useEffect(() => {
     fetchMessages();
 
+    // Supabase Realtime subscription
     const channel = supabase
       .channel('realtime-messages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, 
@@ -75,8 +98,22 @@ export function ChatCard({ isLightMode }) {
       )
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    // Event listener for PFP updates triggered from App.jsx
+    const handlePfpUpdated = () => {
+      fetchMessages();
+    };
+    window.addEventListener('capy-pfp-updated', handlePfpUpdated);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
+    };
   }, []);
+
+  // Auto-scroll to bottom whenever messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleJoinOrUpdate = async (e) => {
     e.preventDefault();
@@ -106,7 +143,7 @@ export function ChatCard({ isLightMode }) {
       .from('messages')
       .insert([{ 
         username, 
-        content: text, 
+        content: text.trim(), 
         user_id: myId,
         avatar_url: currentAvatar 
       }]);
@@ -148,28 +185,20 @@ export function ChatCard({ isLightMode }) {
               }`}
             />
           </div>
-          <button className="w-full py-3 bg-[var(--theme)] text-black font-bold text-[10px] rounded-xl hover:scale-[1.02] active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--theme)]">
+          <button type="submit" className="w-full py-3 bg-[var(--theme)] text-black font-bold text-[10px] rounded-xl hover:scale-[1.02] active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--theme)]">
             {username ? "Update Name" : "AUTHORIZE ACCESS"}
           </button>
         </form>
       ) : (
-        <div className="flex flex-col h-full gap-3">
+        <div className="flex flex-col h-full gap-3 overflow-hidden">
           <div className={`flex-1 overflow-y-auto rounded-xl p-3 text-[11px] font-sans space-y-3 ${isLightMode ? 'bg-black/5' : 'bg-black/45'}`}>
             {messages.length === 0 ? (
-              <div className="text-zinc-300 italic text-[10px] font-mono">Waiting for Messages</div>
+              <div className="text-zinc-400 italic text-[10px] font-mono text-center py-4">Waiting for Messages...</div>
             ) : (
               messages.map((m, i) => (
                 <div key={m.id || i} className="flex items-start gap-2.5 text-left">
                   {/* Profile Picture / Avatar */}
-                  {m.avatar_url ? (
-                    <img 
-                      src={m.avatar_url} 
-                      alt={m.username} 
-                      className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-white/10"
-                    />
-                  ) : (
-                    <DefaultAvatar />
-                  )}
+                  <UserAvatar src={m.avatar_url} alt={m.username} />
 
                   {/* Message Details */}
                   <div className="flex-1 min-w-0">
@@ -188,6 +217,7 @@ export function ChatCard({ isLightMode }) {
                 </div>
               ))
             )}
+            <div ref={messagesEndRef} />
           </div>
           
           <div className="relative flex items-center">
@@ -196,7 +226,7 @@ export function ChatCard({ isLightMode }) {
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Message..."
-              className={`w-full text-[10px] p-2 pr-10 rounded-lg border outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] ${
+              className={`w-full text-xs p-2.5 pr-10 rounded-lg border outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] ${
                 isLightMode ? 'bg-black/5 border-black/10 text-black placeholder:text-zinc-500' : 'bg-white/5 border-white/10 text-zinc-100 placeholder:text-zinc-400 focus:border-[var(--theme)]'
               }`}
             />
@@ -204,9 +234,9 @@ export function ChatCard({ isLightMode }) {
               type="button"
               onClick={handleSend}
               aria-label="Send message"
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-white/5 rounded-md transition-all cursor-pointer text-[var(--theme)] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)]"
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-white/10 rounded-md transition-all cursor-pointer text-[var(--theme)] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)]"
             >
-              <Send className="w-3 h-3" />
+              <Send className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -216,7 +246,7 @@ export function ChatCard({ isLightMode }) {
         <button 
           type="button"
           onClick={() => setShowPrivacy(true)}
-          className="text-[9px] text-zinc-200 hover:text-zinc-100 underline tracking-wide transition-colors uppercase font-mono outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] rounded px-1"
+          className="text-[9px] text-zinc-400 hover:text-zinc-200 underline tracking-wide transition-colors uppercase font-mono outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] rounded px-1"
         >
           Privacy & Data Notice
         </button>
