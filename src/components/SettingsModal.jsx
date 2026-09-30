@@ -7,8 +7,7 @@ import {
 } from 'lucide-react';
 import { saveSongToIDB, loadSongsFromIDB, deleteSongFromIDB } from '../utils/db';
 // Updated to handle both default and named exports cleanly
-import AvatarCropperModalImport from './AvatarCropperModal';
-const AvatarCropperModal = AvatarCropperModalImport.AvatarCropperModal || AvatarCropperModalImport;
+import { AvatarCropperModal } from './AvatarCropperModal';
 
 export function SettingsModal({
   show, onClose, friendCode, displayName, setDisplayName,
