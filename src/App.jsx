@@ -73,6 +73,7 @@ function MainDashboard() {
   const [supplier, setSupplier] = useState(() => localStorage.getItem('capy-supplier') || 'Default');
   const [playtimes, setPlaytimes] = useState(() => JSON.parse(localStorage.getItem('capy-playtimes') || '{}'));
   const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('capy-favs') || '[]'));
+  const [removedGames, setRemovedGames] = useState(() => JSON.parse(localStorage.getItem('capy-removed-games') || '[]'));
   const [themeChangeCount, setThemeChangeCount] = useState(() => parseInt(localStorage.getItem('capy-theme-changes') || '0'));
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
@@ -110,6 +111,24 @@ function MainDashboard() {
     })) : [];
     return [...main, ...gn];
   }, []);
+
+  // Filter supplier games
+  const supplierGames = useMemo(() => {
+    let sourceData = Array.isArray(gamesDataRaw) ? gamesDataRaw : [];
+    if (supplier === 'GN Math') {
+      sourceData = Array.isArray(gnMathDataRaw) ? gnMathDataRaw : [];
+    } else if (supplier === 'Truffled') {
+      sourceData = [];
+    } else {
+      sourceData = sourceData.filter(g => !(g?.urls?.['GN Math'] || g?.urls?.['GN-MATH'] || g?.urls?.['Truffled']));
+    }
+    return sourceData;
+  }, [supplier]);
+
+  // Available games excluding removed games
+  const activeGames = useMemo(() => {
+    return supplierGames.filter(g => g && !removedGames.includes(String(g.id)));
+  }, [supplierGames, removedGames]);
 
   const audioRef = useRef(null);
   const categoryScrollRef = useRef(null);
@@ -295,20 +314,31 @@ function MainDashboard() {
     }
   };
 
+  // DYNAMIC CATEGORIES & COUNTS RECALCULATED FROM activeGames
   const categoriesWithCounts = useMemo(() => {
-    const uniqueCats = [...new Set(gamesData.map(g => g?.category).filter(Boolean))];
-    const final = [{ name: 'All', count: gamesData.length }];
+    const uniqueCats = [...new Set(activeGames.map(g => g?.category).filter(Boolean))];
+    const final = [{ name: 'All', count: activeGames.length }];
     
-    if (favorites.length > 0) {
-      final.push({ name: 'Favorites', count: favorites.length });
+    const activeFavCount = activeGames.filter(g => (favorites || []).includes(String(g?.id))).length;
+    if (activeFavCount > 0) {
+      final.push({ name: 'Favorites', count: activeFavCount });
     }
     
     uniqueCats.forEach(cat => {
-      final.push({ name: cat, count: gamesData.filter(g => g.category === cat).length });
+      const count = activeGames.filter(g => g?.category === cat).length;
+      final.push({ name: cat, count });
     });
     
     return final;
-  }, [gamesData, favorites]);
+  }, [activeGames, favorites]);
+
+  // Fallback to 'All' if active category count drops to zero
+  useEffect(() => {
+    const categoryExists = categoriesWithCounts.some(c => c.name === activeCategory);
+    if (!categoryExists) {
+      setActiveCategory('All');
+    }
+  }, [categoriesWithCounts, activeCategory]);
 
   useEffect(() => {
     checkScroll();
@@ -657,10 +687,16 @@ function MainDashboard() {
     
     setFavorites(newFavs);
     localStorage.setItem('capy-favs', JSON.stringify(newFavs));
+  };
 
-    if (isRemoving && newFavs.length === 0 && activeCategory === 'Favorites') {
-      setActiveCategory('All');
-    }
+  const handleRemoveGame = (id) => {
+    const stringId = String(id);
+    setRemovedGames(prev => {
+      const updated = [...prev, stringId];
+      localStorage.setItem('capy-removed-games', JSON.stringify(updated));
+      return updated;
+    });
+    setNotification("Game removed!");
   };
 
   const applyTheme = (t) => {
@@ -698,7 +734,7 @@ function MainDashboard() {
         'capy-custom-title', 'capy-custom-icon', 'capy-bg-image', 
         'capy-bg-video', 'capy-bg-opacity', 'capy-bg-music', 
         'capy-volume', 'capy-panic-url', 'capy-panic-key', 'capy-perf-mode',
-        'capy-bg-enabled', 'capy-recent', 'capy-pfp', 'capy-light-mode', 'capy-achievements', 'capy-theme-changes'
+        'capy-bg-enabled', 'capy-recent', 'capy-pfp', 'capy-light-mode', 'capy-achievements', 'capy-theme-changes', 'capy-removed-games'
       ];
       settingsKeys.forEach(key => localStorage.removeItem(key));
       window.location.reload();
@@ -726,32 +762,17 @@ function MainDashboard() {
 
   const filteredGames = useMemo(() => {
     const q = (searchQuery || "").toLowerCase();
-    let sourceData = gamesDataRaw || []; 
-    if (supplier === 'GN Math') {
-      sourceData = gnMathDataRaw || [];
-    } else if (supplier === 'Truffled') {
-      sourceData = [];
-    }
 
-    return sourceData.filter(g => {
+    return activeGames.filter(g => {
       const matchesSearch = g?.title?.toLowerCase().includes(q);
       if (!matchesSearch) return false;
-
-      if (supplier === 'GN Math') {
-        return true; 
-      } else if (supplier === 'Truffled') {
-        return true;
-      } else {
-        const isSpecial = g.urls?.['GN Math'] || g.urls?.['GN-MATH'] || g.urls?.['Truffled'];
-        if (isSpecial) return false;
-      }
 
       if (activeCategory === 'Favorites') {
         return (favorites || []).includes(String(g?.id));
       }
       return activeCategory === 'All' || g?.category === activeCategory;
     });
-  }, [searchQuery, activeCategory, favorites, supplier, gamesDataRaw, gnMathDataRaw]);
+  }, [searchQuery, activeCategory, favorites, activeGames]);
   
   const recentGamesData = useMemo(() => {
     if (!recentlyPlayed || !Array.isArray(recentlyPlayed)) return [];
@@ -762,12 +783,13 @@ function MainDashboard() {
       })
       .filter(g => {
         if (!g) return false;
+        if (removedGames.includes(String(g.id))) return false;
         if (supplier === 'GN Math') return true;
         if (supplier === 'Truffled') return false;
         return !(g.urls?.['GN Math'] || g.urls?.['GN-MATH'] || g.urls?.['Truffled']);
       })
       .slice(0, 4); 
-  }, [recentlyPlayed, gamesDataRaw, gnMathDataRaw, supplier]);
+  }, [recentlyPlayed, gamesDataRaw, gnMathDataRaw, supplier, removedGames]);
 
   const currentFriend = useMemo(() => {
     if (!selectedFriendId || selectedFriendId === 'me') return null;
@@ -955,6 +977,7 @@ function MainDashboard() {
                       playtime={formatPlaytime(playtimes[game.id])}
                       isFavorite={favorites.includes(String(game.id))}
                       onToggleFavorite={() => toggleFavorite(game.id)}
+                      onRemoveGame={() => handleRemoveGame(game.id)}
                       performanceMode={performanceMode}
                     />
                   ))}
@@ -971,6 +994,7 @@ function MainDashboard() {
                   playtime={formatPlaytime(playtimes[game.id])}
                   isFavorite={favorites.includes(String(game.id))} 
                   onToggleFavorite={() => toggleFavorite(game.id)}
+                  onRemoveGame={() => handleRemoveGame(game.id)}
                   performanceMode={performanceMode}
                 />
               ))}
