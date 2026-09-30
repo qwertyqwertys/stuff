@@ -6,7 +6,9 @@ import {
   Sun, Moon, Play, Pause, Search, Loader2, Crop
 } from 'lucide-react';
 import { saveSongToIDB, loadSongsFromIDB, deleteSongFromIDB } from '../utils/db';
-import { AvatarCropperModal } from './AvatarCropperModal';
+// Updated to handle both default and named exports cleanly
+import AvatarCropperModalImport from './AvatarCropperModal';
+const AvatarCropperModal = AvatarCropperModalImport.AvatarCropperModal || AvatarCropperModalImport;
 
 export function SettingsModal({
   show, onClose, friendCode, displayName, setDisplayName,
@@ -33,20 +35,16 @@ export function SettingsModal({
   const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Use deferred value for search query to prevent input lag
   const deferredSearchQuery = useDeferredValue(searchQuery);
-  
-  // Persist music reset state across page reloads
   const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset') === 'true');
 
-  // Modal reference for accessibility focus trapping
   const modalRef = useRef(null);
+  const pfpInputRef = useRef(null); // Ref for file input
 
   // --- AVATAR CROPPER STATE ---
   const [cropperOpen, setCropperOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState(null);
 
-  // Enforce music reset state on open/mount if saved in localStorage
   useEffect(() => {
     if (show && localStorage.getItem('capy-music-reset') === 'true') {
       if (handleAudioUpload) {
@@ -69,7 +67,6 @@ export function SettingsModal({
   useEffect(() => {
     loadSongsFromIDB().then(songs => setCustomSongs(songs));
     
-    // Cleanup active object URLs on modal unmount
     return () => {
       customSongsRef.current.forEach(song => {
         if (song.url) URL.revokeObjectURL(song.url);
@@ -119,7 +116,6 @@ export function SettingsModal({
   const [artistName, setArtistName] = useState('');
   const [isSavingSong, setIsSavingSong] = useState(false);
 
-  // --- COLOR PICKER PREVIOUS STATE ---
   const [previousColor, setPreviousColor] = useState(null);
 
   if (!show) return null;
@@ -151,7 +147,7 @@ export function SettingsModal({
     }
   };
 
-  // --- PFP SELECT: PASSES IMAGE TO CROPPER ---
+  // --- PFP SELECT & READ FILE ---
   const handlePfpChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -169,8 +165,13 @@ export function SettingsModal({
 
     const reader = new FileReader();
     reader.onload = () => {
-      setImageToCrop(reader.result);
-      setCropperOpen(true);
+      if (reader.result) {
+        setImageToCrop(reader.result);
+        setCropperOpen(true);
+      }
+    };
+    reader.onerror = () => {
+      alert('Failed to read image file. Please try another picture.');
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -185,7 +186,6 @@ export function SettingsModal({
     setImageToCrop(null);
   };
 
-  // --- SECURE AUDIO UPLOAD ---
   const handleCustomAudioSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -208,7 +208,6 @@ export function SettingsModal({
     e.target.value = '';
   };
 
-  // --- SECURE BACKGROUND UPLOAD ---
   const handleBackgroundChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -230,7 +229,6 @@ export function SettingsModal({
     }
   };
 
-  // --- SAFE SAVING TO INDEXEDDB ---
   const saveCustomSong = async () => {
     if (!pendingFile || isSavingSong) return;
     setIsSavingSong(true);
@@ -270,7 +268,6 @@ export function SettingsModal({
     }
   };
 
-  // --- DELETE CUSTOM SONG ---
   const deleteCustomSong = async (id, e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -299,6 +296,15 @@ export function SettingsModal({
 
   return (
     <>
+      {/* HIDDEN PFP FILE INPUT */}
+      <input 
+        ref={pfpInputRef}
+        type="file" 
+        accept="image/*" 
+        onChange={handlePfpChange} 
+        className="hidden" 
+      />
+
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
         <div 
           ref={modalRef}
@@ -307,7 +313,6 @@ export function SettingsModal({
           aria-labelledby="settings-title"
           className={`${modalBg} border rounded-3xl max-w-md w-full relative shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}
         >
-          
           {/* HEADER */}
           <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-white/5'} px-6 pt-6 pb-4 ${modalBg} z-20 flex-shrink-0`}>
             <h2 id="settings-title" className={`text-xl font-bold flex items-center gap-2 ${headerText}`}>
@@ -366,11 +371,14 @@ export function SettingsModal({
 
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
-                      <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-colors`}>
+                      <button 
+                        type="button"
+                        onClick={() => pfpInputRef.current?.click()}
+                        className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-colors flex flex-col items-center justify-center`}
+                      >
                         <Crop className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                         Upload & Crop PFP
-                        <input type="file" accept="image/*" onChange={handlePfpChange} className="hidden" />
-                      </label>
+                      </button>
                       <button 
                         type="button"
                         onClick={handleResetPfp}
@@ -921,7 +929,7 @@ export function SettingsModal({
       </div>
 
       {/* --- AVATAR CROPPER MODAL SUB-COMPONENT --- */}
-      {cropperOpen && imageToCrop && (
+      {cropperOpen && imageToCrop && AvatarCropperModal && (
         <AvatarCropperModal
           show={cropperOpen}
           imageSrc={imageToCrop}
