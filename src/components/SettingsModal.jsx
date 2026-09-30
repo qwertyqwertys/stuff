@@ -17,6 +17,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 
   if (!show || !imageSrc) return null;
 
+  // --- MOUSE DRAG HANDLERS ---
   const handleMouseDown = (e) => {
     setIsDragging(true);
     setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
@@ -32,36 +33,78 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 
   const handleMouseUp = () => setIsDragging(false);
 
+  // --- TOUCH DRAG HANDLERS (MOBILE SUPPORT) ---
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.touches[0].clientX - offset.x, y: e.touches[0].clientY - offset.y });
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    setOffset({
+      x: e.touches[0].clientX - dragStart.x,
+      y: e.touches[0].clientY - dragStart.y
+    });
+  };
+
+  const handleTouchEnd = () => setIsDragging(false);
+
+  // --- CANVAS CROP & SAVE ---
   const handleSaveCrop = () => {
-    const canvas = document.createElement('canvas');
-    const size = 300; // Output high-res 300x300 avatar
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
+    try {
+      const img = imgRef.current;
+      if (!img || !img.naturalWidth || !img.naturalHeight) {
+        alert("Image is still loading or invalid. Please try again.");
+        return;
+      }
 
-    if (!imgRef.current) return;
+      const canvas = document.createElement('canvas');
+      const outputSize = 300; // Final 300x300 high-res avatar
+      const previewSize = 208; // 208px preview circle size (w-52 h-52)
 
-    const img = imgRef.current;
-    
-    // Create circular clip mask
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-    ctx.clip();
+      canvas.width = outputSize;
+      canvas.height = outputSize;
+      const ctx = canvas.getContext('2d');
 
-    // Calculate scale factor relative to the 208px preview circle
-    const scaleFactor = size / 208;
-    
-    ctx.save();
-    ctx.translate(size / 2 + offset.x * scaleFactor, size / 2 + offset.y * scaleFactor);
-    ctx.scale(zoom * scaleFactor, zoom * scaleFactor);
-    
-    // Render centered cropped image
-    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
-    ctx.restore();
+      if (!ctx) {
+        alert("Canvas context could not be initialized.");
+        return;
+      }
 
-    const croppedUrl = canvas.toDataURL('image/png');
-    onSave(croppedUrl);
+      // Circular clipping path
+      ctx.beginPath();
+      ctx.arc(outputSize / 2, outputSize / 2, outputSize / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+
+      // Background fill for transparent PNGs
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, outputSize, outputSize);
+
+      // Math fix: Combine DOM scaling ratio with output scale ratio
+      const scaleRatio = outputSize / previewSize; 
+      const domImageScale = previewSize / img.naturalHeight; 
+      const finalScale = domImageScale * zoom * scaleRatio;
+
+      ctx.save();
+      ctx.translate(
+        outputSize / 2 + offset.x * scaleRatio,
+        outputSize / 2 + offset.y * scaleRatio
+      );
+      ctx.scale(finalScale, finalScale);
+      
+      // Render centered cropped image
+      ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+      ctx.restore();
+
+      const croppedUrl = canvas.toDataURL('image/png');
+      onSave(croppedUrl);
+    } catch (err) {
+      console.error("Failed to crop image:", err);
+      alert("Failed to save cropped image. Please select another picture.");
+    }
   };
 
   return (
@@ -78,11 +121,14 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 
         {/* CROP VIEWPORT */}
         <div 
-          className="relative w-52 h-52 mx-auto rounded-full overflow-hidden border-4 border-[var(--theme)] cursor-grab active:cursor-grabbing bg-zinc-950 flex items-center justify-center shadow-inner"
+          className="relative w-52 h-52 mx-auto rounded-full overflow-hidden border-4 border-[var(--theme)] cursor-grab active:cursor-grabbing bg-zinc-950 flex items-center justify-center shadow-inner touch-none"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <img 
             ref={imgRef}
