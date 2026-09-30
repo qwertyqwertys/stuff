@@ -146,6 +146,28 @@ export function SettingsModal({
     }
   };
 
+  // --- SECURE PFP UPLOAD WITH TYPE & SIZE VALIDATION ---
+  const handlePfpChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload a valid image or GIF file for your profile picture.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Profile picture file is too large. Max size is 10MB.');
+      e.target.value = '';
+      return;
+    }
+
+    if (handlePfpUpload) {
+      handlePfpUpload(e);
+    }
+    e.target.value = '';
+  };
+
   // --- SECURE AUDIO UPLOAD WITH TYPE & SIZE VALIDATION ---
   const handleCustomAudioSelect = (e) => {
     const file = e.target.files[0];
@@ -329,7 +351,7 @@ export function SettingsModal({
                     <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-colors`}>
                       <Upload className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                       Upload IMG/GIF for PFP
-                      <input type="file" accept="image/*" onChange={handlePfpUpload} className="hidden" />
+                      <input type="file" accept="image/*" onChange={handlePfpChange} className="hidden" />
                     </label>
                     <button 
                       type="button"
