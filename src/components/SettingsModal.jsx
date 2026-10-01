@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useDeferredValue, useRef } from 'react';
+import React, { useState, useEffect, useDeferredValue, useRef, Component } from 'react';
 import { 
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
-  ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check, 
+  Image as ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check, 
   Sun, Moon, Play, Pause, Search, Loader2, Crop
 } from 'lucide-react';
 
@@ -13,11 +13,59 @@ const safeSaveSong = db.saveSongToIDB || (async () => {});
 const safeLoadSongs = db.loadSongsFromIDB || (async () => []);
 const safeDeleteSong = db.deleteSongFromIDB || (async () => {});
 
+// --- ERROR BOUNDARY WRAPPER TO PREVENT APP UNMOUNTS ---
+class SettingsErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("SettingsModal caught a rendering error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      if (!this.props.show) return null;
+      return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-zinc-900 border border-red-500/40 p-6 rounded-3xl max-w-sm w-full space-y-4 text-center shadow-2xl text-white">
+            <ShieldAlert className="w-10 h-10 text-red-500 mx-auto" />
+            <h3 className="text-base font-bold">Settings Encountered an Error</h3>
+            <p className="text-xs text-zinc-400 font-mono break-words bg-black/40 p-3 rounded-xl border border-white/5">
+              {this.state.error?.message || "An unexpected rendering exception occurred."}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                if (typeof this.props.onClose === 'function') this.props.onClose();
+              }}
+              className="px-5 py-2.5 bg-red-500 text-black font-bold text-xs uppercase rounded-xl hover:bg-red-400 transition-colors"
+            >
+              Close & Recover
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // --- HELPER: ENSURE STRICT 7-CHAR HEX FOR INPUT COLOR ---
 const getValidHexColor = () => {
   if (typeof document === 'undefined') return '#38b2f6';
-  const val = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim();
-  return /^#[0-9A-F]{6}$/i.test(val) ? val : '#38b2f6';
+  try {
+    const val = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim();
+    return /^#[0-9A-F]{6}$/i.test(val) ? val : '#38b2f6';
+  } catch (e) {
+    return '#38b2f6';
+  }
 };
 
 // --- INTERACTIVE AVATAR CROPPER SUB-COMPONENT ---
@@ -226,7 +274,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
   );
 }
 
-export function SettingsModal({
+function SettingsModalContent({
   show, onClose, friendCode, displayName = '', setDisplayName,
   friends = [], onAddFriend, onViewFriend, onRemoveFriend,
   handlePfpUpload, handleResetPfp,
@@ -995,7 +1043,7 @@ export function SettingsModal({
                         onClick={() => typeof applyTheme === 'function' && applyTheme(t)} 
                         className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 transition-all outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
                       >
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} /> {t.name}
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t?.color || '#38b2f6' }} /> {t?.name || 'Theme'}
                       </button>
                     ))}
                   </div>
@@ -1176,5 +1224,13 @@ export function SettingsModal({
         />
       )}
     </>
+  );
+}
+
+export function SettingsModal(props) {
+  return (
+    <SettingsErrorBoundary show={props.show} onClose={props.onClose}>
+      <SettingsModalContent {...props} />
+    </SettingsErrorBoundary>
   );
 }
