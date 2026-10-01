@@ -13,26 +13,6 @@ const safeSaveSong = db.saveSongToIDB || (async () => {});
 const safeLoadSongs = db.loadSongsFromIDB || (async () => []);
 const safeDeleteSong = db.deleteSongFromIDB || (async () => {});
 
-// --- HELPER: CONVERT BASE64 DATA URL TO FILE OBJECT ---
-const dataURLtoFile = (dataurl, filename = 'avatar.png') => {
-  try {
-    const arr = dataurl.split(',');
-    if (arr.length < 2) return null;
-    const mimeMatch = arr[0].match(/:(.*?);/);
-    const mime = mimeMatch ? mimeMatch[1] : 'image/png';
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
-  } catch (err) {
-    console.error("Error converting dataURL to File:", err);
-    return null;
-  }
-};
-
 // --- ERROR BOUNDARY WRAPPER TO PREVENT APP UNMOUNTS ---
 class SettingsErrorBoundary extends Component {
   constructor(props) {
@@ -476,24 +456,7 @@ function SettingsModalContent({
 
   const handleCropSave = (croppedDataUrl) => {
     if (typeof handlePfpUpload === 'function') {
-      const file = dataURLtoFile(croppedDataUrl) || croppedDataUrl;
-
-      // Polyfill synthetic event object to support handlers expecting e.target.files
-      const syntheticEvent = {
-        target: { files: [file] },
-        files: [file]
-      };
-
-      try {
-        handlePfpUpload(syntheticEvent);
-      } catch (err) {
-        // Fallback if parent handler expects direct string or File
-        try {
-          handlePfpUpload(croppedDataUrl);
-        } catch (err2) {
-          handlePfpUpload(file);
-        }
-      }
+      handlePfpUpload(croppedDataUrl);
     }
     setCropperOpen(false);
     setImageToCrop(null);
