@@ -5,7 +5,20 @@ import {
   ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check, 
   Sun, Moon, Play, Pause, Search, Loader2, Crop
 } from 'lucide-react';
-import { saveSongToIDB, loadSongsFromIDB, deleteSongFromIDB } from '../utils/db';
+
+// Optional import fallback to prevent crashes if DB file isn't present
+import * as db from '../utils/db';
+
+const safeSaveSong = db.saveSongToIDB || (async () => {});
+const safeLoadSongs = db.loadSongsFromIDB || (async () => []);
+const safeDeleteSong = db.deleteSongFromIDB || (async () => {});
+
+// --- HELPER: ENSURE STRICT 7-CHAR HEX FOR INPUT COLOR ---
+const getValidHexColor = () => {
+  if (typeof document === 'undefined') return '#38b2f6';
+  const val = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim();
+  return /^#[0-9A-F]{6}$/i.test(val) ? val : '#38b2f6';
+};
 
 // --- INTERACTIVE AVATAR CROPPER SUB-COMPONENT ---
 function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
@@ -16,14 +29,12 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const imgRef = useRef(null);
 
-  // Reset load state when a new image source is passed
   useEffect(() => {
     setIsImageLoaded(false);
   }, [imageSrc]);
 
   if (!show || !imageSrc) return null;
 
-  // --- MOUSE DRAG HANDLERS ---
   const handleMouseDown = (e) => {
     if (!isImageLoaded) return;
     setIsDragging(true);
@@ -40,7 +51,6 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 
   const handleMouseUp = () => setIsDragging(false);
 
-  // --- TOUCH DRAG HANDLERS (MOBILE SUPPORT) ---
   const handleTouchStart = (e) => {
     if (!isImageLoaded || e.touches.length !== 1) return;
     setIsDragging(true);
@@ -57,10 +67,8 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 
   const handleTouchEnd = () => setIsDragging(false);
 
-  // --- CANVAS CROP & SAVE ---
   const handleSaveCrop = () => {
     const img = imgRef.current;
-    
     if (!img || !isImageLoaded || !img.naturalWidth || !img.naturalHeight) {
       alert("Image is still loading. Please wait a moment and try again.");
       return;
@@ -68,8 +76,8 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 
     try {
       const canvas = document.createElement('canvas');
-      const outputSize = 300; // Output dimensions (300x300)
-      const previewSize = 208; // Viewport circle size in px (w-52 = 208px)
+      const outputSize = 300;
+      const previewSize = 208;
 
       canvas.width = outputSize;
       canvas.height = outputSize;
@@ -80,17 +88,14 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
         return;
       }
 
-      // Circular clipping path
       ctx.beginPath();
       ctx.arc(outputSize / 2, outputSize / 2, outputSize / 2, 0, Math.PI * 2);
       ctx.closePath();
       ctx.clip();
 
-      // Black background fill
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, outputSize, outputSize);
 
-      // Scale calculations
       const scaleRatio = outputSize / previewSize; 
       const domImageScale = previewSize / img.naturalHeight; 
       const finalScale = domImageScale * zoom * scaleRatio;
@@ -102,16 +107,13 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
       );
       ctx.scale(finalScale, finalScale);
       
-      // Render centered cropped image
       ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
       ctx.restore();
 
-      // Try PNG encoding first; fall back to JPEG if data URL creation fails
       let croppedUrl = '';
       try {
         croppedUrl = canvas.toDataURL('image/png');
       } catch (e) {
-        console.warn("PNG encoding failed, falling back to JPEG:", e);
         croppedUrl = canvas.toDataURL('image/jpeg', 0.85);
       }
 
@@ -119,7 +121,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
         throw new Error('Canvas exported an empty image string.');
       }
 
-      onSave(croppedUrl);
+      if (typeof onSave === 'function') onSave(croppedUrl);
     } catch (err) {
       console.error("Avatar Crop Error Details:", err);
       if (err.name === 'SecurityError') {
@@ -142,7 +144,6 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
           </button>
         </div>
 
-        {/* CROP VIEWPORT */}
         <div 
           className="relative w-52 h-52 mx-auto rounded-full overflow-hidden border-4 border-[var(--theme)] cursor-grab active:cursor-grabbing bg-zinc-950 flex items-center justify-center shadow-inner touch-none"
           onMouseDown={handleMouseDown}
@@ -168,7 +169,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
             onLoad={() => setIsImageLoaded(true)}
             onError={() => {
               alert("Failed to load image preview.");
-              onClose();
+              if (typeof onClose === 'function') onClose();
             }}
             style={{
               transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
@@ -181,7 +182,6 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
           />
         </div>
 
-        {/* ZOOM SLIDER CONTROLS */}
         <div className="space-y-1 pt-2">
           <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400">
             <span>Zoom Scale</span>
@@ -203,7 +203,6 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
           Drag image to reposition • Use slider to zoom
         </p>
 
-        {/* ACTION BUTTONS */}
         <div className="flex justify-end gap-2 pt-2">
           <button 
             type="button" 
@@ -228,23 +227,23 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 }
 
 export function SettingsModal({
-  show, onClose, friendCode, displayName, setDisplayName,
-  friends, onAddFriend, onViewFriend, onRemoveFriend,
+  show, onClose, friendCode, displayName = '', setDisplayName,
+  friends = [], onAddFriend, onViewFriend, onRemoveFriend,
   handlePfpUpload, handleResetPfp,
-  performanceMode, setPerformanceMode,
+  performanceMode = false, setPerformanceMode,
   handleBackgroundUpload, handleAudioUpload, 
   handleResetBackground, handleResetMusic,
-  bgEnabled, bgOpacity, setBgOpacity,
-  bgMusic, volume, setVolume,
-  isPlaying, onTogglePlay,
-  panicKey, setPanicKey,
-  themes, applyTheme,
+  bgEnabled = false, bgOpacity = 100, setBgOpacity,
+  bgMusic, volume = 1, setVolume,
+  isPlaying = false, onTogglePlay,
+  panicKey = '', setPanicKey,
+  themes = {}, applyTheme,
   handleClearSettings, confirmClearSettings,
   handleReset, confirmReset,
   onViewOwnProfile,
-  tracklist,
-  isLightMode, setIsLightMode,
-  activeCloak, setActiveCloak
+  tracklist = [],
+  isLightMode = false, setIsLightMode,
+  activeCloak = '', setActiveCloak
 }) {
   const [friendInput, setFriendInput] = useState('');
   const [friendInputError, setFriendInputError] = useState('');
@@ -253,27 +252,27 @@ export function SettingsModal({
   const [searchQuery, setSearchQuery] = useState('');
   
   const deferredSearchQuery = useDeferredValue(searchQuery);
-  const [isMusicReset, setIsMusicReset] = useState(() => localStorage.getItem('capy-music-reset') === 'true');
+  const [isMusicReset, setIsMusicReset] = useState(() => {
+    try {
+      return localStorage.getItem('capy-music-reset') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
 
   const modalRef = useRef(null);
   const pfpInputRef = useRef(null);
 
-  // --- AVATAR CROPPER STATE ---
   const [cropperOpen, setCropperOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState(null);
 
   useEffect(() => {
-    if (show && localStorage.getItem('capy-music-reset') === 'true') {
-      if (handleAudioUpload) {
-        handleAudioUpload({ presetUrl: '' });
-      }
-      if (isPlaying !== false && onTogglePlay) {
-        onTogglePlay();
-      }
+    if (show && isMusicReset) {
+      if (handleAudioUpload) handleAudioUpload({ presetUrl: '' });
+      if (isPlaying !== false && onTogglePlay) onTogglePlay();
     }
   }, [show]);
   
-  // --- CUSTOM SONG STATE VIA INDEXEDDB ---
   const [customSongs, setCustomSongs] = useState([]);
   const customSongsRef = useRef(customSongs);
 
@@ -282,16 +281,28 @@ export function SettingsModal({
   }, [customSongs]);
 
   useEffect(() => {
-    loadSongsFromIDB().then(songs => setCustomSongs(songs));
+    safeLoadSongs()
+      .then(songs => {
+        if (Array.isArray(songs)) {
+          setCustomSongs(songs);
+        } else {
+          setCustomSongs([]);
+        }
+      })
+      .catch(err => {
+        console.warn("Failed to load IndexedDB songs:", err);
+        setCustomSongs([]);
+      });
     
     return () => {
-      customSongsRef.current.forEach(song => {
-        if (song.url) URL.revokeObjectURL(song.url);
-      });
+      if (Array.isArray(customSongsRef.current)) {
+        customSongsRef.current.forEach(song => {
+          if (song && song.url) URL.revokeObjectURL(song.url);
+        });
+      }
     };
   }, []);
 
-  // --- FOCUS TRAPPING & ESCAPE KEY LISTENER ---
   useEffect(() => {
     if (!show || cropperOpen) return;
     const modalElement = modalRef.current;
@@ -304,7 +315,7 @@ export function SettingsModal({
     const lastElement = focusableElements[focusableElements.length - 1];
 
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && typeof onClose === 'function') {
         onClose();
       }
       if (e.key === 'Tab') {
@@ -340,9 +351,11 @@ export function SettingsModal({
   const effectiveBgMusic = isMusicReset ? null : bgMusic;
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(friendCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (friendCode) {
+      navigator.clipboard.writeText(friendCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const handleAddFriendClick = () => {
@@ -352,7 +365,7 @@ export function SettingsModal({
       return;
     }
     setFriendInputError('');
-    onAddFriend(friendInput.trim());
+    if (typeof onAddFriend === 'function') onAddFriend(friendInput.trim());
     setFriendInput(''); 
   };
 
@@ -360,11 +373,10 @@ export function SettingsModal({
     e.preventDefault();
     e.stopPropagation();
     if (e.key !== 'Escape' && e.key !== 'Tab') {
-      setPanicKey(e.key);
+      if (typeof setPanicKey === 'function') setPanicKey(e.key);
     }
   };
 
-  // --- PFP SELECT & READ FILE ---
   const handlePfpChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -394,9 +406,8 @@ export function SettingsModal({
     e.target.value = '';
   };
 
-  // --- HANDLES CROPPED IMAGE RESULT ---
   const handleCropSave = (croppedDataUrl) => {
-    if (handlePfpUpload) {
+    if (typeof handlePfpUpload === 'function') {
       handlePfpUpload(croppedDataUrl);
     }
     setCropperOpen(false);
@@ -404,7 +415,7 @@ export function SettingsModal({
   };
 
   const handleCustomAudioSelect = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('audio/') && file.type !== 'audio/mpeg') {
@@ -426,7 +437,7 @@ export function SettingsModal({
   };
 
   const handleBackgroundChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
@@ -441,7 +452,7 @@ export function SettingsModal({
     }
 
     setHasBackground(true);
-    if (handleBackgroundUpload) {
+    if (typeof handleBackgroundUpload === 'function') {
       handleBackgroundUpload(e);
     }
   };
@@ -459,7 +470,7 @@ export function SettingsModal({
       };
 
       try {
-        await saveSongToIDB(newSongMeta, pendingFile);
+        await safeSaveSong(newSongMeta, pendingFile);
       } catch (err) {
         alert("Storage failed. Storage quota full or private browsing active.");
         setIsSavingSong(false);
@@ -469,12 +480,12 @@ export function SettingsModal({
       const objectUrl = URL.createObjectURL(pendingFile);
       const newSongWithUrl = { ...newSongMeta, url: objectUrl };
 
-      setCustomSongs(prev => [newSongWithUrl, ...prev]);
+      setCustomSongs(prev => [newSongWithUrl, ...(Array.isArray(prev) ? prev : [])]);
 
       setIsMusicReset(false);
-      localStorage.setItem('capy-music-reset', 'false');
+      try { localStorage.setItem('capy-music-reset', 'false'); } catch (e) {}
 
-      if (handleAudioUpload) {
+      if (typeof handleAudioUpload === 'function') {
         handleAudioUpload({ presetUrl: objectUrl });
       }
 
@@ -486,19 +497,25 @@ export function SettingsModal({
   };
 
   const deleteCustomSong = async (id, e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
-    const songToDelete = customSongs.find(s => s.id === id);
+    const safeList = Array.isArray(customSongs) ? customSongs : [];
+    const songToDelete = safeList.find(s => s.id === id);
     if (songToDelete && songToDelete.url) {
       URL.revokeObjectURL(songToDelete.url);
     }
 
-    await deleteSongFromIDB(id);
-    setCustomSongs(prev => prev.filter(song => song.id !== id));
+    await safeDeleteSong(id);
+    setCustomSongs(prev => (Array.isArray(prev) ? prev.filter(song => song.id !== id) : []));
   };
 
-  const fullTracklist = [...customSongs, ...(tracklist || [])];
+  // --- SAFE ARRAY CONCATENATION ---
+  const safeCustomSongs = Array.isArray(customSongs) ? customSongs : [];
+  const safeTracklist = Array.isArray(tracklist) ? tracklist : [];
+  const fullTracklist = [...safeCustomSongs, ...safeTracklist];
 
   const modalBg = isLightMode ? "bg-white border-zinc-200 text-zinc-900" : "bg-zinc-900 border-white/10 text-white";
   const sectionBg = isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-white/5 border-white/5";
@@ -513,7 +530,6 @@ export function SettingsModal({
 
   return (
     <>
-      {/* HIDDEN PFP FILE INPUT */}
       <input 
         ref={pfpInputRef}
         type="file" 
@@ -548,7 +564,6 @@ export function SettingsModal({
           {/* SCROLLABLE CONTENT BODY */}
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar">
             
-            {/* SEARCH FILTER BAR */}
             <div className="relative">
               <Search className={`absolute left-3 top-3 w-4 h-4 ${isLightMode ? 'text-zinc-400' : 'text-zinc-500'}`} />
               <input
@@ -570,7 +585,7 @@ export function SettingsModal({
             </div>
 
             <div className="space-y-6">
-              {/* IDENTITY & SOCIAL */}
+              {/* PROFILE IDENTITY */}
               {matchesSearch(['identity', 'profile', 'name', 'avatar', 'cropper', 'crop', 'friend', 'code']) && (
                 <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} p-4 rounded-2xl border transition-all`}>
                   <div className="flex items-center justify-between">
@@ -608,7 +623,7 @@ export function SettingsModal({
                       type="text" 
                       placeholder="Custom Display Name..."
                       value={displayName} 
-                      onChange={(e) => setDisplayName(e.target.value.slice(0, 25))}
+                      onChange={(e) => typeof setDisplayName === 'function' && setDisplayName(e.target.value.slice(0, 25))}
                       className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
                     />
                     <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-black/20 border-white/5'} p-3 rounded-xl border space-y-3`}>
@@ -625,7 +640,7 @@ export function SettingsModal({
                       </div>
                       <div className={`${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-lg border max-h-20 overflow-y-auto`}>
                         <p className="text-[10px] font-mono font-black text-[var(--theme)] break-all leading-relaxed tracking-tight">
-                          {friendCode}
+                          {friendCode || 'No code generated'}
                         </p>
                       </div>
                     </div>
@@ -667,20 +682,20 @@ export function SettingsModal({
                   </div>
 
                   <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                    {friends?.length > 0 ? friends.map(friend => (
+                    {Array.isArray(friends) && friends.length > 0 ? friends.map(friend => (
                       <div key={friend.code} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-xl border`}>
                         <span title={friend.name} className={`text-[10px] font-bold truncate max-w-[120px] ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{friend.name}</span>
                         <div className="flex gap-1 items-center">
                           <button 
                             type="button"
-                            onClick={() => onViewFriend(friend)}
+                            onClick={() => typeof onViewFriend === 'function' && onViewFriend(friend)}
                             className={`p-1.5 rounded-lg transition-colors outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
                           >
                             <Eye className="w-3 h-3" />
                           </button>
                           <button 
                             type="button"
-                            onClick={() => onRemoveFriend(friend.code)}
+                            onClick={() => typeof onRemoveFriend === 'function' && onRemoveFriend(friend.code)}
                             className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border border-red-200' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30'}`}
                           >
                             <Trash2 className="w-3 h-3" /> Remove
@@ -704,7 +719,7 @@ export function SettingsModal({
                       </label>
                       <button 
                         type="button"
-                        onClick={() => setPerformanceMode(!performanceMode)}
+                        onClick={() => typeof setPerformanceMode === 'function' && setPerformanceMode(!performanceMode)}
                         className={`flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-black uppercase transition-all outline-none focus:ring-2 focus:ring-yellow-400 ${performanceMode ? 'bg-yellow-500 text-black shadow-md' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-300' : 'bg-white/10 text-zinc-200 border border-white/20'}`}
                       >
                         <Zap className="w-3 h-3" />
@@ -747,7 +762,7 @@ export function SettingsModal({
                       type="button"
                       onClick={() => {
                         setHasBackground(false);
-                        if (handleResetBackground) handleResetBackground();
+                        if (typeof handleResetBackground === 'function') handleResetBackground();
                       }}
                       className={`p-2 border rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-colors outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
                     >
@@ -757,11 +772,11 @@ export function SettingsModal({
                       type="button"
                       onClick={() => {
                         setIsMusicReset(true);
-                        localStorage.setItem('capy-music-reset', 'true');
-                        if (handleAudioUpload) {
+                        try { localStorage.setItem('capy-music-reset', 'true'); } catch (e) {}
+                        if (typeof handleAudioUpload === 'function') {
                           handleAudioUpload({ presetUrl: '' });
                         }
-                        if (isPlaying !== false && onTogglePlay) {
+                        if (isPlaying !== false && typeof onTogglePlay === 'function') {
                           onTogglePlay();
                         }
                       }}
@@ -785,7 +800,7 @@ export function SettingsModal({
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              if (onTogglePlay) onTogglePlay();
+                              if (typeof onTogglePlay === 'function') onTogglePlay();
                             }}
                             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer z-10 outline-none focus:ring-1 focus:ring-[var(--theme)] ${
                               isLightMode 
@@ -804,7 +819,7 @@ export function SettingsModal({
                         min="0" max="1" step="0.01"
                         value={volume ?? 1} 
                         disabled={performanceMode}
-                        onChange={(e) => setVolume && setVolume(parseFloat(e.target.value))}
+                        onChange={(e) => typeof setVolume === 'function' && setVolume(parseFloat(e.target.value))}
                         className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
                       />
                     </div>
@@ -823,7 +838,7 @@ export function SettingsModal({
                         type="range" 
                         min="0" max="100" 
                         value={bgOpacity} 
-                        onChange={(e) => setBgOpacity(Number(e.target.value))}
+                        onChange={(e) => typeof setBgOpacity === 'function' && setBgOpacity(Number(e.target.value))}
                         className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
                       />
                     </div>
@@ -838,7 +853,7 @@ export function SettingsModal({
                     <Music className="w-3 h-3" /> Music Library
                   </label>
                   <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-                    {fullTracklist?.map((song, index) => (
+                    {fullTracklist.map((song, index) => (
                       <div
                         key={song.id || index}
                         onClick={(e) => {
@@ -846,8 +861,10 @@ export function SettingsModal({
                           e.preventDefault();
                           e.stopPropagation();
                           setIsMusicReset(false);
-                          localStorage.setItem('capy-music-reset', 'false');
-                          handleAudioUpload({ presetUrl: song.url });
+                          try { localStorage.setItem('capy-music-reset', 'false'); } catch (err) {}
+                          if (typeof handleAudioUpload === 'function') {
+                            handleAudioUpload({ presetUrl: song.url });
+                          }
                         }}
                         className={`p-3 border rounded-xl text-left flex items-center justify-between cursor-pointer transition-all ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
                       >
@@ -856,7 +873,7 @@ export function SettingsModal({
                           <div className="flex flex-col truncate">
                             <div className="flex items-center gap-2">
                               <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>
-                                {song.title}
+                                {song.title || 'Untitled Track'}
                               </span>
                               {song.isCustom && (
                                 <span className="text-[8px] font-black bg-[var(--theme)]/20 text-[var(--theme)] px-1.5 py-0.5 rounded uppercase flex-shrink-0">
@@ -904,7 +921,7 @@ export function SettingsModal({
                       <button
                         key={cloak}
                         type="button"
-                        onClick={() => setActiveCloak(cloak)}
+                        onClick={() => typeof setActiveCloak === 'function' && setActiveCloak(cloak)}
                         className={`p-3 border rounded-xl text-[10px] font-black uppercase transition-all outline-none focus:ring-2 focus:ring-[var(--theme)] ${
                           activeCloak === cloak 
                           ? 'bg-[var(--theme)] text-black border-[var(--theme)] shadow-md' 
@@ -934,7 +951,7 @@ export function SettingsModal({
                       readOnly 
                     />
                     {panicKey && (
-                      <button type="button" onClick={() => setPanicKey('')} className={`p-3 border rounded-xl transition-colors outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-white border-red-200 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 hover:bg-red-500/30'}`}>
+                      <button type="button" onClick={() => typeof setPanicKey === 'function' && setPanicKey('')} className={`p-3 border rounded-xl transition-colors outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-white border-red-200 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 hover:bg-red-500/30'}`}>
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </button>
                     )}
@@ -963,7 +980,7 @@ export function SettingsModal({
                   
                   <button 
                     type="button"
-                    onClick={() => setIsLightMode(!isLightMode)}
+                    onClick={() => typeof setIsLightMode === 'function' && setIsLightMode(!isLightMode)}
                     className={`w-full p-3 mb-2 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all outline-none focus:ring-2 focus:ring-[var(--theme)] ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
                   >
                     {isLightMode ? <Sun className="w-3.5 h-3.5 text-yellow-500" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />} 
@@ -975,7 +992,7 @@ export function SettingsModal({
                       <button 
                         key={id} 
                         type="button"
-                        onClick={() => applyTheme(t)} 
+                        onClick={() => typeof applyTheme === 'function' && applyTheme(t)} 
                         className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 transition-all outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
                       >
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.color }} /> {t.name}
@@ -983,7 +1000,7 @@ export function SettingsModal({
                     ))}
                   </div>
 
-                  {/* Custom Color Picker */}
+                  {/* CUSTOM COLOR PICKER */}
                   <div 
                     className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}
                     onBlur={(e) => {
@@ -996,11 +1013,10 @@ export function SettingsModal({
                       <div className="relative w-6 h-6 rounded-lg overflow-hidden border border-white/20 cursor-pointer flex items-center justify-center flex-shrink-0">
                         <input 
                           type="color" 
-                          value={typeof document !== 'undefined' ? (getComputedStyle(document.documentElement).getPropertyValue('--theme').trim() || '#38b2f6') : '#38b2f6'}
+                          value={getValidHexColor()}
                           onMouseDown={() => {
-                            if (!previousColor && typeof document !== 'undefined') {
-                              const current = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim() || '#38b2f6';
-                              setPreviousColor(current);
+                            if (!previousColor) {
+                              setPreviousColor(getValidHexColor());
                             }
                           }}
                           onChange={(e) => {
@@ -1010,7 +1026,9 @@ export function SettingsModal({
                             }
                           }}
                           onBlur={(e) => {
-                            applyTheme({ name: 'Custom', color: e.target.value });
+                            if (typeof applyTheme === 'function') {
+                              applyTheme({ name: 'Custom', color: e.target.value });
+                            }
                           }}
                           className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                         />
@@ -1023,7 +1041,7 @@ export function SettingsModal({
                         <button
                           type="button"
                           onClick={() => {
-                            applyTheme({ name: 'Custom', color: previousColor });
+                            if (typeof applyTheme === 'function') applyTheme({ name: 'Custom', color: previousColor });
                             setPreviousColor(null);
                           }}
                           className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors outline-none focus:ring-1 focus:ring-zinc-400 ${
@@ -1087,7 +1105,7 @@ export function SettingsModal({
           </div>
         </div>
 
-        {/* --- SUB-MODAL FOR EDITING SONG NAME & ARTIST --- */}
+        {/* UPLOAD SUB-MODAL */}
         {uploadModalOpen && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
             <div className={`${modalBg} border p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4`}>
@@ -1145,7 +1163,6 @@ export function SettingsModal({
         )}
       </div>
 
-      {/* --- AVATAR CROPPER MODAL SUB-COMPONENT --- */}
       {cropperOpen && imageToCrop && (
         <AvatarCropperModal
           show={cropperOpen}
