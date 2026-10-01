@@ -13,12 +13,19 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const imgRef = useRef(null);
+
+  // Reset load state when a new image source is passed
+  useEffect(() => {
+    setIsImageLoaded(false);
+  }, [imageSrc]);
 
   if (!show || !imageSrc) return null;
 
   // --- MOUSE DRAG HANDLERS ---
   const handleMouseDown = (e) => {
+    if (!isImageLoaded) return;
     setIsDragging(true);
     setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
   };
@@ -35,10 +42,9 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 
   // --- TOUCH DRAG HANDLERS (MOBILE SUPPORT) ---
   const handleTouchStart = (e) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      setDragStart({ x: e.touches[0].clientX - offset.x, y: e.touches[0].clientY - offset.y });
-    }
+    if (!isImageLoaded || e.touches.length !== 1) return;
+    setIsDragging(true);
+    setDragStart({ x: e.touches[0].clientX - offset.x, y: e.touches[0].clientY - offset.y });
   };
 
   const handleTouchMove = (e) => {
@@ -53,23 +59,24 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 
   // --- CANVAS CROP & SAVE ---
   const handleSaveCrop = () => {
-    try {
-      const img = imgRef.current;
-      if (!img || !img.naturalWidth || !img.naturalHeight) {
-        alert("Image is still loading or invalid. Please try again.");
-        return;
-      }
+    const img = imgRef.current;
+    
+    if (!img || !isImageLoaded || !img.naturalWidth || !img.naturalHeight) {
+      alert("Image is still loading. Please wait a moment and try again.");
+      return;
+    }
 
+    try {
       const canvas = document.createElement('canvas');
-      const outputSize = 300; // Final 300x300 high-res avatar
-      const previewSize = 208; // 208px preview circle size (w-52 h-52)
+      const outputSize = 300; // Output dimensions (300x300)
+      const previewSize = 208; // Viewport circle size in px (w-52 = 208px)
 
       canvas.width = outputSize;
       canvas.height = outputSize;
       const ctx = canvas.getContext('2d');
 
       if (!ctx) {
-        alert("Canvas context could not be initialized.");
+        alert("Could not initialize 2D canvas context.");
         return;
       }
 
@@ -79,11 +86,11 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
       ctx.closePath();
       ctx.clip();
 
-      // Background fill for transparent PNGs
+      // Black background fill
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, outputSize, outputSize);
 
-      // Math fix: Combine DOM scaling ratio with output scale ratio
+      // Scale calculations
       const scaleRatio = outputSize / previewSize; 
       const domImageScale = previewSize / img.naturalHeight; 
       const finalScale = domImageScale * zoom * scaleRatio;
@@ -99,11 +106,27 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
       ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
       ctx.restore();
 
-      const croppedUrl = canvas.toDataURL('image/png');
+      // Try PNG encoding first; fall back to JPEG if data URL creation fails
+      let croppedUrl = '';
+      try {
+        croppedUrl = canvas.toDataURL('image/png');
+      } catch (e) {
+        console.warn("PNG encoding failed, falling back to JPEG:", e);
+        croppedUrl = canvas.toDataURL('image/jpeg', 0.85);
+      }
+
+      if (!croppedUrl || croppedUrl === 'data:,') {
+        throw new Error('Canvas exported an empty image string.');
+      }
+
       onSave(croppedUrl);
     } catch (err) {
-      console.error("Failed to crop image:", err);
-      alert("Failed to save cropped image. Please select another picture.");
+      console.error("Avatar Crop Error Details:", err);
+      if (err.name === 'SecurityError') {
+        alert("Cannot crop this image due to cross-origin security restrictions. Please upload a local image file instead.");
+      } else {
+        alert(`Failed to save image: ${err.message || 'Unknown error'}`);
+      }
     }
   };
 
@@ -130,17 +153,30 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+          {!isImageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/80 z-10">
+              <Loader2 className="w-6 h-6 animate-spin text-[var(--theme)]" />
+            </div>
+          )}
+
           <img 
             ref={imgRef}
             src={imageSrc} 
             alt="Crop preview" 
+            crossOrigin="anonymous"
             draggable={false}
+            onLoad={() => setIsImageLoaded(true)}
+            onError={() => {
+              alert("Failed to load image preview.");
+              onClose();
+            }}
             style={{
               transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
               maxWidth: 'none',
               maxHeight: '100%',
               objectFit: 'contain',
-              transition: isDragging ? 'none' : 'transform 0.05s ease-out'
+              transition: isDragging ? 'none' : 'transform 0.05s ease-out',
+              opacity: isImageLoaded ? 1 : 0
             }}
           />
         </div>
@@ -157,8 +193,9 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
             max="3" 
             step="0.05" 
             value={zoom} 
+            disabled={!isImageLoaded}
             onChange={(e) => setZoom(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[var(--theme)]"
+            className="w-full h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[var(--theme)] disabled:opacity-50"
           />
         </div>
 
@@ -178,8 +215,10 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
           <button 
             type="button" 
             onClick={handleSaveCrop} 
-            className="px-5 py-2 rounded-xl bg-[var(--theme)] text-black text-xs font-bold uppercase hover:opacity-90 transition-opacity shadow-md"
+            disabled={!isImageLoaded}
+            className="px-5 py-2 rounded-xl bg-[var(--theme)] text-black text-xs font-bold uppercase hover:opacity-90 transition-opacity shadow-md disabled:opacity-50 flex items-center gap-1.5"
           >
+            {!isImageLoaded && <Loader2 className="w-3 h-3 animate-spin" />}
             Save Avatar
           </button>
         </div>
@@ -259,7 +298,7 @@ export function SettingsModal({
     if (!modalElement) return;
 
     const focusableElements = modalElement.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not("-1")'
     );
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
