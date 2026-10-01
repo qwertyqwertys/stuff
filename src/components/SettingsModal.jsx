@@ -356,34 +356,40 @@ function SettingsModalContent({
     const modalElement = modalRef.current;
     if (!modalElement) return;
 
-    const focusableElements = modalElement.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not("-1")'
-    );
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
+    try {
+      const focusableElements = modalElement.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusableElements || focusableElements.length === 0) return;
 
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && typeof onClose === 'function') {
-        onClose();
-      }
-      if (e.key === 'Tab') {
-        if (e.shiftKey) {
-          if (document.activeElement === firstElement) {
-            lastElement?.focus();
-            e.preventDefault();
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            firstElement?.focus();
-            e.preventDefault();
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape' && typeof onClose === 'function') {
+          onClose();
+        }
+        if (e.key === 'Tab') {
+          if (e.shiftKey) {
+            if (document.activeElement === firstElement) {
+              lastElement?.focus();
+              e.preventDefault();
+            }
+          } else {
+            if (document.activeElement === lastElement) {
+              firstElement?.focus();
+              e.preventDefault();
+            }
           }
         }
-      }
-    };
+      };
 
-    firstElement?.focus();
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+      firstElement?.focus();
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    } catch (err) {
+      console.warn("Focus trap error in SettingsModal:", err);
+    }
   }, [show, onClose, cropperOpen]);
 
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -551,13 +557,13 @@ function SettingsModalContent({
     }
 
     const safeList = Array.isArray(customSongs) ? customSongs : [];
-    const songToDelete = safeList.find(s => s.id === id);
+    const songToDelete = safeList.find(s => s && s.id === id);
     if (songToDelete && songToDelete.url) {
       URL.revokeObjectURL(songToDelete.url);
     }
 
     await safeDeleteSong(id);
-    setCustomSongs(prev => (Array.isArray(prev) ? prev.filter(song => song.id !== id) : []));
+    setCustomSongs(prev => (Array.isArray(prev) ? prev.filter(song => song && song.id !== id) : []));
   };
 
   // --- SAFE ARRAY CONCATENATION ---
@@ -571,9 +577,9 @@ function SettingsModalContent({
   const headerText = isLightMode ? "text-zinc-900" : "text-[var(--theme)]";
 
   const matchesSearch = (keywords) => {
-    if (!deferredSearchQuery.trim()) return true;
+    if (!deferredSearchQuery || !deferredSearchQuery.trim()) return true;
     const q = deferredSearchQuery.toLowerCase();
-    return keywords.some(kw => kw.toLowerCase().includes(q));
+    return Array.isArray(keywords) && keywords.some(kw => typeof kw === 'string' && kw.toLowerCase().includes(q));
   };
 
   return (
@@ -730,27 +736,30 @@ function SettingsModalContent({
                   </div>
 
                   <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
-                    {Array.isArray(friends) && friends.length > 0 ? friends.map(friend => (
-                      <div key={friend.code} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-xl border`}>
-                        <span title={friend.name} className={`text-[10px] font-bold truncate max-w-[120px] ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{friend.name}</span>
-                        <div className="flex gap-1 items-center">
-                          <button 
-                            type="button"
-                            onClick={() => typeof onViewFriend === 'function' && onViewFriend(friend)}
-                            className={`p-1.5 rounded-lg transition-colors outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
-                          >
-                            <Eye className="w-3 h-3" />
-                          </button>
-                          <button 
-                            type="button"
-                            onClick={() => typeof onRemoveFriend === 'function' && onRemoveFriend(friend.code)}
-                            className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border border-red-200' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30'}`}
-                          >
-                            <Trash2 className="w-3 h-3" /> Remove
-                          </button>
+                    {Array.isArray(friends) && friends.length > 0 ? friends.map((friend, idx) => {
+                      if (!friend) return null;
+                      return (
+                        <div key={friend.code || idx} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-xl border`}>
+                          <span title={friend.name} className={`text-[10px] font-bold truncate max-w-[120px] ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{friend.name}</span>
+                          <div className="flex gap-1 items-center">
+                            <button 
+                              type="button"
+                              onClick={() => typeof onViewFriend === 'function' && onViewFriend(friend)}
+                              className={`p-1.5 rounded-lg transition-colors outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
+                            >
+                              <Eye className="w-3 h-3" />
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => typeof onRemoveFriend === 'function' && onRemoveFriend(friend.code)}
+                              className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border border-red-200' : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30'}`}
+                            >
+                              <Trash2 className="w-3 h-3" /> Remove
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )) : (
+                      );
+                    }) : (
                       <p className={`text-[9px] text-center py-2 italic font-medium uppercase tracking-tighter ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>No friends added yet</p>
                     )}
                   </div>
@@ -901,59 +910,62 @@ function SettingsModalContent({
                     <Music className="w-3 h-3" /> Music Library
                   </label>
                   <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-                    {fullTracklist.map((song, index) => (
-                      <div
-                        key={song.id || index}
-                        onClick={(e) => {
-                          if (performanceMode) return;
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setIsMusicReset(false);
-                          try { localStorage.setItem('capy-music-reset', 'false'); } catch (err) {}
-                          if (typeof handleAudioUpload === 'function') {
-                            handleAudioUpload({ presetUrl: song.url });
-                          }
-                        }}
-                        className={`p-3 border rounded-xl text-left flex items-center justify-between cursor-pointer transition-all ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
-                      >
-                        <div className="flex items-center gap-3 truncate mr-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[var(--theme)] flex-shrink-0" />
-                          <div className="flex flex-col truncate">
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>
-                                {song.title || 'Untitled Track'}
-                              </span>
-                              {song.isCustom && (
-                                <span className="text-[8px] font-black bg-[var(--theme)]/20 text-[var(--theme)] px-1.5 py-0.5 rounded uppercase flex-shrink-0">
-                                  Uploaded
+                    {fullTracklist.map((song, index) => {
+                      if (!song) return null;
+                      return (
+                        <div
+                          key={song.id || index}
+                          onClick={(e) => {
+                            if (performanceMode) return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsMusicReset(false);
+                            try { localStorage.setItem('capy-music-reset', 'false'); } catch (err) {}
+                            if (typeof handleAudioUpload === 'function') {
+                              handleAudioUpload({ presetUrl: song.url });
+                            }
+                          }}
+                          className={`p-3 border rounded-xl text-left flex items-center justify-between cursor-pointer transition-all ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
+                        >
+                          <div className="flex items-center gap-3 truncate mr-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--theme)] flex-shrink-0" />
+                            <div className="flex flex-col truncate">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>
+                                  {song.title || 'Untitled Track'}
                                 </span>
-                              )}
+                                {song.isCustom && (
+                                  <span className="text-[8px] font-black bg-[var(--theme)]/20 text-[var(--theme)] px-1.5 py-0.5 rounded uppercase flex-shrink-0">
+                                    Uploaded
+                                  </span>
+                                )}
+                              </div>
+                              <span className={`text-[9px] font-medium uppercase tracking-tight truncate ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>
+                                {song.artist || "Unknown Artist"}
+                              </span>
                             </div>
-                            <span className={`text-[9px] font-medium uppercase tracking-tight truncate ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>
-                              {song.artist || "Unknown Artist"}
-                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {song.isClean && !song.isCustom && (
+                              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${isLightMode ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-700 text-zinc-200'}`}>
+                                Clean
+                              </span>
+                            )}
+                            {song.isCustom && (
+                              <button 
+                                type="button"
+                                onClick={(e) => deleteCustomSong(song.id, e)}
+                                className="px-2 py-1 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors outline-none focus:ring-1 focus:ring-red-400"
+                                title="Delete custom song track"
+                              >
+                                <Trash2 className="w-3 h-3" /> Delete
+                              </button>
+                            )}
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {song.isClean && !song.isCustom && (
-                            <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${isLightMode ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-700 text-zinc-200'}`}>
-                              Clean
-                            </span>
-                          )}
-                          {song.isCustom && (
-                            <button 
-                              type="button"
-                              onClick={(e) => deleteCustomSong(song.id, e)}
-                              className="px-2 py-1 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-colors outline-none focus:ring-1 focus:ring-red-400"
-                              title="Delete custom song track"
-                            >
-                              <Trash2 className="w-3 h-3" /> Delete
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </section>
               )}
@@ -1036,7 +1048,7 @@ function SettingsModalContent({
                   </button>
 
                   <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(themes || {}).map(([id, t]) => (
+                    {Object.entries(typeof themes === 'object' && themes !== null ? themes : {}).map(([id, t]) => (
                       <button 
                         key={id} 
                         type="button"
