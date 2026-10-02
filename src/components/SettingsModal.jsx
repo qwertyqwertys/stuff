@@ -390,11 +390,11 @@ function SettingsModalContent({
     const modalElement = modalRef.current;
     if (!modalElement) return;
 
-    const focusableElements = modalElement.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not("-1")'
-    );
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
+const focusableElements = modalElement.querySelectorAll(
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+);
+const firstElement = focusableElements[0];
+const lastElement = focusableElements[focusableElements.length - 1];
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && typeof onClose === 'function') {
