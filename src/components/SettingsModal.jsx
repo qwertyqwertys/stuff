@@ -9,9 +9,9 @@ import {
 // Optional import fallback to prevent crashes if DB file isn't present
 import * as db from '../utils/db';
 
-const safeSaveSong = db.saveSongToIDB || (async () => {});
-const safeLoadSongs = db.loadSongsFromIDB || (async () => []);
-const safeDeleteSong = db.deleteSongFromIDB || (async () => {});
+const safeSaveSong = db?.saveSongToIDB || (async () => {});
+const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
+const safeDeleteSong = db?.deleteSongFromIDB || (async () => {});
 
 // --- ERROR BOUNDARY WRAPPER TO PREVENT APP UNMOUNTS ---
 class SettingsErrorBoundary extends Component {
@@ -62,7 +62,11 @@ const getValidHexColor = () => {
   if (typeof document === 'undefined') return '#38b2f6';
   try {
     const val = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim();
-    return /^#[0-9A-F]{6}$/i.test(val) ? val : '#38b2f6';
+    if (/^#[0-9A-F]{6}$/i.test(val)) return val;
+    if (/^#[0-9A-F]{3}$/i.test(val)) {
+      return '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
+    }
+    return '#38b2f6';
   } catch (e) {
     return '#38b2f6';
   }
@@ -78,8 +82,12 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
   const imgRef = useRef(null);
 
   useEffect(() => {
-    setIsImageLoaded(false);
-  }, [imageSrc]);
+    if (show) {
+      setZoom(1);
+      setOffset({ x: 0, y: 0 });
+      setIsImageLoaded(false);
+    }
+  }, [show, imageSrc]);
 
   if (!show || !imageSrc) return null;
 
@@ -125,7 +133,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
     try {
       const canvas = document.createElement('canvas');
       const outputSize = 300;
-      const previewSize = 208;
+      const previewSize = 208; // 52 * 4 = 208px
 
       canvas.width = outputSize;
       canvas.height = outputSize;
@@ -144,18 +152,21 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, outputSize, outputSize);
 
-      const scaleRatio = outputSize / previewSize; 
-      const domImageScale = previewSize / img.naturalHeight; 
-      const finalScale = domImageScale * zoom * scaleRatio;
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+      const aspect = nw / nh;
+
+      const baseRenderHeight = previewSize;
+      const baseRenderWidth = previewSize * aspect;
+      const scaleToOutput = outputSize / previewSize;
 
       ctx.save();
       ctx.translate(
-        outputSize / 2 + offset.x * scaleRatio,
-        outputSize / 2 + offset.y * scaleRatio
+        outputSize / 2 + offset.x * scaleToOutput,
+        outputSize / 2 + offset.y * scaleToOutput
       );
-      ctx.scale(finalScale, finalScale);
-      
-      ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+      ctx.scale(zoom * scaleToOutput, zoom * scaleToOutput);
+      ctx.drawImage(img, -baseRenderWidth / 2, -baseRenderHeight / 2, baseRenderWidth, baseRenderHeight);
       ctx.restore();
 
       let croppedUrl = '';
@@ -212,7 +223,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
             ref={imgRef}
             src={imageSrc} 
             alt="Crop preview" 
-            crossOrigin="anonymous"
+            crossOrigin={imageSrc?.startsWith('data:') || imageSrc?.startsWith('blob:') ? undefined : "anonymous"}
             draggable={false}
             onLoad={() => setIsImageLoaded(true)}
             onError={() => {
@@ -275,7 +286,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 }
 
 function SettingsModalContent({
-  show, onClose, friendCode, displayName = '', setDisplayName,
+  show, onClose, friendCode = '', displayName = '', setDisplayName,
   friends = [], onAddFriend, onViewFriend, onRemoveFriend,
   handlePfpUpload, handleResetPfp,
   performanceMode = false, setPerformanceMode,
@@ -286,20 +297,21 @@ function SettingsModalContent({
   isPlaying = false, onTogglePlay,
   panicKey = '', setPanicKey,
   themes = {}, applyTheme,
-  handleClearSettings, confirmClearSettings,
-  handleReset, confirmReset,
+  handleClearSettings, confirmClearSettings = false,
+  handleReset, confirmReset = false,
   onViewOwnProfile,
   tracklist = [],
   isLightMode = false, setIsLightMode,
   activeCloak = '', setActiveCloak
 }) {
+  // ALL REACT HOOKS DECLARED TOP-LEVEL (BEFORE ANY CONDITIONAL RETURNS)
   const [friendInput, setFriendInput] = useState('');
   const [friendInputError, setFriendInputError] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasBackground, setHasBackground] = useState(Boolean(bgEnabled));
   const [searchQuery, setSearchQuery] = useState('');
-  
   const deferredSearchQuery = useDeferredValue(searchQuery);
+
   const [isMusicReset, setIsMusicReset] = useState(() => {
     try {
       return localStorage.getItem('capy-music-reset') === 'true';
@@ -314,13 +326,13 @@ function SettingsModalContent({
   const [cropperOpen, setCropperOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState(null);
 
-  useEffect(() => {
-    if (show && isMusicReset) {
-      if (handleAudioUpload) handleAudioUpload({ presetUrl: '' });
-      if (isPlaying !== false && onTogglePlay) onTogglePlay();
-    }
-  }, [show]);
-  
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [pendingFile, setPendingFile] = useState(null);
+  const [songTitle, setSongTitle] = useState('');
+  const [artistName, setArtistName] = useState('');
+  const [isSavingSong, setIsSavingSong] = useState(false);
+
+  const [previousColor, setPreviousColor] = useState(null);
   const [customSongs, setCustomSongs] = useState([]);
   const customSongsRef = useRef(customSongs);
 
@@ -329,30 +341,52 @@ function SettingsModalContent({
   }, [customSongs]);
 
   useEffect(() => {
+    setHasBackground(Boolean(bgEnabled));
+  }, [bgEnabled]);
+
+  useEffect(() => {
+    if (show && isMusicReset) {
+      if (typeof handleAudioUpload === 'function') handleAudioUpload({ presetUrl: '' });
+      if (isPlaying !== false && typeof onTogglePlay === 'function') onTogglePlay();
+    }
+  }, [show, isMusicReset]);
+
+  useEffect(() => {
+    let isMounted = true;
     safeLoadSongs()
       .then(songs => {
+        if (!isMounted) return;
         if (Array.isArray(songs)) {
-          setCustomSongs(songs);
+          const processedSongs = songs.map(song => {
+            if (!song.url && (song.file || song.blob)) {
+              return { ...song, url: URL.createObjectURL(song.file || song.blob) };
+            }
+            return song;
+          });
+          setCustomSongs(processedSongs);
         } else {
           setCustomSongs([]);
         }
       })
       .catch(err => {
         console.warn("Failed to load IndexedDB songs:", err);
-        setCustomSongs([]);
+        if (isMounted) setCustomSongs([]);
       });
     
     return () => {
+      isMounted = false;
       if (Array.isArray(customSongsRef.current)) {
         customSongsRef.current.forEach(song => {
-          if (song && song.url) URL.revokeObjectURL(song.url);
+          if (song && song.url && song.url.startsWith('blob:')) {
+            URL.revokeObjectURL(song.url);
+          }
         });
       }
     };
   }, []);
 
   useEffect(() => {
-    if (!show || cropperOpen) return;
+    if (!show || cropperOpen || uploadModalOpen) return;
     const modalElement = modalRef.current;
     if (!modalElement) return;
 
@@ -366,7 +400,7 @@ function SettingsModalContent({
       if (e.key === 'Escape' && typeof onClose === 'function') {
         onClose();
       }
-      if (e.key === 'Tab') {
+      if (e.key === 'Tab' && focusableElements.length > 0) {
         if (e.shiftKey) {
           if (document.activeElement === firstElement) {
             lastElement?.focus();
@@ -384,16 +418,9 @@ function SettingsModalContent({
     firstElement?.focus();
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [show, onClose, cropperOpen]);
+  }, [show, onClose, cropperOpen, uploadModalOpen]);
 
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [pendingFile, setPendingFile] = useState(null);
-  const [songTitle, setSongTitle] = useState('');
-  const [artistName, setArtistName] = useState('');
-  const [isSavingSong, setIsSavingSong] = useState(false);
-
-  const [previousColor, setPreviousColor] = useState(null);
-
+  // CONDITIONAL EARLY RETURN SAFE AFTER ALL HOOKS
   if (!show) return null;
 
   const effectiveBgMusic = isMusicReset ? null : bgMusic;
@@ -526,7 +553,7 @@ function SettingsModalContent({
       }
       
       const objectUrl = URL.createObjectURL(pendingFile);
-      const newSongWithUrl = { ...newSongMeta, url: objectUrl };
+      const newSongWithUrl = { ...newSongMeta, url: objectUrl, file: pendingFile };
 
       setCustomSongs(prev => [newSongWithUrl, ...(Array.isArray(prev) ? prev : [])]);
 
@@ -552,7 +579,7 @@ function SettingsModalContent({
 
     const safeList = Array.isArray(customSongs) ? customSongs : [];
     const songToDelete = safeList.find(s => s.id === id);
-    if (songToDelete && songToDelete.url) {
+    if (songToDelete && songToDelete.url && songToDelete.url.startsWith('blob:')) {
       URL.revokeObjectURL(songToDelete.url);
     }
 
@@ -560,7 +587,7 @@ function SettingsModalContent({
     setCustomSongs(prev => (Array.isArray(prev) ? prev.filter(song => song.id !== id) : []));
   };
 
-  // --- SAFE ARRAY CONCATENATION ---
+  // Safe tracklist calculation
   const safeCustomSongs = Array.isArray(customSongs) ? customSongs : [];
   const safeTracklist = Array.isArray(tracklist) ? tracklist : [];
   const fullTracklist = [...safeCustomSongs, ...safeTracklist];
@@ -572,8 +599,8 @@ function SettingsModalContent({
 
   const matchesSearch = (keywords) => {
     if (!deferredSearchQuery.trim()) return true;
-    const q = deferredSearchQuery.toLowerCase();
-    return keywords.some(kw => kw.toLowerCase().includes(q));
+    const q = deferredSearchQuery.toLowerCase().trim();
+    return keywords.some(kw => kw.toLowerCase().includes(q) || q.includes(kw.toLowerCase()));
   };
 
   return (
@@ -823,6 +850,9 @@ function SettingsModalContent({
                         try { localStorage.setItem('capy-music-reset', 'true'); } catch (e) {}
                         if (typeof handleAudioUpload === 'function') {
                           handleAudioUpload({ presetUrl: '' });
+                        }
+                        if (typeof handleResetMusic === 'function') {
+                          handleResetMusic();
                         }
                         if (isPlaying !== false && typeof onTogglePlay === 'function') {
                           onTogglePlay();
