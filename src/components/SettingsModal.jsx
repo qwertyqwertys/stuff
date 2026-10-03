@@ -304,7 +304,7 @@ function SettingsModalContent({
   isLightMode = false, setIsLightMode,
   activeCloak = '', setActiveCloak
 }) {
-  // ALL REACT HOOKS DECLARED TOP-LEVEL (BEFORE ANY CONDITIONAL RETURNS)
+  // ALL REACT HOOKS DECLARED TOP-LEVEL
   const [friendInput, setFriendInput] = useState('');
   const [friendInputError, setFriendInputError] = useState('');
   const [copied, setCopied] = useState(false);
@@ -390,11 +390,11 @@ function SettingsModalContent({
     const modalElement = modalRef.current;
     if (!modalElement) return;
 
-const focusableElements = modalElement.querySelectorAll(
-  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-);
-const firstElement = focusableElements[0];
-const lastElement = focusableElements[focusableElements.length - 1];
+    const focusableElements = modalElement.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && typeof onClose === 'function') {
@@ -481,9 +481,51 @@ const lastElement = focusableElements[focusableElements.length - 1];
     e.target.value = '';
   };
 
+  // --- FIXED: SAFELY DISPATCH CROPPED AVATAR TO PARENT HANDLER ---
   const handleCropSave = (croppedDataUrl) => {
     if (typeof handlePfpUpload === 'function') {
-      handlePfpUpload(croppedDataUrl);
+      let file = null;
+      try {
+        const arr = croppedDataUrl.split(',');
+        if (arr.length >= 2) {
+          const mimeMatch = arr[0].match(/:(.*?);/);
+          const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+          const bstr = atob(arr[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+          }
+          file = new File([u8arr], 'avatar.png', { type: mime });
+        }
+      } catch (err) {
+        console.warn("Failed to convert croppedDataUrl to File:", err);
+      }
+
+      // Create a synthetic event object with .target.files so event-style handlers won't crash
+      const syntheticTarget = {
+        files: file ? [file] : [croppedDataUrl],
+        value: croppedDataUrl
+      };
+
+      const syntheticEvent = {
+        target: syntheticTarget,
+        files: syntheticTarget.files,
+        file: file || croppedDataUrl,
+        dataUrl: croppedDataUrl,
+        toString: () => croppedDataUrl,
+        valueOf: () => croppedDataUrl
+      };
+
+      try {
+        handlePfpUpload(syntheticEvent);
+      } catch (err1) {
+        try {
+          handlePfpUpload(croppedDataUrl);
+        } catch (err2) {
+          if (file) handlePfpUpload(file);
+        }
+      }
     }
     setCropperOpen(false);
     setImageToCrop(null);
