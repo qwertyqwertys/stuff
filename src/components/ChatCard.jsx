@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, RefreshCcw, Pencil, Check, X } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
@@ -106,6 +106,40 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
+  // Mass-syncs current local stats to ALL past and future messages in Supabase
+  const syncUserStatsToDatabase = useCallback(async () => {
+    if (!myId) return;
+
+    const currentAvatar = ownPfp || getStoredAvatar();
+    const savedFavs = JSON.parse(
+      localStorage.getItem('capy-favs') || 
+      localStorage.getItem('favorites') || 
+      localStorage.getItem('capy_favorites') || 
+      '[]'
+    );
+    const currentFavs = (userFavs && userFavs.length > 0) ? userFavs : savedFavs;
+
+    const savedTimes = JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
+    const currentTimes = (userTimes && Object.keys(userTimes).length > 0) ? userTimes : savedTimes;
+
+    const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
+    const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+    const currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
+
+    // Update ALL messages matching this user_id retroactively
+    if (currentFavs.length > 0 || currentAchievements.length > 0 || Object.keys(currentTimes).length > 0) {
+      await supabase
+        .from('messages')
+        .update({ 
+          favs: currentFavs, 
+          achievements: currentAchievements, 
+          times: currentTimes,
+          avatar_url: currentAvatar || null 
+        })
+        .eq('user_id', myId);
+    }
+  }, [myId, ownPfp, userFavs, userTimes, myAchievements]);
+
   const fetchMessages = async () => {
     const { data } = await supabase
       .from('messages')
@@ -117,6 +151,7 @@ export function ChatCard({
 
   useEffect(() => {
     fetchMessages();
+    syncUserStatsToDatabase();
 
     const channel = supabase
       .channel('realtime-messages')
@@ -125,14 +160,18 @@ export function ChatCard({
       )
       .subscribe();
 
-    const handlePfpUpdated = () => fetchMessages();
+    const handlePfpUpdated = () => {
+      fetchMessages();
+      syncUserStatsToDatabase();
+    };
+
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
 
     return () => {
       supabase.removeChannel(channel);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
-  }, []);
+  }, [syncUserStatsToDatabase]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -143,7 +182,7 @@ export function ChatCard({
     const newName = e.target.username?.value.trim() || username;
     if (!newName) return;
 
-    const currentAvatar = getStoredAvatar();
+    const currentAvatar = ownPfp || getStoredAvatar();
 
     await supabase
       .from('messages')
@@ -155,12 +194,13 @@ export function ChatCard({
     setUsername(newName);
     setIsJoined(true);
 
+    await syncUserStatsToDatabase();
     await fetchMessages();
   };
 
   const handleSend = async () => {
     if (!text.trim()) return;
-    const currentAvatar = getStoredAvatar();
+    const currentAvatar = ownPfp || getStoredAvatar();
 
     const currentFavs = userFavs.length > 0 ? userFavs : JSON.parse(localStorage.getItem('capy-favs') || '[]');
     const currentTimes = Object.keys(userTimes).length > 0 ? userTimes : JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
@@ -178,7 +218,9 @@ export function ChatCard({
         achievements: currentAchievements,
         times: currentTimes
       }]);
+    
     setText('');
+    await syncUserStatsToDatabase();
   };
 
   const handleSaveEdit = async (id) => {
@@ -214,7 +256,7 @@ export function ChatCard({
 
       let livePfp = ownPfp || getStoredAvatar();
 
-      // Cross-Device Fallback: Fetch latest profile stats from Supabase if localStorage on this device is empty
+      // If viewing profile on a device where localStorage is blank, pull latest populated message from Supabase
       if (liveFavs.length === 0 && liveAchievements.length === 0) {
         const { data: remoteMsg } = await supabase
           .from('messages')
