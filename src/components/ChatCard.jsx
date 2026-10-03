@@ -4,7 +4,6 @@ import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 
-// Helper function to format timestamps as M/D/YY, h:mm AM/PM
 function formatTimestamp(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -18,7 +17,6 @@ function formatTimestamp(isoString) {
   });
 }
 
-// Default circular blue avatar matching the profile page
 function DefaultAvatar() {
   return (
     <div className="w-8 h-8 rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -31,7 +29,6 @@ function DefaultAvatar() {
   );
 }
 
-// Avatar image with fallback handling and automatic state reset on src changes
 function UserAvatar({ src, alt }) {
   const [hasError, setHasError] = useState(false);
 
@@ -69,6 +66,24 @@ const getStoredAvatar = () => {
          '';
 };
 
+function generateFriendCode(name, pfp, favs, times, achievements) {
+  try {
+    const payload = {
+      n: name || 'User',
+      p: pfp || '',
+      f: Array.isArray(favs) ? favs : [],
+      t: times || {},
+      a: Array.isArray(achievements) ? achievements : []
+    };
+    const jsonStr = JSON.stringify(payload);
+    return btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) =>
+      String.fromCharCode('0x' + p1)
+    ));
+  } catch (e) {
+    return '';
+  }
+}
+
 export function ChatCard({ 
   isLightMode, 
   gamesData = [], 
@@ -84,11 +99,7 @@ export function ChatCard({
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [showPrivacy, setShowPrivacy] = useState(false);
-  
-  // Profile Modal State
   const [selectedUserProfile, setSelectedUserProfile] = useState(null);
-
-  // Edit State
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
 
@@ -114,9 +125,7 @@ export function ChatCard({
       )
       .subscribe();
 
-    const handlePfpUpdated = () => {
-      fetchMessages();
-    };
+    const handlePfpUpdated = () => fetchMessages();
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
 
     return () => {
@@ -169,10 +178,7 @@ export function ChatCard({
 
     await supabase
       .from('messages')
-      .update({
-        content: editText.trim(),
-        is_edited: true
-      })
+      .update({ content: editText.trim(), is_edited: true })
       .eq('id', id);
 
     setEditingId(null);
@@ -183,21 +189,23 @@ export function ChatCard({
   const handleOpenProfile = (m) => {
     const isSelf = m.user_id === myId;
     if (isSelf) {
-      // Pull live local storage values as fail-safe backups
-      const liveFavs = userFavs.length > 0 
-        ? userFavs 
-        : JSON.parse(localStorage.getItem('capy-favs') || '[]');
-      
-      const liveTimes = Object.keys(userTimes).length > 0 
-        ? userTimes 
-        : JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
-        
+      const savedFavs = JSON.parse(
+        localStorage.getItem('capy-favs') || 
+        localStorage.getItem('favorites') || 
+        localStorage.getItem('capy_favorites') || 
+        '[]'
+      );
+      const liveFavs = (userFavs && userFavs.length > 0) ? userFavs : savedFavs;
+
+      const savedTimes = JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
+      const liveTimes = (userTimes && Object.keys(userTimes).length > 0) ? userTimes : savedTimes;
+
       const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
-      const liveAchievements = myAchievements.length > 0 
-        ? myAchievements 
-        : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+      const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+      const liveAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
       const livePfp = ownPfp || getStoredAvatar();
+      const generatedCode = generateFriendCode(username, livePfp, liveFavs, liveTimes, liveAchievements);
 
       setSelectedUserProfile({
         isOwnProfile: true,
@@ -211,7 +219,7 @@ export function ChatCard({
           achievements: liveAchievements,
           a: liveAchievements,
           pfp: livePfp,
-          code: localStorage.getItem('capy-unique-id')
+          code: generatedCode
         }
       });
     } else {
@@ -281,7 +289,6 @@ export function ChatCard({
 
                 return (
                   <div key={m.id || i} className="group/msg flex items-start gap-2.5 text-left relative">
-                    {/* Clickable Profile Avatar */}
                     <button 
                       onClick={() => handleOpenProfile(m)}
                       className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
@@ -290,11 +297,9 @@ export function ChatCard({
                       <UserAvatar src={m.avatar_url} alt={m.username} />
                     </button>
 
-                    {/* Message Details */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {/* Clickable Username */}
                           <button
                             onClick={() => handleOpenProfile(m)}
                             className="text-[var(--theme)] font-bold text-xs hover:underline cursor-pointer focus:outline-none"
@@ -306,7 +311,6 @@ export function ChatCard({
                           </span>
                         </div>
 
-                        {/* Edit trigger button */}
                         {isOwner && !isEditingThis && (
                           <button
                             onClick={() => {
@@ -321,7 +325,6 @@ export function ChatCard({
                         )}
                       </div>
 
-                      {/* Message Content or Edit Input */}
                       {isEditingThis ? (
                         <div className="mt-1 flex items-center gap-1.5">
                           <input
@@ -406,7 +409,6 @@ export function ChatCard({
 
       <ChatPrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
 
-      {/* Friend/User Profile View Modal */}
       {selectedUserProfile && (
         <FriendViewModal
           friend={selectedUserProfile.friend}
