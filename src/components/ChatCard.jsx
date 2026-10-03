@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, RefreshCcw, Pencil, Check, X } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
+import { FriendViewModal } from './FriendViewModal';
 
 // Helper function to format timestamps as M/D/YY, h:mm AM/PM
 function formatTimestamp(isoString) {
@@ -34,7 +35,6 @@ function DefaultAvatar() {
 function UserAvatar({ src, alt }) {
   const [hasError, setHasError] = useState(false);
 
-  // Automatically reset the error state whenever the avatar URL changes or is deleted
   useEffect(() => {
     setHasError(false);
   }, [src]);
@@ -62,7 +62,6 @@ const getPersistentId = () => {
   return id;
 };
 
-// Gets stored avatar from Capybara Science profile settings
 const getStoredAvatar = () => {
   return localStorage.getItem('capy-avatar') || 
          localStorage.getItem('capy-pfp') || 
@@ -70,7 +69,14 @@ const getStoredAvatar = () => {
          '';
 };
 
-export function ChatCard({ isLightMode }) {
+export function ChatCard({ 
+  isLightMode, 
+  gamesData = [], 
+  ownPfp, 
+  myAchievements = [], 
+  userFavs = [], 
+  userTimes = {} 
+}) {
   const [username, setUsername] = useState(() => {
     return localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name') || '';
   });
@@ -79,6 +85,9 @@ export function ChatCard({ isLightMode }) {
   const [text, setText] = useState('');
   const [showPrivacy, setShowPrivacy] = useState(false);
   
+  // Profile Modal State
+  const [selectedUserProfile, setSelectedUserProfile] = useState(null);
+
   // Edit State
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
@@ -86,7 +95,6 @@ export function ChatCard({ isLightMode }) {
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Helper to fetch latest messages
   const fetchMessages = async () => {
     const { data } = await supabase
       .from('messages')
@@ -99,7 +107,6 @@ export function ChatCard({ isLightMode }) {
   useEffect(() => {
     fetchMessages();
 
-    // Supabase Realtime subscription
     const channel = supabase
       .channel('realtime-messages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, 
@@ -107,7 +114,6 @@ export function ChatCard({ isLightMode }) {
       )
       .subscribe();
 
-    // Event listener for PFP updates triggered from App.jsx
     const handlePfpUpdated = () => {
       fetchMessages();
     };
@@ -119,7 +125,6 @@ export function ChatCard({ isLightMode }) {
     };
   }, []);
 
-  // Auto-scroll to bottom whenever messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -131,7 +136,6 @@ export function ChatCard({ isLightMode }) {
 
     const currentAvatar = getStoredAvatar();
 
-    // Update all past messages from this user with new name and avatar (or null if reset)
     await supabase
       .from('messages')
       .update({ username: newName, avatar_url: currentAvatar || null })
@@ -174,6 +178,33 @@ export function ChatCard({ isLightMode }) {
     setEditingId(null);
     setEditText('');
     fetchMessages();
+  };
+
+  const handleOpenProfile = (m) => {
+    const isSelf = m.user_id === myId;
+    if (isSelf) {
+      setSelectedUserProfile({
+        isOwnProfile: true,
+        friend: {
+          favs: userFavs,
+          times: userTimes,
+          achievements: myAchievements
+        }
+      });
+    } else {
+      setSelectedUserProfile({
+        isOwnProfile: false,
+        friend: {
+          decoded: {
+            n: m.username,
+            p: m.avatar_url,
+            f: m.favs || [],
+            a: m.achievements || [],
+            t: m.times || {}
+          }
+        }
+      });
+    }
   };
 
   return (
@@ -227,22 +258,32 @@ export function ChatCard({ isLightMode }) {
 
                 return (
                   <div key={m.id || i} className="group/msg flex items-start gap-2.5 text-left relative">
-                    {/* Profile Picture / Avatar */}
-                    <UserAvatar src={m.avatar_url} alt={m.username} />
+                    {/* Clickable Profile Avatar */}
+                    <button 
+                      onClick={() => handleOpenProfile(m)}
+                      className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
+                      title={`View ${m.username}'s profile`}
+                    >
+                      <UserAvatar src={m.avatar_url} alt={m.username} />
+                    </button>
 
                     {/* Message Details */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[var(--theme)] font-bold text-xs">
+                          {/* Clickable Username */}
+                          <button
+                            onClick={() => handleOpenProfile(m)}
+                            className="text-[var(--theme)] font-bold text-xs hover:underline cursor-pointer focus:outline-none"
+                          >
                             {m.username}
-                          </span>
+                          </button>
                           <span className="text-[9px] text-zinc-400 font-sans">
                             {formatTimestamp(m.created_at)}
                           </span>
                         </div>
 
-                        {/* Edit trigger button for owned messages */}
+                        {/* Edit trigger button */}
                         {isOwner && !isEditingThis && (
                           <button
                             onClick={() => {
@@ -257,7 +298,7 @@ export function ChatCard({ isLightMode }) {
                         )}
                       </div>
 
-                      {/* Content or Inline Edit Input */}
+                      {/* Message Content or Edit Input */}
                       {isEditingThis ? (
                         <div className="mt-1 flex items-center gap-1.5">
                           <input
@@ -341,6 +382,18 @@ export function ChatCard({ isLightMode }) {
       </div>
 
       <ChatPrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+
+      {/* Friend/User Profile View Modal */}
+      {selectedUserProfile && (
+        <FriendViewModal
+          friend={selectedUserProfile.friend}
+          isOwnProfile={selectedUserProfile.isOwnProfile}
+          gamesData={gamesData}
+          ownPfp={ownPfp}
+          myAchievements={myAchievements}
+          onClose={() => setSelectedUserProfile(null)}
+        />
+      )}
     </div>
   );
 }
