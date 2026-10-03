@@ -9,17 +9,40 @@ const TROPHIES = [
   { id: 'styler', name: 'Fashionista', desc: 'Change your theme 5 times', icon: '🎨' }
 ];
 
-// Generates a valid Base64 Friend Code payload
+// Cleans up game IDs into readable titles without "Game #" prefixes
+function formatGameTitle(gameId, gamesData = []) {
+  const game = gamesData.find(g => 
+    String(g.id).toLowerCase() === String(gameId).toLowerCase() || 
+    String(g.title || g.name).toLowerCase() === String(gameId).toLowerCase()
+  );
+  
+  if (game?.title) return game.title;
+  if (game?.name) return game.name;
+
+  if (typeof gameId === 'string') {
+    return gameId
+      .replace(/[-_]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+  return String(gameId);
+}
+
+// Generates a valid UTF-8 safe Base64 Friend Code
 function generateFriendCode(name, pfp, favs, times, achievements) {
   try {
     const payload = {
       n: name || 'User',
       p: pfp || '',
-      f: Array.isArray(favs) ? favs.slice(0, 5) : [],
+      f: Array.isArray(favs) ? favs : [],
       t: times || {},
       a: Array.isArray(achievements) ? achievements : []
     };
-    return btoa(JSON.stringify(payload));
+    const jsonStr = JSON.stringify(payload);
+    return btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) =>
+      String.fromCharCode('0x' + p1)
+    ));
   } catch (e) {
     return '';
   }
@@ -31,7 +54,6 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
   const displayPfp = isOwnProfile ? (ownPfp || friend?.pfp || friend?.p) : (friend?.decoded?.p || friend?.pfp || friend?.p);
   const displayName = isOwnProfile ? "You" : (friend?.decoded?.n || friend?.displayName || friend?.name || "User");
   
-  // Extract array of favorite IDs safely
   const rawFavs = isOwnProfile 
     ? (friend?.favs || friend?.f || []) 
     : (friend?.decoded?.f || friend?.favs || friend?.f || []);
@@ -45,18 +67,16 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
     ? (friend?.achievements || friend?.a || myAchievements || []) 
     : (friend?.decoded?.a || friend?.achievements || friend?.a || []);
 
-  // Compute live Friend Code if viewing own profile
   const friendCodeDisplay = isOwnProfile 
-    ? (friend?.code && !friend?.code?.startsWith('user_') 
-        ? friend.code 
-        : generateFriendCode(displayName, displayPfp, displayFavs, displayTimes, displayAchievements))
+    ? (localStorage.getItem('capy-friend-code') || 
+       localStorage.getItem('capy-code') || 
+       generateFriendCode(displayName, displayPfp, displayFavs, displayTimes, displayAchievements))
     : '';
 
   return (
     <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
       <div className="bg-zinc-900 border border-[var(--theme)]/30 p-8 rounded-3xl max-w-sm w-full relative shadow-[0_0_50px_rgba(0,0,0,0.5)] space-y-6 flex flex-col max-h-[90vh] overflow-hidden">
         
-        {/* Close Button */}
         <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors">
           <X />
         </button>
@@ -111,10 +131,9 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
             </label>
             <div className="grid gap-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
               {displayFavs.length > 0 ? (
-                displayFavs.map(gameId => {
-                  const game = gamesData.find(g => String(g.id) === String(gameId) || String(g.title) === String(gameId));
-                  const title = game?.title || game?.name || `Game #${gameId}`;
-                  const playSeconds = displayTimes[gameId] || (game?.id ? displayTimes[game.id] : 0) || 0;
+                displayFavs.map((gameId) => {
+                  const title = formatGameTitle(gameId, gamesData);
+                  const playSeconds = displayTimes[gameId] || 0;
                   const playMins = Math.floor(playSeconds / 60);
 
                   return (
@@ -132,13 +151,13 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
             </div>
           </div>
 
-          {/* Friend Code Section (Only for Own Profile) */}
+          {/* Friend Code Section */}
           {isOwnProfile && friendCodeDisplay && (
             <div className="space-y-2 pt-4 border-t border-white/5">
               <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
                 Your Friend Code
               </label>
-              <div className="bg-black/40 border border-white/10 rounded-xl p-3 h-24 overflow-y-auto">
+              <div className="bg-black/40 border border-white/10 rounded-xl p-3 max-h-28 overflow-y-auto">
                 <p className="text-[9px] font-mono text-blue-400 break-all whitespace-pre-wrap leading-tight select-all cursor-pointer">
                   {friendCodeDisplay}
                 </p>
