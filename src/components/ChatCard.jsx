@@ -261,8 +261,8 @@ export function ChatCard({
     fetchMessages();
   };
 
-  // Instant profile modal launcher using in-memory message data
-  const handleOpenProfile = (m) => {
+  // Instant profile modal launcher with background fresh-data sync
+  const handleOpenProfile = async (m) => {
     const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
 
     let liveFavs = m.favs || [];
@@ -282,10 +282,8 @@ export function ChatCard({
       if (savedAchievements.length > 0) liveAchievements = savedAchievements;
     }
 
-    const generatedCode = generateFriendCode(m.username, livePfp, liveFavs, liveTimes, liveAchievements);
-
-    // Open immediately!
-    setSelectedUserProfile({
+    // 1. OPEN INSTANTLY with existing message data (zero click lag)
+    const initialProfile = {
       isOwnProfile: isSelf,
       friend: {
         name: m.username,
@@ -297,7 +295,7 @@ export function ChatCard({
         achievements: liveAchievements,
         a: liveAchievements,
         pfp: livePfp,
-        code: generatedCode,
+        code: generateFriendCode(m.username, livePfp, liveFavs, liveTimes, liveAchievements),
         decoded: {
           n: m.username,
           p: livePfp,
@@ -306,9 +304,52 @@ export function ChatCard({
           t: liveTimes
         }
       }
-    });
-  };
+    };
 
+    setSelectedUserProfile(initialProfile);
+
+    // 2. FETCH LATEST IN BACKGROUND (if viewing someone else)
+    if (!isSelf && m.username) {
+      const { data: latestMsg } = await supabase
+        .from('messages')
+        .select('favs, achievements, times, avatar_url')
+        .ilike('username', m.username)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (latestMsg) {
+        const fetchedFavs = latestMsg.favs || liveFavs;
+        const fetchedAchievements = latestMsg.achievements || liveAchievements;
+        const fetchedTimes = latestMsg.times || liveTimes;
+        const fetchedPfp = latestMsg.avatar_url || livePfp;
+
+        setSelectedUserProfile({
+          isOwnProfile: false,
+          friend: {
+            name: m.username,
+            displayName: m.username,
+            favs: fetchedFavs,
+            f: fetchedFavs,
+            times: fetchedTimes,
+            t: fetchedTimes,
+            achievements: fetchedAchievements,
+            a: fetchedAchievements,
+            pfp: fetchedPfp,
+            code: generateFriendCode(m.username, fetchedPfp, fetchedFavs, fetchedTimes, fetchedAchievements),
+            decoded: {
+              n: m.username,
+              p: fetchedPfp,
+              f: fetchedFavs,
+              a: fetchedAchievements,
+              t: fetchedTimes
+            }
+          }
+        });
+      }
+    }
+  };
+  
   return (
     <div className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 ${
       isLightMode ? 'bg-white border-black/5 shadow-sm' : 'bg-[#0f0f11] border-white/5 hover:border-[var(--theme)]/50'
