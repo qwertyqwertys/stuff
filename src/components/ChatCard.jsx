@@ -106,7 +106,7 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Safely sync stats without overwriting remote data with empty local values
+  // Background non-blocking sync function
   const syncUserStatsToDatabase = useCallback(async () => {
     const currentName = username || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
     if (!currentName) return;
@@ -115,7 +115,6 @@ export function ChatCard({
     const savedFavs = JSON.parse(
       localStorage.getItem('capy-favs') || 
       localStorage.getItem('favorites') || 
-      localStorage.getItem('capy_favorites') || 
       '[]'
     );
     let currentFavs = (userFavs && userFavs.length > 0) ? userFavs : savedFavs;
@@ -127,7 +126,7 @@ export function ChatCard({
     const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
-    // IF local storage is completely empty, pull existing stats from Supabase FIRST
+    // Pull remote stats ONLY if local stats are completely blank
     if (currentFavs.length === 0 && currentAchievements.length === 0 && Object.keys(currentTimes).length === 0) {
       const { data: remoteData } = await supabase
         .from('messages')
@@ -144,7 +143,7 @@ export function ChatCard({
         }
         if (remoteData.achievements && remoteData.achievements.length > 0) {
           currentAchievements = remoteData.achievements;
-          remoteData.achievements.forEach(id => localStorage.setItem(`achievement_${id}`, 'true'));
+          remoteData.achievements.forEach(id => localStorage.getItem(`achievement_${id}`, 'true'));
         }
         if (remoteData.times && Object.keys(remoteData.times).length > 0) {
           currentTimes = remoteData.times;
@@ -153,7 +152,6 @@ export function ChatCard({
       }
     }
 
-    // Only update Supabase if we have valid stats to push
     if (currentFavs.length > 0 || currentAchievements.length > 0 || Object.keys(currentTimes).length > 0) {
       await supabase
         .from('messages')
@@ -179,7 +177,11 @@ export function ChatCard({
 
   useEffect(() => {
     fetchMessages();
-    syncUserStatsToDatabase();
+    
+    // Run sync in the background without blocking render
+    setTimeout(() => {
+      syncUserStatsToDatabase();
+    }, 100);
 
     const channel = supabase
       .channel('realtime-messages')
@@ -215,8 +217,8 @@ export function ChatCard({
     setUsername(newName);
     setIsJoined(true);
 
-    await syncUserStatsToDatabase();
-    await fetchMessages();
+    syncUserStatsToDatabase();
+    fetchMessages();
   };
 
   const handleSend = async () => {
@@ -228,20 +230,22 @@ export function ChatCard({
     const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
     const currentAchievements = myAchievements.length > 0 ? myAchievements : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
 
+    const messageText = text.trim();
+    setText(''); // Clear input immediately for instant UX
+
     await supabase
       .from('messages')
       .insert([{ 
         username, 
-        content: text.trim(), 
+        content: messageText, 
         user_id: myId,
         avatar_url: currentAvatar || null,
         favs: currentFavs,
         achievements: currentAchievements,
         times: currentTimes
       }]);
-    
-    setText('');
-    await syncUserStatsToDatabase();
+
+    syncUserStatsToDatabase();
   };
 
   const handleSaveEdit = async (id) => {
@@ -257,7 +261,8 @@ export function ChatCard({
     fetchMessages();
   };
 
-  const handleOpenProfile = async (m) => {
+  // Instant profile modal launcher using in-memory message data
+  const handleOpenProfile = (m) => {
     const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
 
     let liveFavs = m.favs || [];
@@ -277,26 +282,9 @@ export function ChatCard({
       if (savedAchievements.length > 0) liveAchievements = savedAchievements;
     }
 
-    // Fallback: If stats are empty, fetch the last populated message for this username
-    if (liveFavs.length === 0 && liveAchievements.length === 0 && m.username) {
-      const { data: remoteMsg } = await supabase
-        .from('messages')
-        .select('*')
-        .ilike('username', m.username)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (remoteMsg) {
-        if (remoteMsg.favs) liveFavs = remoteMsg.favs;
-        if (remoteMsg.achievements) liveAchievements = remoteMsg.achievements;
-        if (remoteMsg.times) liveTimes = remoteMsg.times;
-        if (remoteMsg.avatar_url) livePfp = remoteMsg.avatar_url;
-      }
-    }
-
     const generatedCode = generateFriendCode(m.username, livePfp, liveFavs, liveTimes, liveAchievements);
 
+    // Open immediately!
     setSelectedUserProfile({
       isOwnProfile: isSelf,
       friend: {
