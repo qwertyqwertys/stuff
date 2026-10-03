@@ -63,8 +63,8 @@ const getPersistentId = () => {
 };
 
 const getStoredAvatar = () => {
-  return localStorage.getItem('capy-avatar') || 
-         localStorage.getItem('capy-pfp') || 
+  return localStorage.getItem('capy-pfp') || 
+         localStorage.getItem('capy-avatar') || 
          localStorage.getItem('user-avatar') || 
          '';
 };
@@ -183,12 +183,35 @@ export function ChatCard({
   const handleOpenProfile = (m) => {
     const isSelf = m.user_id === myId;
     if (isSelf) {
+      // Pull live local storage values as fail-safe backups
+      const liveFavs = userFavs.length > 0 
+        ? userFavs 
+        : JSON.parse(localStorage.getItem('capy-favs') || '[]');
+      
+      const liveTimes = Object.keys(userTimes).length > 0 
+        ? userTimes 
+        : JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
+        
+      const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
+      const liveAchievements = myAchievements.length > 0 
+        ? myAchievements 
+        : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+
+      const livePfp = ownPfp || getStoredAvatar();
+
       setSelectedUserProfile({
         isOwnProfile: true,
         friend: {
-          favs: userFavs,
-          times: userTimes,
-          achievements: myAchievements
+          name: username,
+          displayName: username,
+          favs: liveFavs,
+          f: liveFavs,
+          times: liveTimes,
+          t: liveTimes,
+          achievements: liveAchievements,
+          a: liveAchievements,
+          pfp: livePfp,
+          code: localStorage.getItem('capy-unique-id')
         }
       });
     } else {
@@ -389,7 +412,7 @@ export function ChatCard({
           friend={selectedUserProfile.friend}
           isOwnProfile={selectedUserProfile.isOwnProfile}
           gamesData={gamesData}
-          ownPfp={ownPfp}
+          ownPfp={selectedUserProfile.isOwnProfile ? (ownPfp || getStoredAvatar()) : selectedUserProfile.friend?.decoded?.p}
           myAchievements={myAchievements}
           onClose={() => setSelectedUserProfile(null)}
         />
