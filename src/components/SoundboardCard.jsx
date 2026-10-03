@@ -389,31 +389,25 @@ export function SoundboardCard({ isLightMode, onClose }) {
                       )}
 
                       {/* 3D Push Button Component */}
-                      <div className="relative my-2 flex flex-col items-center justify-center">
-                        {/* Oval Base Ring */}
-                        <div className="w-24 h-5 bg-zinc-300 dark:bg-zinc-700 border border-zinc-400/60 dark:border-zinc-600 rounded-[100%] shadow-md absolute bottom-0" />
+                      <div className="relative my-3 flex items-center justify-center w-full h-16">
+                        {/* Base Oval Ring */}
+                        <div className="absolute bottom-1 w-24 h-6 bg-zinc-400 dark:bg-zinc-700 border-2 border-zinc-600 dark:border-zinc-500 rounded-[50%] shadow-md pointer-events-none" />
 
-                        {/* 3D Button Push Surface */}
+                        {/* Interactive 3D Cylinder Button */}
                         <button
                           onClick={() => handleSoundToggle(sound)}
-                          className={`relative z-10 w-20 h-10 rounded-[100%/45%] transition-all duration-100 active:translate-y-1.5 focus:outline-none cursor-pointer ${
-                            isThisPlaying ? 'translate-y-1.5' : 'hover:-translate-y-0.5'
-                          }`}
+                          className="relative group w-20 h-10 focus:outline-none cursor-pointer select-none"
                           title={isThisPlaying ? "Pause Sound" : "Play Sound"}
                         >
-                          {/* 3D Cylinder Wall / Depth */}
-                          <div
-                            className={`absolute inset-0 rounded-[100%/45%] transition-colors ${
-                              isThisPlaying ? 'bg-purple-800 shadow-none' : 'bg-purple-800 shadow-[0_6px_0_#4c1d95]'
-                            }`}
-                          />
+                          {/* 3D Dark Purple Side Wall (Depth) */}
+                          <div className="absolute inset-0 top-1.5 rounded-[50%] bg-purple-900 border-b-2 border-purple-950 shadow-md" />
 
-                          {/* Top Cap Surface */}
+                          {/* 3D Light Purple Top Face */}
                           <div
-                            className={`absolute inset-0 rounded-[100%/45%] flex items-center justify-center transition-all ${
+                            className={`absolute inset-0 rounded-[50%] bg-purple-600 border-t border-purple-400 flex items-center justify-center transition-transform duration-100 ease-out ${
                               isThisPlaying
-                                ? 'bg-purple-600 shadow-inner'
-                                : 'bg-purple-600 hover:bg-purple-500'
+                                ? 'translate-y-1.5 bg-purple-700'
+                                : 'group-hover:bg-purple-500 group-active:translate-y-1.5'
                             }`}
                           >
                             {isThisPlaying ? (
