@@ -9,18 +9,24 @@ const TROPHIES = [
   { id: 'styler', name: 'Fashionista', desc: 'Change your theme 5 times', icon: '🎨' }
 ];
 
-export function FriendViewModal({ friend, gamesData, onClose, ownPfp, isOwnProfile, myAchievements = [] }) {
-  if (!isOwnProfile && (!friend || !friend.decoded)) return null;
+export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwnProfile, myAchievements = [] }) {
+  if (!isOwnProfile && (!friend || (!friend.decoded && !friend.f && !friend.favs))) return null;
 
-  const displayPfp = isOwnProfile ? ownPfp : friend?.decoded?.p;
-  const displayName = isOwnProfile ? "You" : (friend?.decoded?.n || friend?.name);
-  const displayFavs = isOwnProfile ? (friend?.favs || []) : (friend?.decoded?.f || []);
-  const displayTimes = isOwnProfile ? (friend?.times || {}) : (friend?.decoded?.t || {});
+  const displayPfp = isOwnProfile ? (ownPfp || friend?.pfp || friend?.p) : (friend?.decoded?.p || friend?.pfp || friend?.p);
+  const displayName = isOwnProfile ? "You" : (friend?.decoded?.n || friend?.displayName || friend?.name || "User");
   
-  // Get achievements: checks the friend object, the prop, AND localstorage as a backup
+  // Robust key fallbacks for favorites, times, and achievements
+  const displayFavs = isOwnProfile 
+    ? (friend?.favs || friend?.f || []) 
+    : (friend?.decoded?.f || friend?.favs || friend?.f || []);
+
+  const displayTimes = isOwnProfile 
+    ? (friend?.times || friend?.t || {}) 
+    : (friend?.decoded?.t || friend?.times || friend?.t || {});
+  
   const displayAchievements = isOwnProfile 
-  ? (friend?.achievements || []) 
-  : (friend?.decoded?.a || []);
+    ? (friend?.achievements || friend?.a || myAchievements || []) 
+    : (friend?.decoded?.a || friend?.achievements || friend?.a || []);
 
   return (
     <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
@@ -81,14 +87,15 @@ export function FriendViewModal({ friend, gamesData, onClose, ownPfp, isOwnProfi
             </label>
             <div className="grid gap-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
               {(() => {
-                const validFavs = displayFavs.filter(id => gamesData.find(g => g.id === id));
+                // String comparison avoids type mismatches (number vs string ID)
+                const validFavs = displayFavs.filter(id => gamesData.some(g => String(g.id) === String(id)));
                 return (validFavs.length > 0) ? validFavs.map(gameId => {
-                  const game = gamesData.find(g => g.id === gameId);
+                  const game = gamesData.find(g => String(g.id) === String(gameId));
                   return game ? (
                     <div key={gameId} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
                       <span className="text-xs font-bold text-white">{game.title}</span>
                       <span className="text-[10px] font-mono text-zinc-500">
-                        {displayTimes[gameId] ? Math.floor(displayTimes[gameId]/60) : 0}m played
+                        {displayTimes[gameId] ? Math.floor(displayTimes[gameId] / 60) : 0}m played
                       </span>
                     </div>
                   ) : null;
