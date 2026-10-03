@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Volume2, X, Upload, Trash2, Play, Pause, Loader2, Pencil, Check } from 'lucide-react';
+import { Volume2, X, Upload, Trash2, Play, Pause, Loader2, Pencil, Check, Zap } from 'lucide-react';
 
 // Initialize Supabase client
 const supabaseUrl = 'https://nilgxfmcwljqhawdrsot.supabase.co';
@@ -182,6 +182,16 @@ export function SoundboardCard({ isLightMode, onClose }) {
       setCurrentSoundId(null);
       audioRef.current = null;
     };
+  };
+
+  // Play sound 100x times in rapid staggered burst
+  const handlePlay100x = (sound) => {
+    for (let i = 0; i < 100; i++) {
+      setTimeout(() => {
+        const rapidAudio = new Audio(sound.file_url);
+        rapidAudio.play().catch(() => {});
+      }, i * 15);
+    }
   };
 
   const handleDelete = async (sound) => {
@@ -389,7 +399,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
                       )}
 
                       {/* 3D Push Button Component */}
-                      <div className="relative my-3 flex items-center justify-center w-full h-16">
+                      <div className="relative my-2 flex items-center justify-center w-full h-16">
                         {/* Base Oval Ring */}
                         <div className="absolute bottom-1 w-24 h-6 bg-zinc-400 dark:bg-zinc-700 border-2 border-zinc-600 dark:border-zinc-500 rounded-[50%] shadow-md pointer-events-none" />
 
@@ -419,9 +429,17 @@ export function SoundboardCard({ isLightMode, onClose }) {
                         </button>
                       </div>
 
-                      {/* Delete Action Button for Owner */}
-                      {isOwner && (
-                        <div className="w-full flex justify-end">
+                      {/* Action Buttons Row */}
+                      <div className="w-full flex items-center justify-between gap-1 pt-1 border-t border-white/5">
+                        <button
+                          onClick={() => handlePlay100x(sound)}
+                          className="flex-1 py-1 px-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 font-black text-[10px] uppercase flex items-center justify-center gap-1 transition-all active:scale-95"
+                          title="Play sound 100x in rapid fire"
+                        >
+                          <Zap className="w-3 h-3 fill-purple-300" /> 100x
+                        </button>
+
+                        {isOwner && (
                           <button
                             onClick={() => handleDelete(sound)}
                             className="p-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
@@ -429,8 +447,8 @@ export function SoundboardCard({ isLightMode, onClose }) {
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   );
                 })}
