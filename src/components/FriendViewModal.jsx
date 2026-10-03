@@ -9,8 +9,10 @@ const TROPHIES = [
   { id: 'styler', name: 'Fashionista', desc: 'Change your theme 5 times', icon: '🎨' }
 ];
 
-// Cleans up game IDs into readable titles without "Game #" prefixes
+// Preserves original titles like "Snowball.io (fake)" while cleanly formatting slugs
 function formatGameTitle(gameId, gamesData = []) {
+  if (!gameId) return '';
+
   const game = gamesData.find(g => 
     String(g.id).toLowerCase() === String(gameId).toLowerCase() || 
     String(g.title || g.name).toLowerCase() === String(gameId).toLowerCase()
@@ -20,16 +22,19 @@ function formatGameTitle(gameId, gamesData = []) {
   if (game?.name) return game.name;
 
   if (typeof gameId === 'string') {
+    // If title already has spaces or mixed casing, keep it exactly as written
+    if (gameId.includes(' ') || /[A-Z]/.test(gameId)) {
+      return gameId;
+    }
     return gameId
       .replace(/[-_]/g, ' ')
-      .replace(/\s+/g, ' ')
       .trim()
       .replace(/\b\w/g, c => c.toUpperCase());
   }
   return String(gameId);
 }
 
-// Generates a valid UTF-8 safe Base64 Friend Code
+// UTF-8 safe Base64 Friend Code generator
 function generateFriendCode(name, pfp, favs, times, achievements) {
   try {
     const payload = {
