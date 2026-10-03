@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, RefreshCcw } from 'lucide-react'; 
+import { Send, RefreshCcw, Pencil, Check, X } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 
@@ -79,6 +79,10 @@ export function ChatCard({ isLightMode }) {
   const [text, setText] = useState('');
   const [showPrivacy, setShowPrivacy] = useState(false);
   
+  // Edit State
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
@@ -156,6 +160,22 @@ export function ChatCard({ isLightMode }) {
     setText('');
   };
 
+  const handleSaveEdit = async (id) => {
+    if (!editText.trim()) return;
+
+    await supabase
+      .from('messages')
+      .update({
+        content: editText.trim(),
+        is_edited: true
+      })
+      .eq('id', id);
+
+    setEditingId(null);
+    setEditText('');
+    fetchMessages();
+  };
+
   return (
     <div className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 ${
       isLightMode ? 'bg-white border-black/5 shadow-sm' : 'bg-[#0f0f11] border-white/5 hover:border-[var(--theme)]/50'
@@ -201,27 +221,89 @@ export function ChatCard({ isLightMode }) {
             {messages.length === 0 ? (
               <div className="text-zinc-400 italic text-[10px] font-mono text-center py-4">Waiting for Messages...</div>
             ) : (
-              messages.map((m, i) => (
-                <div key={m.id || i} className="flex items-start gap-2.5 text-left">
-                  {/* Profile Picture / Avatar */}
-                  <UserAvatar src={m.avatar_url} alt={m.username} />
+              messages.map((m, i) => {
+                const isOwner = m.user_id === myId;
+                const isEditingThis = editingId === m.id;
 
-                  {/* Message Details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[var(--theme)] font-bold text-xs">
-                        {m.username}
-                      </span>
-                      <span className="text-[9px] text-zinc-400 font-sans">
-                        {formatTimestamp(m.created_at)}
-                      </span>
+                return (
+                  <div key={m.id || i} className="group/msg flex items-start gap-2.5 text-left relative">
+                    {/* Profile Picture / Avatar */}
+                    <UserAvatar src={m.avatar_url} alt={m.username} />
+
+                    {/* Message Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[var(--theme)] font-bold text-xs">
+                            {m.username}
+                          </span>
+                          <span className="text-[9px] text-zinc-400 font-sans">
+                            {formatTimestamp(m.created_at)}
+                          </span>
+                        </div>
+
+                        {/* Edit trigger button for owned messages */}
+                        {isOwner && !isEditingThis && (
+                          <button
+                            onClick={() => {
+                              setEditingId(m.id);
+                              setEditText(m.content);
+                            }}
+                            className="opacity-0 group-hover/msg:opacity-100 p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white transition-all"
+                            title="Edit message"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Content or Inline Edit Input */}
+                      {isEditingThis ? (
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveEdit(m.id);
+                              if (e.key === 'Escape') setEditingId(null);
+                            }}
+                            className={`flex-1 text-xs p-1.5 rounded-lg border outline-none ${
+                              isLightMode 
+                                ? 'bg-white border-black/20 text-black' 
+                                : 'bg-white/10 border-white/20 text-white focus:border-[var(--theme)]'
+                            }`}
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleSaveEdit(m.id)}
+                            className="p-1.5 rounded-lg bg-[var(--theme)] text-black font-bold hover:opacity-90"
+                            title="Save"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="p-1.5 rounded-lg bg-white/10 text-zinc-300 hover:bg-white/20"
+                            title="Cancel"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className={`mt-0.5 text-xs break-words leading-relaxed ${isLightMode ? 'text-black' : 'text-zinc-100'}`}>
+                          {m.content}
+                          {m.is_edited && (
+                            <span className="text-[10px] text-zinc-500 font-normal ml-1 select-none">
+                              (edited)
+                            </span>
+                          )}
+                        </p>
+                      )}
                     </div>
-                    <p className={`mt-0.5 text-xs break-words leading-relaxed ${isLightMode ? 'text-black' : 'text-zinc-100'}`}>
-                      {m.content}
-                    </p>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
             <div ref={messagesEndRef} />
           </div>
