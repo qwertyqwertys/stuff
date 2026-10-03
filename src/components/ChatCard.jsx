@@ -162,13 +162,21 @@ export function ChatCard({
     if (!text.trim()) return;
     const currentAvatar = getStoredAvatar();
 
+    const currentFavs = userFavs.length > 0 ? userFavs : JSON.parse(localStorage.getItem('capy-favs') || '[]');
+    const currentTimes = Object.keys(userTimes).length > 0 ? userTimes : JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
+    const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
+    const currentAchievements = myAchievements.length > 0 ? myAchievements : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+
     await supabase
       .from('messages')
       .insert([{ 
         username, 
         content: text.trim(), 
         user_id: myId,
-        avatar_url: currentAvatar || null 
+        avatar_url: currentAvatar || null,
+        favs: currentFavs,
+        achievements: currentAchievements,
+        times: currentTimes
       }]);
     setText('');
   };
@@ -186,25 +194,44 @@ export function ChatCard({
     fetchMessages();
   };
 
-  const handleOpenProfile = (m) => {
+  const handleOpenProfile = async (m) => {
     const isSelf = m.user_id === myId;
     if (isSelf) {
-      const savedFavs = JSON.parse(
+      let savedFavs = JSON.parse(
         localStorage.getItem('capy-favs') || 
         localStorage.getItem('favorites') || 
         localStorage.getItem('capy_favorites') || 
         '[]'
       );
-      const liveFavs = (userFavs && userFavs.length > 0) ? userFavs : savedFavs;
+      let liveFavs = (userFavs && userFavs.length > 0) ? userFavs : savedFavs;
 
-      const savedTimes = JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
-      const liveTimes = (userTimes && Object.keys(userTimes).length > 0) ? userTimes : savedTimes;
+      let savedTimes = JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
+      let liveTimes = (userTimes && Object.keys(userTimes).length > 0) ? userTimes : savedTimes;
 
       const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
-      const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
-      const liveAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
+      let savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+      let liveAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
-      const livePfp = ownPfp || getStoredAvatar();
+      let livePfp = ownPfp || getStoredAvatar();
+
+      // Cross-Device Fallback: Fetch latest profile stats from Supabase if localStorage on this device is empty
+      if (liveFavs.length === 0 && liveAchievements.length === 0) {
+        const { data: remoteMsg } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('user_id', myId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (remoteMsg) {
+          if (remoteMsg.favs) liveFavs = remoteMsg.favs;
+          if (remoteMsg.achievements) liveAchievements = remoteMsg.achievements;
+          if (remoteMsg.times) liveTimes = remoteMsg.times;
+          if (remoteMsg.avatar_url && !livePfp) livePfp = remoteMsg.avatar_url;
+        }
+      }
+
       const generatedCode = generateFriendCode(username, livePfp, liveFavs, liveTimes, liveAchievements);
 
       setSelectedUserProfile({
