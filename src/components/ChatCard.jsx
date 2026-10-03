@@ -106,9 +106,10 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Mass-syncs current local stats to ALL past and future messages in Supabase
+  // Mass-syncs current local stats to ALL past and future messages by USERNAME
   const syncUserStatsToDatabase = useCallback(async () => {
-    if (!myId) return;
+    const currentName = username || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
+    if (!currentName) return;
 
     const currentAvatar = ownPfp || getStoredAvatar();
     const savedFavs = JSON.parse(
@@ -126,7 +127,7 @@ export function ChatCard({
     const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     const currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
-    // Update ALL messages matching this user_id retroactively
+    // Update ALL messages matching this username retroactively across all devices
     if (currentFavs.length > 0 || currentAchievements.length > 0 || Object.keys(currentTimes).length > 0) {
       await supabase
         .from('messages')
@@ -134,11 +135,12 @@ export function ChatCard({
           favs: currentFavs, 
           achievements: currentAchievements, 
           times: currentTimes,
-          avatar_url: currentAvatar || null 
+          avatar_url: currentAvatar || null,
+          user_id: myId
         })
-        .eq('user_id', myId);
+        .eq('username', currentName);
     }
-  }, [myId, ownPfp, userFavs, userTimes, myAchievements]);
+  }, [myId, username, ownPfp, userFavs, userTimes, myAchievements]);
 
   const fetchMessages = async () => {
     const { data } = await supabase
@@ -183,11 +185,6 @@ export function ChatCard({
     if (!newName) return;
 
     const currentAvatar = ownPfp || getStoredAvatar();
-
-    await supabase
-      .from('messages')
-      .update({ username: newName, avatar_url: currentAvatar || null })
-      .eq('user_id', myId);
 
     localStorage.setItem('capy-username', newName);
     localStorage.setItem('capy-display-name', newName);
@@ -237,7 +234,8 @@ export function ChatCard({
   };
 
   const handleOpenProfile = async (m) => {
-    const isSelf = m.user_id === myId;
+    const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
+
     if (isSelf) {
       let savedFavs = JSON.parse(
         localStorage.getItem('capy-favs') || 
@@ -256,12 +254,12 @@ export function ChatCard({
 
       let livePfp = ownPfp || getStoredAvatar();
 
-      // If viewing profile on a device where localStorage is blank, pull latest populated message from Supabase
-      if (liveFavs.length === 0 && liveAchievements.length === 0) {
+      // If local stats are empty on a new device, pull latest stats for this handle from Supabase
+      if (liveFavs.length === 0 && liveAchievements.length === 0 && username) {
         const { data: remoteMsg } = await supabase
           .from('messages')
           .select('*')
-          .eq('user_id', myId)
+          .eq('username', username)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -353,7 +351,7 @@ export function ChatCard({
               <div className="text-zinc-400 italic text-[10px] font-mono text-center py-4">Waiting for Messages...</div>
             ) : (
               messages.map((m, i) => {
-                const isOwner = m.user_id === myId;
+                const isOwner = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
                 const isEditingThis = editingId === m.id;
 
                 return (
