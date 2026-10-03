@@ -9,16 +9,33 @@ const TROPHIES = [
   { id: 'styler', name: 'Fashionista', desc: 'Change your theme 5 times', icon: '🎨' }
 ];
 
+// Generates a valid Base64 Friend Code payload
+function generateFriendCode(name, pfp, favs, times, achievements) {
+  try {
+    const payload = {
+      n: name || 'User',
+      p: pfp || '',
+      f: Array.isArray(favs) ? favs.slice(0, 5) : [],
+      t: times || {},
+      a: Array.isArray(achievements) ? achievements : []
+    };
+    return btoa(JSON.stringify(payload));
+  } catch (e) {
+    return '';
+  }
+}
+
 export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwnProfile, myAchievements = [] }) {
   if (!isOwnProfile && (!friend || (!friend.decoded && !friend.f && !friend.favs))) return null;
 
   const displayPfp = isOwnProfile ? (ownPfp || friend?.pfp || friend?.p) : (friend?.decoded?.p || friend?.pfp || friend?.p);
   const displayName = isOwnProfile ? "You" : (friend?.decoded?.n || friend?.displayName || friend?.name || "User");
   
-  // Robust key fallbacks for favorites, times, and achievements
-  const displayFavs = isOwnProfile 
+  // Extract array of favorite IDs safely
+  const rawFavs = isOwnProfile 
     ? (friend?.favs || friend?.f || []) 
     : (friend?.decoded?.f || friend?.favs || friend?.f || []);
+  const displayFavs = Array.isArray(rawFavs) ? rawFavs : [];
 
   const displayTimes = isOwnProfile 
     ? (friend?.times || friend?.t || {}) 
@@ -27,6 +44,13 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
   const displayAchievements = isOwnProfile 
     ? (friend?.achievements || friend?.a || myAchievements || []) 
     : (friend?.decoded?.a || friend?.achievements || friend?.a || []);
+
+  // Compute live Friend Code if viewing own profile
+  const friendCodeDisplay = isOwnProfile 
+    ? (friend?.code && !friend?.code?.startsWith('user_') 
+        ? friend.code 
+        : generateFriendCode(displayName, displayPfp, displayFavs, displayTimes, displayAchievements))
+    : '';
 
   return (
     <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
@@ -83,38 +107,40 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
           {/* Favorites Section */}
           <div className="space-y-4">
             <label className="text-[10px] font-black text-[var(--theme)] uppercase tracking-widest flex items-center gap-2">
-              <Heart className="w-3 h-3" /> Favorite Games
+              <Heart className="w-3 h-3" /> Favorite Games ({displayFavs.length})
             </label>
             <div className="grid gap-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
-              {(() => {
-                // String comparison avoids type mismatches (number vs string ID)
-                const validFavs = displayFavs.filter(id => gamesData.some(g => String(g.id) === String(id)));
-                return (validFavs.length > 0) ? validFavs.map(gameId => {
-                  const game = gamesData.find(g => String(g.id) === String(gameId));
-                  return game ? (
+              {displayFavs.length > 0 ? (
+                displayFavs.map(gameId => {
+                  const game = gamesData.find(g => String(g.id) === String(gameId) || String(g.title) === String(gameId));
+                  const title = game?.title || game?.name || `Game #${gameId}`;
+                  const playSeconds = displayTimes[gameId] || (game?.id ? displayTimes[game.id] : 0) || 0;
+                  const playMins = Math.floor(playSeconds / 60);
+
+                  return (
                     <div key={gameId} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
-                      <span className="text-xs font-bold text-white">{game.title}</span>
+                      <span className="text-xs font-bold text-white">{title}</span>
                       <span className="text-[10px] font-mono text-zinc-500">
-                        {displayTimes[gameId] ? Math.floor(displayTimes[gameId] / 60) : 0}m played
+                        {playMins}m played
                       </span>
                     </div>
-                  ) : null;
-                }) : (
-                  <p className="text-xs text-zinc-600 text-center py-4 italic">No favorites yet...</p>
-                );
-              })()}
+                  );
+                })
+              ) : (
+                <p className="text-xs text-zinc-600 text-center py-4 italic">No favorites yet...</p>
+              )}
             </div>
           </div>
 
           {/* Friend Code Section (Only for Own Profile) */}
-          {isOwnProfile && friend?.code && (
+          {isOwnProfile && friendCodeDisplay && (
             <div className="space-y-2 pt-4 border-t border-white/5">
               <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
                 Your Friend Code
               </label>
               <div className="bg-black/40 border border-white/10 rounded-xl p-3 h-24 overflow-y-auto">
-                <p className="text-[9px] font-mono text-blue-400 break-all whitespace-pre-wrap leading-tight">
-                  {friend.code}
+                <p className="text-[9px] font-mono text-blue-400 break-all whitespace-pre-wrap leading-tight select-all cursor-pointer">
+                  {friendCodeDisplay}
                 </p>
               </div>
             </div>
