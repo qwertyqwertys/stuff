@@ -261,14 +261,16 @@ export function ChatCard({
     fetchMessages();
   };
 
-  // Instant profile modal launcher with background fresh-data sync
+// Instant profile modal launcher with background fresh-data sync
   const handleOpenProfile = async (m) => {
     const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
 
     let liveFavs = m.favs || [];
     let liveAchievements = m.achievements || [];
     let liveTimes = m.times || {};
-    let livePfp = m.avatar_url || ownPfp || getStoredAvatar();
+    
+    // FIX: Only fall back to your stored avatar if viewing yourself!
+    let livePfp = m.avatar_url || (isSelf ? (ownPfp || getStoredAvatar()) : '');
 
     if (isSelf) {
       const savedFavs = JSON.parse(localStorage.getItem('capy-favs') || '[]');
@@ -282,7 +284,7 @@ export function ChatCard({
       if (savedAchievements.length > 0) liveAchievements = savedAchievements;
     }
 
-    // 1. OPEN INSTANTLY with existing message data (zero click lag)
+    // 1. OPEN INSTANTLY with existing message data
     const initialProfile = {
       isOwnProfile: isSelf,
       friend: {
@@ -322,7 +324,9 @@ export function ChatCard({
         const fetchedFavs = latestMsg.favs || liveFavs;
         const fetchedAchievements = latestMsg.achievements || liveAchievements;
         const fetchedTimes = latestMsg.times || liveTimes;
-        const fetchedPfp = latestMsg.avatar_url || livePfp;
+        
+        // FIX: If they don't have an avatar in DB, keep it blank/default
+        const fetchedPfp = latestMsg.avatar_url || '';
 
         setSelectedUserProfile({
           isOwnProfile: false,
