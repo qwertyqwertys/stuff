@@ -375,13 +375,6 @@ function SettingsModalContent({
     
     return () => {
       isMounted = false;
-      if (Array.isArray(customSongsRef.current)) {
-        customSongsRef.current.forEach(song => {
-          if (song && song.url && song.url.startsWith('blob:')) {
-            URL.revokeObjectURL(song.url);
-          }
-        });
-      }
     };
   }, []);
 
