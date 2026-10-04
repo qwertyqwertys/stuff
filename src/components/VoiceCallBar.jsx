@@ -12,21 +12,24 @@ const ICE_SERVERS = {
 
 export function VoiceCallBar({ 
   roomId = 'General', 
+  myUserId,
   myUsername = 'You', 
   userAvatar = '',
   onLeave, 
   onEndCall,
-  onStreamUpdate 
+  onStreamUpdate,
+  onRemoteStreamsUpdate
 }) {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
 
-  const remoteAudioRef = useRef(null);
-  const peerConnectionRef = useRef(null);
   const channelRef = useRef(null);
   const localStreamRef = useRef(null);
-  const iceCandidatesQueue = useRef([]);
+  
+  // Peer connections and remote streams indexed by peer ID
+  const peerConnectionsRef = useRef({});
+  const remoteStreamsRef = useRef({});
 
   const handleDisconnect = onLeave || onEndCall;
 
@@ -60,19 +63,18 @@ export function VoiceCallBar({
 
       return localStreamRef.current;
     } catch (err) {
-      console.error('Microphone access error:', err);
+      console.error('Microphone error:', err);
       return null;
     }
   };
 
-  const getOrCreatePeerConnection = () => {
-    if (peerConnectionRef.current) {
-      return peerConnectionRef.current;
+  const getOrCreatePeerConnection = (targetUserId) => {
+    if (peerConnectionsRef.current[targetUserId]) {
+      return peerConnectionsRef.current[targetUserId];
     }
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
-    peerConnectionRef.current = pc;
-    iceCandidatesQueue.current = [];
+    peerConnectionsRef.current[targetUserId] = pc;
 
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => {
@@ -81,9 +83,11 @@ export function VoiceCallBar({
     }
 
     pc.ontrack = (event) => {
-      if (remoteAudioRef.current && event.streams[0]) {
-        remoteAudioRef.current.srcObject = event.streams[0];
-        remoteAudioRef.current.play().catch((err) => console.warn('Audio play error:', err));
+      if (event.streams && event.streams[0]) {
+        remoteStreamsRef.current[targetUserId] = event.streams[0];
+        if (onRemoteStreamsUpdate) {
+          onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
+        }
       }
     };
 
@@ -92,7 +96,12 @@ export function VoiceCallBar({
         channelRef.current.send({
           type: 'broadcast',
           event: 'signal',
-          payload: { sender: myUsername, type: 'ice-candidate', candidate: event.candidate },
+          payload: {
+            senderId: myUserId,
+            targetId: targetUserId,
+            type: 'ice-candidate',
+            candidate: event.candidate,
+          },
         });
       }
     };
@@ -100,19 +109,8 @@ export function VoiceCallBar({
     return pc;
   };
 
-  const processIceQueue = async (pc) => {
-    while (iceCandidatesQueue.current.length > 0) {
-      const candidate = iceCandidatesQueue.current.shift();
-      try {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (e) {
-        console.error('ICE Candidate Error:', e);
-      }
-    }
-  };
-
-  const startCall = async () => {
-    const pc = getOrCreatePeerConnection();
+  const createAndSendOffer = async (targetUserId) => {
+    const pc = getOrCreatePeerConnection(targetUserId);
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
@@ -120,33 +118,13 @@ export function VoiceCallBar({
       channelRef.current.send({
         type: 'broadcast',
         event: 'signal',
-        payload: { sender: myUsername, type: 'offer', offer },
+        payload: {
+          senderId: myUserId,
+          targetId: targetUserId,
+          type: 'offer',
+          offer,
+        },
       });
-    }
-  };
-
-  const handleReceiveOffer = async (offer) => {
-    const pc = getOrCreatePeerConnection();
-    await pc.setRemoteDescription(new RTCSessionDescription(offer));
-    await processIceQueue(pc);
-
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-
-    if (channelRef.current) {
-      channelRef.current.send({
-        type: 'broadcast',
-        event: 'signal',
-        payload: { sender: myUsername, type: 'answer', answer },
-      });
-    }
-  };
-
-  const handleReceiveAnswer = async (answer) => {
-    const pc = peerConnectionRef.current;
-    if (pc) {
-      await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      await processIceQueue(pc);
     }
   };
 
@@ -158,24 +136,51 @@ export function VoiceCallBar({
 
     channel
       .on('broadcast', { event: 'signal' }, async ({ payload }) => {
-        if (!payload || payload.sender === myUsername) return;
+        if (!payload || payload.senderId === myUserId) return;
 
-        if (payload.type === 'join-voice') {
-          setConnectedUsers((prev) => Array.from(new Set([...prev, payload.sender])));
-          startCall();
-        } else if (payload.type === 'offer') {
-          await handleReceiveOffer(payload.offer);
-        } else if (payload.type === 'answer') {
-          await handleReceiveAnswer(payload.answer);
-        } else if (payload.type === 'ice-candidate' && payload.candidate) {
-          const pc = peerConnectionRef.current;
-          if (pc && pc.remoteDescription) {
-            await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
-          } else {
-            iceCandidatesQueue.current.push(payload.candidate);
+        const { senderId, targetId, type, offer, answer, candidate } = payload;
+
+        if (type === 'join-voice') {
+          setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
+          await createAndSendOffer(senderId);
+        } else if (type === 'offer' && targetId === myUserId) {
+          const pc = getOrCreatePeerConnection(senderId);
+          await pc.setRemoteDescription(new RTCSessionDescription(offer));
+          const createdAnswer = await pc.createAnswer();
+          await pc.setLocalDescription(createdAnswer);
+
+          channel.send({
+            type: 'broadcast',
+            event: 'signal',
+            payload: {
+              senderId: myUserId,
+              targetId: senderId,
+              type: 'answer',
+              answer: createdAnswer,
+            },
+          });
+        } else if (type === 'answer' && targetId === myUserId) {
+          const pc = peerConnectionsRef.current[senderId];
+          if (pc) {
+            await pc.setRemoteDescription(new RTCSessionDescription(answer));
           }
-        } else if (payload.type === 'leave-voice') {
-          setConnectedUsers((prev) => prev.filter((u) => u !== payload.sender));
+        } else if (type === 'ice-candidate' && targetId === myUserId && candidate) {
+          const pc = peerConnectionsRef.current[senderId];
+          if (pc) {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+        } else if (type === 'leave-voice') {
+          setConnectedUsers((prev) => prev.filter((u) => u !== senderId));
+          if (peerConnectionsRef.current[senderId]) {
+            peerConnectionsRef.current[senderId].close();
+            delete peerConnectionsRef.current[senderId];
+          }
+          if (remoteStreamsRef.current[senderId]) {
+            delete remoteStreamsRef.current[senderId];
+            if (onRemoteStreamsUpdate) {
+              onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
+            }
+          }
         }
       })
       .subscribe((status) => {
@@ -183,7 +188,7 @@ export function VoiceCallBar({
           channel.send({
             type: 'broadcast',
             event: 'signal',
-            payload: { sender: myUsername, avatar: userAvatar, type: 'join-voice' },
+            payload: { senderId: myUserId, type: 'join-voice' },
           });
         }
       });
@@ -193,18 +198,16 @@ export function VoiceCallBar({
         channelRef.current.send({
           type: 'broadcast',
           event: 'signal',
-          payload: { sender: myUsername, type: 'leave-voice' },
+          payload: { senderId: myUserId, type: 'leave-voice' },
         });
         supabase.removeChannel(channelRef.current);
       }
+      Object.values(peerConnectionsRef.current).forEach((pc) => pc.close());
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => track.stop());
       }
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-      }
     };
-  }, [roomId, myUsername]);
+  }, [roomId, myUserId]);
 
   const toggleMute = () => {
     if (localStreamRef.current) {
@@ -213,6 +216,10 @@ export function VoiceCallBar({
         const nextMuteState = !isMuted;
         audioTracks[0].enabled = !nextMuteState;
         setIsMuted(nextMuteState);
+
+        if (onStreamUpdate) {
+          onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
+        }
       }
     }
   };
@@ -225,8 +232,6 @@ export function VoiceCallBar({
       await initAudioStream();
     }
 
-    const pc = peerConnectionRef.current;
-
     if (nextVideoState) {
       try {
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -235,18 +240,14 @@ export function VoiceCallBar({
         if (videoTrack && localStreamRef.current) {
           localStreamRef.current.addTrack(videoTrack);
 
-          if (pc) {
-            const sender = pc.getSenders().find((s) => s.track && s.track.kind === 'video');
-            if (sender) {
-              sender.replaceTrack(videoTrack);
-            } else {
-              pc.addTrack(videoTrack, localStreamRef.current);
-              startCall();
-            }
-          }
+          Object.keys(peerConnectionsRef.current).forEach((peerId) => {
+            const pc = peerConnectionsRef.current[peerId];
+            pc.addTrack(videoTrack, localStreamRef.current);
+            createAndSendOffer(peerId);
+          });
         }
       } catch (err) {
-        console.warn('Camera access error:', err);
+        console.warn('Camera blocked:', err);
         setIsVideoOn(false);
       }
     } else {
@@ -255,13 +256,10 @@ export function VoiceCallBar({
         videoTracks.forEach((track) => {
           track.stop();
           localStreamRef.current.removeTrack(track);
+        });
 
-          if (pc) {
-            const sender = pc.getSenders().find((s) => s.track === track || (s.track && s.track.kind === 'video'));
-            if (sender) {
-              pc.removeTrack(sender);
-            }
-          }
+        Object.keys(peerConnectionsRef.current).forEach((peerId) => {
+          createAndSendOffer(peerId);
         });
       }
     }
@@ -273,8 +271,6 @@ export function VoiceCallBar({
 
   return (
     <div className="fixed bottom-4 left-4 z-50 bg-zinc-900/95 border border-emerald-500/30 backdrop-blur-xl p-3 rounded-2xl shadow-2xl flex items-center gap-4 text-white">
-      <audio ref={remoteAudioRef} autoPlay playsInline />
-
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 animate-pulse">
           <Radio className="w-5 h-5" />
@@ -322,5 +318,3 @@ export function VoiceCallBar({
     </div>
   );
 }
-
-export default VoiceCallBar;
