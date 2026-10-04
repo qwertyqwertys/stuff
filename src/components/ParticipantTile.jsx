@@ -1,6 +1,6 @@
 // src/components/ParticipantTile.jsx
 import React, { useEffect, useRef, useState } from 'react';
-import { MicOff, User } from 'lucide-react';
+import { MicOff, User, VolumeX } from 'lucide-react';
 
 export default function ParticipantTile({ participant, user, stream, currentUserId }) {
   const p = participant || user || {};
@@ -15,6 +15,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
   const audioRef = useRef(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isVideoTrackActive, setIsVideoTrackActive] = useState(false);
+  const [audioBlocked, setAudioBlocked] = useState(false);
 
   const videoTrack = stream?.getVideoTracks()?.[0];
   const audioTrack = stream?.getAudioTracks()?.[0];
@@ -23,10 +24,9 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     ? !audioTrack.enabled 
     : Boolean(p.isMuted);
 
-  // Read camera status directly from Supabase presence broadcast
   const isCameraOnPresence = p.isCameraOn !== undefined ? Boolean(p.isCameraOn) : true;
 
-  // Track live WebRTC video track status (mute/unmute/enabled/ended)
+  // Track live WebRTC video track status
   useEffect(() => {
     if (!videoTrack) {
       setIsVideoTrackActive(false);
@@ -44,7 +44,6 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     videoTrack.addEventListener('unmute', updateTrackStatus);
     videoTrack.addEventListener('ended', updateTrackStatus);
 
-    // Fast backup check for track property toggles
     const interval = setInterval(updateTrackStatus, 300);
 
     return () => {
@@ -55,17 +54,37 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     };
   }, [videoTrack]);
 
-  // Only render <video> if camera presence is active AND track is actively streaming
   const showVideo = isCameraOnPresence && isVideoTrackActive;
   const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
 
-  // Handle remote audio playback
-  useEffect(() => {
+  // Unmute and play remote audio with browser autoplay error catching
+  const playRemoteAudio = () => {
     if (!isSelf && audioRef.current && stream && hasAudioTrack) {
       audioRef.current.srcObject = stream;
-      audioRef.current.play().catch((err) => console.warn('Remote audio autoplay error:', err));
+      audioRef.current.volume = 1.0;
+      audioRef.current.play()
+        .then(() => {
+          setAudioBlocked(false);
+        })
+        .catch((err) => {
+          console.warn('Remote audio playback prevented by browser autoplay policy:', err);
+          setAudioBlocked(true);
+        });
     }
+  };
+
+  useEffect(() => {
+    playRemoteAudio();
   }, [stream, isSelf, hasAudioTrack]);
+
+  // User click handler to unlock audio if blocked by browser policy
+  const handleUserUnlockAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play()
+        .then(() => setAudioBlocked(false))
+        .catch(console.error);
+    }
+  };
 
   // Audio volume analyzer for speaking indicator border
   useEffect(() => {
@@ -85,6 +104,16 @@ export default function ParticipantTile({ participant, user, stream, currentUser
 
     try {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+      // Resume suspended context if browser restricted creation
+      if (audioContext.state === 'suspended') {
+        const resumeAudio = () => {
+          audioContext.resume();
+          window.removeEventListener('click', resumeAudio);
+        };
+        window.addEventListener('click', resumeAudio);
+      }
+
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
       analyser.smoothingTimeConstant = 0.4;
@@ -118,7 +147,6 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     };
   }, [stream, isMuted]);
 
-  // Attach stream to video tag when showVideo is true
   useEffect(() => {
     if (videoRef.current && stream && showVideo) {
       videoRef.current.srcObject = stream;
@@ -127,7 +155,10 @@ export default function ParticipantTile({ participant, user, stream, currentUser
 
   return (
     <div 
+      onClick={audioBlocked ? handleUserUnlockAudio : undefined}
       className={`relative w-full h-full aspect-video rounded-2xl overflow-hidden flex items-center justify-center bg-[#c84b2c] transition-all duration-150 ${
+        audioBlocked ? 'cursor-pointer' : ''
+      } ${
         isSpeaking 
           ? 'ring-4 ring-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.7)] scale-[1.01]' 
           : isMuted 
@@ -135,8 +166,22 @@ export default function ParticipantTile({ participant, user, stream, currentUser
           : 'border border-white/10 shadow-lg'
       }`}
     >
-      {/* Hidden Remote Audio Element */}
-      {!isSelf && <audio ref={audioRef} autoPlay playsInline />}
+      {/* Remote Audio Element */}
+      {!isSelf && <audio ref={audioRef} autoPlay playsInline controls={false} />}
+
+      {/* Autoplay Blocked Banner Overlay */}
+      {!isSelf && audioBlocked && (
+        <button 
+          onClick={handleUserUnlockAudio}
+          className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 text-white p-4 text-center cursor-pointer hover:bg-black/85 transition-all"
+        >
+          <VolumeX className="w-8 h-8 text-amber-400 animate-bounce" />
+          <span className="text-sm font-bold">Audio Blocked by Browser</span>
+          <span className="text-xs text-zinc-300 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+            Click anywhere on this tile to enable sound
+          </span>
+        </button>
+      )}
 
       {/* Speaking Badge (Top Left) */}
       {isSpeaking && (
