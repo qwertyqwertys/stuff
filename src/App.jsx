@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
 import { useBackgroundContrast } from './hooks/useBackgroundContrast.js'; 
 import { 
   X, CheckCircle2, ChevronLeft, ChevronRight, History 
@@ -230,7 +230,6 @@ function MainDashboard() {
     return id;
   });
 
-  // Unique session ID generated per device/tab instance
   const sessionId = useMemo(() => {
     return `${uniqueId}-${Math.random().toString(36).substring(2, 9)}`;
   }, [uniqueId]);
@@ -307,13 +306,13 @@ function MainDashboard() {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  const checkScroll = () => {
+  const checkScroll = useCallback(() => {
     if (categoryScrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = categoryScrollRef.current;
       setCanScrollLeft(scrollLeft > 5);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
     }
-  };
+  }, []);
 
   const scrollCategories = (direction) => {
     if (categoryScrollRef.current) {
@@ -326,7 +325,6 @@ function MainDashboard() {
     }
   };
 
-  // DYNAMIC CATEGORIES & COUNTS RECALCULATED FROM activeGames
   const categoriesWithCounts = useMemo(() => {
     const uniqueCats = [...new Set(activeGames.map(g => g?.category).filter(Boolean))];
     const final = [{ name: 'All', count: activeGames.length }];
@@ -344,7 +342,6 @@ function MainDashboard() {
     return final;
   }, [activeGames, favorites]);
 
-  // Fallback to 'All' if active category count drops to zero
   useEffect(() => {
     const categoryExists = categoriesWithCounts.some(c => c.name === activeCategory);
     if (!categoryExists) {
@@ -356,7 +353,7 @@ function MainDashboard() {
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [categoriesWithCounts]);
+  }, [checkScroll]);
 
   const safeDecode = (str) => {
     try {
@@ -462,7 +459,7 @@ function MainDashboard() {
         }
       }
     }
-  }, [bgMusic, performanceMode]);
+  }, [bgMusic, performanceMode, isPlaying]);
 
   useEffect(() => {
     if (notification) {
@@ -898,8 +895,8 @@ function MainDashboard() {
           <VoiceRoom 
             channelName="Voice Room" 
             currentUser={{
-              id: sessionId,       // Unique connection ID per device/tab
-              userId: uniqueId,    // Persistent user account ID
+              id: sessionId,       
+              userId: uniqueId,    
               name: displayName,
               avatar: profilePic
             }}
@@ -1245,10 +1242,7 @@ function NotFound() {
 export default function App() {
   return (
     <Routes>
-      {/* Primary Dashboard / Home Route */}
       <Route path="/" element={<MainDashboard />} />
-
-      {/* Catch-all 404 Route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
