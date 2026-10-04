@@ -88,29 +88,33 @@ export default function ParticipantTile({ participant, user, stream, currentUser
 
   return (
     <div 
-      className={`relative flex flex-col items-center justify-center bg-zinc-900 rounded-2xl p-4 min-h-[220px] w-full overflow-hidden transition-all duration-150 ${
+      className={`relative w-full h-full aspect-video rounded-2xl overflow-hidden flex items-center justify-center bg-[#c84b2c] transition-all duration-150 ${
         isSpeaking 
-          ? 'border-2 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)] scale-[1.02]' 
+          ? 'ring-4 ring-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.7)] scale-[1.01]' 
           : isMuted 
-          ? 'border border-red-500/40 bg-red-950/10'
-          : 'border border-zinc-800 shadow-lg'
+          ? 'ring-2 ring-red-500/50'
+          : 'border border-white/10 shadow-lg'
       }`}
     >
+      {/* Hidden Remote Audio Element */}
       {!isSelf && <audio ref={audioRef} autoPlay playsInline />}
 
+      {/* Speaking Badge (Top Left) */}
       {isSpeaking && (
-        <div className="absolute top-3 left-3 bg-emerald-500 text-black text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full z-20 animate-pulse">
+        <div className="absolute top-3 left-3 bg-emerald-500 text-black text-[10px] font-black uppercase px-2.5 py-1 rounded-full z-20 animate-pulse shadow-md">
           Speaking
         </div>
       )}
 
+      {/* Muted Badge (Top Right) */}
       {isMuted && (
-        <div className="absolute top-3 right-3 bg-red-500/90 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full z-20 flex items-center gap-1 shadow-md border border-red-400/30 backdrop-blur-sm">
+        <div className="absolute top-3 right-3 bg-red-600/90 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full z-20 flex items-center gap-1 shadow-md border border-red-400/30 backdrop-blur-sm">
           <MicOff className="w-3.5 h-3.5" />
           <span>MUTED</span>
         </div>
       )}
 
+      {/* Video Feed OR Centered Avatar Graphic */}
       {hasVideoTrack ? (
         <video
           ref={videoRef}
@@ -121,23 +125,29 @@ export default function ParticipantTile({ participant, user, stream, currentUser
           className="absolute inset-0 w-full h-full object-cover rounded-2xl"
         />
       ) : (
-        <div className="flex flex-col items-center z-10">
-          <div className={`w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 mb-3 overflow-hidden transition-all ${
+        <div className="flex items-center justify-center w-full h-full p-4 z-10">
+          <div className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center overflow-hidden transition-all ${
             isSpeaking 
-              ? 'border-2 border-emerald-400 ring-4 ring-emerald-500/30' 
+              ? 'ring-4 ring-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]' 
               : isMuted
-              ? 'border-2 border-red-500/50'
-              : 'border-2 border-zinc-700'
+              ? 'ring-2 ring-red-500/50'
+              : ''
           }`}>
             {avatar ? (
-              <img src={avatar} alt={name} className="w-full h-full object-cover" />
+              <img src={avatar} alt={name} className="w-full h-full object-contain drop-shadow-md" />
             ) : (
-              <User className="w-10 h-10 text-zinc-400" />
+              <div className="w-full h-full bg-black/20 rounded-full flex items-center justify-center text-white">
+                <User className="w-12 h-12 text-white/80" />
+              </div>
             )}
           </div>
-          <span className="text-sm font-bold text-zinc-100">{name}</span>
         </div>
       )}
+
+      {/* Bottom-left Username Pill Badge */}
+      <div className="absolute bottom-3 left-3 bg-neutral-900/80 backdrop-blur-md text-white text-sm font-semibold px-3 py-1.5 rounded-xl shadow-md flex items-center gap-2 z-20 pointer-events-none">
+        <span>{name}</span>
+      </div>
     </div>
   );
 }
