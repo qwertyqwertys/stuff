@@ -467,6 +467,34 @@ function SettingsModalContent({
       return;
     }
 
+    // IF IT'S A GIF: Bypass canvas cropper so animation stays intact!
+    if (file.type === 'image/gif') {
+      if (typeof handlePfpUpload === 'function') {
+        const syntheticTarget = {
+          files: [file],
+          value: file
+        };
+        const syntheticEvent = {
+          target: syntheticTarget,
+          files: [file],
+          file: file,
+          toString: () => file,
+          valueOf: () => file
+        };
+        try {
+          handlePfpUpload(syntheticEvent);
+        } catch (err1) {
+          try {
+            handlePfpUpload(file);
+          } catch (err2) {
+            console.error("Failed to upload GIF avatar:", err2);
+          }
+        }
+      }
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       if (reader.result) {
@@ -481,7 +509,7 @@ function SettingsModalContent({
     e.target.value = '';
   };
 
-  // --- FIXED: SAFELY DISPATCH CROPPED AVATAR TO PARENT HANDLER ---
+  // --- SAFELY DISPATCH CROPPED AVATAR TO PARENT HANDLER ---
   const handleCropSave = (croppedDataUrl) => {
     if (typeof handlePfpUpload === 'function') {
       let file = null;
@@ -650,7 +678,7 @@ function SettingsModalContent({
       <input 
         ref={pfpInputRef}
         type="file" 
-        accept="image/*" 
+        accept="image/png, image/jpeg, image/gif, image/webp" 
         onChange={handlePfpChange} 
         className="hidden" 
       />
