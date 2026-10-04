@@ -78,7 +78,23 @@ export default function VoiceRoom({
   const roomChannelRef = useRef(null);
   const trackPayloadRef = useRef({});
 
-  // Keep latest presence state in a Ref so background intervals don't use stale state
+  // Continuously monitor local audio stream enabled status for instant presence broadcast
+  useEffect(() => {
+    if (!localStream) return;
+    const audioTrack = localStream.getAudioTracks()[0];
+    if (!audioTrack) return;
+
+    const syncMuteState = () => {
+      setIsMuted(!audioTrack.enabled);
+    };
+
+    syncMuteState();
+
+    const interval = setInterval(syncMuteState, 250);
+    return () => clearInterval(interval);
+  }, [localStream]);
+
+  // Keep latest presence state in Ref
   useEffect(() => {
     trackPayloadRef.current = {
       id: localUserId,
@@ -138,7 +154,6 @@ export default function VoiceRoom({
           setIsConnected(true);
           await trackPresence();
 
-          // Heartbeat interval to keep presence alive every 10 seconds
           if (heartbeatTimer) clearInterval(heartbeatTimer);
           heartbeatTimer = setInterval(() => {
             if (roomChannelRef.current && isConnected) {
@@ -150,7 +165,6 @@ export default function VoiceRoom({
         }
       });
 
-    // Auto re-track when coming back from background tab / device sleep
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && roomChannelRef.current) {
         trackPresence();
@@ -167,7 +181,7 @@ export default function VoiceRoom({
     };
   }, [sessionKey]);
 
-  // Update presence payload on state changes without re-connecting channel
+  // Immediately broadcast updated presence when isMuted state changes
   useEffect(() => {
     if (roomChannelRef.current && isConnected) {
       roomChannelRef.current.track(trackPayloadRef.current);
@@ -213,7 +227,7 @@ export default function VoiceRoom({
         </span>
       </div>
 
-      {/* Grid container enforcing identical fixed 16:9 proportions */}
+      {/* Grid container */}
       <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-6 items-center justify-center max-w-6xl mx-auto w-full">
         {sortedParticipants.length > 0 ? (
           sortedParticipants.map((participant) => {
