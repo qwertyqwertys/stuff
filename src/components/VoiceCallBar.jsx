@@ -10,7 +10,7 @@ const ICE_SERVERS = {
   ],
 };
 
-export function VoiceCallBar({ 
+export default function VoiceCallBar({ 
   roomId = 'General', 
   myUserId,
   myUsername = 'You', 
