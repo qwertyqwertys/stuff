@@ -3,17 +3,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Mic, MicOff, PhoneOff, Radio, Video, VideoOff } from 'lucide-react';
 
-// STUN server configuration with standard port 19302
 const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
   ],
 };
 
-export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, onEndCall }) {
-  const [status, setStatus] = useState('Connecting...');
+export function VoiceCallBar({ 
+  roomId = 'General', 
+  myUsername = 'You', 
+  onLeave, 
+  onEndCall,
+  onStreamUpdate 
+}) {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
@@ -25,30 +28,35 @@ export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, 
   const localStreamRef = useRef(null);
   const iceCandidatesQueue = useRef([]);
 
-  // Supports both onLeave and onEndCall prop names
   const handleDisconnect = onLeave || onEndCall;
 
-  // Request media stream from browser
-  const getMediaStream = async (includeVideo = false) => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => track.stop());
-    }
-
+  // Initialize audio and video stream
+  const initStream = async (enableVideo = false) => {
     try {
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((t) => t.stop());
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: includeVideo,
+        video: enableVideo,
       });
+
       localStreamRef.current = stream;
 
       if (localAudioRef.current) {
         localAudioRef.current.srcObject = stream;
       }
+
+      if (onStreamUpdate) {
+        onStreamUpdate(stream);
+      }
+
       return stream;
     } catch (err) {
-      console.warn('Microphone/Camera access error:', err);
-      if (includeVideo) {
-        return getMediaStream(false);
+      console.warn('Media device access error:', err);
+      if (enableVideo) {
+        return initStream(false);
       }
       return null;
     }
@@ -63,7 +71,7 @@ export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, 
     peerConnectionRef.current = pc;
     iceCandidatesQueue.current = [];
 
-    const stream = localStreamRef.current || (await getMediaStream(isVideoOn));
+    const stream = localStreamRef.current || (await initStream(isVideoOn));
 
     if (stream) {
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
@@ -72,7 +80,6 @@ export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, 
     pc.ontrack = (event) => {
       if (remoteAudioRef.current && event.streams[0]) {
         remoteAudioRef.current.srcObject = event.streams[0];
-        remoteAudioRef.current.play().catch((e) => console.log('Audio playback delay:', e));
       }
     };
 
@@ -95,7 +102,7 @@ export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, 
       try {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (e) {
-        console.error('Error adding queued ICE candidate:', e);
+        console.error('ICE Error:', e);
       }
     }
   };
@@ -140,8 +147,7 @@ export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, 
   };
 
   useEffect(() => {
-    // Request microphone permission on mount
-    getMediaStream(false);
+    initStream(false);
 
     const channel = supabase.channel(`voice_${roomId}`);
     channelRef.current = channel;
@@ -175,13 +181,25 @@ export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, 
             event: 'signal',
             payload: { sender: myUsername, type: 'join-voice' },
           });
-          setStatus('Connected');
         }
       });
 
+    // Clean up tracks and channel ONLY — do NOT trigger handleDisconnect here
     return () => {
-      leaveVoice();
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'signal',
+          payload: { sender: myUsername, type: 'leave-voice' },
+        });
+        supabase.removeChannel(channelRef.current);
+      }
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+      }
     };
   }, [roomId, myUsername]);
 
@@ -198,37 +216,13 @@ export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, 
   const toggleVideo = async () => {
     const nextVideoState = !isVideoOn;
     setIsVideoOn(nextVideoState);
-
-    const stream = await getMediaStream(nextVideoState);
-    if (stream && peerConnectionRef.current) {
-      const pc = peerConnectionRef.current;
-      const senders = pc.getSenders();
-      const videoTrack = stream.getVideoTracks()[0];
-
-      const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
-      if (videoSender && videoTrack) {
-        videoSender.replaceTrack(videoTrack);
-      } else if (videoTrack) {
-        pc.addTrack(videoTrack, stream);
-      }
+    await initStream(nextVideoState);
+    if (peerConnectionRef.current) {
+      startCall();
     }
   };
 
-  const leaveVoice = () => {
-    if (channelRef.current) {
-      channelRef.current.send({
-        type: 'broadcast',
-        event: 'signal',
-        payload: { sender: myUsername, type: 'leave-voice' },
-      });
-    }
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => track.stop());
-    }
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
+  const manualLeave = () => {
     if (handleDisconnect) {
       handleDisconnect();
     }
@@ -249,7 +243,7 @@ export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, 
             <span className="text-[10px] text-zinc-400 font-mono">/ {roomId}</span>
           </div>
           <p className="text-[11px] text-zinc-300 font-bold truncate max-w-[140px]">
-            {connectedUsers.length > 0 ? `${connectedUsers.length + 1} in voice` : 'Waiting for others...'}
+            {connectedUsers.length > 0 ? `${connectedUsers.length + 1} in voice` : '1 in voice'}
           </p>
         </div>
       </div>
@@ -276,7 +270,7 @@ export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, 
         </button>
 
         <button
-          onClick={leaveVoice}
+          onClick={manualLeave}
           className="p-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-transform active:scale-95 shadow-md"
           title="Disconnect Voice"
         >
