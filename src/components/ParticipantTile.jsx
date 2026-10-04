@@ -14,15 +14,52 @@ export default function ParticipantTile({ participant, user, stream, currentUser
   const videoRef = useRef(null);
   const audioRef = useRef(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isVideoTrackActive, setIsVideoTrackActive] = useState(false);
 
+  const videoTrack = stream?.getVideoTracks()?.[0];
   const audioTrack = stream?.getAudioTracks()?.[0];
+
   const isMuted = audioTrack !== undefined 
     ? !audioTrack.enabled 
     : Boolean(p.isMuted);
 
-  const hasVideoTrack = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
+  // Read camera status directly from Supabase presence broadcast
+  const isCameraOnPresence = p.isCameraOn !== undefined ? Boolean(p.isCameraOn) : true;
+
+  // Track live WebRTC video track status (mute/unmute/enabled/ended)
+  useEffect(() => {
+    if (!videoTrack) {
+      setIsVideoTrackActive(false);
+      return;
+    }
+
+    const updateTrackStatus = () => {
+      const active = videoTrack.enabled && !videoTrack.muted && videoTrack.readyState === 'live';
+      setIsVideoTrackActive(active);
+    };
+
+    updateTrackStatus();
+
+    videoTrack.addEventListener('mute', updateTrackStatus);
+    videoTrack.addEventListener('unmute', updateTrackStatus);
+    videoTrack.addEventListener('ended', updateTrackStatus);
+
+    // Fast backup check for track property toggles
+    const interval = setInterval(updateTrackStatus, 300);
+
+    return () => {
+      videoTrack.removeEventListener('mute', updateTrackStatus);
+      videoTrack.removeEventListener('unmute', updateTrackStatus);
+      videoTrack.removeEventListener('ended', updateTrackStatus);
+      clearInterval(interval);
+    };
+  }, [videoTrack]);
+
+  // Only render <video> if camera presence is active AND track is actively streaming
+  const showVideo = isCameraOnPresence && isVideoTrackActive;
   const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
 
+  // Handle remote audio playback
   useEffect(() => {
     if (!isSelf && audioRef.current && stream && hasAudioTrack) {
       audioRef.current.srcObject = stream;
@@ -30,6 +67,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     }
   }, [stream, isSelf, hasAudioTrack]);
 
+  // Audio volume analyzer for speaking indicator border
   useEffect(() => {
     if (!stream || isMuted) {
       setIsSpeaking(false);
@@ -80,11 +118,12 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     };
   }, [stream, isMuted]);
 
+  // Attach stream to video tag when showVideo is true
   useEffect(() => {
-    if (videoRef.current && stream && hasVideoTrack) {
+    if (videoRef.current && stream && showVideo) {
       videoRef.current.srcObject = stream;
     }
-  }, [stream, hasVideoTrack]);
+  }, [stream, showVideo]);
 
   return (
     <div 
@@ -115,7 +154,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
       )}
 
       {/* Video Feed OR Centered Avatar Graphic */}
-      {hasVideoTrack ? (
+      {showVideo ? (
         <video
           ref={videoRef}
           autoPlay
