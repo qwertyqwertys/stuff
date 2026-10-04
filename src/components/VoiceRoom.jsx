@@ -84,10 +84,52 @@ export default function VoiceRoom({
     if (stream) {
       const videoTrack = stream.getVideoTracks()[0];
       const audioTrack = stream.getAudioTracks()[0];
-      setIsCameraOn(Boolean(videoTrack && videoTrack.enabled));
+      setIsCameraOn(Boolean(videoTrack && videoTrack.enabled && videoTrack.readyState === 'live'));
       setIsMuted(Boolean(audioTrack && !audioTrack.enabled));
+    } else {
+      setIsCameraOn(false);
     }
   };
+
+  // Explicitly stop video tracks so Chromebook cuts physical power to the camera LED
+  const toggleCamera = async () => {
+    if (isCameraOn) {
+      // TURN OFF: Call track.stop() on all video tracks to extinguish Chromebook LED
+      if (localStream) {
+        localStream.getVideoTracks().forEach((track) => {
+          track.stop();
+          localStream.removeTrack(track);
+        });
+        setLocalStream(new MediaStream(localStream.getTracks()));
+      }
+      setIsCameraOn(false);
+    } else {
+      // TURN ON: Re-request camera access from browser
+      try {
+        const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const videoTrack = cameraStream.getVideoTracks()[0];
+        
+        if (localStream) {
+          localStream.addTrack(videoTrack);
+          setLocalStream(new MediaStream(localStream.getTracks()));
+        } else {
+          setLocalStream(cameraStream);
+        }
+        setIsCameraOn(true);
+      } catch (err) {
+        console.error('Failed to enable camera:', err);
+      }
+    }
+  };
+
+  // Clean up all hardware media tracks when leaving the voice room
+  useEffect(() => {
+    return () => {
+      if (localStream) {
+        localStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [localStream]);
 
   // Keep latest presence state in Ref
   useEffect(() => {
@@ -267,6 +309,9 @@ export default function VoiceRoom({
           myUsername={displayName} 
           userAvatar={avatarUrl}
           rtcConfig={RTC_CONFIG}
+          isCameraOn={isCameraOn}
+          isMuted={isMuted}
+          onToggleCamera={toggleCamera}
           onLeave={handleLeave} 
           onEndCall={handleLeave}
           onStreamUpdate={handleStreamUpdate}
