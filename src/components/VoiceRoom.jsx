@@ -13,18 +13,41 @@ export default function VoiceRoom({
 }) {
   const handleLeave = onLeave || onLeaveRoom;
 
-  // Stream & Presence States
   const [localStream, setLocalStream] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [participants, setParticipants] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
 
   const roomChannelRef = useRef(null);
 
-  // Sync profile details (Name & PFP/Avatar) from settings/currentUser
-  const userId = useMemo(() => currentUser?.id || `user_${Math.random().toString(36).substring(2, 9)}`, [currentUser]);
-  const userName = useMemo(() => currentUser?.name || currentUser?.username || currentUser?.displayName || 'User', [currentUser]);
-  const userAvatar = useMemo(() => currentUser?.avatar || currentUser?.avatar_url || currentUser?.pfp || currentUser?.photoURL || '', [currentUser]);
+  // Auto-fetch profile from Supabase Auth if currentUser prop is missing
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (currentUser && (currentUser.name || currentUser.username || currentUser.avatar || currentUser.pfp)) {
+        setUserProfile(currentUser);
+        return;
+      }
+
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const meta = user.user_metadata || {};
+          setUserProfile({
+            id: user.id,
+            name: meta.full_name || meta.name || meta.username || user.email?.split('@')[0] || 'User',
+            avatar: meta.avatar_url || meta.pfp || meta.avatar || '',
+          });
+        }
+      }
+    };
+
+    loadProfile();
+  }, [currentUser]);
+
+  const userId = useMemo(() => userProfile?.id || currentUser?.id || `user_${Math.random().toString(36).substring(2, 9)}`, [userProfile, currentUser]);
+  const userName = useMemo(() => userProfile?.name || currentUser?.name || currentUser?.username || 'User', [userProfile, currentUser]);
+  const userAvatar = useMemo(() => userProfile?.avatar || currentUser?.avatar || currentUser?.pfp || '', [userProfile, currentUser]);
 
   // Sync users in call with Supabase Realtime Presence
   useEffect(() => {
@@ -47,6 +70,7 @@ export default function VoiceRoom({
             activeUsers.push({
               ...userPresence,
               avatar: userPresence.avatar || userAvatar,
+              name: userPresence.name || userName,
               media: { isVideo: userPresence.isCameraOn, isMuted: userPresence.isMuted },
               video: { isVideo: userPresence.isCameraOn }
             });
@@ -73,7 +97,7 @@ export default function VoiceRoom({
     };
   }, [channelName, userId, userName, userAvatar]);
 
-  // Sync state changes across Presence
+  // Track state changes across Presence
   useEffect(() => {
     if (roomChannelRef.current) {
       roomChannelRef.current.track({
@@ -120,6 +144,7 @@ export default function VoiceRoom({
               key={participant.id} 
               participant={participant} 
               user={participant}
+              currentUserId={userId}
               stream={participant.id === userId ? localStream : null}
             />
           ))
@@ -134,6 +159,7 @@ export default function VoiceRoom({
               media: { isVideo: isCameraOn },
               video: { isVideo: isCameraOn }
             }}
+            currentUserId={userId}
             stream={localStream}
           />
         )}
