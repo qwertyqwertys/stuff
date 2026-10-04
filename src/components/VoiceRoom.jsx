@@ -19,14 +19,14 @@ export default function VoiceRoom({
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [participants, setParticipants] = useState([]);
 
-  // Active channel ref to track presence updates without re-subscribing
   const roomChannelRef = useRef(null);
 
-  // Persistent user metadata
+  // Sync profile details (Name & PFP/Avatar) from settings/currentUser
   const userId = useMemo(() => currentUser?.id || `user_${Math.random().toString(36).substring(2, 9)}`, [currentUser]);
-  const userName = useMemo(() => currentUser?.name || currentUser?.username || 'User', [currentUser]);
+  const userName = useMemo(() => currentUser?.name || currentUser?.username || currentUser?.displayName || 'User', [currentUser]);
+  const userAvatar = useMemo(() => currentUser?.avatar || currentUser?.avatar_url || currentUser?.pfp || currentUser?.photoURL || '', [currentUser]);
 
-  // 1. Manage Supabase Realtime Presence without disconnect loops
+  // Sync users in call with Supabase Realtime Presence
   useEffect(() => {
     if (!supabase) return;
 
@@ -46,7 +46,7 @@ export default function VoiceRoom({
           if (userPresence) {
             activeUsers.push({
               ...userPresence,
-              // Fallback structures for ParticipantTile safety
+              avatar: userPresence.avatar || userAvatar,
               media: { isVideo: userPresence.isCameraOn, isMuted: userPresence.isMuted },
               video: { isVideo: userPresence.isCameraOn }
             });
@@ -60,6 +60,7 @@ export default function VoiceRoom({
           await roomChannel.track({
             id: userId,
             name: userName,
+            avatar: userAvatar,
             isMuted: false,
             isCameraOn: false,
             joinedAt: new Date().toISOString()
@@ -70,22 +71,22 @@ export default function VoiceRoom({
     return () => {
       supabase.removeChannel(roomChannel);
     };
-  }, [channelName, userId, userName]); // Note: isMuted and isCameraOn excluded to prevent loop
+  }, [channelName, userId, userName, userAvatar]);
 
-  // 2. Track presence state updates when controls are toggled
+  // Sync state changes across Presence
   useEffect(() => {
     if (roomChannelRef.current) {
       roomChannelRef.current.track({
         id: userId,
         name: userName,
+        avatar: userAvatar,
         isMuted,
         isCameraOn,
         joinedAt: new Date().toISOString()
       });
     }
-  }, [isMuted, isCameraOn, userId, userName]);
+  }, [isMuted, isCameraOn, userId, userName, userAvatar]);
 
-  // Handle stream updates passed from VoiceCallBar
   const handleStreamUpdate = (stream) => {
     setLocalStream(stream);
     if (stream) {
@@ -111,7 +112,7 @@ export default function VoiceRoom({
         </span>
       </div>
 
-      {/* Grid of Users */}
+      {/* User Grid */}
       <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 my-6 items-center justify-center">
         {participants.length > 0 ? (
           participants.map((participant) => (
@@ -127,6 +128,7 @@ export default function VoiceRoom({
             participant={{
               id: userId,
               name: userName,
+              avatar: userAvatar,
               isMuted,
               isCameraOn,
               media: { isVideo: isCameraOn },
@@ -142,6 +144,7 @@ export default function VoiceRoom({
         <VoiceCallBar 
           roomId={channelName} 
           myUsername={userName} 
+          userAvatar={userAvatar}
           onLeave={handleLeave} 
           onEndCall={handleLeave}
           onStreamUpdate={handleStreamUpdate}
