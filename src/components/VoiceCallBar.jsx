@@ -57,7 +57,6 @@ export default function VoiceCallBar({
       audioStream.getAudioTracks().forEach((track) => {
         localStreamRef.current.addTrack(track);
 
-        // Attach track to any existing peer connections if they were created early
         Object.values(peerConnectionsRef.current).forEach((pc) => {
           const senders = pc.getSenders();
           const hasAudioSender = senders.some((s) => s.track && s.track.kind === 'audio');
@@ -115,12 +114,37 @@ export default function VoiceCallBar({
       }
     };
 
+    pc.onnegotiationneeded = async () => {
+      try {
+        if (pc.signalingState !== 'stable') return;
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        if (channelRef.current) {
+          channelRef.current.send({
+            type: 'broadcast',
+            event: 'signal',
+            payload: {
+              senderId: myUserId,
+              targetId: targetUserId,
+              type: 'offer',
+              offer,
+            },
+          });
+        }
+      } catch (err) {
+        console.error('Negotiation error:', err);
+      }
+    };
+
     return pc;
   };
 
   const createAndSendOffer = async (targetUserId) => {
     try {
       const pc = getOrCreatePeerConnection(targetUserId);
+      if (pc.signalingState !== 'stable') return;
+      
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
@@ -145,7 +169,6 @@ export default function VoiceCallBar({
     let mounted = true;
 
     const setupVoice = async () => {
-      // Ensure microphone input is ready BEFORE signaling to avoid silent connections
       await initAudioStream();
       if (!mounted) return;
 
@@ -157,16 +180,29 @@ export default function VoiceCallBar({
           if (!payload || payload.senderId === myUserId) return;
 
           const { senderId, targetId, type, offer, answer, candidate } = payload;
+          if (targetId && targetId !== myUserId) return;
 
           try {
             if (type === 'join-voice') {
               setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
               await createAndSendOffer(senderId);
-            } else if (type === 'offer' && targetId === myUserId) {
+            } else if (type === 'offer') {
               const pc = getOrCreatePeerConnection(senderId);
+              
+              // Handle polite/impolite peer collision logic if needed, or basic state guard
+              if (pc.signalingState !== 'stable') {
+                // If we have a glare condition, rollback or accept based on user ID ordering
+                if (senderId < myUserId) {
+                  // Collision: roll back local description
+                  await pc.setLocalDescription({ type: 'rollback' });
+                } else {
+                  // Ignore incoming offer if we are higher priority
+                  return;
+                }
+              }
+
               await pc.setRemoteDescription(new RTCSessionDescription(offer));
 
-              // Process queued candidates
               if (iceCandidatesQueueRef.current[senderId]) {
                 for (const cand of iceCandidatesQueueRef.current[senderId]) {
                   await pc.addIceCandidate(new RTCIceCandidate(cand));
@@ -187,12 +223,11 @@ export default function VoiceCallBar({
                   answer: createdAnswer,
                 },
               });
-            } else if (type === 'answer' && targetId === myUserId) {
+            } else if (type === 'answer') {
               const pc = peerConnectionsRef.current[senderId];
-              if (pc && pc.signalingState !== 'closed') {
+              if (pc && pc.signalingState === 'have-local-offer') {
                 await pc.setRemoteDescription(new RTCSessionDescription(answer));
 
-                // Process queued candidates
                 if (iceCandidatesQueueRef.current[senderId]) {
                   for (const cand of iceCandidatesQueueRef.current[senderId]) {
                     await pc.addIceCandidate(new RTCIceCandidate(cand));
@@ -200,9 +235,9 @@ export default function VoiceCallBar({
                   delete iceCandidatesQueueRef.current[senderId];
                 }
               }
-            } else if (type === 'ice-candidate' && targetId === myUserId && candidate) {
+            } else if (type === 'ice-candidate' && candidate) {
               const pc = peerConnectionsRef.current[senderId];
-              if (pc && pc.remoteDescription) {
+              if (pc && pc.remoteDescription && pc.remoteDescription.type) {
                 await pc.addIceCandidate(new RTCIceCandidate(candidate));
               } else {
                 if (!iceCandidatesQueueRef.current[senderId]) {
@@ -252,6 +287,7 @@ export default function VoiceCallBar({
         supabase.removeChannel(channelRef.current);
       }
       Object.values(peerConnectionsRef.current).forEach((pc) => pc.close());
+      peerConnectionsRef.current = {};
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => track.stop());
       }
@@ -277,7 +313,6 @@ export default function VoiceCallBar({
     const nextVideoState = !isVideoOn;
 
     if (nextVideoState) {
-      // TURN CAMERA ON
       if (!localStreamRef.current) {
         await initAudioStream();
       }
@@ -294,11 +329,9 @@ export default function VoiceCallBar({
           localStreamRef.current.addTrack(newVideoTrack);
           setIsVideoOn(true);
 
-          // Add track to peer connections and renegotiate
           Object.keys(peerConnectionsRef.current).forEach((peerId) => {
             const pc = peerConnectionsRef.current[peerId];
             pc.addTrack(newVideoTrack, localStreamRef.current);
-            createAndSendOffer(peerId);
           });
         }
       } catch (err) {
@@ -306,22 +339,19 @@ export default function VoiceCallBar({
         setIsVideoOn(false);
       }
     } else {
-      // TURN CAMERA OFF: Call track.stop() so Chromebook cuts power to hardware LED
       if (localStreamRef.current) {
         const videoTracks = localStreamRef.current.getVideoTracks();
         videoTracks.forEach((track) => {
-          track.stop(); // Releases camera sensor -> LED goes OFF
+          track.stop();
           localStreamRef.current.removeTrack(track);
         });
 
-        // Remove video senders from active WebRTC peer connections
         Object.keys(peerConnectionsRef.current).forEach((peerId) => {
           const pc = peerConnectionsRef.current[peerId];
           const senders = pc.getSenders();
-          const videoSender = senders.find((s) => s.track?.kind === 'video' || s.track === null);
+          const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
           if (videoSender) {
             pc.removeTrack(videoSender);
-            createAndSendOffer(peerId);
           }
         });
       }
