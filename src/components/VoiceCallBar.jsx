@@ -30,41 +30,42 @@ export function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Optimized Low-Latency Audio Stream
-  const initStream = async (enableVideo = false) => {
+  // 1. Initialize Microphone Audio independently (Stays running regardless of camera state)
+  const initAudioStream = async () => {
     try {
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((t) => t.stop());
+      if (localStreamRef.current && localStreamRef.current.getAudioTracks().length > 0) {
+        return localStreamRef.current;
       }
 
-      // Latency-optimized media constraints
-      const constraints = {
+      const audioStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          latency: 0, // Reduces local audio buffering
         },
-        video: enableVideo,
-      };
+        video: false,
+      });
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      localStreamRef.current = stream;
+      if (!localStreamRef.current) {
+        localStreamRef.current = new MediaStream();
+      }
+
+      audioStream.getAudioTracks().forEach((track) => {
+        localStreamRef.current.addTrack(track);
+      });
 
       if (onStreamUpdate) {
-        onStreamUpdate(stream);
+        onStreamUpdate(localStreamRef.current);
       }
 
-      return stream;
+      return localStreamRef.current;
     } catch (err) {
-      console.warn('Media device error, falling back:', err);
-      if (enableVideo) {
-        return initStream(false);
-      }
+      console.error('Microphone access denied or error:', err);
       return null;
     }
   };
 
+  // 2. Initialize Peer Connection
   const initPeerConnection = async () => {
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
@@ -74,7 +75,7 @@ export function VoiceCallBar({
     peerConnectionRef.current = pc;
     iceCandidatesQueue.current = [];
 
-    const stream = localStreamRef.current || (await initStream(isVideoOn));
+    const stream = localStreamRef.current || (await initAudioStream());
 
     if (stream) {
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
@@ -150,7 +151,7 @@ export function VoiceCallBar({
   };
 
   useEffect(() => {
-    initStream(false);
+    initAudioStream();
 
     const channel = supabase.channel(`voice_${roomId}`);
     channelRef.current = channel;
@@ -205,34 +206,62 @@ export function VoiceCallBar({
     };
   }, [roomId, myUsername]);
 
+  // 3. Toggle Mute without modifying video stream
   const toggleMute = () => {
     if (localStreamRef.current) {
-      const audioTrack = localStreamRef.current.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsMuted(!audioTrack.enabled);
+      const audioTracks = localStreamRef.current.getAudioTracks();
+      if (audioTracks.length > 0) {
+        const nextMuteState = !isMuted;
+        audioTracks[0].enabled = !nextMuteState;
+        setIsMuted(nextMuteState);
       }
     }
   };
 
+  // 4. Toggle Camera independently without stopping microphone audio
   const toggleVideo = async () => {
     const nextVideoState = !isVideoOn;
     setIsVideoOn(nextVideoState);
-    await initStream(nextVideoState);
+
+    if (!localStreamRef.current) {
+      await initAudioStream();
+    }
+
+    if (nextVideoState) {
+      // Add Camera Track
+      try {
+        const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const videoTrack = videoStream.getVideoTracks()[0];
+
+        if (videoTrack && localStreamRef.current) {
+          localStreamRef.current.addTrack(videoTrack);
+        }
+      } catch (err) {
+        console.warn('Camera not available or permission denied:', err);
+        setIsVideoOn(false);
+      }
+    } else {
+      // Stop & Remove Camera Track only (Microphone audio remains intact)
+      if (localStreamRef.current) {
+        const videoTracks = localStreamRef.current.getVideoTracks();
+        videoTracks.forEach((track) => {
+          track.stop();
+          localStreamRef.current.removeTrack(track);
+        });
+      }
+    }
+
+    if (onStreamUpdate && localStreamRef.current) {
+      onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
+    }
+
     if (peerConnectionRef.current) {
       startCall();
     }
   };
 
-  const manualLeave = () => {
-    if (handleDisconnect) {
-      handleDisconnect();
-    }
-  };
-
   return (
     <div className="fixed bottom-4 left-4 z-50 bg-zinc-900/95 border border-emerald-500/30 backdrop-blur-xl p-3 rounded-2xl shadow-2xl flex items-center gap-4 text-white">
-      {/* Remote Audio Only - Local Audio is not routed here to prevent echo/delay */}
       <audio ref={remoteAudioRef} autoPlay playsInline />
 
       <div className="flex items-center gap-3">
@@ -272,7 +301,7 @@ export function VoiceCallBar({
         </button>
 
         <button
-          onClick={manualLeave}
+          onClick={handleDisconnect}
           className="p-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-transform active:scale-95 shadow-md"
           title="Disconnect Voice"
         >
