@@ -15,6 +15,7 @@ import { FriendViewModal } from './components/FriendViewModal';
 import { tracklist } from './components/tracklist'; 
 import { ChatCard } from './components/ChatCard';
 import { SoundboardCard } from './components/SoundboardCard';
+import VoiceRoom from './components/VoiceRoom';
 import { applyCloak } from './utils';
 
 // --- CONSTANTS & CONFIGS ---
@@ -886,6 +887,16 @@ function MainDashboard() {
             }
           }}
         />
+      )}
+
+      {/* Voice Call Room Full Screen Overlay */}
+      {isInVoice && (
+        <div className="fixed inset-0 z-[99999] bg-[#0b0e14] flex flex-col animate-in fade-in duration-300">
+          <VoiceRoom 
+            channelName="Voice Room" 
+            onLeave={() => setIsInVoice(false)} 
+          />
+        </div>
       )}
 
       {isChatOpen ? (
