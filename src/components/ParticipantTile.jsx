@@ -4,16 +4,17 @@ import { MicOff, User } from 'lucide-react';
 
 export default function ParticipantTile({ participant, user, stream, currentUserId }) {
   const p = participant || user || {};
-  const name = p.name || p.username || p.displayName || 'User';
+  
+  // Checks all common name keys to guarantee display
+  const name = p.name || p.username || p.displayName || p.handle || 'User';
   const avatar = p.avatar || p.avatar_url || p.pfp || p.photoURL;
   
-  const isSelf = p.isSelf || p.id === currentUserId || p.id === 'self';
+  const isSelf = p.isSelf || p.id === currentUserId || p.id === 'self' || p.id === 'self_user';
   
   const videoRef = useRef(null);
   const audioRef = useRef(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // Directly check the current stream track status for real-time toggle accuracy
   const audioTrack = stream?.getAudioTracks()?.[0];
   const isMuted = audioTrack !== undefined 
     ? !audioTrack.enabled 
@@ -22,7 +23,6 @@ export default function ParticipantTile({ participant, user, stream, currentUser
   const hasVideoTrack = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
   const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
 
-  // Auto-play remote audio through individual user tile
   useEffect(() => {
     if (!isSelf && audioRef.current && stream && hasAudioTrack) {
       audioRef.current.srcObject = stream;
@@ -30,7 +30,6 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     }
   }, [stream, isSelf, hasAudioTrack]);
 
-  // Real-time Voice Activity Detection
   useEffect(() => {
     if (!stream || isMuted) {
       setIsSpeaking(false);
@@ -97,17 +96,14 @@ export default function ParticipantTile({ participant, user, stream, currentUser
           : 'border border-zinc-800 shadow-lg'
       }`}
     >
-      {/* Hidden element to play audio for remote users */}
       {!isSelf && <audio ref={audioRef} autoPlay playsInline />}
 
-      {/* Speaking Indicator */}
       {isSpeaking && (
         <div className="absolute top-3 left-3 bg-emerald-500 text-black text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full z-20 animate-pulse">
           Speaking
         </div>
       )}
 
-      {/* Muted Status Badge - Only displays when actually muted */}
       {isMuted && (
         <div className="absolute top-3 right-3 bg-red-500/90 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full z-20 flex items-center gap-1 shadow-md border border-red-400/30 backdrop-blur-sm">
           <MicOff className="w-3.5 h-3.5" />
