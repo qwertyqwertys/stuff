@@ -1,5 +1,5 @@
 // src/components/VoiceRoom.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ParticipantTile from './ParticipantTile';
 import VoiceCallBar from './VoiceCallBar';
 import { supabase } from '../supabaseClient';
@@ -18,94 +18,98 @@ export default function VoiceRoom({
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [participants, setParticipants] = useState([]);
-  
   const [userProfile, setUserProfile] = useState(null);
-  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
 
   const roomChannelRef = useRef(null);
 
-  // 1. Load Profile from Prop, LocalStorage, Supabase Auth, or Profiles Table
+  // 1. Fetch user profile from Supabase DB or auth
   useEffect(() => {
     let isMounted = true;
 
-    const loadFullProfile = async () => {
+    const fetchProfile = async () => {
       try {
-        // Check local storage for handles saved in chat
-        const storedName = localStorage.getItem('username') || 
-                           localStorage.getItem('chat_username') || 
-                           localStorage.getItem('user_handle') || 
-                           localStorage.getItem('handle');
-        const storedAvatar = localStorage.getItem('avatar_url') || 
-                            localStorage.getItem('avatar');
+        if (!supabase) return;
+        const { data: { user } } = await supabase.auth.getUser();
 
-        let authUser = null;
-        if (supabase) {
-          const { data } = await supabase.auth.getUser();
-          authUser = data?.user;
-        }
-
-        let dbUsername = null;
-        let dbAvatar = null;
-
-        if (authUser) {
+        if (user) {
           const { data: dbProfile } = await supabase
             .from('profiles')
             .select('username, avatar_url')
-            .eq('id', authUser.id)
+            .eq('id', user.id)
             .maybeSingle();
 
-          if (dbProfile) {
-            dbUsername = dbProfile.username;
-            dbAvatar = dbProfile.avatar_url;
+          if (isMounted && dbProfile) {
+            setUserProfile({
+              id: user.id,
+              name: dbProfile.username,
+              avatar: dbProfile.avatar_url,
+            });
           }
         }
-
-        const meta = authUser?.user_metadata || {};
-
-        const finalId = authUser?.id || currentUser?.id || localStorage.getItem('user_id') || `user_${Math.random().toString(36).substring(2, 9)}`;
-        const finalName = dbUsername || currentUser?.name || currentUser?.username || meta.full_name || meta.name || meta.username || storedName || authUser?.email?.split('@')[0] || 'User';
-        const finalAvatar = dbAvatar || currentUser?.avatar || currentUser?.pfp || meta.avatar_url || meta.pfp || meta.avatar || storedAvatar || '';
-
-        if (isMounted) {
-          setUserProfile({ id: finalId, name: finalName, avatar: finalAvatar });
-          setIsProfileLoaded(true);
-        }
       } catch (err) {
-        console.warn('Profile resolution error:', err);
-        if (isMounted) setIsProfileLoaded(true);
+        console.warn('Error fetching profile:', err);
       }
     };
 
-    loadFullProfile();
+    fetchProfile();
+    return () => { isMounted = false; };
+  }, []);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [currentUser]);
+  // 2. Resolve final active name across all common object keys & storage
+  const userName = useMemo(() => {
+    return (
+      userProfile?.name ||
+      currentUser?.username ||
+      currentUser?.name ||
+      currentUser?.displayName ||
+      currentUser?.handle ||
+      localStorage.getItem('username') ||
+      localStorage.getItem('chat_username') ||
+      localStorage.getItem('user_handle') ||
+      localStorage.getItem('handle') ||
+      'User'
+    );
+  }, [userProfile, currentUser]);
 
-  const userId = userProfile?.id || currentUser?.id || 'guest';
-  const userName = userProfile?.name || currentUser?.name || currentUser?.username || 'User';
-  const userAvatar = userProfile?.avatar || currentUser?.avatar || currentUser?.pfp || '';
+  const userAvatar = useMemo(() => {
+    return (
+      userProfile?.avatar ||
+      currentUser?.avatar ||
+      currentUser?.avatar_url ||
+      currentUser?.pfp ||
+      localStorage.getItem('avatar_url') ||
+      localStorage.getItem('avatar') ||
+      ''
+    );
+  }, [userProfile, currentUser]);
 
-  // 2. Track Presence in Supabase Voice Channel
+  const userId = useMemo(() => {
+    return (
+      userProfile?.id ||
+      currentUser?.id ||
+      localStorage.getItem('user_id') ||
+      'self_user'
+    );
+  }, [userProfile, currentUser]);
+
+  // 3. Connect to room channel ONCE (does not disconnect on name update)
   useEffect(() => {
-    if (!supabase || !isProfileLoaded) return;
+    if (!supabase) return;
 
-    const roomChannel = supabase.channel(`voiceroom_${channelName}`, {
+    const channel = supabase.channel(`voiceroom_${channelName}`, {
       config: { presence: { key: userId } }
     });
 
-    roomChannelRef.current = roomChannel;
+    roomChannelRef.current = channel;
 
-    roomChannel
+    channel
       .on('presence', { event: 'sync' }, () => {
-        const state = roomChannel.presenceState();
+        const state = channel.presenceState();
         const activeUsers = [];
 
         Object.keys(state).forEach((key) => {
-          const userPresence = state[key][0];
-          if (userPresence) {
-            activeUsers.push(userPresence);
+          if (state[key] && state[key][0]) {
+            activeUsers.push(state[key][0]);
           }
         });
 
@@ -113,7 +117,7 @@ export default function VoiceRoom({
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          await roomChannel.track({
+          await channel.track({
             id: userId,
             name: userName,
             avatar: userAvatar,
@@ -125,13 +129,14 @@ export default function VoiceRoom({
       });
 
     return () => {
-      supabase.removeChannel(roomChannel);
+      supabase.removeChannel(channel);
+      roomChannelRef.current = null;
     };
-  }, [channelName, isProfileLoaded, userId, userName, userAvatar]);
+  }, [channelName, userId]);
 
-  // 3. Re-track mute/camera states
+  // 4. Update presence live on channel when name, avatar, or mute states change
   useEffect(() => {
-    if (roomChannelRef.current && isProfileLoaded) {
+    if (roomChannelRef.current) {
       roomChannelRef.current.track({
         id: userId,
         name: userName,
@@ -141,7 +146,7 @@ export default function VoiceRoom({
         joinedAt: new Date().toISOString()
       });
     }
-  }, [isMuted, isCameraOn, isProfileLoaded, userId, userName, userAvatar]);
+  }, [userName, userAvatar, isMuted, isCameraOn, userId]);
 
   const handleStreamUpdate = (stream) => {
     setLocalStream(stream);
@@ -173,11 +178,12 @@ export default function VoiceRoom({
         {participants.length > 0 ? (
           participants.map((participant) => {
             const isSelf = participant.id === userId;
-            // Force self tile to use resolved userName & avatar
+            
+            // Force local self tile to render the live userName directly
             const participantData = isSelf 
               ? { 
                   ...participant, 
-                  name: userName !== 'User' ? userName : (participant.name || 'User'),
+                  name: userName,
                   avatar: userAvatar || participant.avatar,
                   isMuted, 
                   isCameraOn, 
