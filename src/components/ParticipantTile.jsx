@@ -1,4 +1,3 @@
-// src/components/ParticipantTile.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import { MicOff, User } from 'lucide-react';
 
@@ -12,6 +11,32 @@ export default function ParticipantTile({ participant, user, stream, currentUser
   const videoRef = useRef(null);
   const audioRef = useRef(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [trackMuted, setTrackMuted] = useState(false);
+
+  // Monitor the media stream's actual track status in real-time
+  useEffect(() => {
+    if (!stream) {
+      setTrackMuted(true);
+      return;
+    }
+
+    const checkTrackState = () => {
+      const audioTracks = stream.getAudioTracks();
+      if (audioTracks.length === 0) {
+        setTrackMuted(true);
+      } else {
+        setTrackMuted(!audioTracks[0].enabled);
+      }
+    };
+
+    checkTrackState();
+    const interval = setInterval(checkTrackState, 200);
+
+    return () => clearInterval(interval);
+  }, [stream]);
+
+  // Combine presence state and real-time track status
+  const isMuted = Boolean(p.isMuted || trackMuted);
 
   const hasVideoTrack = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
   const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
@@ -26,9 +51,16 @@ export default function ParticipantTile({ participant, user, stream, currentUser
 
   // Real-time Voice Activity Detection
   useEffect(() => {
-    if (!stream) return;
+    if (!stream || isMuted) {
+      setIsSpeaking(false);
+      return;
+    }
+
     const audioTracks = stream.getAudioTracks();
-    if (audioTracks.length === 0) return;
+    if (audioTracks.length === 0 || !audioTracks[0].enabled) {
+      setIsSpeaking(false);
+      return;
+    }
 
     let audioContext;
     let animationFrameId;
@@ -51,7 +83,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
           sum += dataArray[i];
         }
         const average = sum / dataArray.length;
-        setIsSpeaking(average > 10 && !p.isMuted);
+        setIsSpeaking(average > 12 && !isMuted);
         animationFrameId = requestAnimationFrame(checkVolume);
       };
 
@@ -66,7 +98,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
         audioContext.close();
       }
     };
-  }, [stream, p.isMuted]);
+  }, [stream, isMuted]);
 
   useEffect(() => {
     if (videoRef.current && stream && hasVideoTrack) {
@@ -79,7 +111,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
       className={`relative flex flex-col items-center justify-center bg-zinc-900 rounded-2xl p-4 min-h-[220px] w-full overflow-hidden transition-all duration-150 ${
         isSpeaking 
           ? 'border-2 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)] scale-[1.02]' 
-          : p.isMuted 
+          : isMuted 
           ? 'border border-red-500/40 bg-red-950/10'
           : 'border border-zinc-800 shadow-lg'
       }`}
@@ -95,7 +127,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
       )}
 
       {/* Muted Status Badge */}
-      {p.isMuted && (
+      {isMuted && (
         <div className="absolute top-3 right-3 bg-red-500/90 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full z-20 flex items-center gap-1 shadow-md border border-red-400/30 backdrop-blur-sm">
           <MicOff className="w-3.5 h-3.5" />
           <span>MUTED</span>
@@ -116,7 +148,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
           <div className={`w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 mb-3 overflow-hidden transition-all ${
             isSpeaking 
               ? 'border-2 border-emerald-400 ring-4 ring-emerald-500/30' 
-              : p.isMuted
+              : isMuted
               ? 'border-2 border-red-500/50'
               : 'border-2 border-zinc-700'
           }`}>
