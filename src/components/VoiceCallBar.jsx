@@ -110,21 +110,25 @@ export default function VoiceCallBar({
   };
 
   const createAndSendOffer = async (targetUserId) => {
-    const pc = getOrCreatePeerConnection(targetUserId);
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
+    try {
+      const pc = getOrCreatePeerConnection(targetUserId);
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
 
-    if (channelRef.current) {
-      channelRef.current.send({
-        type: 'broadcast',
-        event: 'signal',
-        payload: {
-          senderId: myUserId,
-          targetId: targetUserId,
-          type: 'offer',
-          offer,
-        },
-      });
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'signal',
+          payload: {
+            senderId: myUserId,
+            targetId: targetUserId,
+            type: 'offer',
+            offer,
+          },
+        });
+      }
+    } catch (err) {
+      console.error('Error creating offer:', err);
     }
   };
 
@@ -140,47 +144,51 @@ export default function VoiceCallBar({
 
         const { senderId, targetId, type, offer, answer, candidate } = payload;
 
-        if (type === 'join-voice') {
-          setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
-          await createAndSendOffer(senderId);
-        } else if (type === 'offer' && targetId === myUserId) {
-          const pc = getOrCreatePeerConnection(senderId);
-          await pc.setRemoteDescription(new RTCSessionDescription(offer));
-          const createdAnswer = await pc.createAnswer();
-          await pc.setLocalDescription(createdAnswer);
+        try {
+          if (type === 'join-voice') {
+            setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
+            await createAndSendOffer(senderId);
+          } else if (type === 'offer' && targetId === myUserId) {
+            const pc = getOrCreatePeerConnection(senderId);
+            await pc.setRemoteDescription(new RTCSessionDescription(offer));
+            const createdAnswer = await pc.createAnswer();
+            await pc.setLocalDescription(createdAnswer);
 
-          channel.send({
-            type: 'broadcast',
-            event: 'signal',
-            payload: {
-              senderId: myUserId,
-              targetId: senderId,
-              type: 'answer',
-              answer: createdAnswer,
-            },
-          });
-        } else if (type === 'answer' && targetId === myUserId) {
-          const pc = peerConnectionsRef.current[senderId];
-          if (pc) {
-            await pc.setRemoteDescription(new RTCSessionDescription(answer));
-          }
-        } else if (type === 'ice-candidate' && targetId === myUserId && candidate) {
-          const pc = peerConnectionsRef.current[senderId];
-          if (pc) {
-            await pc.addIceCandidate(new RTCIceCandidate(candidate));
-          }
-        } else if (type === 'leave-voice') {
-          setConnectedUsers((prev) => prev.filter((u) => u !== senderId));
-          if (peerConnectionsRef.current[senderId]) {
-            peerConnectionsRef.current[senderId].close();
-            delete peerConnectionsRef.current[senderId];
-          }
-          if (remoteStreamsRef.current[senderId]) {
-            delete remoteStreamsRef.current[senderId];
-            if (onRemoteStreamsUpdate) {
-              onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
+            channel.send({
+              type: 'broadcast',
+              event: 'signal',
+              payload: {
+                senderId: myUserId,
+                targetId: senderId,
+                type: 'answer',
+                answer: createdAnswer,
+              },
+            });
+          } else if (type === 'answer' && targetId === myUserId) {
+            const pc = peerConnectionsRef.current[senderId];
+            if (pc && pc.signalingState !== 'closed') {
+              await pc.setRemoteDescription(new RTCSessionDescription(answer));
+            }
+          } else if (type === 'ice-candidate' && targetId === myUserId && candidate) {
+            const pc = peerConnectionsRef.current[senderId];
+            if (pc && pc.remoteDescription) {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+          } else if (type === 'leave-voice') {
+            setConnectedUsers((prev) => prev.filter((u) => u !== senderId));
+            if (peerConnectionsRef.current[senderId]) {
+              peerConnectionsRef.current[senderId].close();
+              delete peerConnectionsRef.current[senderId];
+            }
+            if (remoteStreamsRef.current[senderId]) {
+              delete remoteStreamsRef.current[senderId];
+              if (onRemoteStreamsUpdate) {
+                onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
+              }
             }
           }
+        } catch (err) {
+          console.error('Signaling error:', err);
         }
       })
       .subscribe((status) => {
@@ -236,11 +244,11 @@ export default function VoiceCallBar({
     let videoTrack = localStreamRef.current.getVideoTracks()[0];
 
     if (videoTrack) {
-      // Toggle video track enabled state directly without breaking WebRTC peer connections
+      // Direct track toggle: keeps WebRTC connections alive and prevents remote tiles from vanishing
       videoTrack.enabled = nextVideoState;
       setIsVideoOn(nextVideoState);
     } else if (nextVideoState) {
-      // Acquire video track if not present yet and add to active connections
+      // Request video track if turning camera on for the first time
       try {
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         const newVideoTrack = videoStream.getVideoTracks()[0];
@@ -249,6 +257,7 @@ export default function VoiceCallBar({
           localStreamRef.current.addTrack(newVideoTrack);
           setIsVideoOn(true);
 
+          // Add video track to active peer connections and send offer once
           Object.keys(peerConnectionsRef.current).forEach((peerId) => {
             const pc = peerConnectionsRef.current[peerId];
             pc.addTrack(newVideoTrack, localStreamRef.current);
