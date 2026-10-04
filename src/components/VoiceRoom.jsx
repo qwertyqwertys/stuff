@@ -5,6 +5,9 @@ import VoiceCallBar from './VoiceCallBar';
 import { supabase } from '../supabaseClient';
 import './VoiceRoom.css';
 
+// Fixed single global room ID so all devices always enter the same voice channel
+const GLOBAL_ROOM_ID = 'global-voice-room';
+
 // Public STUN servers to allow NAT traversal across different Wi-Fi / cellular networks
 export const RTC_CONFIG = {
   iceServers: [
@@ -21,7 +24,7 @@ export default function VoiceRoom({
   user,
   username,
   myUsername,
-  channelName = 'Voice Room', 
+  channelName = 'Global Voice Room', 
   onLeave, 
   onLeaveRoom 
 }) {
@@ -111,11 +114,12 @@ export default function VoiceRoom({
     }
   }, [currentUser, user, username, myUsername]);
 
-  // 4. Connect to Supabase Realtime Voice Channel
+  // 4. Connect to Supabase Realtime Voice Channel using the GLOBAL_ROOM_ID
   useEffect(() => {
     if (!supabase) return;
 
-    const channel = supabase.channel(`voiceroom_${channelName}`, {
+    // Guaranteed single room name across all users/devices
+    const channel = supabase.channel(`voiceroom_${GLOBAL_ROOM_ID}`, {
       config: { presence: { key: localUserId } }
     });
 
@@ -151,7 +155,7 @@ export default function VoiceRoom({
       supabase.removeChannel(channel);
       roomChannelRef.current = null;
     };
-  }, [channelName, localUserId]);
+  }, [localUserId]);
 
   // 5. Live update presence when local name or mute states change
   useEffect(() => {
@@ -237,10 +241,10 @@ export default function VoiceRoom({
         )}
       </div>
 
-      {/* Controls Bar */}
+      {/* Controls Bar - Explicitly target GLOBAL_ROOM_ID for WebRTC signaling */}
       <div className="w-full flex justify-center pb-4">
         <VoiceCallBar 
-          roomId={channelName} 
+          roomId={GLOBAL_ROOM_ID} 
           myUserId={localUserId}
           myUsername={displayName} 
           userAvatar={avatarUrl}
