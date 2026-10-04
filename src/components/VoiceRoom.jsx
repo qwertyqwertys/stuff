@@ -91,10 +91,9 @@ export default function VoiceRoom({
     }
   };
 
-  // Explicitly stop video tracks so Chromebook cuts physical power to the camera LED
+  // Explicitly stop video tracks so hardware cuts power to the camera LED
   const toggleCamera = async () => {
     if (isCameraOn) {
-      // TURN OFF: Call track.stop() on all video tracks to extinguish Chromebook LED
       if (localStream) {
         localStream.getVideoTracks().forEach((track) => {
           track.stop();
@@ -104,7 +103,6 @@ export default function VoiceRoom({
       }
       setIsCameraOn(false);
     } else {
-      // TURN ON: Re-request camera access from browser
       try {
         const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
         const videoTrack = cameraStream.getVideoTracks()[0];
