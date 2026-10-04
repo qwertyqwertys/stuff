@@ -30,7 +30,7 @@ export function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // 1. Initialize Microphone Audio independently (Stays running regardless of camera state)
+  // Ultra-Low Latency Audio Stream Initializer
   const initAudioStream = async () => {
     try {
       if (localStreamRef.current && localStreamRef.current.getAudioTracks().length > 0) {
@@ -42,6 +42,7 @@ export function VoiceCallBar({
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
+          channelCount: 1, // Single channel reduces packet size and latency
         },
         video: false,
       });
@@ -60,25 +61,24 @@ export function VoiceCallBar({
 
       return localStreamRef.current;
     } catch (err) {
-      console.error('Microphone access denied or error:', err);
+      console.error('Microphone access denied:', err);
       return null;
     }
   };
 
-  // 2. Initialize Peer Connection
-  const initPeerConnection = async () => {
+  const getOrCreatePeerConnection = () => {
     if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
+      return peerConnectionRef.current;
     }
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
     peerConnectionRef.current = pc;
     iceCandidatesQueue.current = [];
 
-    const stream = localStreamRef.current || (await initAudioStream());
-
-    if (stream) {
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => {
+        pc.addTrack(track, localStreamRef.current);
+      });
     }
 
     pc.ontrack = (event) => {
@@ -106,13 +106,13 @@ export function VoiceCallBar({
       try {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (e) {
-        console.error('ICE Error:', e);
+        console.error('ICE Candidate Error:', e);
       }
     }
   };
 
   const startCall = async () => {
-    const pc = await initPeerConnection();
+    const pc = getOrCreatePeerConnection();
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
@@ -126,7 +126,7 @@ export function VoiceCallBar({
   };
 
   const handleReceiveOffer = async (offer) => {
-    const pc = await initPeerConnection();
+    const pc = getOrCreatePeerConnection();
     await pc.setRemoteDescription(new RTCSessionDescription(offer));
     await processIceQueue(pc);
 
@@ -206,7 +206,6 @@ export function VoiceCallBar({
     };
   }, [roomId, myUsername]);
 
-  // 3. Toggle Mute without modifying video stream
   const toggleMute = () => {
     if (localStreamRef.current) {
       const audioTracks = localStreamRef.current.getAudioTracks();
@@ -218,7 +217,7 @@ export function VoiceCallBar({
     }
   };
 
-  // 4. Toggle Camera independently without stopping microphone audio
+  // Dynamically swap/replace video tracks without destroying active audio WebRTC connection
   const toggleVideo = async () => {
     const nextVideoState = !isVideoOn;
     setIsVideoOn(nextVideoState);
@@ -227,36 +226,49 @@ export function VoiceCallBar({
       await initAudioStream();
     }
 
+    const pc = peerConnectionRef.current;
+
     if (nextVideoState) {
-      // Add Camera Track
       try {
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         const videoTrack = videoStream.getVideoTracks()[0];
 
         if (videoTrack && localStreamRef.current) {
           localStreamRef.current.addTrack(videoTrack);
+
+          if (pc) {
+            const sender = pc.getSenders().find((s) => s.track && s.track.kind === 'video');
+            if (sender) {
+              sender.replaceTrack(videoTrack);
+            } else {
+              pc.addTrack(videoTrack, localStreamRef.current);
+              startCall();
+            }
+          }
         }
       } catch (err) {
-        console.warn('Camera not available or permission denied:', err);
+        console.warn('Camera access denied:', err);
         setIsVideoOn(false);
       }
     } else {
-      // Stop & Remove Camera Track only (Microphone audio remains intact)
       if (localStreamRef.current) {
         const videoTracks = localStreamRef.current.getVideoTracks();
         videoTracks.forEach((track) => {
           track.stop();
           localStreamRef.current.removeTrack(track);
+
+          if (pc) {
+            const sender = pc.getSenders().find((s) => s.track === track || (s.track && s.track.kind === 'video'));
+            if (sender) {
+              pc.removeTrack(sender);
+            }
+          }
         });
       }
     }
 
     if (onStreamUpdate && localStreamRef.current) {
       onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
-    }
-
-    if (peerConnectionRef.current) {
-      startCall();
     }
   };
 
