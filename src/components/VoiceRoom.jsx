@@ -5,10 +5,8 @@ import VoiceCallBar from './VoiceCallBar';
 import { supabase } from '../supabaseClient';
 import './VoiceRoom.css';
 
-// Fixed single global room ID so all devices always enter the same voice channel
 const GLOBAL_ROOM_ID = 'global-voice-room';
 
-// Public STUN servers to allow NAT traversal across different Wi-Fi / cellular networks
 export const RTC_CONFIG = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
@@ -30,7 +28,6 @@ export default function VoiceRoom({
 }) {
   const handleLeave = onLeave || onLeaveRoom;
 
-  // 1. Stable User ID for the entire session (prevents presence & card key mismatches)
   const [localUserId] = useState(() => {
     const u = currentUser || user;
     if (typeof u === 'object' && u?.id) return u.id;
@@ -41,7 +38,6 @@ export default function VoiceRoom({
     return newId;
   });
 
-  // 2. Resolve display name synchronously on mount across all string/object props & localStorage
   const resolveName = () => {
     const u = currentUser || user;
     if (typeof u === 'string' && u.trim()) return u;
@@ -78,7 +74,6 @@ export default function VoiceRoom({
 
   const roomChannelRef = useRef(null);
 
-  // 3. Optional: Sync from Supabase DB profiles table if available
   useEffect(() => {
     let isMounted = true;
     const fetchSupabaseProfile = async () => {
@@ -106,7 +101,6 @@ export default function VoiceRoom({
     return () => { isMounted = false; };
   }, []);
 
-  // Sync if parent component updates props dynamically
   useEffect(() => {
     const freshName = resolveName();
     if (freshName && freshName !== 'User') {
@@ -114,7 +108,6 @@ export default function VoiceRoom({
     }
   }, [currentUser, user, username, myUsername]);
 
-  // 4. Connect to Supabase Realtime Voice Channel using GLOBAL_ROOM_ID
   useEffect(() => {
     if (!supabase) return;
 
@@ -156,7 +149,6 @@ export default function VoiceRoom({
     };
   }, [localUserId]);
 
-  // 5. Live update presence when local name or mute states change
   useEffect(() => {
     if (roomChannelRef.current) {
       roomChannelRef.current.track({
@@ -180,7 +172,6 @@ export default function VoiceRoom({
     }
   };
 
-  // Sort participants so local user's account always sits at index 0 on their own device
   const sortedParticipants = useMemo(() => {
     return [...participants].sort((a, b) => {
       const aIsSelf = a.id === localUserId || a.id === 'self' || a.id === 'self_user';
@@ -206,13 +197,12 @@ export default function VoiceRoom({
         </span>
       </div>
 
-      {/* Grid of User Tiles */}
-      <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 my-6 items-center justify-center">
+      {/* Grid container enforcing identical fixed 16:9 proportions */}
+      <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-6 items-center justify-center max-w-6xl mx-auto w-full">
         {sortedParticipants.length > 0 ? (
           sortedParticipants.map((participant) => {
             const isSelf = participant.id === localUserId || participant.id === 'self' || participant.id === 'self_user';
             
-            // Force local tile to display active name and stream directly
             const participantData = isSelf 
               ? { 
                   ...participant, 
@@ -226,28 +216,31 @@ export default function VoiceRoom({
               : participant;
 
             return (
-              <ParticipantTile 
-                key={participant.id || localUserId} 
-                participant={participantData} 
-                user={participantData}
-                currentUserId={localUserId}
-                stream={isSelf ? localStream : remoteStreams[participant.id]}
-              />
+              <div key={participant.id || localUserId} className="w-full max-w-lg mx-auto aspect-video">
+                <ParticipantTile 
+                  participant={participantData} 
+                  user={participantData}
+                  currentUserId={localUserId}
+                  stream={isSelf ? localStream : remoteStreams[participant.id]}
+                />
+              </div>
             );
           })
         ) : (
-          <ParticipantTile 
-            participant={{
-              id: localUserId,
-              name: displayName,
-              avatar: avatarUrl,
-              isMuted,
-              isCameraOn,
-              isSelf: true
-            }}
-            currentUserId={localUserId}
-            stream={localStream}
-          />
+          <div className="w-full max-w-lg mx-auto aspect-video">
+            <ParticipantTile 
+              participant={{
+                id: localUserId,
+                name: displayName,
+                avatar: avatarUrl,
+                isMuted,
+                isCameraOn,
+                isSelf: true
+              }}
+              currentUserId={localUserId}
+              stream={localStream}
+            />
+          </div>
         )}
       </div>
 
