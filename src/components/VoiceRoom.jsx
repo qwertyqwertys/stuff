@@ -1,5 +1,5 @@
 // src/components/VoiceRoom.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ParticipantTile from './ParticipantTile';
 import VoiceCallBar from './VoiceCallBar';
 import { supabase } from '../supabaseClient';
@@ -114,11 +114,10 @@ export default function VoiceRoom({
     }
   }, [currentUser, user, username, myUsername]);
 
-  // 4. Connect to Supabase Realtime Voice Channel using the GLOBAL_ROOM_ID
+  // 4. Connect to Supabase Realtime Voice Channel using GLOBAL_ROOM_ID
   useEffect(() => {
     if (!supabase) return;
 
-    // Guaranteed single room name across all users/devices
     const channel = supabase.channel(`voiceroom_${GLOBAL_ROOM_ID}`, {
       config: { presence: { key: localUserId } }
     });
@@ -181,6 +180,17 @@ export default function VoiceRoom({
     }
   };
 
+  // Sort participants so local user's account always sits at index 0 on their own device
+  const sortedParticipants = useMemo(() => {
+    return [...participants].sort((a, b) => {
+      const aIsSelf = a.id === localUserId || a.id === 'self' || a.id === 'self_user';
+      const bIsSelf = b.id === localUserId || b.id === 'self' || b.id === 'self_user';
+      if (aIsSelf) return -1;
+      if (bIsSelf) return 1;
+      return 0;
+    });
+  }, [participants, localUserId]);
+
   return (
     <div className="voice-room relative w-full h-full min-h-screen flex flex-col justify-between p-6 bg-[#0b0e14] text-white">
       {/* Header */}
@@ -188,7 +198,7 @@ export default function VoiceRoom({
         <div>
           <h2 className="text-xl font-bold text-white">{channelName}</h2>
           <p className="text-xs text-zinc-400">
-            {participants.length > 0 ? `${participants.length} connected in call` : 'Connected'}
+            {sortedParticipants.length > 0 ? `${sortedParticipants.length} connected in call` : 'Connected'}
           </p>
         </div>
         <span className="text-xs bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 px-3 py-1 rounded-full font-semibold animate-pulse">
@@ -198,11 +208,11 @@ export default function VoiceRoom({
 
       {/* Grid of User Tiles */}
       <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 my-6 items-center justify-center">
-        {participants.length > 0 ? (
-          participants.map((participant) => {
+        {sortedParticipants.length > 0 ? (
+          sortedParticipants.map((participant) => {
             const isSelf = participant.id === localUserId || participant.id === 'self' || participant.id === 'self_user';
             
-            // Force local tile to display active name directly
+            // Force local tile to display active name and stream directly
             const participantData = isSelf 
               ? { 
                   ...participant, 
@@ -241,7 +251,7 @@ export default function VoiceRoom({
         )}
       </div>
 
-      {/* Controls Bar - Explicitly target GLOBAL_ROOM_ID for WebRTC signaling */}
+      {/* Controls Bar */}
       <div className="w-full flex justify-center pb-4">
         <VoiceCallBar 
           roomId={GLOBAL_ROOM_ID} 
