@@ -135,15 +135,22 @@ export default function VoiceRoom({
       {/* Grid of User Tiles */}
       <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 my-6 items-center justify-center">
         {participants.length > 0 ? (
-          participants.map((participant) => (
-            <ParticipantTile 
-              key={participant.id} 
-              participant={participant} 
-              user={participant}
-              currentUserId={userId}
-              stream={participant.id === userId ? localStream : remoteStreams[participant.id]}
-            />
-          ))
+          participants.map((participant) => {
+            const isSelf = participant.id === userId;
+            const participantData = isSelf 
+              ? { ...participant, isMuted, isCameraOn, isSelf: true } 
+              : participant;
+
+            return (
+              <ParticipantTile 
+                key={participant.id} 
+                participant={participantData} 
+                user={participantData}
+                currentUserId={userId}
+                stream={isSelf ? localStream : remoteStreams[participant.id]}
+              />
+            );
+          })
         ) : (
           <ParticipantTile 
             participant={{
@@ -152,6 +159,7 @@ export default function VoiceRoom({
               avatar: userAvatar,
               isMuted,
               isCameraOn,
+              isSelf: true
             }}
             currentUserId={userId}
             stream={localStream}
