@@ -1,3 +1,4 @@
+// src/components/ParticipantTile.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import { MicOff, User } from 'lucide-react';
 
@@ -11,32 +12,12 @@ export default function ParticipantTile({ participant, user, stream, currentUser
   const videoRef = useRef(null);
   const audioRef = useRef(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [trackMuted, setTrackMuted] = useState(false);
 
-  // Monitor the media stream's actual track status in real-time
-  useEffect(() => {
-    if (!stream) {
-      setTrackMuted(true);
-      return;
-    }
-
-    const checkTrackState = () => {
-      const audioTracks = stream.getAudioTracks();
-      if (audioTracks.length === 0) {
-        setTrackMuted(true);
-      } else {
-        setTrackMuted(!audioTracks[0].enabled);
-      }
-    };
-
-    checkTrackState();
-    const interval = setInterval(checkTrackState, 200);
-
-    return () => clearInterval(interval);
-  }, [stream]);
-
-  // Combine presence state and real-time track status
-  const isMuted = Boolean(p.isMuted || trackMuted);
+  // Directly check the current stream track status for real-time toggle accuracy
+  const audioTrack = stream?.getAudioTracks()?.[0];
+  const isMuted = audioTrack !== undefined 
+    ? !audioTrack.enabled 
+    : Boolean(p.isMuted);
 
   const hasVideoTrack = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
   const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
@@ -126,7 +107,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
         </div>
       )}
 
-      {/* Muted Status Badge */}
+      {/* Muted Status Badge - Only displays when actually muted */}
       {isMuted && (
         <div className="absolute top-3 right-3 bg-red-500/90 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full z-20 flex items-center gap-1 shadow-md border border-red-400/30 backdrop-blur-sm">
           <MicOff className="w-3.5 h-3.5" />
