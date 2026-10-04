@@ -230,6 +230,11 @@ function MainDashboard() {
     return id;
   });
 
+  // Unique session ID generated per device/tab instance
+  const sessionId = useMemo(() => {
+    return `${uniqueId}-${Math.random().toString(36).substring(2, 9)}`;
+  }, [uniqueId]);
+
   const getLaunchUrl = (game, currentSupplier) => {
     if (currentSupplier !== 'Default' && game.urls && game.urls[currentSupplier]) {
       return game.urls[currentSupplier];
@@ -667,7 +672,6 @@ function MainDashboard() {
     }
   };
 
-  // Upload or update PFP and sync across all Supabase chat messages in real time
   const handlePfpUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -692,7 +696,6 @@ function MainDashboard() {
     }
   };
 
-  // Delete/Reset PFP and clear avatar across Supabase chat messages automatically
   const handleResetPfp = async () => {
     setProfilePic('');
     localStorage.removeItem('capy-pfp');
@@ -895,7 +898,8 @@ function MainDashboard() {
           <VoiceRoom 
             channelName="Voice Room" 
             currentUser={{
-              id: uniqueId,
+              id: sessionId,       // Unique connection ID per device/tab
+              userId: uniqueId,    // Persistent user account ID
               name: displayName,
               avatar: profilePic
             }}
