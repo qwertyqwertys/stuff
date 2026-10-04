@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { Mic, MicOff, PhoneOff, Radio, Volume2 } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Radio } from 'lucide-react';
 
 const ICE_SERVERS = {
   iceServers: [
@@ -9,7 +9,7 @@ const ICE_SERVERS = {
   ],
 };
 
-export function VoiceCallBar({ roomId, myUsername, onLeave }) {
+export function VoiceCallBar({ roomId = 'General', myUsername = 'You', onLeave, onEndCall }) {
   const [status, setStatus] = useState('Connecting...');
   const [isMuted, setIsMuted] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
@@ -20,13 +20,16 @@ export function VoiceCallBar({ roomId, myUsername, onLeave }) {
   const channelRef = useRef(null);
   const localStreamRef = useRef(null);
 
+  // Supports both onLeave and onEndCall prop names
+  const handleDisconnect = onLeave || onEndCall;
+
   useEffect(() => {
     const channel = supabase.channel(`voice_${roomId}`);
     channelRef.current = channel;
 
     channel
       .on('broadcast', { event: 'signal' }, async ({ payload }) => {
-        if (payload.sender === myUsername) return;
+        if (!payload || payload.sender === myUsername) return;
 
         if (payload.type === 'join-voice') {
           setConnectedUsers((prev) => Array.from(new Set([...prev, payload.sender])));
@@ -59,17 +62,21 @@ export function VoiceCallBar({ roomId, myUsername, onLeave }) {
       leaveVoice();
       supabase.removeChannel(channel);
     };
-  }, [roomId]);
+  }, [roomId, myUsername]);
 
   const initPeerConnection = async () => {
     const pc = new RTCPeerConnection(ICE_SERVERS);
     peerConnectionRef.current = pc;
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    localStreamRef.current = stream;
-    if (localAudioRef.current) localAudioRef.current.srcObject = stream;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      localStreamRef.current = stream;
+      if (localAudioRef.current) localAudioRef.current.srcObject = stream;
 
-    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+    }
 
     pc.ontrack = (event) => {
       if (remoteAudioRef.current) {
@@ -78,7 +85,7 @@ export function VoiceCallBar({ roomId, myUsername, onLeave }) {
     };
 
     pc.onicecandidate = (event) => {
-      if (event.candidate) {
+      if (event.candidate && channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
           event: 'signal',
@@ -95,11 +102,13 @@ export function VoiceCallBar({ roomId, myUsername, onLeave }) {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
-    channelRef.current.send({
-      type: 'broadcast',
-      event: 'signal',
-      payload: { sender: myUsername, type: 'offer', offer },
-    });
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'signal',
+        payload: { sender: myUsername, type: 'offer', offer },
+      });
+    }
   };
 
   const handleReceiveOffer = async (offer) => {
@@ -108,11 +117,13 @@ export function VoiceCallBar({ roomId, myUsername, onLeave }) {
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
 
-    channelRef.current.send({
-      type: 'broadcast',
-      event: 'signal',
-      payload: { sender: myUsername, type: 'answer', answer },
-    });
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'signal',
+        payload: { sender: myUsername, type: 'answer', answer },
+      });
+    }
   };
 
   const handleReceiveAnswer = async (answer) => {
@@ -146,7 +157,9 @@ export function VoiceCallBar({ roomId, myUsername, onLeave }) {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
-    if (onLeave) onLeave();
+    if (handleDisconnect) {
+      handleDisconnect();
+    }
   };
 
   return (
@@ -191,3 +204,5 @@ export function VoiceCallBar({ roomId, myUsername, onLeave }) {
     </div>
   );
 }
+
+export default VoiceCallBar;
