@@ -5,8 +5,6 @@ import VoiceCallBar from './VoiceCallBar';
 import { supabase } from '../supabaseClient';
 import './VoiceRoom.css';
 
-const GLOBAL_ROOM_ID = 'global-voice-room';
-
 export const RTC_CONFIG = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
@@ -27,6 +25,13 @@ export default function VoiceRoom({
   onLeaveRoom 
 }) {
   const handleLeave = onLeave || onLeaveRoom;
+
+  // Standardize the room ID slug from the channelName prop to ensure consistency across devices
+  const ROOM_SLUG = useMemo(() => {
+    return (channelName || 'global-voice-room')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '_');
+  }, [channelName]);
 
   const [localUserId] = useState(() => {
     const u = currentUser || user;
@@ -174,7 +179,7 @@ export default function VoiceRoom({
       }
     };
 
-    const channel = supabase.channel(`voiceroom_${GLOBAL_ROOM_ID}`, {
+    const channel = supabase.channel(`voiceroom_${ROOM_SLUG}`, {
       config: { presence: { key: sessionKey } }
     });
 
@@ -205,7 +210,7 @@ export default function VoiceRoom({
       supabase.removeChannel(channel);
       roomChannelRef.current = null;
     };
-  }, [sessionKey]);
+  }, [ROOM_SLUG, sessionKey]);
 
   // Broadcast presence updates when camera/mute toggles
   useEffect(() => {
@@ -299,10 +304,10 @@ export default function VoiceRoom({
         )}
       </div>
 
-      {/* Controls Bar */}
+      {/* Controls Bar - Passes ROOM_SLUG so WebRTC signaling aligns with presence */}
       <div className="w-full flex justify-center pb-4">
         <VoiceCallBar 
-          roomId={GLOBAL_ROOM_ID} 
+          roomId={ROOM_SLUG} 
           myUserId={localUserId}
           myUsername={displayName} 
           userAvatar={avatarUrl}
