@@ -14,6 +14,7 @@ export default function VoiceRoom({
   const handleLeave = onLeave || onLeaveRoom;
 
   const [localStream, setLocalStream] = useState(null);
+  const [remoteStreams, setRemoteStreams] = useState({});
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [participants, setParticipants] = useState([]);
@@ -21,7 +22,6 @@ export default function VoiceRoom({
 
   const roomChannelRef = useRef(null);
 
-  // Auto-fetch profile from Supabase Auth if currentUser prop is missing
   useEffect(() => {
     const loadProfile = async () => {
       if (currentUser && (currentUser.name || currentUser.username || currentUser.avatar || currentUser.pfp)) {
@@ -49,7 +49,6 @@ export default function VoiceRoom({
   const userName = useMemo(() => userProfile?.name || currentUser?.name || currentUser?.username || 'User', [userProfile, currentUser]);
   const userAvatar = useMemo(() => userProfile?.avatar || currentUser?.avatar || currentUser?.pfp || '', [userProfile, currentUser]);
 
-  // Sync users in call with Supabase Realtime Presence
   useEffect(() => {
     if (!supabase) return;
 
@@ -71,8 +70,6 @@ export default function VoiceRoom({
               ...userPresence,
               avatar: userPresence.avatar || userAvatar,
               name: userPresence.name || userName,
-              media: { isVideo: userPresence.isCameraOn, isMuted: userPresence.isMuted },
-              video: { isVideo: userPresence.isCameraOn }
             });
           }
         });
@@ -85,8 +82,8 @@ export default function VoiceRoom({
             id: userId,
             name: userName,
             avatar: userAvatar,
-            isMuted: false,
-            isCameraOn: false,
+            isMuted,
+            isCameraOn,
             joinedAt: new Date().toISOString()
           });
         }
@@ -97,7 +94,6 @@ export default function VoiceRoom({
     };
   }, [channelName, userId, userName, userAvatar]);
 
-  // Track state changes across Presence
   useEffect(() => {
     if (roomChannelRef.current) {
       roomChannelRef.current.track({
@@ -136,7 +132,7 @@ export default function VoiceRoom({
         </span>
       </div>
 
-      {/* User Grid */}
+      {/* Grid of User Tiles */}
       <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 my-6 items-center justify-center">
         {participants.length > 0 ? (
           participants.map((participant) => (
@@ -145,7 +141,7 @@ export default function VoiceRoom({
               participant={participant} 
               user={participant}
               currentUserId={userId}
-              stream={participant.id === userId ? localStream : null}
+              stream={participant.id === userId ? localStream : remoteStreams[participant.id]}
             />
           ))
         ) : (
@@ -156,8 +152,6 @@ export default function VoiceRoom({
               avatar: userAvatar,
               isMuted,
               isCameraOn,
-              media: { isVideo: isCameraOn },
-              video: { isVideo: isCameraOn }
             }}
             currentUserId={userId}
             stream={localStream}
@@ -165,15 +159,17 @@ export default function VoiceRoom({
         )}
       </div>
 
-      {/* Control Bar */}
+      {/* Controls Bar */}
       <div className="w-full flex justify-center pb-4">
         <VoiceCallBar 
           roomId={channelName} 
+          myUserId={userId}
           myUsername={userName} 
           userAvatar={userAvatar}
           onLeave={handleLeave} 
           onEndCall={handleLeave}
           onStreamUpdate={handleStreamUpdate}
+          onRemoteStreamsUpdate={(streams) => setRemoteStreams(streams)}
         />
       </div>
     </div>
