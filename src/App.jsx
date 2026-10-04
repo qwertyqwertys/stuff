@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
-import { useBackgroundContrast } from './hooks/useBackgroundContrast.js';
+import { useBackgroundContrast } from './hooks/useBackgroundContrast.js'; 
 import { 
   X, CheckCircle2, ChevronLeft, ChevronRight, History 
 } from 'lucide-react';
