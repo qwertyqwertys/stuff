@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ParticipantTile from './ParticipantTile';
-import VoiceCallBar from './VoiceCallBar'; // Imports your existing component
+import { VoiceCallBar } from './VoiceCallBar';
 import './VoiceRoom.css';
 
 // Example state matching the 5 participants from your screenshot
