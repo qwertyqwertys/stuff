@@ -530,7 +530,6 @@ function SettingsModalContent({
         console.warn("Failed to convert croppedDataUrl to File:", err);
       }
 
-      // Create a synthetic event object with .target.files so event-style handlers won't crash
       const syntheticTarget = {
         files: file ? [file] : [croppedDataUrl],
         value: croppedDataUrl
@@ -657,7 +656,6 @@ function SettingsModalContent({
     setCustomSongs(prev => (Array.isArray(prev) ? prev.filter(song => song.id !== id) : []));
   };
 
-  // Safe tracklist calculation
   const safeCustomSongs = Array.isArray(customSongs) ? customSongs : [];
   const safeTracklist = Array.isArray(tracklist) ? tracklist : [];
   const fullTracklist = [...safeCustomSongs, ...safeTracklist];
