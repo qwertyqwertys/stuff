@@ -894,6 +894,11 @@ function MainDashboard() {
         <div className="fixed inset-0 z-[99999] bg-[#0b0e14] flex flex-col animate-in fade-in duration-300">
           <VoiceRoom 
             channelName="Voice Room" 
+            currentUser={{
+              id: uniqueId,
+              name: displayName,
+              avatar: profilePic
+            }}
             onLeave={() => setIsInVoice(false)} 
           />
         </div>
