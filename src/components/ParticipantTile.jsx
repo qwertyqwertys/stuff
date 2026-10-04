@@ -7,15 +7,24 @@ export default function ParticipantTile({ participant, user, stream, currentUser
   const name = p.name || p.username || p.displayName || 'User';
   const avatar = p.avatar || p.avatar_url || p.pfp || p.photoURL;
   
-  // Accurately determine if this tile belongs to the local user
   const isSelf = p.isSelf || p.id === currentUserId || p.id === 'self';
   
   const videoRef = useRef(null);
+  const audioRef = useRef(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const hasVideoTrack = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
+  const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
 
-  // Real-time Voice Activity Detection (AnalyserNode)
+  // Auto-play remote audio through individual user tile
+  useEffect(() => {
+    if (!isSelf && audioRef.current && stream && hasAudioTrack) {
+      audioRef.current.srcObject = stream;
+      audioRef.current.play().catch((err) => console.warn('Remote audio autoplay error:', err));
+    }
+  }, [stream, isSelf, hasAudioTrack]);
+
+  // Real-time Voice Activity Detection
   useEffect(() => {
     if (!stream) return;
     const audioTracks = stream.getAudioTracks();
@@ -42,7 +51,6 @@ export default function ParticipantTile({ participant, user, stream, currentUser
           sum += dataArray[i];
         }
         const average = sum / dataArray.length;
-        // Trigger green highlight when audio level passes threshold
         setIsSpeaking(average > 10 && !p.isMuted);
         animationFrameId = requestAnimationFrame(checkVolume);
       };
@@ -68,16 +76,29 @@ export default function ParticipantTile({ participant, user, stream, currentUser
 
   return (
     <div 
-      className={`relative flex flex-col items-center justify-center bg-zinc-900 rounded-2xl p-4 min-h-[200px] w-full overflow-hidden transition-all duration-150 ${
+      className={`relative flex flex-col items-center justify-center bg-zinc-900 rounded-2xl p-4 min-h-[220px] w-full overflow-hidden transition-all duration-150 ${
         isSpeaking 
           ? 'border-2 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)] scale-[1.02]' 
+          : p.isMuted 
+          ? 'border border-red-500/40 bg-red-950/10'
           : 'border border-zinc-800 shadow-lg'
       }`}
     >
-      {/* Active Speaking Indicator Badge */}
+      {/* Hidden element to play audio for remote users */}
+      {!isSelf && <audio ref={audioRef} autoPlay playsInline />}
+
+      {/* Speaking Indicator */}
       {isSpeaking && (
-        <div className="absolute top-3 left-3 bg-emerald-500 text-black text-[10px] font-black uppercase px-2 py-0.5 rounded-full z-20 animate-pulse">
+        <div className="absolute top-3 left-3 bg-emerald-500 text-black text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full z-20 animate-pulse">
           Speaking
+        </div>
+      )}
+
+      {/* Muted Status Badge */}
+      {p.isMuted && (
+        <div className="absolute top-3 right-3 bg-red-500/90 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full z-20 flex items-center gap-1 shadow-md border border-red-400/30 backdrop-blur-sm">
+          <MicOff className="w-3.5 h-3.5" />
+          <span>MUTED</span>
         </div>
       )}
 
@@ -93,7 +114,11 @@ export default function ParticipantTile({ participant, user, stream, currentUser
       ) : (
         <div className="flex flex-col items-center z-10">
           <div className={`w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 mb-3 overflow-hidden transition-all ${
-            isSpeaking ? 'border-2 border-emerald-400 ring-4 ring-emerald-500/30' : 'border-2 border-zinc-700'
+            isSpeaking 
+              ? 'border-2 border-emerald-400 ring-4 ring-emerald-500/30' 
+              : p.isMuted
+              ? 'border-2 border-red-500/50'
+              : 'border-2 border-zinc-700'
           }`}>
             {avatar ? (
               <img src={avatar} alt={name} className="w-full h-full object-cover" />
@@ -102,12 +127,6 @@ export default function ParticipantTile({ participant, user, stream, currentUser
             )}
           </div>
           <span className="text-sm font-bold text-zinc-100">{name}</span>
-        </div>
-      )}
-
-      {p.isMuted && (
-        <div className="absolute bottom-3 right-3 bg-red-500 text-white p-1.5 rounded-full text-xs shadow-md z-20">
-          <MicOff className="w-4 h-4" />
         </div>
       )}
     </div>
