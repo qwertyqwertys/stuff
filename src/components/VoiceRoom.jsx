@@ -28,6 +28,7 @@ export default function VoiceRoom({
 }) {
   const handleLeave = onLeave || onLeaveRoom;
 
+  // Persistent User ID for user identification
   const [localUserId] = useState(() => {
     const u = currentUser || user;
     if (typeof u === 'object' && u?.id) return u.id;
@@ -37,6 +38,9 @@ export default function VoiceRoom({
     localStorage.setItem('user_id', newId);
     return newId;
   });
+
+  // Unique per-device/per-tab session key to prevent cross-device overwrites
+  const [sessionKey] = useState(() => `${localUserId}_${Math.random().toString(36).substring(2, 7)}`);
 
   const resolveName = () => {
     const u = currentUser || user;
@@ -71,6 +75,7 @@ export default function VoiceRoom({
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [participants, setParticipants] = useState([]);
+  const [isConnected, setIsConnected] = useState(false);
 
   const roomChannelRef = useRef(null);
 
@@ -102,44 +107,49 @@ export default function VoiceRoom({
   }, []);
 
   useEffect(() => {
-    const freshName = resolveName();
-    if (freshName && freshName !== 'User') {
-      setDisplayName(freshName);
-    }
-  }, [currentUser, user, username, myUsername]);
-
-  useEffect(() => {
     if (!supabase) return;
 
+    // Use unique sessionKey so multiple devices/tabs don't replace each other
     const channel = supabase.channel(`voiceroom_${GLOBAL_ROOM_ID}`, {
-      config: { presence: { key: localUserId } }
+      config: { presence: { key: sessionKey } }
     });
 
     roomChannelRef.current = channel;
 
+    const syncPresence = () => {
+      const state = channel.presenceState();
+      const activeUsers = [];
+
+      Object.keys(state).forEach((key) => {
+        const presences = state[key];
+        if (Array.isArray(presences)) {
+          presences.forEach((p) => {
+            if (p) activeUsers.push(p);
+          });
+        }
+      });
+
+      setParticipants(activeUsers);
+    };
+
     channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const activeUsers = [];
-
-        Object.keys(state).forEach((key) => {
-          if (state[key] && state[key][0]) {
-            activeUsers.push(state[key][0]);
-          }
-        });
-
-        setParticipants(activeUsers);
-      })
+      .on('presence', { event: 'sync' }, syncPresence)
+      .on('presence', { event: 'join' }, syncPresence)
+      .on('presence', { event: 'leave' }, syncPresence)
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+          setIsConnected(true);
           await channel.track({
             id: localUserId,
+            sessionKey,
             name: displayName,
             avatar: avatarUrl,
             isMuted,
             isCameraOn,
             joinedAt: new Date().toISOString()
           });
+        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setIsConnected(false);
         }
       });
 
@@ -147,12 +157,14 @@ export default function VoiceRoom({
       supabase.removeChannel(channel);
       roomChannelRef.current = null;
     };
-  }, [localUserId]);
+  }, [sessionKey, localUserId]);
 
+  // Sync state changes across presence without recreating channel connection
   useEffect(() => {
-    if (roomChannelRef.current) {
+    if (roomChannelRef.current && isConnected) {
       roomChannelRef.current.track({
         id: localUserId,
+        sessionKey,
         name: displayName,
         avatar: avatarUrl,
         isMuted,
@@ -160,7 +172,7 @@ export default function VoiceRoom({
         joinedAt: new Date().toISOString()
       });
     }
-  }, [displayName, avatarUrl, isMuted, isCameraOn, localUserId]);
+  }, [displayName, avatarUrl, isMuted, isCameraOn, localUserId, sessionKey, isConnected]);
 
   const handleStreamUpdate = (stream) => {
     setLocalStream(stream);
@@ -174,13 +186,13 @@ export default function VoiceRoom({
 
   const sortedParticipants = useMemo(() => {
     return [...participants].sort((a, b) => {
-      const aIsSelf = a.id === localUserId || a.id === 'self' || a.id === 'self_user';
-      const bIsSelf = b.id === localUserId || b.id === 'self' || b.id === 'self_user';
+      const aIsSelf = a.sessionKey === sessionKey || a.id === localUserId;
+      const bIsSelf = b.sessionKey === sessionKey || b.id === localUserId;
       if (aIsSelf) return -1;
       if (bIsSelf) return 1;
       return 0;
     });
-  }, [participants, localUserId]);
+  }, [participants, sessionKey, localUserId]);
 
   return (
     <div className="voice-room relative w-full h-full min-h-screen flex flex-col justify-between p-6 bg-[#0b0e14] text-white">
@@ -189,11 +201,15 @@ export default function VoiceRoom({
         <div>
           <h2 className="text-xl font-bold text-white">{channelName}</h2>
           <p className="text-xs text-zinc-400">
-            {sortedParticipants.length > 0 ? `${sortedParticipants.length} connected in call` : 'Connected'}
+            {sortedParticipants.length > 0 ? `${sortedParticipants.length} connected in call` : 'Connecting...'}
           </p>
         </div>
-        <span className="text-xs bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 px-3 py-1 rounded-full font-semibold animate-pulse">
-          Voice Active
+        <span className={`text-xs border px-3 py-1 rounded-full font-semibold ${
+          isConnected 
+            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 animate-pulse' 
+            : 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+        }`}>
+          {isConnected ? 'Voice Active' : 'Connecting...'}
         </span>
       </div>
 
@@ -201,7 +217,7 @@ export default function VoiceRoom({
       <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-6 items-center justify-center max-w-6xl mx-auto w-full">
         {sortedParticipants.length > 0 ? (
           sortedParticipants.map((participant) => {
-            const isSelf = participant.id === localUserId || participant.id === 'self' || participant.id === 'self_user';
+            const isSelf = participant.sessionKey === sessionKey || participant.id === localUserId;
             
             const participantData = isSelf 
               ? { 
@@ -216,7 +232,7 @@ export default function VoiceRoom({
               : participant;
 
             return (
-              <div key={participant.id || localUserId} className="w-full max-w-lg mx-auto aspect-video">
+              <div key={participant.sessionKey || participant.id} className="w-full max-w-lg mx-auto aspect-video">
                 <ParticipantTile 
                   participant={participantData} 
                   user={participantData}
