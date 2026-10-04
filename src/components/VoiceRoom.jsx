@@ -1,5 +1,5 @@
 // src/components/VoiceRoom.jsx
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ParticipantTile from './ParticipantTile';
 import VoiceCallBar from './VoiceCallBar';
 import { supabase } from '../supabaseClient';
@@ -18,39 +18,72 @@ export default function VoiceRoom({
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [participants, setParticipants] = useState([]);
+  
   const [userProfile, setUserProfile] = useState(null);
+  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
 
   const roomChannelRef = useRef(null);
 
+  // 1. Load Profile from Supabase Auth + Database Table
   useEffect(() => {
-    const loadProfile = async () => {
-      if (currentUser && (currentUser.name || currentUser.username || currentUser.avatar || currentUser.pfp)) {
-        setUserProfile(currentUser);
-        return;
-      }
+    let isMounted = true;
 
-      if (supabase) {
+    const loadFullProfile = async () => {
+      try {
+        if (!supabase) return;
+
         const { data: { user } } = await supabase.auth.getUser();
+
         if (user) {
+          // Fetch custom profile from Supabase DB table
+          const { data: dbProfile } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', user.id)
+            .maybeSingle();
+
           const meta = user.user_metadata || {};
-          setUserProfile({
+
+          const resolvedProfile = {
             id: user.id,
-            name: meta.full_name || meta.name || meta.username || user.email?.split('@')[0] || 'User',
-            avatar: meta.avatar_url || meta.pfp || meta.avatar || '',
-          });
+            name: dbProfile?.username || currentUser?.name || currentUser?.username || meta.full_name || meta.name || meta.username || user.email?.split('@')[0] || 'User',
+            avatar: dbProfile?.avatar_url || currentUser?.avatar || currentUser?.pfp || meta.avatar_url || meta.pfp || meta.avatar || '',
+          };
+
+          if (isMounted) {
+            setUserProfile(resolvedProfile);
+            setIsProfileLoaded(true);
+          }
+        } else if (currentUser) {
+          if (isMounted) {
+            setUserProfile({
+              id: currentUser.id || `user_${Math.random().toString(36).substring(2, 9)}`,
+              name: currentUser.name || currentUser.username || 'User',
+              avatar: currentUser.avatar || currentUser.pfp || '',
+            });
+            setIsProfileLoaded(true);
+          }
         }
+      } catch (err) {
+        console.warn('Profile load error:', err);
+        if (isMounted) setIsProfileLoaded(true);
       }
     };
 
-    loadProfile();
+    loadFullProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [currentUser]);
 
-  const userId = useMemo(() => userProfile?.id || currentUser?.id || `user_${Math.random().toString(36).substring(2, 9)}`, [userProfile, currentUser]);
-  const userName = useMemo(() => userProfile?.name || currentUser?.name || currentUser?.username || 'User', [userProfile, currentUser]);
-  const userAvatar = useMemo(() => userProfile?.avatar || currentUser?.avatar || currentUser?.pfp || '', [userProfile, currentUser]);
+  const userId = userProfile?.id || currentUser?.id || 'guest';
+  const userName = userProfile?.name || 'User';
+  const userAvatar = userProfile?.avatar || '';
 
+  // 2. Track Presence only AFTER profile loading is complete
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase || !isProfileLoaded) return;
 
     const roomChannel = supabase.channel(`voiceroom_${channelName}`, {
       config: { presence: { key: userId } }
@@ -66,11 +99,7 @@ export default function VoiceRoom({
         Object.keys(state).forEach((key) => {
           const userPresence = state[key][0];
           if (userPresence) {
-            activeUsers.push({
-              ...userPresence,
-              avatar: userPresence.avatar || userAvatar,
-              name: userPresence.name || userName,
-            });
+            activeUsers.push(userPresence);
           }
         });
 
@@ -92,10 +121,11 @@ export default function VoiceRoom({
     return () => {
       supabase.removeChannel(roomChannel);
     };
-  }, [channelName, userId, userName, userAvatar]);
+  }, [channelName, isProfileLoaded, userId, userName, userAvatar]);
 
+  // 3. Re-track mute / camera toggle updates
   useEffect(() => {
-    if (roomChannelRef.current) {
+    if (roomChannelRef.current && isProfileLoaded) {
       roomChannelRef.current.track({
         id: userId,
         name: userName,
@@ -105,7 +135,7 @@ export default function VoiceRoom({
         joinedAt: new Date().toISOString()
       });
     }
-  }, [isMuted, isCameraOn, userId, userName, userAvatar]);
+  }, [isMuted, isCameraOn, isProfileLoaded, userId, userName, userAvatar]);
 
   const handleStreamUpdate = (stream) => {
     setLocalStream(stream);
