@@ -218,7 +218,7 @@ export default function VoiceCallBar({
         setIsMuted(nextMuteState);
 
         if (onStreamUpdate) {
-          onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
+          onStreamUpdate(localStreamRef.current);
         }
       }
     }
@@ -226,46 +226,43 @@ export default function VoiceCallBar({
 
   const toggleVideo = async () => {
     const nextVideoState = !isVideoOn;
-    setIsVideoOn(nextVideoState);
 
     if (!localStreamRef.current) {
       await initAudioStream();
     }
 
-    if (nextVideoState) {
+    if (!localStreamRef.current) return;
+
+    let videoTrack = localStreamRef.current.getVideoTracks()[0];
+
+    if (videoTrack) {
+      // Toggle video track enabled state directly without breaking WebRTC peer connections
+      videoTrack.enabled = nextVideoState;
+      setIsVideoOn(nextVideoState);
+    } else if (nextVideoState) {
+      // Acquire video track if not present yet and add to active connections
       try {
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        const videoTrack = videoStream.getVideoTracks()[0];
+        const newVideoTrack = videoStream.getVideoTracks()[0];
 
-        if (videoTrack && localStreamRef.current) {
-          localStreamRef.current.addTrack(videoTrack);
+        if (newVideoTrack && localStreamRef.current) {
+          localStreamRef.current.addTrack(newVideoTrack);
+          setIsVideoOn(true);
 
           Object.keys(peerConnectionsRef.current).forEach((peerId) => {
             const pc = peerConnectionsRef.current[peerId];
-            pc.addTrack(videoTrack, localStreamRef.current);
+            pc.addTrack(newVideoTrack, localStreamRef.current);
             createAndSendOffer(peerId);
           });
         }
       } catch (err) {
-        console.warn('Camera blocked:', err);
+        console.warn('Camera blocked or unavailable:', err);
         setIsVideoOn(false);
-      }
-    } else {
-      if (localStreamRef.current) {
-        const videoTracks = localStreamRef.current.getVideoTracks();
-        videoTracks.forEach((track) => {
-          track.stop();
-          localStreamRef.current.removeTrack(track);
-        });
-
-        Object.keys(peerConnectionsRef.current).forEach((peerId) => {
-          createAndSendOffer(peerId);
-        });
       }
     }
 
     if (onStreamUpdate && localStreamRef.current) {
-      onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
+      onStreamUpdate(localStreamRef.current);
     }
   };
 
