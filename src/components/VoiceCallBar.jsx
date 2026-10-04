@@ -30,7 +30,6 @@ export function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Ultra-Low Latency Audio Stream Initializer
   const initAudioStream = async () => {
     try {
       if (localStreamRef.current && localStreamRef.current.getAudioTracks().length > 0) {
@@ -42,7 +41,7 @@ export function VoiceCallBar({
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          channelCount: 1, // Single channel reduces packet size and latency
+          channelCount: 1,
         },
         video: false,
       });
@@ -61,7 +60,7 @@ export function VoiceCallBar({
 
       return localStreamRef.current;
     } catch (err) {
-      console.error('Microphone access denied:', err);
+      console.error('Microphone access error:', err);
       return null;
     }
   };
@@ -84,6 +83,7 @@ export function VoiceCallBar({
     pc.ontrack = (event) => {
       if (remoteAudioRef.current && event.streams[0]) {
         remoteAudioRef.current.srcObject = event.streams[0];
+        remoteAudioRef.current.play().catch((err) => console.warn('Audio play error:', err));
       }
     };
 
@@ -217,7 +217,6 @@ export function VoiceCallBar({
     }
   };
 
-  // Dynamically swap/replace video tracks without destroying active audio WebRTC connection
   const toggleVideo = async () => {
     const nextVideoState = !isVideoOn;
     setIsVideoOn(nextVideoState);
@@ -247,7 +246,7 @@ export function VoiceCallBar({
           }
         }
       } catch (err) {
-        console.warn('Camera access denied:', err);
+        console.warn('Camera access error:', err);
         setIsVideoOn(false);
       }
     } else {
