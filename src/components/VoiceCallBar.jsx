@@ -27,9 +27,10 @@ export default function VoiceCallBar({
   const channelRef = useRef(null);
   const localStreamRef = useRef(null);
   
-  // Peer connections and remote streams indexed by peer ID
+  // Peer connections, remote streams, and ICE candidate queues indexed by peer ID
   const peerConnectionsRef = useRef({});
   const remoteStreamsRef = useRef({});
+  const iceCandidatesQueueRef = useRef({});
 
   const handleDisconnect = onLeave || onEndCall;
 
@@ -55,6 +56,15 @@ export default function VoiceCallBar({
 
       audioStream.getAudioTracks().forEach((track) => {
         localStreamRef.current.addTrack(track);
+
+        // Attach track to any existing peer connections if they were created early
+        Object.values(peerConnectionsRef.current).forEach((pc) => {
+          const senders = pc.getSenders();
+          const hasAudioSender = senders.some((s) => s.track && s.track.kind === 'audio');
+          if (!hasAudioSender) {
+            pc.addTrack(track, localStreamRef.current);
+          }
+        });
       });
 
       if (onStreamUpdate) {
@@ -83,11 +93,10 @@ export default function VoiceCallBar({
     }
 
     pc.ontrack = (event) => {
-      if (event.streams && event.streams[0]) {
-        remoteStreamsRef.current[targetUserId] = event.streams[0];
-        if (onRemoteStreamsUpdate) {
-          onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
-        }
+      const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
+      remoteStreamsRef.current[targetUserId] = stream;
+      if (onRemoteStreamsUpdate) {
+        onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
       }
     };
 
@@ -133,75 +142,107 @@ export default function VoiceCallBar({
   };
 
   useEffect(() => {
-    initAudioStream();
+    let mounted = true;
 
-    const channel = supabase.channel(`voice_${roomId}`);
-    channelRef.current = channel;
+    const setupVoice = async () => {
+      // Ensure microphone input is ready BEFORE signaling to avoid silent connections
+      await initAudioStream();
+      if (!mounted) return;
 
-    channel
-      .on('broadcast', { event: 'signal' }, async ({ payload }) => {
-        if (!payload || payload.senderId === myUserId) return;
+      const channel = supabase.channel(`voice_${roomId}`);
+      channelRef.current = channel;
 
-        const { senderId, targetId, type, offer, answer, candidate } = payload;
+      channel
+        .on('broadcast', { event: 'signal' }, async ({ payload }) => {
+          if (!payload || payload.senderId === myUserId) return;
 
-        try {
-          if (type === 'join-voice') {
-            setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
-            await createAndSendOffer(senderId);
-          } else if (type === 'offer' && targetId === myUserId) {
-            const pc = getOrCreatePeerConnection(senderId);
-            await pc.setRemoteDescription(new RTCSessionDescription(offer));
-            const createdAnswer = await pc.createAnswer();
-            await pc.setLocalDescription(createdAnswer);
+          const { senderId, targetId, type, offer, answer, candidate } = payload;
 
+          try {
+            if (type === 'join-voice') {
+              setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
+              await createAndSendOffer(senderId);
+            } else if (type === 'offer' && targetId === myUserId) {
+              const pc = getOrCreatePeerConnection(senderId);
+              await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+              // Process queued candidates
+              if (iceCandidatesQueueRef.current[senderId]) {
+                for (const cand of iceCandidatesQueueRef.current[senderId]) {
+                  await pc.addIceCandidate(new RTCIceCandidate(cand));
+                }
+                delete iceCandidatesQueueRef.current[senderId];
+              }
+
+              const createdAnswer = await pc.createAnswer();
+              await pc.setLocalDescription(createdAnswer);
+
+              channel.send({
+                type: 'broadcast',
+                event: 'signal',
+                payload: {
+                  senderId: myUserId,
+                  targetId: senderId,
+                  type: 'answer',
+                  answer: createdAnswer,
+                },
+              });
+            } else if (type === 'answer' && targetId === myUserId) {
+              const pc = peerConnectionsRef.current[senderId];
+              if (pc && pc.signalingState !== 'closed') {
+                await pc.setRemoteDescription(new RTCSessionDescription(answer));
+
+                // Process queued candidates
+                if (iceCandidatesQueueRef.current[senderId]) {
+                  for (const cand of iceCandidatesQueueRef.current[senderId]) {
+                    await pc.addIceCandidate(new RTCIceCandidate(cand));
+                  }
+                  delete iceCandidatesQueueRef.current[senderId];
+                }
+              }
+            } else if (type === 'ice-candidate' && targetId === myUserId && candidate) {
+              const pc = peerConnectionsRef.current[senderId];
+              if (pc && pc.remoteDescription) {
+                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+              } else {
+                if (!iceCandidatesQueueRef.current[senderId]) {
+                  iceCandidatesQueueRef.current[senderId] = [];
+                }
+                iceCandidatesQueueRef.current[senderId].push(candidate);
+              }
+            } else if (type === 'leave-voice') {
+              setConnectedUsers((prev) => prev.filter((u) => u !== senderId));
+              if (peerConnectionsRef.current[senderId]) {
+                peerConnectionsRef.current[senderId].close();
+                delete peerConnectionsRef.current[senderId];
+              }
+              if (remoteStreamsRef.current[senderId]) {
+                delete remoteStreamsRef.current[senderId];
+                if (onRemoteStreamsUpdate) {
+                  onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
+                }
+              }
+              delete iceCandidatesQueueRef.current[senderId];
+            }
+          } catch (err) {
+            console.error('Signaling error:', err);
+          }
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
             channel.send({
               type: 'broadcast',
               event: 'signal',
-              payload: {
-                senderId: myUserId,
-                targetId: senderId,
-                type: 'answer',
-                answer: createdAnswer,
-              },
+              payload: { senderId: myUserId, type: 'join-voice' },
             });
-          } else if (type === 'answer' && targetId === myUserId) {
-            const pc = peerConnectionsRef.current[senderId];
-            if (pc && pc.signalingState !== 'closed') {
-              await pc.setRemoteDescription(new RTCSessionDescription(answer));
-            }
-          } else if (type === 'ice-candidate' && targetId === myUserId && candidate) {
-            const pc = peerConnectionsRef.current[senderId];
-            if (pc && pc.remoteDescription) {
-              await pc.addIceCandidate(new RTCIceCandidate(candidate));
-            }
-          } else if (type === 'leave-voice') {
-            setConnectedUsers((prev) => prev.filter((u) => u !== senderId));
-            if (peerConnectionsRef.current[senderId]) {
-              peerConnectionsRef.current[senderId].close();
-              delete peerConnectionsRef.current[senderId];
-            }
-            if (remoteStreamsRef.current[senderId]) {
-              delete remoteStreamsRef.current[senderId];
-              if (onRemoteStreamsUpdate) {
-                onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
-              }
-            }
           }
-        } catch (err) {
-          console.error('Signaling error:', err);
-        }
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          channel.send({
-            type: 'broadcast',
-            event: 'signal',
-            payload: { senderId: myUserId, type: 'join-voice' },
-          });
-        }
-      });
+        });
+    };
+
+    setupVoice();
 
     return () => {
+      mounted = false;
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
@@ -244,11 +285,9 @@ export default function VoiceCallBar({
     let videoTrack = localStreamRef.current.getVideoTracks()[0];
 
     if (videoTrack) {
-      // Direct track toggle: keeps WebRTC connections alive and prevents remote tiles from vanishing
       videoTrack.enabled = nextVideoState;
       setIsVideoOn(nextVideoState);
     } else if (nextVideoState) {
-      // Request video track if turning camera on for the first time
       try {
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         const newVideoTrack = videoStream.getVideoTracks()[0];
@@ -257,7 +296,6 @@ export default function VoiceCallBar({
           localStreamRef.current.addTrack(newVideoTrack);
           setIsVideoOn(true);
 
-          // Add video track to active peer connections and send offer once
           Object.keys(peerConnectionsRef.current).forEach((peerId) => {
             const pc = peerConnectionsRef.current[peerId];
             pc.addTrack(newVideoTrack, localStreamRef.current);
