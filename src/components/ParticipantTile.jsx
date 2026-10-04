@@ -1,33 +1,44 @@
 // src/components/ParticipantTile.jsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MicOff, User } from 'lucide-react';
 
-export default function ParticipantTile({ participant, user }) {
-  // Safe extraction regardless of prop name used
-  const p = participant || user || {};
+export default function ParticipantTile({ participant, stream }) {
+  const p = participant || {};
   const name = p.name || p.username || 'User';
-  const isMuted = p.isMuted || p.media?.isMuted || false;
-  const isSpeaking = p.isSpeaking || false;
-  const avatar = p.avatar || p.avatar_url || p.user?.avatar_url;
+  const videoRef = useRef(null);
+
+  const hasVideoTrack = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
+
+  useEffect(() => {
+    if (videoRef.current && stream && hasVideoTrack) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, hasVideoTrack]);
 
   return (
-    <div className={`relative flex flex-col items-center justify-center bg-zinc-900/90 border ${isSpeaking ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'border-zinc-800'} rounded-2xl p-6 min-h-[180px] transition-all`}>
-      <div className="relative mb-3">
-        {avatar ? (
-          <img src={avatar} alt={name} className="w-16 h-16 rounded-full object-cover border-2 border-zinc-700" />
-        ) : (
-          <div className="w-16 h-16 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center text-zinc-400">
+    <div className="relative flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-2xl p-4 min-h-[200px] w-full overflow-hidden shadow-lg">
+      {hasVideoTrack ? (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted={p.isSelf}
+          className="absolute inset-0 w-full h-full object-cover rounded-2xl"
+        />
+      ) : (
+        <div className="flex flex-col items-center z-10">
+          <div className="w-16 h-16 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center text-zinc-400 mb-3">
             <User className="w-8 h-8" />
           </div>
-        )}
-        {isMuted && (
-          <div className="absolute -bottom-1 -right-1 bg-red-500 text-white p-1 rounded-full text-xs shadow-md">
-            <MicOff className="w-3.5 h-3.5" />
-          </div>
-        )}
-      </div>
+          <span className="text-sm font-bold text-zinc-200">{name}</span>
+        </div>
+      )}
 
-      <span className="text-sm font-bold text-zinc-200">{name}</span>
+      {p.isMuted && (
+        <div className="absolute bottom-3 right-3 bg-red-500 text-white p-1.5 rounded-full text-xs shadow-md z-20">
+          <MicOff className="w-4 h-4" />
+        </div>
+      )}
     </div>
   );
 }
