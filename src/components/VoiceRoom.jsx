@@ -5,6 +5,17 @@ import VoiceCallBar from './VoiceCallBar';
 import { supabase } from '../supabaseClient';
 import './VoiceRoom.css';
 
+// Public STUN servers to allow NAT traversal across different Wi-Fi / cellular networks
+export const RTC_CONFIG = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' }
+  ]
+};
+
 export default function VoiceRoom({ 
   currentUser, 
   user,
@@ -233,6 +244,8 @@ export default function VoiceRoom({
           myUserId={localUserId}
           myUsername={displayName} 
           userAvatar={avatarUrl}
+          rtcConfig={RTC_CONFIG}
+          iceServers={RTC_CONFIG.iceServers}
           onLeave={handleLeave} 
           onEndCall={handleLeave}
           onStreamUpdate={handleStreamUpdate}
