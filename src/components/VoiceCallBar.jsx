@@ -276,26 +276,25 @@ export default function VoiceCallBar({
   const toggleVideo = async () => {
     const nextVideoState = !isVideoOn;
 
-    if (!localStreamRef.current) {
-      await initAudioStream();
-    }
+    if (nextVideoState) {
+      // TURN CAMERA ON
+      if (!localStreamRef.current) {
+        await initAudioStream();
+      }
 
-    if (!localStreamRef.current) return;
-
-    let videoTrack = localStreamRef.current.getVideoTracks()[0];
-
-    if (videoTrack) {
-      videoTrack.enabled = nextVideoState;
-      setIsVideoOn(nextVideoState);
-    } else if (nextVideoState) {
       try {
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         const newVideoTrack = videoStream.getVideoTracks()[0];
 
-        if (newVideoTrack && localStreamRef.current) {
+        if (newVideoTrack) {
+          if (!localStreamRef.current) {
+            localStreamRef.current = new MediaStream();
+          }
+
           localStreamRef.current.addTrack(newVideoTrack);
           setIsVideoOn(true);
 
+          // Add track to peer connections and renegotiate
           Object.keys(peerConnectionsRef.current).forEach((peerId) => {
             const pc = peerConnectionsRef.current[peerId];
             pc.addTrack(newVideoTrack, localStreamRef.current);
@@ -306,6 +305,27 @@ export default function VoiceCallBar({
         console.warn('Camera blocked or unavailable:', err);
         setIsVideoOn(false);
       }
+    } else {
+      // TURN CAMERA OFF: Call track.stop() so Chromebook cuts power to hardware LED
+      if (localStreamRef.current) {
+        const videoTracks = localStreamRef.current.getVideoTracks();
+        videoTracks.forEach((track) => {
+          track.stop(); // Releases camera sensor -> LED goes OFF
+          localStreamRef.current.removeTrack(track);
+        });
+
+        // Remove video senders from active WebRTC peer connections
+        Object.keys(peerConnectionsRef.current).forEach((peerId) => {
+          const pc = peerConnectionsRef.current[peerId];
+          const senders = pc.getSenders();
+          const videoSender = senders.find((s) => s.track?.kind === 'video' || s.track === null);
+          if (videoSender) {
+            pc.removeTrack(videoSender);
+            createAndSendOffer(peerId);
+          }
+        });
+      }
+      setIsVideoOn(false);
     }
 
     if (onStreamUpdate && localStreamRef.current) {
