@@ -28,7 +28,6 @@ export default function VoiceRoom({
 }) {
   const handleLeave = onLeave || onLeaveRoom;
 
-  // Persistent User ID for user identification
   const [localUserId] = useState(() => {
     const u = currentUser || user;
     if (typeof u === 'object' && u?.id) return u.id;
@@ -39,7 +38,6 @@ export default function VoiceRoom({
     return newId;
   });
 
-  // Unique per-device/per-tab session key to prevent cross-device overwrites
   const [sessionKey] = useState(() => `${localUserId}_${Math.random().toString(36).substring(2, 7)}`);
 
   const resolveName = () => {
@@ -78,46 +76,29 @@ export default function VoiceRoom({
   const [isConnected, setIsConnected] = useState(false);
 
   const roomChannelRef = useRef(null);
+  const trackPayloadRef = useRef({});
 
+  // Keep latest presence state in a Ref so background intervals don't use stale state
   useEffect(() => {
-    let isMounted = true;
-    const fetchSupabaseProfile = async () => {
-      try {
-        if (!supabase) return;
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username, avatar_url')
-            .eq('id', authUser.id)
-            .maybeSingle();
-
-          if (isMounted && profile) {
-            if (profile.username) setDisplayName(profile.username);
-            if (profile.avatar_url) setAvatarUrl(profile.avatar_url);
-          }
-        }
-      } catch (err) {
-        console.warn('Supabase profile sync notice:', err);
-      }
+    trackPayloadRef.current = {
+      id: localUserId,
+      sessionKey,
+      name: displayName,
+      avatar: avatarUrl,
+      isMuted,
+      isCameraOn,
+      joinedAt: new Date().toISOString()
     };
-
-    fetchSupabaseProfile();
-    return () => { isMounted = false; };
-  }, []);
+  }, [localUserId, sessionKey, displayName, avatarUrl, isMuted, isCameraOn]);
 
   useEffect(() => {
     if (!supabase) return;
 
-    // Use unique sessionKey so multiple devices/tabs don't replace each other
-    const channel = supabase.channel(`voiceroom_${GLOBAL_ROOM_ID}`, {
-      config: { presence: { key: sessionKey } }
-    });
-
-    roomChannelRef.current = channel;
+    let heartbeatTimer = null;
 
     const syncPresence = () => {
-      const state = channel.presenceState();
+      if (!roomChannelRef.current) return;
+      const state = roomChannelRef.current.presenceState();
       const activeUsers = [];
 
       Object.keys(state).forEach((key) => {
@@ -132,6 +113,22 @@ export default function VoiceRoom({
       setParticipants(activeUsers);
     };
 
+    const trackPresence = async () => {
+      if (roomChannelRef.current) {
+        try {
+          await roomChannelRef.current.track(trackPayloadRef.current);
+        } catch (err) {
+          console.warn('Presence track error:', err);
+        }
+      }
+    };
+
+    const channel = supabase.channel(`voiceroom_${GLOBAL_ROOM_ID}`, {
+      config: { presence: { key: sessionKey } }
+    });
+
+    roomChannelRef.current = channel;
+
     channel
       .on('presence', { event: 'sync' }, syncPresence)
       .on('presence', { event: 'join' }, syncPresence)
@@ -139,40 +136,43 @@ export default function VoiceRoom({
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           setIsConnected(true);
-          await channel.track({
-            id: localUserId,
-            sessionKey,
-            name: displayName,
-            avatar: avatarUrl,
-            isMuted,
-            isCameraOn,
-            joinedAt: new Date().toISOString()
-          });
+          await trackPresence();
+
+          // Heartbeat interval to keep presence alive every 10 seconds
+          if (heartbeatTimer) clearInterval(heartbeatTimer);
+          heartbeatTimer = setInterval(() => {
+            if (roomChannelRef.current && isConnected) {
+              trackPresence();
+            }
+          }, 10000);
         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           setIsConnected(false);
         }
       });
 
+    // Auto re-track when coming back from background tab / device sleep
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && roomChannelRef.current) {
+        trackPresence();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       supabase.removeChannel(channel);
       roomChannelRef.current = null;
     };
-  }, [sessionKey, localUserId]);
+  }, [sessionKey]);
 
-  // Sync state changes across presence without recreating channel connection
+  // Update presence payload on state changes without re-connecting channel
   useEffect(() => {
     if (roomChannelRef.current && isConnected) {
-      roomChannelRef.current.track({
-        id: localUserId,
-        sessionKey,
-        name: displayName,
-        avatar: avatarUrl,
-        isMuted,
-        isCameraOn,
-        joinedAt: new Date().toISOString()
-      });
+      roomChannelRef.current.track(trackPayloadRef.current);
     }
-  }, [displayName, avatarUrl, isMuted, isCameraOn, localUserId, sessionKey, isConnected]);
+  }, [displayName, avatarUrl, isMuted, isCameraOn, isConnected]);
 
   const handleStreamUpdate = (stream) => {
     setLocalStream(stream);
