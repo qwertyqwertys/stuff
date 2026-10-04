@@ -13,6 +13,7 @@ const ICE_SERVERS = {
 export function VoiceCallBar({ 
   roomId = 'General', 
   myUsername = 'You', 
+  userAvatar = '',
   onLeave, 
   onEndCall,
   onStreamUpdate 
@@ -21,7 +22,6 @@ export function VoiceCallBar({
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
 
-  const localAudioRef = useRef(null);
   const remoteAudioRef = useRef(null);
   const peerConnectionRef = useRef(null);
   const channelRef = useRef(null);
@@ -30,23 +30,26 @@ export function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Initialize audio and video stream
+  // Optimized Low-Latency Audio Stream
   const initStream = async (enableVideo = false) => {
     try {
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((t) => t.stop());
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
+      // Latency-optimized media constraints
+      const constraints = {
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          latency: 0, // Reduces local audio buffering
+        },
         video: enableVideo,
-      });
+      };
 
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       localStreamRef.current = stream;
-
-      if (localAudioRef.current) {
-        localAudioRef.current.srcObject = stream;
-      }
 
       if (onStreamUpdate) {
         onStreamUpdate(stream);
@@ -54,7 +57,7 @@ export function VoiceCallBar({
 
       return stream;
     } catch (err) {
-      console.warn('Media device access error:', err);
+      console.warn('Media device error, falling back:', err);
       if (enableVideo) {
         return initStream(false);
       }
@@ -179,12 +182,11 @@ export function VoiceCallBar({
           channel.send({
             type: 'broadcast',
             event: 'signal',
-            payload: { sender: myUsername, type: 'join-voice' },
+            payload: { sender: myUsername, avatar: userAvatar, type: 'join-voice' },
           });
         }
       });
 
-    // Clean up tracks and channel ONLY — do NOT trigger handleDisconnect here
     return () => {
       if (channelRef.current) {
         channelRef.current.send({
@@ -230,7 +232,7 @@ export function VoiceCallBar({
 
   return (
     <div className="fixed bottom-4 left-4 z-50 bg-zinc-900/95 border border-emerald-500/30 backdrop-blur-xl p-3 rounded-2xl shadow-2xl flex items-center gap-4 text-white">
-      <audio ref={localAudioRef} autoPlay muted playsInline />
+      {/* Remote Audio Only - Local Audio is not routed here to prevent echo/delay */}
       <audio ref={remoteAudioRef} autoPlay playsInline />
 
       <div className="flex items-center gap-3">
