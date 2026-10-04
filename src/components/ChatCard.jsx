@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, RefreshCcw, Pencil, Check, X } from 'lucide-react'; 
+import { Send, RefreshCcw, Pencil, Check, X, Headphones } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
@@ -90,7 +90,9 @@ export function ChatCard({
   ownPfp, 
   myAchievements = [], 
   userFavs = [], 
-  userTimes = {} 
+  userTimes = {},
+  isInVoice = false,
+  onToggleVoice
 }) {
   const [username, setUsername] = useState(() => {
     return localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name') || '';
@@ -261,7 +263,7 @@ export function ChatCard({
     fetchMessages();
   };
 
-// Instant profile modal launcher with background fresh-data sync
+  // Instant profile modal launcher with background fresh-data sync
   const handleOpenProfile = async (m) => {
     const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
 
@@ -269,7 +271,7 @@ export function ChatCard({
     let liveAchievements = m.achievements || [];
     let liveTimes = m.times || {};
     
-    // FIX: Only fall back to your stored avatar if viewing yourself!
+    // Only fall back to your stored avatar if viewing yourself!
     let livePfp = m.avatar_url || (isSelf ? (ownPfp || getStoredAvatar()) : '');
 
     if (isSelf) {
@@ -325,7 +327,7 @@ export function ChatCard({
         const fetchedAchievements = latestMsg.achievements || liveAchievements;
         const fetchedTimes = latestMsg.times || liveTimes;
         
-        // FIX: If they don't have an avatar in DB, keep it blank/default
+        // If they don't have an avatar in DB, keep it blank/default
         const fetchedPfp = latestMsg.avatar_url || '';
 
         setSelectedUserProfile({
@@ -359,20 +361,41 @@ export function ChatCard({
       isLightMode ? 'bg-white border-black/5 shadow-sm' : 'bg-[#0f0f11] border-white/5 hover:border-[var(--theme)]/50'
     } p-5 h-full flex flex-col gap-4`}>
       
-      <div className="flex items-center justify-between">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between pb-1 border-b border-white/5">
         <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--theme)]">
           Chat
         </h3>
-        {isJoined && (
-          <button 
-            onClick={() => setIsJoined(false)} 
-            className="text-zinc-200 hover:text-[var(--theme)] p-1 hover:bg-white/5 rounded-md transition-all outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-            title="Change Identity"
-            aria-label="Change chat username"
-          >
-            <RefreshCcw className="w-3.5 h-3.5" />
-          </button>
-        )}
+        
+        <div className="flex items-center gap-2">
+          {/* Join / Active Voice Channel Toggle Button */}
+          {isJoined && onToggleVoice && (
+            <button
+              type="button"
+              onClick={onToggleVoice}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border transition-all ${
+                isInVoice
+                  ? 'bg-emerald-500 text-black border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                  : 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300'
+              }`}
+              title={isInVoice ? "Leave Voice Channel" : "Join Voice Channel"}
+            >
+              <Headphones className="w-3 h-3" />
+              {isInVoice ? 'In Voice' : 'Join Voice'}
+            </button>
+          )}
+
+          {isJoined && (
+            <button 
+              onClick={() => setIsJoined(false)} 
+              className="text-zinc-200 hover:text-[var(--theme)] p-1 hover:bg-white/5 rounded-md transition-all outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              title="Change Identity"
+              aria-label="Change chat username"
+            >
+              <RefreshCcw className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {!isJoined ? (
@@ -538,3 +561,5 @@ export function ChatCard({
     </div>
   );
 }
+
+export default ChatCard;
