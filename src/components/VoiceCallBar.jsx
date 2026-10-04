@@ -7,6 +7,7 @@ const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
   ],
 };
 
@@ -34,6 +35,7 @@ export default function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
+  // Instantly initialize local audio stream and bind to active peers
   const initAudioStream = async () => {
     try {
       if (localStreamRef.current && localStreamRef.current.getAudioTracks().length > 0) {
@@ -133,7 +135,7 @@ export default function VoiceCallBar({
           });
         }
       } catch (err) {
-        console.error('Negotiation error:', err);
+        console.error('Instant negotiation error:', err);
       }
     };
 
@@ -161,7 +163,7 @@ export default function VoiceCallBar({
         });
       }
     } catch (err) {
-      console.error('Error creating offer:', err);
+      console.error('Error creating instant offer:', err);
     }
   };
 
@@ -172,7 +174,7 @@ export default function VoiceCallBar({
       await initAudioStream();
       if (!mounted) return;
 
-      const channel = supabase.channel(`voice_${roomId}`);
+      const channel = supabase.channel(`voice_instant_${roomId}`);
       channelRef.current = channel;
 
       channel
@@ -189,14 +191,10 @@ export default function VoiceCallBar({
             } else if (type === 'offer') {
               const pc = getOrCreatePeerConnection(senderId);
               
-              // Handle polite/impolite peer collision logic if needed, or basic state guard
               if (pc.signalingState !== 'stable') {
-                // If we have a glare condition, rollback or accept based on user ID ordering
                 if (senderId < myUserId) {
-                  // Collision: roll back local description
                   await pc.setLocalDescription({ type: 'rollback' });
                 } else {
-                  // Ignore incoming offer if we are higher priority
                   return;
                 }
               }
@@ -260,7 +258,7 @@ export default function VoiceCallBar({
               delete iceCandidatesQueueRef.current[senderId];
             }
           } catch (err) {
-            console.error('Signaling error:', err);
+            console.error('Instant signaling error:', err);
           }
         })
         .subscribe((status) => {
@@ -371,7 +369,7 @@ export default function VoiceCallBar({
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-black uppercase tracking-tight text-emerald-400">Voice Connected</span>
+            <span className="text-xs font-black uppercase tracking-tight text-emerald-400">Instant Connected</span>
             <span className="text-[10px] text-zinc-400 font-mono">/ {roomId}</span>
           </div>
           <p className="text-[11px] text-zinc-300 font-bold truncate max-w-[140px]">
