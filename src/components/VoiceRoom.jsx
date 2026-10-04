@@ -59,8 +59,8 @@ export default function VoiceRoom({
     return 'User';
   };
 
-  const [displayName, setDisplayName] = useState(resolveName);
-  const [avatarUrl, setAvatarUrl] = useState(() => {
+  const [displayName] = useState(resolveName);
+  const [avatarUrl] = useState(() => {
     const u = currentUser || user;
     if (typeof u === 'object' && u !== null) {
       return u.avatar || u.avatar_url || u.pfp || '';
@@ -78,21 +78,16 @@ export default function VoiceRoom({
   const roomChannelRef = useRef(null);
   const trackPayloadRef = useRef({});
 
-  // Continuously monitor local audio stream enabled status for instant presence broadcast
-  useEffect(() => {
-    if (!localStream) return;
-    const audioTrack = localStream.getAudioTracks()[0];
-    if (!audioTrack) return;
-
-    const syncMuteState = () => {
-      setIsMuted(!audioTrack.enabled);
-    };
-
-    syncMuteState();
-
-    const interval = setInterval(syncMuteState, 250);
-    return () => clearInterval(interval);
-  }, [localStream]);
+  // Sync state whenever local stream changes
+  const handleStreamUpdate = (stream) => {
+    setLocalStream(stream);
+    if (stream) {
+      const videoTrack = stream.getVideoTracks()[0];
+      const audioTrack = stream.getAudioTracks()[0];
+      setIsCameraOn(Boolean(videoTrack && videoTrack.enabled));
+      setIsMuted(Boolean(audioTrack && !audioTrack.enabled));
+    }
+  };
 
   // Keep latest presence state in Ref
   useEffect(() => {
@@ -165,41 +160,31 @@ export default function VoiceRoom({
         }
       });
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && roomChannelRef.current) {
-        trackPresence();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
       if (heartbeatTimer) clearInterval(heartbeatTimer);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       supabase.removeChannel(channel);
       roomChannelRef.current = null;
     };
   }, [sessionKey]);
 
-  // Immediately broadcast updated presence when isMuted state changes
+  // Broadcast presence updates when camera/mute toggles
   useEffect(() => {
     if (roomChannelRef.current && isConnected) {
       roomChannelRef.current.track(trackPayloadRef.current);
     }
   }, [displayName, avatarUrl, isMuted, isCameraOn, isConnected]);
 
-  const handleStreamUpdate = (stream) => {
-    setLocalStream(stream);
-    if (stream) {
-      const hasVideo = stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
-      const hasAudio = stream.getAudioTracks().length > 0 && stream.getAudioTracks()[0].enabled;
-      setIsCameraOn(hasVideo);
-      setIsMuted(!hasAudio);
-    }
-  };
-
+  // Deduplicate and prioritize participant tiles
   const sortedParticipants = useMemo(() => {
-    return [...participants].sort((a, b) => {
+    const map = new Map();
+    participants.forEach((p) => {
+      const key = p.id || p.sessionKey;
+      if (key && !map.has(key)) {
+        map.set(key, p);
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => {
       const aIsSelf = a.sessionKey === sessionKey || a.id === localUserId;
       const bIsSelf = b.sessionKey === sessionKey || b.id === localUserId;
       if (aIsSelf) return -1;
@@ -246,7 +231,7 @@ export default function VoiceRoom({
               : participant;
 
             return (
-              <div key={participant.sessionKey || participant.id} className="w-full max-w-lg mx-auto aspect-video">
+              <div key={participant.id || participant.sessionKey} className="w-full max-w-lg mx-auto aspect-video">
                 <ParticipantTile 
                   participant={participantData} 
                   user={participantData}
@@ -282,7 +267,6 @@ export default function VoiceRoom({
           myUsername={displayName} 
           userAvatar={avatarUrl}
           rtcConfig={RTC_CONFIG}
-          iceServers={RTC_CONFIG.iceServers}
           onLeave={handleLeave} 
           onEndCall={handleLeave}
           onStreamUpdate={handleStreamUpdate}
