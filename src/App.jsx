@@ -77,6 +77,7 @@ function MainDashboard() {
   const [removedGames, setRemovedGames] = useState(() => JSON.parse(localStorage.getItem('capy-removed-games') || '[]'));
   const [themeChangeCount, setThemeChangeCount] = useState(() => parseInt(localStorage.getItem('capy-theme-changes') || '0'));
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isInVoice, setIsInVoice] = useState(false);
   const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
 
@@ -84,6 +85,10 @@ function MainDashboard() {
   const [activeCloak, setActiveCloak] = useState(() => localStorage.getItem('capy-cloak-type') || 'google');
 
   const activeIntervals = useRef([]);
+
+  const handleToggleVoice = () => {
+    setIsInVoice(prev => !prev);
+  };
 
   useEffect(() => {
     const config = DISGUISE_CONFIG[activeCloak] || DISGUISE_CONFIG.google;
@@ -662,48 +667,46 @@ function MainDashboard() {
   };
 
   // Upload or update PFP and sync across all Supabase chat messages in real time
-const handlePfpUpload = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const newPfp = reader.result;
-      setProfilePic(newPfp);
-      localStorage.setItem('capy-pfp', newPfp);
-      localStorage.setItem('capy-avatar', newPfp);
+  const handlePfpUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const newPfp = reader.result;
+        setProfilePic(newPfp);
+        localStorage.setItem('capy-pfp', newPfp);
+        localStorage.setItem('capy-avatar', newPfp);
 
-      const myId = localStorage.getItem('capy-uid');
-      if (myId) {
-        // Automatically update all existing messages for everyone online
-        await supabase
-          .from('messages')
-          .update({ avatar_url: newPfp })
-          .eq('user_id', myId);
-      }
+        const myId = localStorage.getItem('capy-uid');
+        if (myId) {
+          await supabase
+            .from('messages')
+            .update({ avatar_url: newPfp })
+            .eq('user_id', myId);
+        }
 
-      window.dispatchEvent(new Event('capy-pfp-updated'));
-    };
-    reader.readAsDataURL(file);
-  }
-};
+        window.dispatchEvent(new Event('capy-pfp-updated'));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-// Delete/Reset PFP and clear avatar across Supabase chat messages automatically
-const handleResetPfp = async () => {
-  setProfilePic('');
-  localStorage.removeItem('capy-pfp');
-  localStorage.removeItem('capy-avatar');
+  // Delete/Reset PFP and clear avatar across Supabase chat messages automatically
+  const handleResetPfp = async () => {
+    setProfilePic('');
+    localStorage.removeItem('capy-pfp');
+    localStorage.removeItem('capy-avatar');
 
-  const myId = localStorage.getItem('capy-uid');
-  if (myId) {
-    // Sets avatar_url to null so all connected clients revert to the default avatar
-    await supabase
-      .from('messages')
-      .update({ avatar_url: null })
-      .eq('user_id', myId);
-  }
+    const myId = localStorage.getItem('capy-uid');
+    if (myId) {
+      await supabase
+        .from('messages')
+        .update({ avatar_url: null })
+        .eq('user_id', myId);
+    }
 
-  window.dispatchEvent(new Event('capy-pfp-updated'));
-};
+    window.dispatchEvent(new Event('capy-pfp-updated'));
+  };
   
   const toggleFavorite = (id) => {
     const stringId = String(id); 
@@ -895,7 +898,16 @@ const handleResetPfp = async () => {
           </button>
           <div className="flex-1 w-full max-w-5xl mx-auto flex items-center justify-center">
             <div className="w-full h-[85vh]">
-               <ChatCard isLightMode={isLightMode} setIsChatOpen={setIsChatOpen} />
+               <ChatCard 
+                 isLightMode={isLightMode} 
+                 gamesData={gamesData}
+                 ownPfp={profilePic}
+                 myAchievements={achievements}
+                 userFavs={favorites}
+                 userTimes={playtimes}
+                 isInVoice={isInVoice}
+                 onToggleVoice={handleToggleVoice}
+               />
             </div>
           </div>
         </div>
@@ -1078,7 +1090,7 @@ const handleResetPfp = async () => {
         handleResetMusic={handleResetMusic}
         profilePic={profilePic}
         handlePfpUpload={handlePfpUpload}
-        handleResetPfp={() => { setProfilePic(''); localStorage.removeItem('capy-pfp'); }}
+        handleResetPfp={handleResetPfp}
         handleClearSettings={handleClearSettings}
         handleReset={handleReset}
         confirmReset={confirmReset}
