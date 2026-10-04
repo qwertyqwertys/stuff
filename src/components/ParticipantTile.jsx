@@ -16,15 +16,43 @@ export default function ParticipantTile({ participant, user, stream, currentUser
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isVideoTrackActive, setIsVideoTrackActive] = useState(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
+  const [isTrackMuted, setIsTrackMuted] = useState(false);
 
   const videoTrack = stream?.getVideoTracks()?.[0];
   const audioTrack = stream?.getAudioTracks()?.[0];
 
-  const isMuted = audioTrack !== undefined 
-    ? !audioTrack.enabled 
-    : Boolean(p.isMuted);
+  // For remote users, prioritize Supabase presence `p.isMuted`.
+  // For local user, check the local audioTrack.enabled status.
+  const isMuted = isSelf
+    ? (audioTrack ? !audioTrack.enabled : Boolean(p.isMuted))
+    : (p.isMuted !== undefined ? Boolean(p.isMuted) : isTrackMuted);
 
   const isCameraOnPresence = p.isCameraOn !== undefined ? Boolean(p.isCameraOn) : true;
+
+  // Listen to remote WebRTC track mute/unmute events
+  useEffect(() => {
+    if (!audioTrack) {
+      setIsTrackMuted(true);
+      return;
+    }
+
+    const updateAudioTrackStatus = () => {
+      setIsTrackMuted(!audioTrack.enabled || audioTrack.muted);
+    };
+
+    updateAudioTrackStatus();
+
+    audioTrack.addEventListener('mute', updateAudioTrackStatus);
+    audioTrack.addEventListener('unmute', updateAudioTrackStatus);
+
+    const interval = setInterval(updateAudioTrackStatus, 300);
+
+    return () => {
+      audioTrack.removeEventListener('mute', updateAudioTrackStatus);
+      audioTrack.removeEventListener('unmute', updateAudioTrackStatus);
+      clearInterval(interval);
+    };
+  }, [audioTrack]);
 
   // Track live WebRTC video track status
   useEffect(() => {
@@ -105,7 +133,6 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     try {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-      // Resume suspended context if browser restricted creation
       if (audioContext.state === 'suspended') {
         const resumeAudio = () => {
           audioContext.resume();
