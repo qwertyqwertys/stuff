@@ -14,7 +14,6 @@ export default function ParticipantTile({ participant, user, stream, currentUser
   const videoRef = useRef(null);
   const audioRef = useRef(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isVideoTrackActive, setIsVideoTrackActive] = useState(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [isTrackMuted, setIsTrackMuted] = useState(false);
 
@@ -52,38 +51,9 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     };
   }, [audioTrack]);
 
-  // Track live WebRTC video track status
-  useEffect(() => {
-    if (!videoTrack) {
-      setIsVideoTrackActive(false);
-      return;
-    }
-
-    const updateTrackStatus = () => {
-      // Must explicitly check that videoTrack.enabled is true and it's not muted
-      const active = Boolean(videoTrack.enabled && !videoTrack.muted && videoTrack.readyState === 'live');
-      setIsVideoTrackActive(active);
-    };
-
-    updateTrackStatus();
-
-    videoTrack.addEventListener('mute', updateTrackStatus);
-    videoTrack.addEventListener('unmute', updateTrackStatus);
-    videoTrack.addEventListener('ended', updateTrackStatus);
-
-    const interval = setInterval(updateTrackStatus, 300);
-
-    return () => {
-      videoTrack.removeEventListener('mute', updateTrackStatus);
-      videoTrack.removeEventListener('unmute', updateTrackStatus);
-      videoTrack.removeEventListener('ended', updateTrackStatus);
-      clearInterval(interval);
-    };
-  }, [videoTrack]);
-
-  // If the stream is missing or the video track is disabled/muted, force showVideo to false immediately
-  const hasValidVideoTrack = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled && !stream.getVideoTracks()[0].muted;
-  const showVideo = isVideoTrackActive && hasValidVideoTrack;
+  // INSTANT video tracking: Checks live track properties immediately without interval lag
+  const videoTrackObj = stream?.getVideoTracks()?.[0];
+  const showVideo = Boolean(videoTrackObj && videoTrackObj.enabled && !videoTrackObj.muted && videoTrackObj.readyState === 'live');
   const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
 
   // Unmute and play remote audio with browser autoplay error catching
