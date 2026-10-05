@@ -38,7 +38,6 @@ export default function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Initialize media stream immediately
   const initLocalStream = async () => {
     if (localStreamRef.current) return localStreamRef.current;
 
@@ -75,7 +74,6 @@ export default function VoiceCallBar({
       return peerConnectionsRef.current[targetUserId];
     }
 
-    // Determine polite vs impolite based on user IDs to prevent collision races
     const isPolite = myUserId.localeCompare(targetUserId) > 0;
     makingOfferRef.current[targetUserId] = false;
     ignoreOfferRef.current[targetUserId] = false;
@@ -148,17 +146,19 @@ export default function VoiceCallBar({
           try {
             if (type === 'join-voice') {
               setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
-              // Trigger a renegotiation
+              
               await pc.setLocalDescription();
               channel.send({
                 type: 'broadcast',
                 event: 'signal',
                 payload: { senderId: myUserId, targetId: senderId, type: 'description', description: pc.localDescription },
               });
+              
+              // Immediately broadcast our current camera status back to the new user
               channel.send({
                 type: 'broadcast',
                 event: 'signal',
-                payload: { senderId: myUserId, targetId: senderId, type: 'camera-status', isVideoOn },
+                payload: { senderId: myUserId, type: 'camera-status', isVideoOn },
               });
             } else if (type === 'camera-status') {
               remoteCameraStatusesRef.current[senderId] = remoteVideoState;
@@ -248,6 +248,7 @@ export default function VoiceCallBar({
         videoTracks[0].enabled = nextVideoState;
         setIsVideoOn(nextVideoState);
 
+        // Broadcast globally without a targetId so everyone in the room updates instantly
         channelRef.current?.send({
           type: 'broadcast',
           event: 'signal',
