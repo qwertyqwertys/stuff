@@ -60,7 +60,8 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     }
 
     const updateTrackStatus = () => {
-      const active = videoTrack.enabled && !videoTrack.muted && videoTrack.readyState === 'live';
+      // Must explicitly check that videoTrack.enabled is true and it's not muted
+      const active = Boolean(videoTrack.enabled && !videoTrack.muted && videoTrack.readyState === 'live');
       setIsVideoTrackActive(active);
     };
 
@@ -80,9 +81,9 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     };
   }, [videoTrack]);
 
-  // Rely strictly on whether the video track is actually enabled and live 
-  // instead of presence flags that might collapse the UI layout.
-  const showVideo = isVideoTrackActive;
+  // If the stream is missing or the video track is disabled/muted, force showVideo to false immediately
+  const hasValidVideoTrack = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled && !stream.getVideoTracks()[0].muted;
+  const showVideo = isVideoTrackActive && hasValidVideoTrack;
   const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
 
   // Unmute and play remote audio with browser autoplay error catching
