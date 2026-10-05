@@ -35,7 +35,7 @@ export default function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Initialize both audio and video tracks upfront so WebRTC transceivers are permanently established
+  // Initialize a permanent master stream reference upfront
   const initLocalStream = async () => {
     try {
       if (localStreamRef.current) {
@@ -49,10 +49,10 @@ export default function VoiceCallBar({
           autoGainControl: true,
           channelCount: 1,
         },
-        video: true, // Bound permanently to prevent transceiver creation/destruction bugs
+        video: true, // Bound permanently so transceivers never get destroyed
       });
 
-      // Start with video muted/disabled so the camera light stays off until toggled
+      // Start with video disabled so the camera light stays off initially
       const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = false;
@@ -60,7 +60,7 @@ export default function VoiceCallBar({
 
       localStreamRef.current = stream;
 
-      // Bind all initial tracks to existing peer connections
+      // Bind permanent tracks to existing peer connections
       Object.values(peerConnectionsRef.current).forEach((pc) => {
         stream.getTracks().forEach((track) => {
           const senders = pc.getSenders();
@@ -72,21 +72,21 @@ export default function VoiceCallBar({
       });
 
       if (onStreamUpdate) {
-        onStreamUpdate(new MediaStream(stream.getTracks()));
+        onStreamUpdate(stream);
       }
 
       return stream;
     } catch (err) {
-      console.warn('Camera permission denied or unavailable, falling back to audio-only:', err);
+      console.warn('Camera blocked, falling back to audio-only:', err);
       try {
         const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         localStreamRef.current = audioStream;
         if (onStreamUpdate) {
-          onStreamUpdate(new MediaStream(audioStream.getTracks()));
+          onStreamUpdate(audioStream);
         }
         return audioStream;
       } catch (audioErr) {
-        console.error('Microphone initialization error:', audioErr);
+        console.error('Microphone error:', audioErr);
         return null;
       }
     }
@@ -148,7 +148,7 @@ export default function VoiceCallBar({
           });
         }
       } catch (err) {
-        console.error('Instant negotiation error:', err);
+        console.error('Negotiation error:', err);
       }
     };
 
@@ -176,7 +176,7 @@ export default function VoiceCallBar({
         });
       }
     } catch (err) {
-      console.error('Error creating instant offer:', err);
+      console.error('Offer error:', err);
     }
   };
 
@@ -271,7 +271,7 @@ export default function VoiceCallBar({
               delete iceCandidatesQueueRef.current[senderId];
             }
           } catch (err) {
-            console.error('Instant signaling error:', err);
+            console.error('Signaling error:', err);
           }
         })
         .subscribe((status) => {
@@ -314,7 +314,7 @@ export default function VoiceCallBar({
         setIsMuted(nextMuteState);
 
         if (onStreamUpdate) {
-          onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
+          onStreamUpdate(localStreamRef.current);
         }
       }
     }
@@ -331,11 +331,11 @@ export default function VoiceCallBar({
       const videoTrack = videoTracks[0];
       const nextVideoState = !isVideoOn;
 
-      // Toggle track data flow without destroying transceivers or removing tracks
+      // Simply toggle the track's enabled state. The MediaStream reference never changes!
       videoTrack.enabled = nextVideoState;
       setIsVideoOn(nextVideoState);
 
-      // Broadcast camera state change to guarantee remote cards stay locked and pinned
+      // Broadcast explicit status flag so remote layout keeps the card anchored
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
@@ -349,8 +349,9 @@ export default function VoiceCallBar({
       }
     }
 
+    // Pass the exact same persistent stream reference (no new MediaStream() wrapping)
     if (onStreamUpdate && localStreamRef.current) {
-      onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
+      onStreamUpdate(localStreamRef.current);
     }
   };
 
