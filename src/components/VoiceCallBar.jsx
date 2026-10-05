@@ -37,7 +37,7 @@ export default function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Pre-initialize media stream immediately to clear browser prompts before WebRTC starts
+  // Initialize both audio and video IMMEDIATELY on mount so WebRTC includes video transceivers from the start
   const initLocalStream = async () => {
     if (localStreamRef.current) return localStreamRef.current;
 
@@ -47,11 +47,14 @@ export default function VoiceCallBar({
         video: true,
       });
 
+      // Start with the video track disabled so the camera light isn't forced on until toggled,
+      // but KEEP it in the stream so the peer connection knows video is available!
       const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) videoTrack.enabled = false;
 
       localStreamRef.current = stream;
 
+      // Attach tracks to any existing peer connections
       Object.values(peerConnectionsRef.current).forEach((pc) => {
         stream.getTracks().forEach((track) => {
           const senders = pc.getSenders();
@@ -64,16 +67,8 @@ export default function VoiceCallBar({
       if (onStreamUpdate) onStreamUpdate(stream);
       return stream;
     } catch (err) {
-      console.warn('Camera permission blocked, falling back to audio-only stream:', err);
-      try {
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        localStreamRef.current = audioStream;
-        if (onStreamUpdate) onStreamUpdate(audioStream);
-        return audioStream;
-      } catch (audioErr) {
-        console.error('Fatal microphone error:', audioErr);
-        return null;
-      }
+      console.warn('Camera/Mic permission error:', err);
+      return null;
     }
   };
 
@@ -85,6 +80,7 @@ export default function VoiceCallBar({
     const pc = new RTCPeerConnection(ICE_SERVERS);
     peerConnectionsRef.current[targetUserId] = pc;
 
+    // Add local tracks immediately when creating the peer connection
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => {
         pc.addTrack(track, localStreamRef.current);
@@ -123,7 +119,7 @@ export default function VoiceCallBar({
         payload: { senderId: myUserId, targetId: targetUserId, type: 'offer', offer },
       });
     } catch (err) {
-      console.error('Offer generation error:', err);
+      console.error('Offer error:', err);
     }
   };
 
@@ -134,10 +130,11 @@ export default function VoiceCallBar({
     let isMounted = true;
 
     const startSession = async () => {
-      // Force stream initialization and permission acceptance FIRST before joining channel
+      // 1. Get media permissions and setup stream first
       await initLocalStream();
       if (!isMounted) return;
 
+      // 2. Open Supabase channel for signaling
       const channel = supabase.channel(`voice_instant_${roomId}`);
       channelRef.current = channel;
 
@@ -151,6 +148,8 @@ export default function VoiceCallBar({
             if (type === 'join-voice') {
               setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
               await createAndSendOffer(senderId);
+              
+              // Broadcast our camera state back
               channel.send({
                 type: 'broadcast',
                 event: 'signal',
@@ -213,7 +212,7 @@ export default function VoiceCallBar({
               if (onRemoteCameraStatusUpdate) onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
             }
           } catch (err) {
-            console.error('Signaling processing error:', err);
+            console.error('Signaling error:', err);
           }
         })
         .subscribe((status) => {
@@ -256,22 +255,22 @@ export default function VoiceCallBar({
     }
   };
 
-  const toggleVideo = async () => {
-    if (!localStreamRef.current) await initLocalStream();
+  const toggleVideo = () => {
+    if (localStreamRef.current) {
+      const videoTracks = localStreamRef.current.getVideoTracks();
+      if (videoTracks.length > 0) {
+        const nextVideoState = !isVideoOn;
+        videoTracks[0].enabled = nextVideoState; // Safely toggle the existing track instead of recreating stream!
+        setIsVideoOn(nextVideoState);
 
-    const videoTracks = localStreamRef.current ? localStreamRef.current.getVideoTracks() : [];
-    if (videoTracks.length > 0) {
-      const nextVideoState = !isVideoOn;
-      videoTracks[0].enabled = nextVideoState;
-      setIsVideoOn(nextVideoState);
-
-      channelRef.current?.send({
-        type: 'broadcast',
-        event: 'signal',
-        payload: { senderId: myUserId, type: 'camera-status', isVideoOn: nextVideoState },
-      });
+        // Broadcast camera state change to everyone else in the room
+        channelRef.current?.send({
+          type: 'broadcast',
+          event: 'signal',
+          payload: { senderId: myUserId, type: 'camera-status', isVideoOn: nextVideoState },
+        });
+      }
     }
-
     if (onStreamUpdate && localStreamRef.current) {
       onStreamUpdate(localStreamRef.current);
     }
