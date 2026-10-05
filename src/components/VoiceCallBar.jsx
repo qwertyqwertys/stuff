@@ -147,7 +147,6 @@ export default function VoiceCallBar({
                 payload: { senderId: myUserId, type: 'camera-status', isVideoOn },
               });
             } else if (type === 'camera-status') {
-              // Keep camera status updated so the UI toggles between video and avatar, but keep the card safely mounted!
               remoteCameraStatusesRef.current[senderId] = remoteVideoState;
               if (onRemoteCameraStatusUpdate) {
                 onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
@@ -237,48 +236,35 @@ export default function VoiceCallBar({
   const toggleVideo = async () => {
     try {
       const nextVideoState = !isVideoOn;
+      let videoTrack = localStreamRef.current?.getVideoTracks()[0];
 
       if (nextVideoState) {
-        const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        const videoTrack = videoStream.getVideoTracks()[0];
+        if (!videoTrack) {
+          // First time turning on camera: acquire track and add to peer connections
+          const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          videoTrack = videoStream.getVideoTracks()[0];
 
-        if (localStreamRef.current) {
-          localStreamRef.current.getVideoTracks().forEach((t) => {
-            t.stop();
-            localStreamRef.current.removeTrack(t);
-          });
-          localStreamRef.current.addTrack(videoTrack);
-        }
-
-        for (const [targetUserId, pc] of Object.entries(peerConnectionsRef.current)) {
-          const senders = pc.getSenders();
-          const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
-          if (videoSender) {
-            await videoSender.replaceTrack(videoTrack);
+          if (localStreamRef.current) {
+            localStreamRef.current.addTrack(videoTrack);
           } else {
-            pc.addTrack(videoTrack, localStreamRef.current);
+            localStreamRef.current = videoStream;
           }
-          await createAndSendOffer(targetUserId);
+
+          for (const [targetUserId, pc] of Object.entries(peerConnectionsRef.current)) {
+            pc.addTrack(videoTrack, localStreamRef.current);
+            await createAndSendOffer(targetUserId);
+          }
+        } else {
+          // Track already exists: just enable it (turns hardware light back on instantly)
+          videoTrack.enabled = true;
         }
 
         setIsVideoOn(true);
       } else {
-        if (localStreamRef.current) {
-          localStreamRef.current.getVideoTracks().forEach((t) => {
-            t.stop();
-            localStreamRef.current.removeTrack(t);
-          });
+        if (videoTrack) {
+          // Just disable the track (turns hardware light off, stream remains intact!)
+          videoTrack.enabled = false;
         }
-
-        for (const [targetUserId, pc] of Object.entries(peerConnectionsRef.current)) {
-          const senders = pc.getSenders();
-          const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
-          if (videoSender) {
-            await videoSender.replaceTrack(null);
-          }
-          await createAndSendOffer(targetUserId);
-        }
-
         setIsVideoOn(false);
       }
 
@@ -315,7 +301,7 @@ export default function VoiceCallBar({
 
       <div className="flex items-center gap-1.5 pl-2 border-l border-white/10">
         <button
-       type="button"
+          type="button"
           onClick={toggleMute}
           className={`p-2 rounded-xl transition-all ${isMuted ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-white/5 hover:bg-white/10 text-zinc-300'}`}
           title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
@@ -324,7 +310,7 @@ export default function VoiceCallBar({
         </button>
 
         <button
-       type="button"
+          type="button"
           onClick={toggleVideo}
           className={`p-2 rounded-xl transition-all ${!isVideoOn ? 'bg-white/5 hover:bg-white/10 text-zinc-300' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}`}
           title={isVideoOn ? 'Turn Off Camera' : 'Turn On Camera'}
@@ -333,7 +319,7 @@ export default function VoiceCallBar({
         </button>
 
         <button
-       type="button"
+          type="button"
           onClick={handleDisconnect}
           className="p-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-transform active:scale-95 shadow-md"
           title="Disconnect Voice"
