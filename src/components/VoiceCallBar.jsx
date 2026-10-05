@@ -76,7 +76,6 @@ export default function VoiceCallBar({
         remoteStreamsRef.current[targetUserId] = stream;
       }
 
-      // Safely manage tracks without discarding the stream container
       if (event.track.kind === 'video') {
         stream.getVideoTracks().forEach(t => stream.removeTrack(t));
         stream.addTrack(event.track);
@@ -148,17 +147,8 @@ export default function VoiceCallBar({
                 payload: { senderId: myUserId, type: 'camera-status', isVideoOn },
               });
             } else if (type === 'camera-status') {
+              // Keep camera status updated so the UI toggles between video and avatar, but keep the card safely mounted!
               remoteCameraStatusesRef.current[senderId] = remoteVideoState;
-              
-              // If the remote user turns off their camera, clean up their video track safely from the stream container
-              if (!remoteVideoState && remoteStreamsRef.current[senderId]) {
-                remoteStreamsRef.current[senderId].getVideoTracks().forEach((track) => {
-                  track.stop();
-                  remoteStreamsRef.current[senderId].removeTrack(track);
-                });
-                if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
-              }
-
               if (onRemoteCameraStatusUpdate) {
                 onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
               }
@@ -202,7 +192,7 @@ export default function VoiceCallBar({
           }
         })
         .subscribe((status) => {
-            if (status === 'SUBSCRIBED') {
+          if (status === 'SUBSCRIBED') {
             channel.send({
               type: 'broadcast',
               event: 'signal',
@@ -325,6 +315,7 @@ export default function VoiceCallBar({
 
       <div className="flex items-center gap-1.5 pl-2 border-l border-white/10">
         <button
+       type="button"
           onClick={toggleMute}
           className={`p-2 rounded-xl transition-all ${isMuted ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-white/5 hover:bg-white/10 text-zinc-300'}`}
           title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
@@ -333,6 +324,7 @@ export default function VoiceCallBar({
         </button>
 
         <button
+       type="button"
           onClick={toggleVideo}
           className={`p-2 rounded-xl transition-all ${!isVideoOn ? 'bg-white/5 hover:bg-white/10 text-zinc-300' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}`}
           title={isVideoOn ? 'Turn Off Camera' : 'Turn On Camera'}
@@ -341,6 +333,7 @@ export default function VoiceCallBar({
         </button>
 
         <button
+       type="button"
           onClick={handleDisconnect}
           className="p-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-transform active:scale-95 shadow-md"
           title="Disconnect Voice"
