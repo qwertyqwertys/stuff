@@ -35,47 +35,60 @@ export default function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Instantly initialize local audio stream and bind to active peers
-  const initAudioStream = async () => {
+  // Initialize both audio and video tracks upfront so WebRTC transceivers are permanently established
+  const initLocalStream = async () => {
     try {
-      if (localStreamRef.current && localStreamRef.current.getAudioTracks().length > 0) {
+      if (localStreamRef.current) {
         return localStreamRef.current;
       }
 
-      const audioStream = await navigator.mediaDevices.getUserMedia({
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
           channelCount: 1,
         },
-        video: false,
+        video: true, // Bound permanently to prevent transceiver creation/destruction bugs
       });
 
-      if (!localStreamRef.current) {
-        localStreamRef.current = new MediaStream();
+      // Start with video muted/disabled so the camera light stays off until toggled
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = false;
       }
 
-      audioStream.getAudioTracks().forEach((track) => {
-        localStreamRef.current.addTrack(track);
+      localStreamRef.current = stream;
 
-        Object.values(peerConnectionsRef.current).forEach((pc) => {
+      // Bind all initial tracks to existing peer connections
+      Object.values(peerConnectionsRef.current).forEach((pc) => {
+        stream.getTracks().forEach((track) => {
           const senders = pc.getSenders();
-          const hasAudioSender = senders.some((s) => s.track && s.track.kind === 'audio');
-          if (!hasAudioSender) {
-            pc.addTrack(track, localStreamRef.current);
+          const hasSender = senders.some((s) => s.track && s.track.kind === track.kind);
+          if (!hasSender) {
+            pc.addTrack(track, stream);
           }
         });
       });
 
       if (onStreamUpdate) {
-        onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
+        onStreamUpdate(new MediaStream(stream.getTracks()));
       }
 
-      return localStreamRef.current;
+      return stream;
     } catch (err) {
-      console.error('Microphone error:', err);
-      return null;
+      console.warn('Camera permission denied or unavailable, falling back to audio-only:', err);
+      try {
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        localStreamRef.current = audioStream;
+        if (onStreamUpdate) {
+          onStreamUpdate(new MediaStream(audioStream.getTracks()));
+        }
+        return audioStream;
+      } catch (audioErr) {
+        console.error('Microphone initialization error:', audioErr);
+        return null;
+      }
     }
   };
 
@@ -171,7 +184,7 @@ export default function VoiceCallBar({
     let mounted = true;
 
     const setupVoice = async () => {
-      await initAudioStream();
+      await initLocalStream();
       if (!mounted) return;
 
       const channel = supabase.channel(`voice_instant_${roomId}`);
@@ -309,28 +322,20 @@ export default function VoiceCallBar({
 
   const toggleVideo = async () => {
     if (!localStreamRef.current) {
-      await initAudioStream();
+      await initLocalStream();
     }
 
     const videoTracks = localStreamRef.current ? localStreamRef.current.getVideoTracks() : [];
 
-    if (isVideoOn && videoTracks.length > 0) {
-      // Turn off video completely and stop hardware light
+    if (videoTracks.length > 0) {
       const videoTrack = videoTracks[0];
-      videoTrack.stop();
-      localStreamRef.current.removeTrack(videoTrack);
-      setIsVideoOn(false);
+      const nextVideoState = !isVideoOn;
 
-      // Clean track sender from peer connections safely
-      Object.values(peerConnectionsRef.current).forEach((pc) => {
-        const senders = pc.getSenders();
-        const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
-        if (videoSender) {
-          pc.removeTrack(videoSender);
-        }
-      });
+      // Toggle track data flow without destroying transceivers or removing tracks
+      videoTrack.enabled = nextVideoState;
+      setIsVideoOn(nextVideoState);
 
-      // Broadcast camera-off state so remote clients retain the caller card with avatar fallback
+      // Broadcast camera state change to guarantee remote cards stay locked and pinned
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
@@ -338,51 +343,9 @@ export default function VoiceCallBar({
           payload: {
             senderId: myUserId,
             type: 'camera-status',
-            isVideoOn: false,
+            isVideoOn: nextVideoState,
           },
         });
-      }
-    } else {
-      // Turn on video
-      try {
-        const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        const newVideoTrack = videoStream.getVideoTracks()[0];
-
-        if (newVideoTrack) {
-          if (videoTracks.length > 0) {
-            videoTracks[0].stop();
-            localStreamRef.current.removeTrack(videoTracks[0]);
-          }
-
-          localStreamRef.current.addTrack(newVideoTrack);
-          setIsVideoOn(true);
-
-          Object.values(peerConnectionsRef.current).forEach((pc) => {
-            const senders = pc.getSenders();
-            const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
-            if (videoSender) {
-              videoSender.replaceTrack(newVideoTrack);
-            } else {
-              pc.addTrack(newVideoTrack, localStreamRef.current);
-            }
-          });
-
-          // Broadcast camera-on state
-          if (channelRef.current) {
-            channelRef.current.send({
-              type: 'broadcast',
-              event: 'signal',
-              payload: {
-                senderId: myUserId,
-                type: 'camera-status',
-                isVideoOn: true,
-              },
-            });
-          }
-        }
-      } catch (err) {
-        console.warn('Camera blocked or unavailable:', err);
-        setIsVideoOn(false);
       }
     }
 
