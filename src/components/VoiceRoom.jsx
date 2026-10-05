@@ -96,17 +96,18 @@ export default function VoiceRoom({
     }
   };
 
-  // Explicitly stop video tracks so hardware cuts power to the camera LED
+  // Toggle camera using track.enabled instead of stopping/removing tracks, 
+  // preventing the remote screen from dropping the participant tile.
   const toggleCamera = async () => {
-    if (isCameraOn) {
-      if (localStream) {
-        localStream.getVideoTracks().forEach((track) => {
-          track.stop();
-          localStream.removeTrack(track);
-        });
-        setLocalStream(new MediaStream(localStream.getTracks()));
+    if (localStream && localStream.getVideoTracks().length > 0) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (isCameraOn) {
+        videoTrack.enabled = false;
+        setIsCameraOn(false);
+      } else {
+        videoTrack.enabled = true;
+        setIsCameraOn(true);
       }
-      setIsCameraOn(false);
     } else {
       try {
         const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -125,7 +126,7 @@ export default function VoiceRoom({
     }
   };
 
-  // Clean up all hardware media tracks when leaving the voice room
+  // Clean up all hardware media tracks when leaving the voice room completely
   useEffect(() => {
     return () => {
       if (localStream) {
@@ -248,7 +249,7 @@ export default function VoiceRoom({
             {sortedParticipants.length > 0 ? `${sortedParticipants.length} connected in call` : 'Connecting...'}
           </p>
         </div>
-        <span className={`text-xs border px-3 py-1 rounded-full font-semibold ${
+        <span className={`text-xs border px-3 py-1 rounded-full font-semibold[cite: 7] ${
           isConnected 
             ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 animate-pulse' 
             : 'bg-amber-500/20 border-amber-500/40 text-amber-400'
