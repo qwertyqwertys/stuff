@@ -19,7 +19,8 @@ export default function VoiceCallBar({
   onLeave, 
   onEndCall,
   onStreamUpdate,
-  onRemoteStreamsUpdate
+  onRemoteStreamsUpdate,
+  onRemoteCameraStatusUpdate // <--- Add this prop
 }) {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
@@ -30,71 +31,47 @@ export default function VoiceCallBar({
   
   const peerConnectionsRef = useRef({});
   const remoteStreamsRef = useRef({});
+  const remoteCameraStatusesRef = useRef({});
   const iceCandidatesQueueRef = useRef({});
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Request both audio and video simultaneously in one prompt to prevent stream-splitting bugs
   const initLocalStream = async () => {
     try {
-      if (localStreamRef.current) {
-        return localStreamRef.current;
-      }
+      if (localStreamRef.current) return localStreamRef.current;
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 1,
-        },
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         video: true,
       });
 
-      // Keep the video track disabled initially so the camera light stays off
       const videoTrack = stream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = false;
-      }
+      if (videoTrack) videoTrack.enabled = false;
 
       localStreamRef.current = stream;
 
-      // Attach tracks immediately to any existing peer connections
       Object.values(peerConnectionsRef.current).forEach((pc) => {
         stream.getTracks().forEach((track) => {
           const senders = pc.getSenders();
-          const hasSender = senders.some((s) => s.track && s.track.kind === track.kind);
-          if (!hasSender) {
+          if (!senders.some((s) => s.track && s.track.kind === track.kind)) {
             pc.addTrack(track, stream);
           }
         });
       });
 
-      if (onStreamUpdate) {
-        onStreamUpdate(stream);
-      }
-
+      if (onStreamUpdate) onStreamUpdate(stream);
       return stream;
     } catch (err) {
-      console.warn('Camera/Mic permission error, falling back to audio-only:', err);
-      try {
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        localStreamRef.current = audioStream;
-        if (onStreamUpdate) {
-          onStreamUpdate(audioStream);
-        }
-        return audioStream;
-      } catch (audioErr) {
-        console.error('Microphone fatal error:', audioErr);
-        return null;
-      }
+      console.warn('Camera/Mic fallback to audio-only:', err);
+      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      localStreamRef.current = audioStream;
+      if (onStreamUpdate) onStreamUpdate(audioStream);
+      return audioStream;
     }
   };
 
   const getOrCreatePeerConnection = (targetUserId) => {
-    if (peerConnectionsRef.current[targetUserId]) {
-      return peerConnectionsRef.current[targetUserId];
-    }
+    if (peerConnectionsRef.current[targetUserId]) return peerConnectionsRef.current[targetUserId];
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
     peerConnectionsRef.current[targetUserId] = pc;
@@ -108,9 +85,7 @@ export default function VoiceCallBar({
     pc.ontrack = (event) => {
       const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
       remoteStreamsRef.current[targetUserId] = stream;
-      if (onRemoteStreamsUpdate) {
-        onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
-      }
+      if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
     };
 
     pc.onicecandidate = (event) => {
@@ -118,12 +93,7 @@ export default function VoiceCallBar({
         channelRef.current.send({
           type: 'broadcast',
           event: 'signal',
-          payload: {
-            senderId: myUserId,
-            targetId: targetUserId,
-            type: 'ice-candidate',
-            candidate: event.candidate,
-          },
+          payload: { senderId: myUserId, targetId: targetUserId, type: 'ice-candidate', candidate: event.candidate },
         });
       }
     };
@@ -135,22 +105,14 @@ export default function VoiceCallBar({
     try {
       const pc = getOrCreatePeerConnection(targetUserId);
       if (pc.signalingState !== 'stable') return;
-      
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      if (channelRef.current) {
-        channelRef.current.send({
-          type: 'broadcast',
-          event: 'signal',
-          payload: {
-            senderId: myUserId,
-            targetId: targetUserId,
-            type: 'offer',
-            offer,
-          },
-        });
-      }
+      channelRef.current?.send({
+        type: 'broadcast',
+        event: 'signal',
+        payload: { senderId: myUserId, targetId: targetUserId, type: 'offer', offer },
+      });
     } catch (err) {
       console.error('Offer error:', err);
     }
@@ -169,25 +131,30 @@ export default function VoiceCallBar({
       channel
         .on('broadcast', { event: 'signal' }, async ({ payload }) => {
           if (!payload || payload.senderId === myUserId) return;
-
-          const { senderId, targetId, type, offer, answer, candidate } = payload;
+          const { senderId, targetId, type, offer, answer, candidate, isVideoOn: remoteVideoState } = payload;
           if (targetId && targetId !== myUserId) return;
 
           try {
             if (type === 'join-voice') {
               setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
               await createAndSendOffer(senderId);
+              // Send current camera state back to new joiner
+              channel.send({
+                type: 'broadcast',
+                event: 'signal',
+                payload: { senderId: myUserId, targetId: senderId, type: 'camera-status', isVideoOn },
+              });
+            } else if (type === 'camera-status') {
+              remoteCameraStatusesRef.current[senderId] = remoteVideoState;
+              if (onRemoteCameraStatusUpdate) {
+                onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
+              }
             } else if (type === 'offer') {
               const pc = getOrCreatePeerConnection(senderId);
-              
               if (pc.signalingState !== 'stable') {
-                if (senderId < myUserId) {
-                  await pc.setLocalDescription({ type: 'rollback' });
-                } else {
-                  return;
-                }
+                if (senderId < myUserId) await pc.setLocalDescription({ type: 'rollback' });
+                else return;
               }
-
               await pc.setRemoteDescription(new RTCSessionDescription(offer));
 
               if (iceCandidatesQueueRef.current[senderId]) {
@@ -203,18 +170,12 @@ export default function VoiceCallBar({
               channel.send({
                 type: 'broadcast',
                 event: 'signal',
-                payload: {
-                  senderId: myUserId,
-                  targetId: senderId,
-                  type: 'answer',
-                  answer: createdAnswer,
-                },
+                payload: { senderId: myUserId, targetId: senderId, type: 'answer', answer: createdAnswer },
               });
             } else if (type === 'answer') {
               const pc = peerConnectionsRef.current[senderId];
               if (pc && pc.signalingState === 'have-local-offer') {
                 await pc.setRemoteDescription(new RTCSessionDescription(answer));
-
                 if (iceCandidatesQueueRef.current[senderId]) {
                   for (const cand of iceCandidatesQueueRef.current[senderId]) {
                     await pc.addIceCandidate(new RTCIceCandidate(cand));
@@ -227,24 +188,17 @@ export default function VoiceCallBar({
               if (pc && pc.remoteDescription && pc.remoteDescription.type) {
                 await pc.addIceCandidate(new RTCIceCandidate(candidate));
               } else {
-                if (!iceCandidatesQueueRef.current[senderId]) {
-                  iceCandidatesQueueRef.current[senderId] = [];
-                }
+                if (!iceCandidatesQueueRef.current[senderId]) iceCandidatesQueueRef.current[senderId] = [];
                 iceCandidatesQueueRef.current[senderId].push(candidate);
               }
             } else if (type === 'leave-voice') {
               setConnectedUsers((prev) => prev.filter((u) => u !== senderId));
-              if (peerConnectionsRef.current[senderId]) {
-                peerConnectionsRef.current[senderId].close();
-                delete peerConnectionsRef.current[senderId];
-              }
-              if (remoteStreamsRef.current[senderId]) {
-                delete remoteStreamsRef.current[senderId];
-                if (onRemoteStreamsUpdate) {
-                  onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
-                }
-              }
-              delete iceCandidatesQueueRef.current[senderId];
+              peerConnectionsRef.current[senderId]?.close();
+              delete peerConnectionsRef.current[senderId];
+              delete remoteStreamsRef.current[senderId];
+              delete remoteCameraStatusesRef.current[senderId];
+              if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
+              if (onRemoteCameraStatusUpdate) onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
             }
           } catch (err) {
             console.error('Signaling error:', err);
@@ -275,9 +229,7 @@ export default function VoiceCallBar({
       }
       Object.values(peerConnectionsRef.current).forEach((pc) => pc.close());
       peerConnectionsRef.current = {};
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => track.stop());
-      }
+      localStreamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, [roomId, myUserId]);
 
@@ -288,40 +240,26 @@ export default function VoiceCallBar({
         const nextMuteState = !isMuted;
         audioTracks[0].enabled = !nextMuteState;
         setIsMuted(nextMuteState);
-
-        if (onStreamUpdate) {
-          onStreamUpdate(localStreamRef.current);
-        }
+        if (onStreamUpdate) onStreamUpdate(localStreamRef.current);
       }
     }
   };
 
   const toggleVideo = async () => {
-    if (!localStreamRef.current) {
-      await initLocalStream();
-    }
+    if (!localStreamRef.current) await initLocalStream();
 
     const videoTracks = localStreamRef.current ? localStreamRef.current.getVideoTracks() : [];
-
     if (videoTracks.length > 0) {
-      const videoTrack = videoTracks[0];
       const nextVideoState = !isVideoOn;
-
-      // Cleanly toggle the single persistent track without recreating or splitting streams
-      videoTrack.enabled = nextVideoState;
+      videoTracks[0].enabled = nextVideoState;
       setIsVideoOn(nextVideoState);
 
-      if (channelRef.current) {
-        channelRef.current.send({
-          type: 'broadcast',
-          event: 'signal',
-          payload: {
-            senderId: myUserId,
-            type: 'camera-status',
-            isVideoOn: nextVideoState,
-          },
-        });
-      }
+      // Broadcast camera state explicitly so remote clients know whether to show video or avatar
+      channelRef.current?.send({
+        type: 'broadcast',
+        event: 'signal',
+        payload: { senderId: myUserId, type: 'camera-status', isVideoOn: nextVideoState },
+      });
     }
 
     if (onStreamUpdate && localStreamRef.current) {
@@ -349,9 +287,7 @@ export default function VoiceCallBar({
       <div className="flex items-center gap-1.5 pl-2 border-l border-white/10">
         <button
           onClick={toggleMute}
-          className={`p-2 rounded-xl transition-all ${
-            isMuted ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-white/5 hover:bg-white/10 text-zinc-300'
-          }`}
+          className={`p-2 rounded-xl transition-all ${isMuted ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-white/5 hover:bg-white/10 text-zinc-300'}`}
           title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
         >
           {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -359,9 +295,7 @@ export default function VoiceCallBar({
 
         <button
           onClick={toggleVideo}
-          className={`p-2 rounded-xl transition-all ${
-            !isVideoOn ? 'bg-white/5 hover:bg-white/10 text-zinc-300' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-          }`}
+          className={`p-2 rounded-xl transition-all ${!isVideoOn ? 'bg-white/5 hover:bg-white/10 text-zinc-300' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}`}
           title={isVideoOn ? 'Turn Off Camera' : 'Turn On Camera'}
         >
           {isVideoOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
