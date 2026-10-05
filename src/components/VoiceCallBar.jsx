@@ -33,15 +33,13 @@ export default function VoiceCallBar({
   const remoteStreamsRef = useRef({});
   const remoteCameraStatusesRef = useRef({});
   const iceCandidatesQueueRef = useRef({});
-  const isInitializedRef = useRef(false);
+  const isSetupDoneRef = useRef(false);
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Initialize media stream ONCE and never re-create it to prevent stream destruction bugs
+  // Pre-initialize media stream immediately to clear browser prompts before WebRTC starts
   const initLocalStream = async () => {
     if (localStreamRef.current) return localStreamRef.current;
-    if (isInitializedRef.current) return localStreamRef.current;
-    isInitializedRef.current = true;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -49,13 +47,11 @@ export default function VoiceCallBar({
         video: true,
       });
 
-      // Keep video track disabled initially so camera light stays off until toggled
       const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) videoTrack.enabled = false;
 
       localStreamRef.current = stream;
 
-      // Bind tracks to any existing peer connections safely
       Object.values(peerConnectionsRef.current).forEach((pc) => {
         stream.getTracks().forEach((track) => {
           const senders = pc.getSenders();
@@ -68,14 +64,14 @@ export default function VoiceCallBar({
       if (onStreamUpdate) onStreamUpdate(stream);
       return stream;
     } catch (err) {
-      console.warn('Camera/Mic permission denied or fallback to audio-only:', err);
+      console.warn('Camera permission blocked, falling back to audio-only stream:', err);
       try {
         const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         localStreamRef.current = audioStream;
         if (onStreamUpdate) onStreamUpdate(audioStream);
         return audioStream;
       } catch (audioErr) {
-        console.error('Microphone fatal error:', audioErr);
+        console.error('Fatal microphone error:', audioErr);
         return null;
       }
     }
@@ -127,14 +123,18 @@ export default function VoiceCallBar({
         payload: { senderId: myUserId, targetId: targetUserId, type: 'offer', offer },
       });
     } catch (err) {
-      console.error('Offer error:', err);
+      console.error('Offer generation error:', err);
     }
   };
 
   useEffect(() => {
+    if (isSetupDoneRef.current) return;
+    isSetupDoneRef.current = true;
+
     let isMounted = true;
 
-    const setupVoice = async () => {
+    const startSession = async () => {
+      // Force stream initialization and permission acceptance FIRST before joining channel
       await initLocalStream();
       if (!isMounted) return;
 
@@ -151,7 +151,6 @@ export default function VoiceCallBar({
             if (type === 'join-voice') {
               setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
               await createAndSendOffer(senderId);
-              // Send current camera state to new joiner
               channel.send({
                 type: 'broadcast',
                 event: 'signal',
@@ -214,7 +213,7 @@ export default function VoiceCallBar({
               if (onRemoteCameraStatusUpdate) onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
             }
           } catch (err) {
-            console.error('Signaling error:', err);
+            console.error('Signaling processing error:', err);
           }
         })
         .subscribe((status) => {
@@ -228,7 +227,7 @@ export default function VoiceCallBar({
         });
     };
 
-    setupVoice();
+    startSession();
 
     return () => {
       isMounted = false;
@@ -266,7 +265,6 @@ export default function VoiceCallBar({
       videoTracks[0].enabled = nextVideoState;
       setIsVideoOn(nextVideoState);
 
-      // Broadcast camera state explicitly so remote clients know whether to show video or avatar
       channelRef.current?.send({
         type: 'broadcast',
         event: 'signal',
