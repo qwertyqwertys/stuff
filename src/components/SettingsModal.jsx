@@ -32,7 +32,7 @@ class SettingsErrorBoundary extends Component {
     if (this.state.hasError) {
       if (!this.props.show) return null;
       return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
           <div className="bg-zinc-900 border border-red-500/40 p-6 rounded-3xl max-w-sm w-full space-y-4 text-center shadow-2xl text-white">
             <ShieldAlert className="w-10 h-10 text-red-500 mx-auto" />
             <h3 className="text-base font-bold">Settings Encountered an Error</h3>
@@ -133,7 +133,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
     try {
       const canvas = document.createElement('canvas');
       const outputSize = 300;
-      const previewSize = 208; // 52 * 4 = 208px
+      const previewSize = 208;
 
       canvas.width = outputSize;
       canvas.height = outputSize;
@@ -304,7 +304,6 @@ function SettingsModalContent({
   isLightMode = false, setIsLightMode,
   activeCloak = '', setActiveCloak
 }) {
-  // ALL REACT HOOKS DECLARED TOP-LEVEL
   const [friendInput, setFriendInput] = useState('');
   const [friendInputError, setFriendInputError] = useState('');
   const [copied, setCopied] = useState(false);
@@ -413,7 +412,6 @@ function SettingsModalContent({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [show, onClose, cropperOpen, uploadModalOpen]);
 
-  // CONDITIONAL EARLY RETURN SAFE AFTER ALL HOOKS
   if (!show) return null;
 
   const effectiveBgMusic = isMusicReset ? null : bgMusic;
@@ -460,13 +458,9 @@ function SettingsModalContent({
       return;
     }
 
-    // IF IT'S A GIF: Bypass canvas cropper so animation stays intact!
     if (file.type === 'image/gif') {
       if (typeof handlePfpUpload === 'function') {
-        const syntheticTarget = {
-          files: [file],
-          value: file
-        };
+        const syntheticTarget = { files: [file], value: file };
         const syntheticEvent = {
           target: syntheticTarget,
           files: [file],
@@ -477,11 +471,7 @@ function SettingsModalContent({
         try {
           handlePfpUpload(syntheticEvent);
         } catch (err1) {
-          try {
-            handlePfpUpload(file);
-          } catch (err2) {
-            console.error("Failed to upload GIF avatar:", err2);
-          }
+          try { handlePfpUpload(file); } catch (err2) {}
         }
       }
       e.target.value = '';
@@ -502,7 +492,6 @@ function SettingsModalContent({
     e.target.value = '';
   };
 
-  // --- SAFELY DISPATCH CROPPED AVATAR TO PARENT HANDLER ---
   const handleCropSave = (croppedDataUrl) => {
     if (typeof handlePfpUpload === 'function') {
       let file = null;
@@ -674,7 +663,7 @@ function SettingsModalContent({
         className="hidden" 
       />
 
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
         <div 
           ref={modalRef}
           role="dialog"
