@@ -125,28 +125,8 @@ export default function VoiceCallBar({
       }
     };
 
-    pc.onnegotiationneeded = async () => {
-      try {
-        if (pc.signalingState !== 'stable') return;
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-
-        if (channelRef.current) {
-          channelRef.current.send({
-            type: 'broadcast',
-            event: 'signal',
-            payload: {
-              senderId: myUserId,
-              targetId: targetUserId,
-              type: 'offer',
-              offer,
-            },
-          });
-        }
-      } catch (err) {
-        console.error('Negotiation error:', err);
-      }
-    };
+    // NOTE: pc.onnegotiationneeded has been completely removed here 
+    // to prevent m-line mismatch crashes and InvalidAccessErrors!
 
     return pc;
   };
@@ -330,7 +310,6 @@ export default function VoiceCallBar({
       videoTrack.enabled = nextVideoState;
       setIsVideoOn(nextVideoState);
 
-      // Broadcast camera state with explicit metadata flag so parent grids know not to unmount your card
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
