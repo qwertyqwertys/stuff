@@ -308,9 +308,16 @@ export default function VoiceCallBar({
   };
 
   const toggleVideo = async () => {
-    const nextVideoState = !isVideoOn;
-
-    if (nextVideoState) {
+    if (localStreamRef.current && localStreamRef.current.getVideoTracks().length > 0) {
+      const videoTrack = localStreamRef.current.getVideoTracks()[0];
+      if (isVideoOn) {
+        videoTrack.enabled = false;
+        setIsVideoOn(false);
+      } else {
+        videoTrack.enabled = true;
+        setIsVideoOn(true);
+      }
+    } else {
       if (!localStreamRef.current) {
         await initAudioStream();
       }
@@ -329,31 +336,17 @@ export default function VoiceCallBar({
 
           Object.keys(peerConnectionsRef.current).forEach((peerId) => {
             const pc = peerConnectionsRef.current[peerId];
-            pc.addTrack(newVideoTrack, localStreamRef.current);
+            const senders = pc.getSenders();
+            const hasVideoSender = senders.some((s) => s.track && s.track.kind === 'video');
+            if (!hasVideoSender) {
+              pc.addTrack(newVideoTrack, localStreamRef.current);
+            }
           });
         }
       } catch (err) {
         console.warn('Camera blocked or unavailable:', err);
         setIsVideoOn(false);
       }
-    } else {
-      if (localStreamRef.current) {
-        const videoTracks = localStreamRef.current.getVideoTracks();
-        videoTracks.forEach((track) => {
-          track.stop();
-          localStreamRef.current.removeTrack(track);
-        });
-
-        Object.keys(peerConnectionsRef.current).forEach((peerId) => {
-          const pc = peerConnectionsRef.current[peerId];
-          const senders = pc.getSenders();
-          const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
-          if (videoSender) {
-            pc.removeTrack(videoSender);
-          }
-        });
-      }
-      setIsVideoOn(false);
     }
 
     if (onStreamUpdate && localStreamRef.current) {
