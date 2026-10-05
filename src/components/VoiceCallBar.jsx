@@ -19,7 +19,10 @@ export default function VoiceCallBar({
   onLeave, 
   onEndCall,
   onStreamUpdate,
-  onRemoteStreamsUpdate
+  onRemoteStreamsUpdate,
+  isCameraOn: externalIsCameraOn,
+  isMuted: externalIsMuted,
+  onToggleCamera
 }) {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
@@ -308,20 +311,50 @@ export default function VoiceCallBar({
   };
 
   const toggleVideo = async () => {
+    if (onToggleCamera) {
+      onToggleCamera();
+    }
+
     if (localStreamRef.current && localStreamRef.current.getVideoTracks().length > 0) {
       const videoTrack = localStreamRef.current.getVideoTracks()[0];
       if (isVideoOn) {
         videoTrack.enabled = false;
         setIsVideoOn(false);
+        // Completely stop the track hardware light so the camera turns off fully
+        videoTrack.stop();
+        localStreamRef.current.removeTrack(videoTrack);
+        
+        // Update senders across all peer connections to cleanly signal track removal
+        Object.values(peerConnectionsRef.current).forEach((pc) => {
+          const senders = pc.getSenders();
+          const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
+          if (videoSender) {
+            pc.removeTrack(videoSender);
+          }
+        });
       } else {
-        videoTrack.enabled = true;
-        setIsVideoOn(true);
+        try {
+          const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          const newVideoTrack = videoStream.getVideoTracks()[0];
+
+          if (newVideoTrack) {
+            localStreamRef.current.addTrack(newVideoTrack);
+            setIsVideoOn(true);
+
+            Object.values(peerConnectionsRef.current).forEach((pc) => {
+              const senders = pc.getSenders();
+              const hasVideoSender = senders.some((s) => s.track && s.track.kind === 'video');
+              if (!hasVideoSender) {
+                pc.addTrack(newVideoTrack, localStreamRef.current);
+              }
+            });
+          }
+        } catch (err) {
+          console.warn('Camera blocked or unavailable:', err);
+          setIsVideoOn(false);
+        }
       }
     } else {
-      if (!localStreamRef.current) {
-        await initAudioStream();
-      }
-
       try {
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         const newVideoTrack = videoStream.getVideoTracks()[0];
@@ -334,8 +367,7 @@ export default function VoiceCallBar({
           localStreamRef.current.addTrack(newVideoTrack);
           setIsVideoOn(true);
 
-          Object.keys(peerConnectionsRef.current).forEach((peerId) => {
-            const pc = peerConnectionsRef.current[peerId];
+          Object.values(peerConnectionsRef.current).forEach((pc) => {
             const senders = pc.getSenders();
             const hasVideoSender = senders.some((s) => s.track && s.track.kind === 'video');
             if (!hasVideoSender) {
@@ -350,7 +382,7 @@ export default function VoiceCallBar({
     }
 
     if (onStreamUpdate && localStreamRef.current) {
-      onStreamUpdate(localStreamRef.current);
+      onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
     }
   };
 
