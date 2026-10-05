@@ -219,12 +219,11 @@ export default function VoiceRoom({
     }
   }, [displayName, avatarUrl, isMuted, isCameraOn, isConnected]);
 
-  // Ensure local user is always included in sortedParticipants even if presence sync takes a moment,
-  // preventing the tile from disappearing when camera state updates.
+  // De-duplicate participants based on localUserId or remote user id so self only appears once
   const sortedParticipants = useMemo(() => {
     const map = new Map();
     
-    // Always inject self first to guarantee the local/remote caller tile never unmounts
+    // 1. Inject the local user entry explicitly using localUserId as the unique primary key
     const selfParticipant = {
       id: localUserId,
       sessionKey,
@@ -235,18 +234,27 @@ export default function VoiceRoom({
       isSelf: true
     };
     map.set(localUserId, selfParticipant);
-    map.set(sessionKey, selfParticipant);
 
+    // 2. Iterate through incoming presence participants from Supabase
     participants.forEach((p) => {
-      const key = p.id || p.sessionKey;
-      if (key && !map.has(key)) {
-        map.set(key, p);
+      const pId = p.id || p.sessionKey;
+      if (!pId) return;
+
+      // If this presence record matches our own localUserId, skip adding it as a duplicate 
+      // (unless it's a completely different tab/session, but on the same device localUserId matches)
+      if (pId === localUserId || p.sessionKey === sessionKey) {
+        return; 
+      }
+
+      // For remote participants, map them uniquely by their user id
+      if (!map.has(pId)) {
+        map.set(pId, p);
       }
     });
 
     return Array.from(map.values()).sort((a, b) => {
-      const aIsSelf = a.sessionKey === sessionKey || a.id === localUserId;
-      const bIsSelf = b.sessionKey === sessionKey || b.id === localUserId;
+      const aIsSelf = a.id === localUserId || a.sessionKey === sessionKey;
+      const bIsSelf = b.id === localUserId || b.sessionKey === sessionKey;
       if (aIsSelf) return -1;
       if (bIsSelf) return 1;
       return 0;
@@ -275,7 +283,7 @@ export default function VoiceRoom({
       {/* Grid container */}
       <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-6 items-center justify-center max-w-6xl mx-auto w-full">
         {sortedParticipants.map((participant) => {
-          const isSelf = participant.sessionKey === sessionKey || participant.id === localUserId;
+          const isSelf = participant.id === localUserId || participant.sessionKey === sessionKey;
           
           const participantData = isSelf 
             ? { 
