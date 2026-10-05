@@ -32,8 +32,6 @@ export default function VoiceCallBar({
   const peerConnectionsRef = useRef({});
   const remoteStreamsRef = useRef({});
   const remoteCameraStatusesRef = useRef({});
-  const makingOfferRef = useRef({});
-  const ignoreOfferRef = useRef({});
   const isSetupDoneRef = useRef(false);
 
   const handleDisconnect = onLeave || onEndCall;
@@ -69,14 +67,10 @@ export default function VoiceCallBar({
     }
   };
 
-  const createPeerConnection = (targetUserId) => {
+  const getOrCreatePeerConnection = (targetUserId) => {
     if (peerConnectionsRef.current[targetUserId]) {
       return peerConnectionsRef.current[targetUserId];
     }
-
-    const isPolite = myUserId.localeCompare(targetUserId) > 0;
-    makingOfferRef.current[targetUserId] = false;
-    ignoreOfferRef.current[targetUserId] = false;
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
     peerConnectionsRef.current[targetUserId] = pc;
@@ -103,23 +97,24 @@ export default function VoiceCallBar({
       }
     };
 
-    pc.onnegotiationneeded = async () => {
-      try {
-        makingOfferRef.current[targetUserId] = true;
-        await pc.setLocalDescription();
-        channelRef.current?.send({
-          type: 'broadcast',
-          event: 'signal',
-          payload: { senderId: myUserId, targetId: targetUserId, type: 'description', description: pc.localDescription },
-        });
-      } catch (err) {
-        console.error('Negotiation error:', err);
-      } finally {
-        makingOfferRef.current[targetUserId] = false;
-      }
-    };
+    return pc;
+  };
 
-    return { pc, isPolite };
+  const createAndSendOffer = async (targetUserId) => {
+    try {
+      const pc = getOrCreatePeerConnection(targetUserId);
+      if (pc.signalingState !== 'stable') return;
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      channelRef.current?.send({
+        type: 'broadcast',
+        event: 'signal',
+        payload: { senderId: myUserId, targetId: targetUserId, type: 'offer', offer },
+      });
+    } catch (err) {
+      console.error('Offer error:', err);
+    }
   };
 
   useEffect(() => {
@@ -138,23 +133,14 @@ export default function VoiceCallBar({
       channel
         .on('broadcast', { event: 'signal' }, async ({ payload }) => {
           if (!payload || payload.senderId === myUserId) return;
-          const { senderId, targetId, type, description, candidate, isVideoOn: remoteVideoState } = payload;
+          const { senderId, targetId, type, offer, answer, candidate, isVideoOn: remoteVideoState } = payload;
           if (targetId && targetId !== myUserId) return;
-
-          const { pc, isPolite } = createPeerConnection(senderId);
 
           try {
             if (type === 'join-voice') {
               setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
+              await createAndSendOffer(senderId);
               
-              await pc.setLocalDescription();
-              channel.send({
-                type: 'broadcast',
-                event: 'signal',
-                payload: { senderId: myUserId, targetId: senderId, type: 'description', description: pc.localDescription },
-              });
-              
-              // Immediately broadcast our current camera status back to the new user
               channel.send({
                 type: 'broadcast',
                 event: 'signal',
@@ -165,27 +151,31 @@ export default function VoiceCallBar({
               if (onRemoteCameraStatusUpdate) {
                 onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
               }
-            } else if (type === 'description') {
-              const offerCollision = description.type === 'offer' && 
-                (makingOfferRef.current[senderId] || pc.signalingState !== 'stable');
+            } else if (type === 'offer') {
+              const pc = getOrCreatePeerConnection(senderId);
+              if (pc.signalingState !== 'stable') {
+                if (senderId < myUserId) await pc.setLocalDescription({ type: 'rollback' });
+                else return;
+              }
+              await pc.setRemoteDescription(new RTCSessionDescription(offer));
 
-              ignoreOfferRef.current[senderId] = !isPolite && offerCollision;
-              if (ignoreOfferRef.current[senderId]) return;
+              const createdAnswer = await pc.createAnswer();
+              await pc.setLocalDescription(createdAnswer);
 
-              await pc.setRemoteDescription(new RTCSessionDescription(description));
-              if (description.type === 'offer') {
-                await pc.setLocalDescription();
-                channel.send({
-                  type: 'broadcast',
-                  event: 'signal',
-                  payload: { senderId: myUserId, targetId: senderId, type: 'description', description: pc.localDescription },
-                });
+              channel.send({
+                type: 'broadcast',
+                event: 'signal',
+                payload: { senderId: myUserId, targetId: senderId, type: 'answer', answer: createdAnswer },
+              });
+            } else if (type === 'answer') {
+              const pc = peerConnectionsRef.current[senderId];
+              if (pc && pc.signalingState === 'have-local-offer') {
+                await pc.setRemoteDescription(new RTCSessionDescription(answer));
               }
             } else if (type === 'ice-candidate' && candidate) {
-              try {
+              const pc = peerConnectionsRef.current[senderId];
+              if (pc && pc.remoteDescription && pc.remoteDescription.type) {
                 await pc.addIceCandidate(new RTCIceCandidate(candidate));
-              } catch (err) {
-                if (!ignoreOfferRef.current[senderId]) console.error('ICE error:', err);
               }
             } else if (type === 'leave-voice') {
               setConnectedUsers((prev) => prev.filter((u) => u !== senderId));
@@ -240,7 +230,7 @@ export default function VoiceCallBar({
     }
   };
 
-  const toggleVideo = () => {
+  const toggleVideo = async () => {
     if (localStreamRef.current) {
       const videoTracks = localStreamRef.current.getVideoTracks();
       if (videoTracks.length > 0) {
@@ -248,12 +238,19 @@ export default function VoiceCallBar({
         videoTracks[0].enabled = nextVideoState;
         setIsVideoOn(nextVideoState);
 
-        // Broadcast globally without a targetId so everyone in the room updates instantly
+        // Broadcast the camera status update cleanly to everyone
         channelRef.current?.send({
           type: 'broadcast',
           event: 'signal',
           payload: { senderId: myUserId, type: 'camera-status', isVideoOn: nextVideoState },
         });
+
+        // If turning video on, re-offer to all peers to ensure frames transmit instantly
+        if (nextVideoState) {
+          for (const targetUserId of connectedUsers) {
+            await createAndSendOffer(targetUserId);
+          }
+        }
       }
     }
     if (onStreamUpdate && localStreamRef.current) {
