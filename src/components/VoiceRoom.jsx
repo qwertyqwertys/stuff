@@ -75,6 +75,7 @@ export default function VoiceRoom({
 
   const [localStream, setLocalStream] = useState(null);
   const [remoteStreams, setRemoteStreams] = useState({});
+  const [remoteCameraStatuses, setRemoteCameraStatuses] = useState({}); // <--- Tracks remote camera states
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [participants, setParticipants] = useState([]);
@@ -240,13 +241,10 @@ export default function VoiceRoom({
       const pId = p.id || p.sessionKey;
       if (!pId) return;
 
-      // If this presence record matches our own localUserId, skip adding it as a duplicate 
-      // (unless it's a completely different tab/session, but on the same device localUserId matches)
       if (pId === localUserId || p.sessionKey === sessionKey) {
         return; 
       }
 
-      // For remote participants, map them uniquely by their user id
       if (!map.has(pId)) {
         map.set(pId, p);
       }
@@ -284,6 +282,7 @@ export default function VoiceRoom({
       <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-6 items-center justify-center max-w-6xl mx-auto w-full">
         {sortedParticipants.map((participant) => {
           const isSelf = participant.id === localUserId || participant.sessionKey === sessionKey;
+          const remoteCamStatus = remoteCameraStatuses[participant.id];
           
           const participantData = isSelf 
             ? { 
@@ -295,7 +294,11 @@ export default function VoiceRoom({
                 isCameraOn, 
                 isSelf: true 
               } 
-            : participant;
+            : {
+                ...participant,
+                // Override with direct signal camera status if available, fallback to presence
+                isCameraOn: remoteCamStatus !== undefined ? remoteCamStatus : participant.isCameraOn
+              };
 
           return (
             <div key={participant.id || participant.sessionKey} className="w-full max-w-lg mx-auto aspect-video">
@@ -325,6 +328,7 @@ export default function VoiceRoom({
           onEndCall={handleLeave}
           onStreamUpdate={handleStreamUpdate}
           onRemoteStreamsUpdate={(streams) => setRemoteStreams(streams)}
+          onRemoteCameraStatusUpdate={(statuses) => setRemoteCameraStatuses(statuses)}
         />
       </div>
     </div>
