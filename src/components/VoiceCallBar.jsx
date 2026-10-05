@@ -28,14 +28,12 @@ export default function VoiceCallBar({
   const channelRef = useRef(null);
   const localStreamRef = useRef(null);
   
-  // Peer connections, remote streams, and ICE candidate queues indexed by peer ID
   const peerConnectionsRef = useRef({});
   const remoteStreamsRef = useRef({});
   const iceCandidatesQueueRef = useRef({});
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Initialize a permanent master stream reference upfront
   const initLocalStream = async () => {
     try {
       if (localStreamRef.current) {
@@ -49,10 +47,9 @@ export default function VoiceCallBar({
           autoGainControl: true,
           channelCount: 1,
         },
-        video: true, // Bound permanently so transceivers never get destroyed
+        video: true,
       });
 
-      // Start with video disabled so the camera light stays off initially
       const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = false;
@@ -60,7 +57,6 @@ export default function VoiceCallBar({
 
       localStreamRef.current = stream;
 
-      // Bind permanent tracks to existing peer connections
       Object.values(peerConnectionsRef.current).forEach((pc) => {
         stream.getTracks().forEach((track) => {
           const senders = pc.getSenders();
@@ -331,11 +327,10 @@ export default function VoiceCallBar({
       const videoTrack = videoTracks[0];
       const nextVideoState = !isVideoOn;
 
-      // Simply toggle the track's enabled state. The MediaStream reference never changes!
       videoTrack.enabled = nextVideoState;
       setIsVideoOn(nextVideoState);
 
-      // Broadcast explicit status flag so remote layout keeps the card anchored
+      // Broadcast camera state with explicit metadata flag so parent grids know not to unmount your card
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
@@ -349,7 +344,6 @@ export default function VoiceCallBar({
       }
     }
 
-    // Pass the exact same persistent stream reference (no new MediaStream() wrapping)
     if (onStreamUpdate && localStreamRef.current) {
       onStreamUpdate(localStreamRef.current);
     }
