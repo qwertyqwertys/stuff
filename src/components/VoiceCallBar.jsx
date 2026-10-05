@@ -36,14 +36,13 @@ export default function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
-  // Initialize audio immediately, but start with NO video track to keep the camera light off until toggled
   const initLocalStream = async () => {
     if (localStreamRef.current) return localStreamRef.current;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: false, // Start video-free so hardware light stays off until user explicitly turns it on
+        video: false,
       });
 
       localStreamRef.current = stream;
@@ -70,7 +69,28 @@ export default function VoiceCallBar({
     }
 
     pc.ontrack = (event) => {
-      const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
+      let stream = remoteStreamsRef.current[targetUserId];
+      
+      // If we receive a video track, ensure it's properly attached to the remote user's stream object
+      if (event.track.kind === 'video') {
+        if (!stream) {
+          stream = new MediaStream([event.track]);
+        } else {
+          // Replace or add the video track cleanly
+          const existingVideoTracks = stream.getVideoTracks();
+          existingVideoTracks.forEach(t => stream.removeTrack(t));
+          stream.addTrack(event.track);
+        }
+      } else if (event.track.kind === 'audio') {
+        if (!stream) {
+          stream = new MediaStream([event.track]);
+        } else {
+          const existingAudioTracks = stream.getAudioTracks();
+          existingAudioTracks.forEach(t => stream.removeTrack(t));
+          stream.addTrack(event.track);
+        }
+      }
+
       remoteStreamsRef.current[targetUserId] = stream;
       if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
     };
@@ -136,6 +156,16 @@ export default function VoiceCallBar({
               });
             } else if (type === 'camera-status') {
               remoteCameraStatusesRef.current[senderId] = remoteVideoState;
+              
+              // If the remote user turned off their camera, clean up their video track immediately so it doesn't freeze
+              if (!remoteVideoState && remoteStreamsRef.current[senderId]) {
+                remoteStreamsRef.current[senderId].getVideoTracks().forEach((track) => {
+                  track.stop();
+                  remoteStreamsRef.current[senderId].removeTrack(track);
+                });
+                if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
+              }
+
               if (onRemoteCameraStatusUpdate) {
                 onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
               }
@@ -226,12 +256,10 @@ export default function VoiceCallBar({
       const nextVideoState = !isVideoOn;
 
       if (nextVideoState) {
-        // TURN ON: Request actual video stream and add/replace track on peer connections
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         const videoTrack = videoStream.getVideoTracks()[0];
 
         if (localStreamRef.current) {
-          // Remove any old video tracks first
           localStreamRef.current.getVideoTracks().forEach((t) => {
             t.stop();
             localStreamRef.current.removeTrack(t);
@@ -239,7 +267,6 @@ export default function VoiceCallBar({
           localStreamRef.current.addTrack(videoTrack);
         }
 
-        // Update senders on all active peer connections so the remote end receives the live track
         for (const [targetUserId, pc] of Object.entries(peerConnectionsRef.current)) {
           const senders = pc.getSenders();
           const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
@@ -253,7 +280,6 @@ export default function VoiceCallBar({
 
         setIsVideoOn(true);
       } else {
-        // TURN OFF: Completely stop physical video tracks to kill the camera light and release hardware
         if (localStreamRef.current) {
           localStreamRef.current.getVideoTracks().forEach((t) => {
             t.stop();
@@ -261,7 +287,6 @@ export default function VoiceCallBar({
           });
         }
 
-        // Inform peer connections to clear the video sender track
         for (const [targetUserId, pc] of Object.entries(peerConnectionsRef.current)) {
           const senders = pc.getSenders();
           const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
@@ -274,7 +299,6 @@ export default function VoiceCallBar({
         setIsVideoOn(false);
       }
 
-      // Broadcast camera state change globally
       channelRef.current?.send({
         type: 'broadcast',
         event: 'signal',
