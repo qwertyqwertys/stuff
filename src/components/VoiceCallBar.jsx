@@ -76,13 +76,20 @@ export default function VoiceCallBar({
         remoteStreamsRef.current[targetUserId] = stream;
       }
 
-      if (event.track.kind === 'video') {
-        stream.getVideoTracks().forEach(t => stream.removeTrack(t));
+      // Check if we already have a track of this kind in the stream
+      const existingTrack = event.track.kind === 'video' 
+        ? stream.getVideoTracks()[0] 
+        : stream.getAudioTracks()[0];
+
+      if (!existingTrack) {
+        // If no track exists yet, add it safely
         stream.addTrack(event.track);
-      } else if (event.track.kind === 'audio') {
-        stream.getAudioTracks().forEach(t => stream.removeTrack(t));
+      } else if (existingTrack.id !== event.track.id) {
+        // If it's a brand new track replacement, swap it cleanly
+        stream.removeTrack(existingTrack);
         stream.addTrack(event.track);
       }
+      // If it's the exact same track, we do nothing — keeping it perfectly stable!
 
       if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
     };
