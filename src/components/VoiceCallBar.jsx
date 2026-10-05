@@ -20,7 +20,7 @@ export default function VoiceCallBar({
   onEndCall,
   onStreamUpdate,
   onRemoteStreamsUpdate,
-  onRemoteCameraStatusUpdate // <--- Add this prop
+  onRemoteCameraStatusUpdate
 }) {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
@@ -33,23 +33,29 @@ export default function VoiceCallBar({
   const remoteStreamsRef = useRef({});
   const remoteCameraStatusesRef = useRef({});
   const iceCandidatesQueueRef = useRef({});
+  const isInitializedRef = useRef(false);
 
   const handleDisconnect = onLeave || onEndCall;
 
+  // Initialize media stream ONCE and never re-create it to prevent stream destruction bugs
   const initLocalStream = async () => {
-    try {
-      if (localStreamRef.current) return localStreamRef.current;
+    if (localStreamRef.current) return localStreamRef.current;
+    if (isInitializedRef.current) return localStreamRef.current;
+    isInitializedRef.current = true;
 
+    try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         video: true,
       });
 
+      // Keep video track disabled initially so camera light stays off until toggled
       const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) videoTrack.enabled = false;
 
       localStreamRef.current = stream;
 
+      // Bind tracks to any existing peer connections safely
       Object.values(peerConnectionsRef.current).forEach((pc) => {
         stream.getTracks().forEach((track) => {
           const senders = pc.getSenders();
@@ -62,16 +68,23 @@ export default function VoiceCallBar({
       if (onStreamUpdate) onStreamUpdate(stream);
       return stream;
     } catch (err) {
-      console.warn('Camera/Mic fallback to audio-only:', err);
-      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      localStreamRef.current = audioStream;
-      if (onStreamUpdate) onStreamUpdate(audioStream);
-      return audioStream;
+      console.warn('Camera/Mic permission denied or fallback to audio-only:', err);
+      try {
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        localStreamRef.current = audioStream;
+        if (onStreamUpdate) onStreamUpdate(audioStream);
+        return audioStream;
+      } catch (audioErr) {
+        console.error('Microphone fatal error:', audioErr);
+        return null;
+      }
     }
   };
 
   const getOrCreatePeerConnection = (targetUserId) => {
-    if (peerConnectionsRef.current[targetUserId]) return peerConnectionsRef.current[targetUserId];
+    if (peerConnectionsRef.current[targetUserId]) {
+      return peerConnectionsRef.current[targetUserId];
+    }
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
     peerConnectionsRef.current[targetUserId] = pc;
@@ -119,11 +132,11 @@ export default function VoiceCallBar({
   };
 
   useEffect(() => {
-    let mounted = true;
+    let isMounted = true;
 
     const setupVoice = async () => {
       await initLocalStream();
-      if (!mounted) return;
+      if (!isMounted) return;
 
       const channel = supabase.channel(`voice_instant_${roomId}`);
       channelRef.current = channel;
@@ -138,7 +151,7 @@ export default function VoiceCallBar({
             if (type === 'join-voice') {
               setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
               await createAndSendOffer(senderId);
-              // Send current camera state back to new joiner
+              // Send current camera state to new joiner
               channel.send({
                 type: 'broadcast',
                 event: 'signal',
@@ -218,7 +231,7 @@ export default function VoiceCallBar({
     setupVoice();
 
     return () => {
-      mounted = false;
+      isMounted = false;
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
@@ -229,7 +242,6 @@ export default function VoiceCallBar({
       }
       Object.values(peerConnectionsRef.current).forEach((pc) => pc.close());
       peerConnectionsRef.current = {};
-      localStreamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, [roomId, myUserId]);
 
