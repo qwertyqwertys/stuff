@@ -71,25 +71,20 @@ export default function VoiceCallBar({
     pc.ontrack = (event) => {
       let stream = remoteStreamsRef.current[targetUserId];
       
-      if (event.track.kind === 'video') {
-        if (!stream) {
-          stream = new MediaStream([event.track]);
-        } else {
-          const existingVideoTracks = stream.getVideoTracks();
-          existingVideoTracks.forEach(t => stream.removeTrack(t));
-          stream.addTrack(event.track);
-        }
-      } else if (event.track.kind === 'audio') {
-        if (!stream) {
-          stream = new MediaStream([event.track]);
-        } else {
-          const existingAudioTracks = stream.getAudioTracks();
-          existingAudioTracks.forEach(t => stream.removeTrack(t));
-          stream.addTrack(event.track);
-        }
+      if (!stream) {
+        stream = new MediaStream();
+        remoteStreamsRef.current[targetUserId] = stream;
       }
 
-      remoteStreamsRef.current[targetUserId] = stream;
+      // Safely manage tracks without discarding the stream container
+      if (event.track.kind === 'video') {
+        stream.getVideoTracks().forEach(t => stream.removeTrack(t));
+        stream.addTrack(event.track);
+      } else if (event.track.kind === 'audio') {
+        stream.getAudioTracks().forEach(t => stream.removeTrack(t));
+        stream.addTrack(event.track);
+      }
+
       if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
     };
 
@@ -153,8 +148,17 @@ export default function VoiceCallBar({
                 payload: { senderId: myUserId, type: 'camera-status', isVideoOn },
               });
             } else if (type === 'camera-status') {
-              // Keep status updated so the UI knows whether to show video or avatar, but keep the card mounted!
               remoteCameraStatusesRef.current[senderId] = remoteVideoState;
+              
+              // If the remote user turns off their camera, clean up their video track safely from the stream container
+              if (!remoteVideoState && remoteStreamsRef.current[senderId]) {
+                remoteStreamsRef.current[senderId].getVideoTracks().forEach((track) => {
+                  track.stop();
+                  remoteStreamsRef.current[senderId].removeTrack(track);
+                });
+                if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
+              }
+
               if (onRemoteCameraStatusUpdate) {
                 onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
               }
@@ -198,7 +202,7 @@ export default function VoiceCallBar({
           }
         })
         .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
+            if (status === 'SUBSCRIBED') {
             channel.send({
               type: 'broadcast',
               event: 'signal',
