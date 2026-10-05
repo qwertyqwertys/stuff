@@ -36,33 +36,21 @@ export default function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
+  // Initialize audio immediately, but start with NO video track to keep the camera light off until toggled
   const initLocalStream = async () => {
     if (localStreamRef.current) return localStreamRef.current;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: true,
+        video: false, // Start video-free so hardware light stays off until user explicitly turns it on
       });
-
-      const videoTrack = stream.getVideoTracks()[0];
-      if (videoTrack) videoTrack.enabled = false;
 
       localStreamRef.current = stream;
-
-      Object.values(peerConnectionsRef.current).forEach((pc) => {
-        stream.getTracks().forEach((track) => {
-          const senders = pc.getSenders();
-          if (!senders.some((s) => s.track && s.track.kind === track.kind)) {
-            pc.addTrack(track, stream);
-          }
-        });
-      });
-
       if (onStreamUpdate) onStreamUpdate(stream);
       return stream;
     } catch (err) {
-      console.warn('Camera/Mic permission error:', err);
+      console.warn('Microphone permission error:', err);
       return null;
     }
   };
@@ -205,6 +193,9 @@ export default function VoiceCallBar({
 
     return () => {
       isMounted = false;
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
@@ -231,30 +222,70 @@ export default function VoiceCallBar({
   };
 
   const toggleVideo = async () => {
-    if (localStreamRef.current) {
-      const videoTracks = localStreamRef.current.getVideoTracks();
-      if (videoTracks.length > 0) {
-        const nextVideoState = !isVideoOn;
-        videoTracks[0].enabled = nextVideoState;
-        setIsVideoOn(nextVideoState);
+    try {
+      const nextVideoState = !isVideoOn;
 
-        // Broadcast the camera status update cleanly to everyone
-        channelRef.current?.send({
-          type: 'broadcast',
-          event: 'signal',
-          payload: { senderId: myUserId, type: 'camera-status', isVideoOn: nextVideoState },
-        });
+      if (nextVideoState) {
+        // TURN ON: Request actual video stream and add/replace track on peer connections
+        const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const videoTrack = videoStream.getVideoTracks()[0];
 
-        // If turning video on, re-offer to all peers to ensure frames transmit instantly
-        if (nextVideoState) {
-          for (const targetUserId of connectedUsers) {
-            await createAndSendOffer(targetUserId);
-          }
+        if (localStreamRef.current) {
+          // Remove any old video tracks first
+          localStreamRef.current.getVideoTracks().forEach((t) => {
+            t.stop();
+            localStreamRef.current.removeTrack(t);
+          });
+          localStreamRef.current.addTrack(videoTrack);
         }
+
+        // Update senders on all active peer connections so the remote end receives the live track
+        for (const [targetUserId, pc] of Object.entries(peerConnectionsRef.current)) {
+          const senders = pc.getSenders();
+          const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
+          if (videoSender) {
+            await videoSender.replaceTrack(videoTrack);
+          } else {
+            pc.addTrack(videoTrack, localStreamRef.current);
+          }
+          await createAndSendOffer(targetUserId);
+        }
+
+        setIsVideoOn(true);
+      } else {
+        // TURN OFF: Completely stop physical video tracks to kill the camera light and release hardware
+        if (localStreamRef.current) {
+          localStreamRef.current.getVideoTracks().forEach((t) => {
+            t.stop();
+            localStreamRef.current.removeTrack(t);
+          });
+        }
+
+        // Inform peer connections to clear the video sender track
+        for (const [targetUserId, pc] of Object.entries(peerConnectionsRef.current)) {
+          const senders = pc.getSenders();
+          const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
+          if (videoSender) {
+            await videoSender.replaceTrack(null);
+          }
+          await createAndSendOffer(targetUserId);
+        }
+
+        setIsVideoOn(false);
       }
-    }
-    if (onStreamUpdate && localStreamRef.current) {
-      onStreamUpdate(localStreamRef.current);
+
+      // Broadcast camera state change globally
+      channelRef.current?.send({
+        type: 'broadcast',
+        event: 'signal',
+        payload: { senderId: myUserId, type: 'camera-status', isVideoOn: nextVideoState },
+      });
+
+      if (onStreamUpdate && localStreamRef.current) {
+        onStreamUpdate(localStreamRef.current);
+      }
+    } catch (err) {
+      console.error('Toggle video error:', err);
     }
   };
 
