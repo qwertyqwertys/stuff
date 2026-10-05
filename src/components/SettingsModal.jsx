@@ -86,6 +86,11 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
       setZoom(1);
       setOffset({ x: 0, y: 0 });
       setIsImageLoaded(false);
+      
+      // Check if image is already cached/loaded
+      if (imgRef.current && imgRef.current.complete) {
+        setIsImageLoaded(true);
+      }
     }
   }, [show, imageSrc]);
 
