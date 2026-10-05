@@ -71,12 +71,10 @@ export default function VoiceCallBar({
     pc.ontrack = (event) => {
       let stream = remoteStreamsRef.current[targetUserId];
       
-      // If we receive a video track, ensure it's properly attached to the remote user's stream object
       if (event.track.kind === 'video') {
         if (!stream) {
           stream = new MediaStream([event.track]);
         } else {
-          // Replace or add the video track cleanly
           const existingVideoTracks = stream.getVideoTracks();
           existingVideoTracks.forEach(t => stream.removeTrack(t));
           stream.addTrack(event.track);
@@ -155,17 +153,8 @@ export default function VoiceCallBar({
                 payload: { senderId: myUserId, type: 'camera-status', isVideoOn },
               });
             } else if (type === 'camera-status') {
+              // Keep status updated so the UI knows whether to show video or avatar, but keep the card mounted!
               remoteCameraStatusesRef.current[senderId] = remoteVideoState;
-              
-              // If the remote user turned off their camera, clean up their video track immediately so it doesn't freeze
-              if (!remoteVideoState && remoteStreamsRef.current[senderId]) {
-                remoteStreamsRef.current[senderId].getVideoTracks().forEach((track) => {
-                  track.stop();
-                  remoteStreamsRef.current[senderId].removeTrack(track);
-                });
-                if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
-              }
-
               if (onRemoteCameraStatusUpdate) {
                 onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
               }
