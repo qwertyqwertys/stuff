@@ -27,8 +27,6 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     ? (audioTrack ? !audioTrack.enabled : Boolean(p.isMuted))
     : (p.isMuted !== undefined ? Boolean(p.isMuted) : isTrackMuted);
 
-  const isCameraOnPresence = p.isCameraOn !== undefined ? Boolean(p.isCameraOn) : true;
-
   // Listen to remote WebRTC track mute/unmute events
   useEffect(() => {
     if (!audioTrack) {
@@ -82,7 +80,9 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     };
   }, [videoTrack]);
 
-  const showVideo = isCameraOnPresence && isVideoTrackActive;
+  // Rely strictly on whether the video track is actually enabled and live 
+  // instead of presence flags that might collapse the UI layout.
+  const showVideo = isVideoTrackActive;
   const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
 
   // Unmute and play remote audio with browser autoplay error catching
