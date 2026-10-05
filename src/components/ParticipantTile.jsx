@@ -196,13 +196,19 @@ export default function ParticipantTile({ participant, user, stream, currentUser
         </div>
       )}
 
-      {/* Video Feed OR Centered Avatar Graphic */}
+     {/* Video Feed OR Centered Avatar Graphic */}
       {showVideo ? (
         <video
-          ref={videoRef}
           autoPlay
           playsInline
           muted={isSelf}
+          ref={(node) => {
+            videoRef.current = node;
+            if (node && stream) {
+              node.srcObject = stream;
+              node.play().catch((err) => console.log('Video play catch:', err));
+            }
+          }}
           style={{ transform: isSelf ? 'scaleX(-1)' : 'scaleX(1)' }}
           className="absolute inset-0 w-full h-full object-cover rounded-2xl"
         />
