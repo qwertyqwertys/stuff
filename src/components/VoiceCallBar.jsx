@@ -34,29 +34,46 @@ export default function VoiceCallBar({
 
   const handleDisconnect = onLeave || onEndCall;
 
+  // Initialize master media stream (Audio + Video)
   const initLocalStream = async () => {
     try {
       if (localStreamRef.current) {
         return localStreamRef.current;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 1,
-        },
-        video: true,
-      });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1,
+          },
+          video: true,
+        });
+      } catch (videoErr) {
+        console.warn('Camera access denied or unavailable, starting audio-only:', videoErr);
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1,
+          },
+          video: false,
+        });
+      }
 
-      const videoTrack = stream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = false;
+      // If video track exists, start it disabled so the camera light stays off initially
+      const videoTracks = stream.getVideoTracks();
+      if (videoTracks.length > 0) {
+        videoTracks[0].enabled = false;
       }
 
       localStreamRef.current = stream;
 
+      // Bind tracks to any existing peer connections
       Object.values(peerConnectionsRef.current).forEach((pc) => {
         stream.getTracks().forEach((track) => {
           const senders = pc.getSenders();
@@ -73,18 +90,8 @@ export default function VoiceCallBar({
 
       return stream;
     } catch (err) {
-      console.warn('Camera blocked, falling back to audio-only:', err);
-      try {
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        localStreamRef.current = audioStream;
-        if (onStreamUpdate) {
-          onStreamUpdate(audioStream);
-        }
-        return audioStream;
-      } catch (audioErr) {
-        console.error('Microphone error:', audioErr);
-        return null;
-      }
+      console.error('Media initialization error:', err);
+      return null;
     }
   };
 
@@ -124,9 +131,6 @@ export default function VoiceCallBar({
         });
       }
     };
-
-    // NOTE: pc.onnegotiationneeded has been completely removed here 
-    // to prevent m-line mismatch crashes and InvalidAccessErrors!
 
     return pc;
   };
@@ -301,7 +305,28 @@ export default function VoiceCallBar({
       await initLocalStream();
     }
 
-    const videoTracks = localStreamRef.current ? localStreamRef.current.getVideoTracks() : [];
+    let videoTracks = localStreamRef.current ? localStreamRef.current.getVideoTracks() : [];
+
+    // If no video track exists yet (e.g., initial permission fallback), request it now
+    if (videoTracks.length === 0) {
+      try {
+        const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const newVideoTrack = videoStream.getVideoTracks()[0];
+        if (newVideoTrack && localStreamRef.current) {
+          localStreamRef.current.addTrack(newVideoTrack);
+          
+          // Add new video track to existing peer connections and renegotiate
+          for (const [targetId, pc] of Object.entries(peerConnectionsRef.current)) {
+            pc.addTrack(newVideoTrack, localStreamRef.current);
+            await createAndSendOffer(targetId);
+          }
+        }
+        videoTracks = localStreamRef.current.getVideoTracks();
+      } catch (err) {
+        console.warn('Could not acquire video track:', err);
+        return;
+      }
+    }
 
     if (videoTracks.length > 0) {
       const videoTrack = videoTracks[0];
