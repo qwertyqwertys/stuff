@@ -96,8 +96,7 @@ export default function VoiceRoom({
     }
   };
 
-  // Toggle camera using track.enabled instead of stopping/removing tracks, 
-  // preventing the remote screen from dropping the participant tile.
+  // Toggle camera using track.enabled
   const toggleCamera = async () => {
     if (localStream && localStream.getVideoTracks().length > 0) {
       const videoTrack = localStream.getVideoTracks()[0];
@@ -220,9 +219,24 @@ export default function VoiceRoom({
     }
   }, [displayName, avatarUrl, isMuted, isCameraOn, isConnected]);
 
-  // Deduplicate and prioritize participant tiles
+  // Ensure local user is always included in sortedParticipants even if presence sync takes a moment,
+  // preventing the tile from disappearing when camera state updates.
   const sortedParticipants = useMemo(() => {
     const map = new Map();
+    
+    // Always inject self first to guarantee the local/remote caller tile never unmounts
+    const selfParticipant = {
+      id: localUserId,
+      sessionKey,
+      name: displayName,
+      avatar: avatarUrl,
+      isMuted,
+      isCameraOn,
+      isSelf: true
+    };
+    map.set(localUserId, selfParticipant);
+    map.set(sessionKey, selfParticipant);
+
     participants.forEach((p) => {
       const key = p.id || p.sessionKey;
       if (key && !map.has(key)) {
@@ -237,7 +251,7 @@ export default function VoiceRoom({
       if (bIsSelf) return 1;
       return 0;
     });
-  }, [participants, sessionKey, localUserId]);
+  }, [participants, sessionKey, localUserId, displayName, avatarUrl, isMuted, isCameraOn]);
 
   return (
     <div className="voice-room relative w-full h-full min-h-screen flex flex-col justify-between p-6 bg-[#0b0e14] text-white">
@@ -249,7 +263,7 @@ export default function VoiceRoom({
             {sortedParticipants.length > 0 ? `${sortedParticipants.length} connected in call` : 'Connecting...'}
           </p>
         </div>
-        <span className={`text-xs border px-3 py-1 rounded-full font-semibold[cite: 7] ${
+        <span className={`text-xs border px-3 py-1 rounded-full font-semibold ${
           isConnected 
             ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 animate-pulse' 
             : 'bg-amber-500/20 border-amber-500/40 text-amber-400'
@@ -260,52 +274,35 @@ export default function VoiceRoom({
 
       {/* Grid container */}
       <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-6 items-center justify-center max-w-6xl mx-auto w-full">
-        {sortedParticipants.length > 0 ? (
-          sortedParticipants.map((participant) => {
-            const isSelf = participant.sessionKey === sessionKey || participant.id === localUserId;
-            
-            const participantData = isSelf 
-              ? { 
-                  ...participant, 
-                  id: localUserId,
-                  name: displayName,
-                  avatar: avatarUrl || participant.avatar,
-                  isMuted, 
-                  isCameraOn, 
-                  isSelf: true 
-                } 
-              : participant;
-
-            return (
-              <div key={participant.id || participant.sessionKey} className="w-full max-w-lg mx-auto aspect-video">
-                <ParticipantTile 
-                  participant={participantData} 
-                  user={participantData}
-                  currentUserId={localUserId}
-                  stream={isSelf ? localStream : remoteStreams[participant.id]}
-                />
-              </div>
-            );
-          })
-        ) : (
-          <div className="w-full max-w-lg mx-auto aspect-video">
-            <ParticipantTile 
-              participant={{
+        {sortedParticipants.map((participant) => {
+          const isSelf = participant.sessionKey === sessionKey || participant.id === localUserId;
+          
+          const participantData = isSelf 
+            ? { 
+                ...participant, 
                 id: localUserId,
                 name: displayName,
-                avatar: avatarUrl,
-                isMuted,
-                isCameraOn,
-                isSelf: true
-              }}
-              currentUserId={localUserId}
-              stream={localStream}
-            />
-          </div>
-        )}
+                avatar: avatarUrl || participant.avatar,
+                isMuted, 
+                isCameraOn, 
+                isSelf: true 
+              } 
+            : participant;
+
+          return (
+            <div key={participant.id || participant.sessionKey} className="w-full max-w-lg mx-auto aspect-video">
+              <ParticipantTile 
+                participant={participantData} 
+                user={participantData}
+                currentUserId={localUserId}
+                stream={isSelf ? localStream : remoteStreams[participant.id]}
+              />
+            </div>
+          );
+        })}
       </div>
 
-      {/* Controls Bar - Passes ROOM_SLUG so WebRTC signaling aligns with presence */}
+      {/* Controls Bar */}
       <div className="w-full flex justify-center pb-4">
         <VoiceCallBar 
           roomId={ROOM_SLUG} 
