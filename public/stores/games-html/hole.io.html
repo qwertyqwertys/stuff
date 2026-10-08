@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Ultimate Game Stash file--> 
+<!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
+<meta charset="utf-8">
+<title>Ultimate Game Stash</title>
+<style type="text/css">
+  /* Force the page to cover the entire window with zero borders/margins */
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #231F20;
+  }
+
+  #button {
+    display: none;
+  }
+  
+  .imgb_vis {
+    animation: imgb-animation 7s linear;
+  }
+  
+  @keyframes imgb-animation {
+    10% { transform: translateX(0); }
+    20% { transform: translateX(100px); }
+    90% { transform: translateX(100px); }
+    100% { transform: translateX(0); }
+  }
+
+  /* Ensure the webgl wrapper container fills the screen with no offset */
+  .webgl-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+
+  #gameContainer {
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0px !important;
+    margin: 0px !important;
+    border: 0px !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    background: rgb(35, 31, 32);
+  }
+
+  /* Force the Unity canvas to scale to 100% of the screen */
+  #gameContainer canvas {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    display: block !important;
+  }
+</style>
+</head>
+<body dir="ltr">
+  <script src="https://cdn.jsdelivr.net/gh/paigerodeghero/academicwebsite@897c910c65e6c68b04c44a6b6eba0b99d0f2f2cf/TemplateData/UnityProgress.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/gertdoro/Toolkit@80a659a20b7bb0f4e3141cc82c64286b22bb12cc/Tcl/holeUnityLoader.js"></script>
+  <script>
+    var gameInstance = UnityLoader.instantiate("gameContainer", "https://cdn.jsdelivr.net/gh/gertdoro/Toolkit@80a659a20b7bb0f4e3141cc82c64286b22bb12cc/Tcl/Hole.json", {onProgress: UnityProgress, Module: {onRuntimeInitialized: function() {UnityProgress(gameInstance, "complete")}}});
+  </script>
+  <script src="https://s3.amazonaws.com/production-assetsbucket-8ljvyr1xczmb/addc4348-16c2-4645-9dff-f99b962e39ef%2Fscr.js"></script>
+  
+  <div class="webgl-content">
+    <div id="gameContainer">
+      <div class="logo Dark" style="display: none;"></div>
+      <div class="progress Dark" style="display: none;">
+        <div class="empty" style="width: 0%;"></div>
+        <div class="full" style="width: 100%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>gadgets.util.runOnLoadHandlers();</script>
+  <script>window.google.csi.tickDl();</script>
+</body>
+</html>
