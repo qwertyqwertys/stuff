@@ -523,6 +523,13 @@
     "url": "/stores/games-html/they-are-coming-zombie-defense.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fplay-lh.googleusercontent.com%2FLFDhuwopS9HR3fp15F6QUBuIftM5Uoh9Q4f78SoYIl-CWNqPXFsr28GjhpETYNpt4A&f=1&nofb=1&ipt=86d524b38c03c31929b5aef84ab3719e59e31d05e1f94d0a5552a2c645c5c20e&ipo=images",
     "category": "Action"
+  },
+  {
+    "id": "hole.io",
+    "title": "Hole.io (fake)",
+    "url": "/stores/games-html/hole.io.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fkevin.games%2Fassets%2Fimages%2Fgames%2Fhole-io.jpg&f=1&nofb=1&ipt=abc56c1b1b8ef75d518464038b4eded17ff02e455e20962d0c94baa815f733a2&ipo=images",
+    "category": "Io"
   }
 ]
 
