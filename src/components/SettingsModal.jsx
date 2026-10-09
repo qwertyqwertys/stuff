@@ -3,7 +3,7 @@ import {
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
   Image as ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check, 
-  Sun, Moon, Play, Pause, Search, Loader2, Crop
+  Sun, Moon, Play, Pause, Search, Loader2, Crop, Sparkles
 } from 'lucide-react';
 
 // Optional import fallback to prevent crashes if DB file isn't present
@@ -12,6 +12,14 @@ import * as db from '../utils/db';
 const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
 const safeDeleteSong = db?.deleteSongFromIDB || (async () => {});
+
+// --- SHOP INVENTORY (FREE ITEMS) ---
+const shopItems = [
+  { id: 1, type: 'frame', name: 'Neon Cyber Border', url: 'https://i.imgur.com/8PKp3S6.png' },
+  { id: 2, type: 'frame', name: 'Golden Crown', url: 'https://i.imgur.com/6VBx3io.png' },
+  { id: 3, type: 'effect', name: 'Matrix Rain', url: 'https://media.giphy.com/media/26bro9GJSo4M4yK40/giphy.gif' },
+  { id: 4, type: 'effect', name: 'Sparkle Aura', url: 'https://media.giphy.com/media/xTiTnMhJTwNHCHdAIU/giphy.gif' }
+];
 
 // --- ERROR BOUNDARY WRAPPER TO PREVENT APP UNMOUNTS ---
 class SettingsErrorBoundary extends Component {
@@ -87,7 +95,6 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
       setOffset({ x: 0, y: 0 });
       setIsImageLoaded(false);
       
-      // Check if image is already cached/loaded
       if (imgRef.current && imgRef.current.complete) {
         setIsImageLoaded(true);
       }
@@ -307,7 +314,9 @@ function SettingsModalContent({
   onViewOwnProfile,
   tracklist = [],
   isLightMode = false, setIsLightMode,
-  activeCloak = '', setActiveCloak
+  activeCloak = '', setActiveCloak,
+  selectedFrame = shopItems[0].url, setSelectedFrame,
+  selectedEffect = shopItems[2].url, setSelectedEffect
 }) {
   const [friendInput, setFriendInput] = useState('');
   const [friendInputError, setFriendInputError] = useState('');
@@ -715,12 +724,12 @@ function SettingsModalContent({
             </div>
 
             <div className="space-y-6">
-              {/* PROFILE IDENTITY */}
-              {matchesSearch(['identity', 'profile', 'name', 'avatar', 'cropper', 'crop', 'friend', 'code']) && (
+              {/* PROFILE IDENTITY & SHOP */}
+              {matchesSearch(['identity', 'profile', 'name', 'avatar', 'shop', 'border', 'effect', 'cropper', 'crop', 'friend', 'code']) && (
                 <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} p-4 rounded-2xl border transition-all`}>
                   <div className="flex items-center justify-between">
                     <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
-                      <Type className="w-3 h-3" /> Profile Identity
+                      <Type className="w-3 h-3" /> Profile Identity & Shop
                     </label>
                     <button 
                       type="button"
@@ -756,6 +765,45 @@ function SettingsModalContent({
                       onChange={(e) => typeof setDisplayName === 'function' && setDisplayName(e.target.value.slice(0, 25))}
                       className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
                     />
+
+                    {/* FREE AVATAR & PROFILE SHOP SECTION */}
+                    <div className={`${isLightMode ? 'bg-white border-zinc-200' : 'bg-black/30 border-white/5'} p-3 rounded-xl border space-y-3`}>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 ${headerText}`}>
+                          <Sparkles className="w-3 h-3 text-[var(--theme)]" /> Free Profile Shop
+                        </span>
+                        <span className="text-[8px] font-bold bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full uppercase">All Free</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                        {shopItems.map(item => {
+                          const isEquipped = (item.type === 'frame' && selectedFrame === item.url) || (item.type === 'effect' && selectedEffect === item.url);
+                          return (
+                            <div key={item.id} className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-zinc-800/80 border-white/5'} p-2.5 rounded-xl border flex flex-col justify-between`}>
+                              <div>
+                                <span className={`text-[10px] font-bold block truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{item.name}</span>
+                                <span className="text-[8px] uppercase tracking-tighter text-zinc-400">{item.type}</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (item.type === 'frame' && typeof setSelectedFrame === 'function') setSelectedFrame(item.url);
+                                  if (item.type === 'effect' && typeof setSelectedEffect === 'function') setSelectedEffect(item.url);
+                                }}
+                                className={`mt-2 w-full py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
+                                  isEquipped 
+                                    ? 'bg-green-500 text-black shadow-sm' 
+                                    : 'bg-[var(--theme)] text-black hover:opacity-80'
+                                }`}
+                              >
+                                {isEquipped ? 'Equipped' : 'Get Free'}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-black/20 border-white/5'} p-3 rounded-xl border space-y-3`}>
                       <div className="flex items-center justify-between">
                         <p className={`text-[8px] font-black uppercase leading-none ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>Your Friend Code</p>
