@@ -11,7 +11,7 @@ import * as db from '../utils/db';
 
 const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
-const safeDeleteSong = db?.deleteSongFromIDB || (async () => []);
+const safeDeleteSong = db?.deleteSongFromIDB || (async () => {});
 
 // --- SHOP INVENTORY (BUILT-IN SVG BORDERS & EFFECTS) ---
 const shopItems = [
