@@ -10,6 +10,32 @@ const TROPHIES = [
   { id: 'styler', name: 'Fashionista', desc: 'Change your theme 5 times', icon: '🎨' }
 ];
 
+// Helper to validate and clean up avatar image URLs (filters out broken Imgur links)
+function getValidAvatar(url) {
+  if (
+    !url || 
+    typeof url !== 'string' || 
+    url.trim() === '' || 
+    url.includes('i.imgur.com/7gK1QvK.png') || 
+    url.includes('imgur.com/a/')
+  ) {
+    return '';
+  }
+  return url;
+}
+
+function DefaultProfileIcon() {
+  return (
+    <div className="w-full h-full rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center overflow-hidden">
+      <svg className="w-12 h-12 text-[#22d3ee]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="9" r="3" />
+        <path d="M6.5 17.5c1.2-2 3.3-3 5.5-3s4.3 1 5.5 3" />
+      </svg>
+    </div>
+  );
+}
+
 // Preserves original titles like "Snowball.io (fake)" while cleanly formatting slugs
 function formatGameTitle(gameId, gamesData = []) {
   if (!gameId) return '';
@@ -56,7 +82,9 @@ function generateFriendCode(name, pfp, favs, times, achievements) {
 export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwnProfile, myAchievements = [] }) {
   if (!isOwnProfile && (!friend || (!friend.decoded && !friend.f && !friend.favs))) return null;
 
-  const displayPfp = isOwnProfile ? (ownPfp || friend?.pfp || friend?.p) : (friend?.decoded?.p || friend?.pfp || friend?.p);
+  const rawPfp = isOwnProfile ? (ownPfp || friend?.pfp || friend?.p) : (friend?.decoded?.p || friend?.pfp || friend?.p);
+  const displayPfp = getValidAvatar(rawPfp);
+
   const displayName = isOwnProfile ? "You" : (friend?.decoded?.n || friend?.displayName || friend?.name || "User");
   
   const rawFavs = isOwnProfile 
@@ -78,6 +106,15 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
        generateFriendCode(displayName, displayPfp, displayFavs, displayTimes, displayAchievements))
     : '';
 
+  // Only render your own frames/effects if it's your profile, or the friend's specific frame if they have one equipped
+  const activeFrame = isOwnProfile 
+    ? (localStorage.getItem('capy-selected-frame') || '') 
+    : (friend?.frameUrl || '');
+    
+  const activeEffect = isOwnProfile 
+    ? (localStorage.getItem('capy-selected-effect') || '') 
+    : (friend?.effectUrl || '');
+
   return (
     <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
       <div className="bg-zinc-900 border border-[var(--theme)]/30 p-8 rounded-3xl max-w-sm w-full relative shadow-[0_0_50px_rgba(0,0,0,0.5)] space-y-6 flex flex-col max-h-[90vh] overflow-hidden">
@@ -90,12 +127,25 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
           {/* Profile Header */}
           <div className="text-center space-y-2">
             <div className="w-24 h-24 mx-auto flex items-center justify-center">
-              <ProfileAvatar 
-                pfpUrl={displayPfp} 
-                frameUrl={localStorage.getItem('capy-selected-frame')} 
-                effectUrl={localStorage.getItem('capy-selected-effect')} 
-                size="w-24 h-24" 
-              />
+              {displayPfp ? (
+                <ProfileAvatar 
+                  pfpUrl={displayPfp} 
+                  frameUrl={activeFrame} 
+                  effectUrl={activeEffect} 
+                  size="w-24 h-24" 
+                />
+              ) : (
+                <div className="relative w-24 h-24">
+                  <DefaultProfileIcon />
+                  {activeFrame && (
+                    <img 
+                      src={activeFrame} 
+                      alt="Frame" 
+                      className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-125 z-20"
+                    />
+                  )}
+                </div>
+              )}
             </div>
             
             <h3 className="text-2xl font-black tracking-tighter text-white">{displayName}</h3>
