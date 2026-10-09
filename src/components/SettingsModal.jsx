@@ -11,7 +11,7 @@ import * as db from '../utils/db';
 
 const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
-const safeDeleteSong = db?.deleteSongFromIDB || (async () => {});
+const safeDeleteSong = db?.deleteSongFromIDB || (async () => []);
 
 // --- SHOP INVENTORY (BUILT-IN SVG BORDERS & EFFECTS) ---
 const shopItems = [
@@ -49,6 +49,38 @@ const shopItems = [
     url: 'https://media.giphy.com/media/xTiTnMhJTwNHCHdAIU/giphy.gif' 
   }
 ];
+
+// --- REUSABLE PROFILE AVATAR WRAPPER (SHOWS FRAMES & EFFECTS ANYWHERE) ---
+export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20", className = "" }) {
+  return (
+    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
+      {/* Underlying Profile Picture */}
+      <img 
+        src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
+        alt="Profile" 
+        className="w-full h-full rounded-full object-cover"
+      />
+
+      {/* Equipped Frame Overlay */}
+      {frameUrl && (
+        <img 
+          src={frameUrl} 
+          alt="Profile Frame" 
+          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-125 z-10"
+        />
+      )}
+
+      {/* Equipped Effect Layer */}
+      {effectUrl && (
+        <img 
+          src={effectUrl} 
+          alt="Profile Effect" 
+          className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-70 mix-blend-screen z-0"
+        />
+      )}
+    </div>
+  );
+}
 
 // --- ERROR BOUNDARY WRAPPER TO PREVENT APP UNMOUNTS ---
 class SettingsErrorBoundary extends Component {
@@ -816,8 +848,14 @@ function SettingsModalContent({
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (item.type === 'frame' && typeof setSelectedFrame === 'function') setSelectedFrame(item.url);
-                                  if (item.type === 'effect' && typeof setSelectedEffect === 'function') setSelectedEffect(item.url);
+                                  if (item.type === 'frame' && typeof setSelectedFrame === 'function') {
+                                    setSelectedFrame(item.url);
+                                    try { localStorage.setItem('capy-selected-frame', item.url); } catch (e) {}
+                                  }
+                                  if (item.type === 'effect' && typeof setSelectedEffect === 'function') {
+                                    setSelectedEffect(item.url);
+                                    try { localStorage.setItem('capy-selected-effect', item.url); } catch (e) {}
+                                  }
                                 }}
                                 className={`mt-2 w-full py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
                                   isEquipped 
