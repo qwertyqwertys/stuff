@@ -57,11 +57,20 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
+      {/* Equipped Effect Layer (Rendered behind or over pfp with high contrast) */}
+      {hasValidEffect && (
+        <img 
+          src={effectUrl} 
+          alt="Profile Effect" 
+          className="absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] pointer-events-none object-cover rounded-full opacity-90 z-20 mix-blend-screen"
+        />
+      )}
+
       {/* Underlying Profile Picture */}
       <img 
         src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
         alt="Profile" 
-        className="w-full h-full rounded-full object-cover"
+        className="w-full h-full rounded-full object-cover relative z-10"
       />
 
       {/* Equipped Frame Overlay */}
@@ -69,16 +78,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
         <img 
           src={frameUrl} 
           alt="Profile Frame" 
-          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-125 z-10"
-        />
-      )}
-
-      {/* Equipped Effect Layer */}
-      {hasValidEffect && (
-        <img 
-          src={effectUrl} 
-          alt="Profile Effect" 
-          className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-70 mix-blend-screen z-0"
+          className="absolute -inset-3.5 w-[calc(100%+28px)] h-[calc(100%+28px)] pointer-events-none object-contain z-30"
         />
       )}
     </div>
