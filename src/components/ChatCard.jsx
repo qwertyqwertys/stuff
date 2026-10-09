@@ -267,7 +267,12 @@ export function ChatCard({
     let liveFavs = m.favs || [];
     let liveAchievements = m.achievements || [];
     let liveTimes = m.times || {};
-    let livePfp = m.avatar_url || (isSelf ? (ownPfp || getStoredAvatar()) : '');
+
+    const isValidImg = (url) => url && typeof url === 'string' && !url.includes('i.imgur.com/7gK1QvK.png') && url.trim() !== '';
+
+    let livePfp = isValidImg(m.avatar_url) 
+      ? m.avatar_url 
+      : (isSelf ? (ownPfp || getStoredAvatar()) : '');
 
     if (isSelf) {
       const savedFavs = JSON.parse(localStorage.getItem('capy-favs') || '[]');
@@ -293,6 +298,8 @@ export function ChatCard({
         achievements: liveAchievements,
         a: liveAchievements,
         pfp: livePfp,
+        frameUrl: isSelf ? (localStorage.getItem('capy-selected-frame') || '') : '',
+        effectUrl: isSelf ? (localStorage.getItem('capy-selected-effect') || '') : '',
         code: generateFriendCode(m.username, livePfp, liveFavs, liveTimes, liveAchievements),
         decoded: {
           n: m.username,
@@ -319,7 +326,7 @@ export function ChatCard({
         const fetchedFavs = latestMsg.favs || liveFavs;
         const fetchedAchievements = latestMsg.achievements || liveAchievements;
         const fetchedTimes = latestMsg.times || liveTimes;
-        const fetchedPfp = latestMsg.avatar_url || '';
+        const fetchedPfp = isValidImg(latestMsg.avatar_url) ? latestMsg.avatar_url : '';
 
         setSelectedUserProfile({
           isOwnProfile: false,
@@ -333,6 +340,8 @@ export function ChatCard({
             achievements: fetchedAchievements,
             a: fetchedAchievements,
             pfp: fetchedPfp,
+            frameUrl: '',
+            effectUrl: '',
             code: generateFriendCode(m.username, fetchedPfp, fetchedFavs, fetchedTimes, fetchedAchievements),
             decoded: {
               n: m.username,
@@ -423,7 +432,6 @@ export function ChatCard({
                       className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none flex-shrink-0 pt-0.5"
                       title={`View ${m.username}'s profile`}
                     >
-                      {/* Wrapped in a padded container so frames and effects don't get clipped in chat */}
                       <div className="w-10 h-10 flex items-center justify-center">
                         {isOwner ? (
                           <ProfileAvatar 
