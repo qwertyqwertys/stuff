@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, UserCircle, Heart, Trophy } from 'lucide-react';
+import { ProfileAvatar } from './SettingsModal';
 
 const TROPHIES = [
   { id: 'first_game', name: 'First Blood', desc: 'Play your first game', icon: '🎯' },
@@ -22,7 +23,6 @@ function formatGameTitle(gameId, gamesData = []) {
   if (game?.name) return game.name;
 
   if (typeof gameId === 'string') {
-    // If title already has spaces or mixed casing, keep it exactly as written
     if (gameId.includes(' ') || /[A-Z]/.test(gameId)) {
       return gameId;
     }
@@ -89,12 +89,13 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
         <div className="overflow-y-auto overflow-x-hidden space-y-6 pr-1 custom-scrollbar">
           {/* Profile Header */}
           <div className="text-center space-y-2">
-            <div className="w-24 h-24 bg-[var(--theme)]/10 rounded-full mx-auto flex items-center justify-center border border-[var(--theme)]/20 overflow-hidden shadow-[0_0_20px_rgba(var(--theme-rgb),0.1)]">
-              {displayPfp ? (
-                <img src={displayPfp} alt={displayName} className="w-full h-full object-cover" />
-              ) : (
-                <UserCircle className="w-14 h-14 text-[var(--theme)]" />
-              )}
+            <div className="w-24 h-24 mx-auto flex items-center justify-center">
+              <ProfileAvatar 
+                pfpUrl={displayPfp} 
+                frameUrl={localStorage.getItem('capy-selected-frame')} 
+                effectUrl={localStorage.getItem('capy-selected-effect')} 
+                size="w-24 h-24" 
+              />
             </div>
             
             <h3 className="text-2xl font-black tracking-tighter text-white">{displayName}</h3>
