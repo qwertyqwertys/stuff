@@ -57,12 +57,12 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      {/* Equipped Effect Layer (Rendered behind or over pfp with high contrast) */}
+      {/* Equipped Effect Layer */}
       {hasValidEffect && (
         <img 
           src={effectUrl} 
           alt="Profile Effect" 
-          className="absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] pointer-events-none object-cover rounded-full opacity-90 z-20 mix-blend-screen"
+          className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-80 mix-blend-screen scale-110 z-0"
         />
       )}
 
@@ -73,12 +73,12 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
         className="w-full h-full rounded-full object-cover relative z-10"
       />
 
-      {/* Equipped Frame Overlay */}
+      {/* Equipped Frame Overlay (Centered Perfectly via Inset-0 & Scale) */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
           alt="Profile Frame" 
-          className="absolute -inset-3.5 w-[calc(100%+28px)] h-[calc(100%+28px)] pointer-events-none object-contain z-30"
+          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-125 z-20"
         />
       )}
     </div>
