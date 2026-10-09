@@ -39,8 +39,8 @@ const shopItems = [
   { 
     id: 4, 
     type: 'effect', 
-    name: 'Matrix Rain', 
-    url: 'https://media.giphy.com/media/26bro9GJSo4M4yK40/giphy.gif' 
+    name: 'Matrix Binary Code', 
+    url: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDZxMHZ5dzdxbjh3eDUzYnluZ2pwNDdobjNrb2w1Z3cxbDV0OWkzYyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WoD6JZnwap6s8/giphy.gif' 
   },
   { 
     id: 5, 
