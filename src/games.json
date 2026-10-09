@@ -525,13 +525,6 @@
     "category": "Action"
   },
   {
-    "id": "hole.io",
-    "title": "Hole.io (fake)",
-    "url": "/stores/games-html/hole.io.html",
-    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fkevin.games%2Fassets%2Fimages%2Fgames%2Fhole-io.jpg&f=1&nofb=1&ipt=abc56c1b1b8ef75d518464038b4eded17ff02e455e20962d0c94baa815f733a2&ipo=images",
-    "category": "Io"
-  },
-  {
     "id": "grow-a-garden",
     "title": "Grow a Garden (fake)",
     "url": "/stores/games-html/grow-a-garden.html",
