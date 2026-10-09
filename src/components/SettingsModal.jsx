@@ -67,13 +67,13 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
         className="w-full h-full rounded-full object-cover relative z-10"
       />
 
-      {/* Equipped Effect Layer (Framing Aura with Screen Blend & Negative Inset) */}
+      {/* Equipped Effect Layer (Sits on top of PFP with transparency so both show through) */}
       {hasValidEffect && (
         <img 
           src={effectUrl} 
           alt="Profile Effect" 
           onError={() => setEffectError(true)}
-          className="absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] pointer-events-none object-cover rounded-full opacity-80 mix-blend-screen z-20"
+          className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-35 z-20"
         />
       )}
 
