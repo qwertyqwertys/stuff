@@ -52,6 +52,9 @@ const shopItems = [
 
 // --- REUSABLE PROFILE AVATAR WRAPPER (SHOWS FRAMES & EFFECTS ANYWHERE) ---
 export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20", className = "" }) {
+  const hasValidFrame = frameUrl && frameUrl !== 'null' && frameUrl !== '';
+  const hasValidEffect = effectUrl && effectUrl !== 'null' && effectUrl !== '';
+
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
       {/* Underlying Profile Picture */}
@@ -62,7 +65,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
       />
 
       {/* Equipped Frame Overlay */}
-      {frameUrl && (
+      {hasValidFrame && (
         <img 
           src={frameUrl} 
           alt="Profile Frame" 
@@ -71,7 +74,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
       )}
 
       {/* Equipped Effect Layer */}
-      {effectUrl && (
+      {hasValidEffect && (
         <img 
           src={effectUrl} 
           alt="Profile Effect" 
@@ -376,8 +379,8 @@ function SettingsModalContent({
   tracklist = [],
   isLightMode = false, setIsLightMode,
   activeCloak = '', setActiveCloak,
-  selectedFrame = shopItems[0].url, setSelectedFrame,
-  selectedEffect = shopItems[3].url, setSelectedEffect
+  selectedFrame = '', setSelectedFrame,
+  selectedEffect = '', setSelectedEffect
 }) {
   const [friendInput, setFriendInput] = useState('');
   const [friendInputError, setFriendInputError] = useState('');
@@ -833,7 +836,36 @@ function SettingsModalContent({
                         <span className={`text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 ${headerText}`}>
                           <Sparkles className="w-3 h-3 text-[var(--theme)]" /> Free Profile Shop
                         </span>
-                        <span className="text-[8px] font-bold bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full uppercase">All Free</span>
+                        <div className="flex items-center gap-1.5">
+                          {selectedFrame && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (typeof setSelectedFrame === 'function') {
+                                  setSelectedFrame('');
+                                  try { localStorage.removeItem('capy-selected-frame'); } catch (e) {}
+                                }
+                              }}
+                              className="text-[8px] font-black bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-0.5 rounded-full uppercase transition-colors"
+                            >
+                              Unequip Frame
+                            </button>
+                          )}
+                          {selectedEffect && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (typeof setSelectedEffect === 'function') {
+                                  setSelectedEffect('');
+                                  try { localStorage.removeItem('capy-selected-effect'); } catch (e) {}
+                                }
+                              }}
+                              className="text-[8px] font-black bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-0.5 rounded-full uppercase transition-colors"
+                            >
+                              Unequip Effect
+                            </button>
+                          )}
+                        </div>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
