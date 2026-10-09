@@ -3,6 +3,7 @@ import { Send, RefreshCcw, Pencil, Check, X, Headphones } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
+import { ProfileAvatar } from './SettingsModal';
 
 function formatTimestamp(isoString) {
   if (!isoString) return '';
@@ -108,7 +109,6 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Background non-blocking sync function
   const syncUserStatsToDatabase = useCallback(async () => {
     const currentName = username || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
     if (!currentName) return;
@@ -128,7 +128,6 @@ export function ChatCard({
     const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
-    // Pull remote stats ONLY if local stats are completely blank
     if (currentFavs.length === 0 && currentAchievements.length === 0 && Object.keys(currentTimes).length === 0) {
       const { data: remoteData } = await supabase
         .from('messages')
@@ -180,7 +179,6 @@ export function ChatCard({
   useEffect(() => {
     fetchMessages();
     
-    // Run sync in the background without blocking render
     setTimeout(() => {
       syncUserStatsToDatabase();
     }, 100);
@@ -233,7 +231,7 @@ export function ChatCard({
     const currentAchievements = myAchievements.length > 0 ? myAchievements : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
 
     const messageText = text.trim();
-    setText(''); // Clear input immediately for instant UX
+    setText(''); 
 
     await supabase
       .from('messages')
@@ -263,15 +261,12 @@ export function ChatCard({
     fetchMessages();
   };
 
-  // Instant profile modal launcher with background fresh-data sync
   const handleOpenProfile = async (m) => {
     const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
 
     let liveFavs = m.favs || [];
     let liveAchievements = m.achievements || [];
     let liveTimes = m.times || {};
-    
-    // Only fall back to your stored avatar if viewing yourself!
     let livePfp = m.avatar_url || (isSelf ? (ownPfp || getStoredAvatar()) : '');
 
     if (isSelf) {
@@ -286,7 +281,6 @@ export function ChatCard({
       if (savedAchievements.length > 0) liveAchievements = savedAchievements;
     }
 
-    // 1. OPEN INSTANTLY with existing message data
     const initialProfile = {
       isOwnProfile: isSelf,
       friend: {
@@ -312,7 +306,6 @@ export function ChatCard({
 
     setSelectedUserProfile(initialProfile);
 
-    // 2. FETCH LATEST IN BACKGROUND (if viewing someone else)
     if (!isSelf && m.username) {
       const { data: latestMsg } = await supabase
         .from('messages')
@@ -326,8 +319,6 @@ export function ChatCard({
         const fetchedFavs = latestMsg.favs || liveFavs;
         const fetchedAchievements = latestMsg.achievements || liveAchievements;
         const fetchedTimes = latestMsg.times || liveTimes;
-        
-        // If they don't have an avatar in DB, keep it blank/default
         const fetchedPfp = latestMsg.avatar_url || '';
 
         setSelectedUserProfile({
@@ -368,7 +359,6 @@ export function ChatCard({
         </h3>
         
         <div className="flex items-center gap-2">
-          {/* Join / Active Voice Channel Toggle Button */}
           {isJoined && onToggleVoice && (
             <button
               type="button"
@@ -427,13 +417,25 @@ export function ChatCard({
                 const isEditingThis = editingId === m.id;
 
                 return (
-                  <div key={m.id || i} className="group/msg flex items-start gap-2.5 text-left relative">
+                  <div key={m.id || i} className="group/msg flex items-start gap-3 text-left relative py-1">
                     <button 
                       onClick={() => handleOpenProfile(m)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
+                      className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none flex-shrink-0 pt-0.5"
                       title={`View ${m.username}'s profile`}
                     >
-                      <UserAvatar src={m.avatar_url} alt={m.username} />
+                      {/* Wrapped in a padded container so frames and effects don't get clipped in chat */}
+                      <div className="w-10 h-10 flex items-center justify-center">
+                        {isOwner ? (
+                          <ProfileAvatar 
+                            pfpUrl={m.avatar_url || ownPfp || getStoredAvatar()} 
+                            frameUrl={localStorage.getItem('capy-selected-frame')} 
+                            effectUrl={localStorage.getItem('capy-selected-effect')} 
+                            size="w-8 h-8" 
+                          />
+                        ) : (
+                          <UserAvatar src={m.avatar_url} alt={m.username} />
+                        )}
+                      </div>
                     </button>
 
                     <div className="flex-1 min-w-0">
