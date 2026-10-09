@@ -3,7 +3,6 @@ import { Send, RefreshCcw, Pencil, Check, X, Headphones } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
-import { ProfileAvatar } from './SettingsModal';
 
 function formatTimestamp(isoString) {
   if (!isoString) return '';
@@ -16,6 +15,39 @@ function formatTimestamp(isoString) {
     minute: '2-digit',
     hour12: true
   });
+}
+
+function DefaultAvatar() {
+  return (
+    <div className="w-8 h-8 rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center flex-shrink-0 overflow-hidden">
+      <svg className="w-5 h-5 text-[#22d3ee]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="9" r="3" />
+        <path d="M6.5 17.5c1.2-2 3.3-3 5.5-3s4.3 1 5.5 3" />
+      </svg>
+    </div>
+  );
+}
+
+function UserAvatar({ src, alt }) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [src]);
+
+  if (!src || hasError) {
+    return <DefaultAvatar />;
+  }
+
+  return (
+    <img 
+      src={src} 
+      alt={alt || 'User avatar'} 
+      onError={() => setHasError(true)}
+      className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-white/10"
+    />
+  );
 }
 
 const getPersistentId = () => {
@@ -148,6 +180,7 @@ export function ChatCard({
   useEffect(() => {
     fetchMessages();
     
+    // Run sync in the background without blocking render
     setTimeout(() => {
       syncUserStatsToDatabase();
     }, 100);
@@ -200,7 +233,7 @@ export function ChatCard({
     const currentAchievements = myAchievements.length > 0 ? myAchievements : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
 
     const messageText = text.trim();
-    setText(''); 
+    setText(''); // Clear input immediately for instant UX
 
     await supabase
       .from('messages')
@@ -230,12 +263,15 @@ export function ChatCard({
     fetchMessages();
   };
 
+  // Instant profile modal launcher with background fresh-data sync
   const handleOpenProfile = async (m) => {
     const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
 
     let liveFavs = m.favs || [];
     let liveAchievements = m.achievements || [];
     let liveTimes = m.times || {};
+    
+    // Only fall back to your stored avatar if viewing yourself!
     let livePfp = m.avatar_url || (isSelf ? (ownPfp || getStoredAvatar()) : '');
 
     if (isSelf) {
@@ -250,6 +286,7 @@ export function ChatCard({
       if (savedAchievements.length > 0) liveAchievements = savedAchievements;
     }
 
+    // 1. OPEN INSTANTLY with existing message data
     const initialProfile = {
       isOwnProfile: isSelf,
       friend: {
@@ -275,6 +312,7 @@ export function ChatCard({
 
     setSelectedUserProfile(initialProfile);
 
+    // 2. FETCH LATEST IN BACKGROUND (if viewing someone else)
     if (!isSelf && m.username) {
       const { data: latestMsg } = await supabase
         .from('messages')
@@ -288,6 +326,8 @@ export function ChatCard({
         const fetchedFavs = latestMsg.favs || liveFavs;
         const fetchedAchievements = latestMsg.achievements || liveAchievements;
         const fetchedTimes = latestMsg.times || liveTimes;
+        
+        // If they don't have an avatar in DB, keep it blank/default
         const fetchedPfp = latestMsg.avatar_url || '';
 
         setSelectedUserProfile({
@@ -328,6 +368,7 @@ export function ChatCard({
         </h3>
         
         <div className="flex items-center gap-2">
+          {/* Join / Active Voice Channel Toggle Button */}
           {isJoined && onToggleVoice && (
             <button
               type="button"
@@ -392,12 +433,7 @@ export function ChatCard({
                       className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
                       title={`View ${m.username}'s profile`}
                     >
-                      <ProfileAvatar 
-                        pfpUrl={m.avatar_url} 
-                        frameUrl={isOwner ? localStorage.getItem('capy-selected-frame') : ''} 
-                        effectUrl={isOwner ? localStorage.getItem('capy-selected-effect') : ''} 
-                        size="w-8 h-8" 
-                      />
+                      <UserAvatar src={m.avatar_url} alt={m.username} />
                     </button>
 
                     <div className="flex-1 min-w-0">
