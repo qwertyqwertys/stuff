@@ -82,6 +82,18 @@ function MainDashboard() {
   const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
 
+  // --- EQUIPPED SHOP STATES ---
+  const [selectedFrame, setSelectedFrame] = useState(() => localStorage.getItem('capy-selected-frame') || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="none" stroke="%2338b2f6" stroke-width="6" stroke-dasharray="10 4"/></svg>');
+  const [selectedEffect, setSelectedEffect] = useState(() => localStorage.getItem('capy-selected-effect') || 'https://media.giphy.com/media/26bro9GJSo4M4yK40/giphy.gif');
+
+  useEffect(() => {
+    localStorage.setItem('capy-selected-frame', selectedFrame);
+  }, [selectedFrame]);
+
+  useEffect(() => {
+    localStorage.setItem('capy-selected-effect', selectedEffect);
+  }, [selectedEffect]);
+
   const [achievements, setAchievements] = useState([]);
   const [activeCloak, setActiveCloak] = useState(() => localStorage.getItem('capy-cloak-type') || 'google');
 
@@ -1210,6 +1222,10 @@ function MainDashboard() {
         setActiveCloak={setActiveCloak}
         isPlaying={isPlaying}
         onTogglePlay={handleTogglePlay}
+        selectedFrame={selectedFrame}
+        setSelectedFrame={setSelectedFrame}
+        selectedEffect={selectedEffect}
+        setSelectedEffect={setSelectedEffect}
       />
 
       <footer className={`mt-10 py-6 text-center text-xs border-t border-white/5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isHeaderLight && !isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
