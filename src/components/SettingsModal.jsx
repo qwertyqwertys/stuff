@@ -52,20 +52,14 @@ const shopItems = [
 
 // --- REUSABLE PROFILE AVATAR WRAPPER (SHOWS FRAMES & EFFECTS ANYWHERE) ---
 export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20", className = "" }) {
-  const hasValidFrame = frameUrl && frameUrl !== 'null' && frameUrl !== '';
-  const hasValidEffect = effectUrl && effectUrl !== 'null' && effectUrl !== '';
+  const [effectError, setEffectError] = useState(false);
+  const [frameError, setFrameError] = useState(false);
+
+  const hasValidFrame = frameUrl && frameUrl !== 'null' && frameUrl !== '' && !frameError;
+  const hasValidEffect = effectUrl && effectUrl !== 'null' && effectUrl !== '' && !effectError;
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      {/* Equipped Effect Layer */}
-      {hasValidEffect && (
-        <img 
-          src={effectUrl} 
-          alt="Profile Effect" 
-          className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-80 mix-blend-screen scale-110 z-0"
-        />
-      )}
-
       {/* Underlying Profile Picture */}
       <img 
         src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
@@ -73,12 +67,23 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
         className="w-full h-full rounded-full object-cover relative z-10"
       />
 
+      {/* Equipped Effect Layer */}
+      {hasValidEffect && (
+        <img 
+          src={effectUrl} 
+          alt="Profile Effect" 
+          onError={() => setEffectError(true)}
+          className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full scale-110 z-20"
+        />
+      )}
+
       {/* Equipped Frame Overlay (Centered Perfectly via Inset-0 & Scale) */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
           alt="Profile Frame" 
-          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-125 z-20"
+          onError={() => setFrameError(true)}
+          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-125 z-30"
         />
       )}
     </div>
