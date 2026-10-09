@@ -82,16 +82,24 @@ function MainDashboard() {
   const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
 
-  // --- EQUIPPED SHOP STATES ---
-  const [selectedFrame, setSelectedFrame] = useState(() => localStorage.getItem('capy-selected-frame') || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="none" stroke="%2338b2f6" stroke-width="6" stroke-dasharray="10 4"/></svg>');
-  const [selectedEffect, setSelectedEffect] = useState(() => localStorage.getItem('capy-selected-effect') || 'https://media.giphy.com/media/26bro9GJSo4M4yK40/giphy.gif');
+  // --- EQUIPPED SHOP STATES (DEFAULT TO EMPTY STRINGS TO ALLOW UNEQUIPPING) ---
+  const [selectedFrame, setSelectedFrame] = useState(() => localStorage.getItem('capy-selected-frame') || '');
+  const [selectedEffect, setSelectedEffect] = useState(() => localStorage.getItem('capy-selected-effect') || '');
 
   useEffect(() => {
-    localStorage.setItem('capy-selected-frame', selectedFrame);
+    if (selectedFrame) {
+      localStorage.setItem('capy-selected-frame', selectedFrame);
+    } else {
+      localStorage.removeItem('capy-selected-frame');
+    }
   }, [selectedFrame]);
 
   useEffect(() => {
-    localStorage.setItem('capy-selected-effect', selectedEffect);
+    if (selectedEffect) {
+      localStorage.setItem('capy-selected-effect', selectedEffect);
+    } else {
+      localStorage.removeItem('capy-selected-effect');
+    }
   }, [selectedEffect]);
 
   const [achievements, setAchievements] = useState([]);
@@ -777,7 +785,8 @@ function MainDashboard() {
         'capy-custom-title', 'capy-custom-icon', 'capy-bg-image', 
         'capy-bg-video', 'capy-bg-opacity', 'capy-bg-music', 
         'capy-volume', 'capy-panic-url', 'capy-panic-key', 'capy-perf-mode',
-        'capy-bg-enabled', 'capy-recent', 'capy-pfp', 'capy-light-mode', 'capy-achievements', 'capy-theme-changes', 'capy-removed-games'
+        'capy-bg-enabled', 'capy-recent', 'capy-pfp', 'capy-light-mode', 'capy-achievements', 'capy-theme-changes', 'capy-removed-games',
+        'capy-selected-frame', 'capy-selected-effect'
       ];
       settingsKeys.forEach(key => localStorage.removeItem(key));
       window.location.reload();
