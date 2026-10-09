@@ -13,12 +13,41 @@ const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
 const safeDeleteSong = db?.deleteSongFromIDB || (async () => {});
 
-// --- SHOP INVENTORY (FREE ITEMS) ---
+// --- SHOP INVENTORY (BUILT-IN SVG BORDERS & EFFECTS) ---
 const shopItems = [
-  { id: 1, type: 'frame', name: 'Neon Cyber Border', url: 'https://i.imgur.com/8PKp3S6.png' },
-  { id: 2, type: 'frame', name: 'Golden Crown', url: 'https://i.imgur.com/6VBx3io.png' },
-  { id: 3, type: 'effect', name: 'Matrix Rain', url: 'https://media.giphy.com/media/26bro9GJSo4M4yK40/giphy.gif' },
-  { id: 4, type: 'effect', name: 'Sparkle Aura', url: 'https://media.giphy.com/media/xTiTnMhJTwNHCHdAIU/giphy.gif' }
+  // --- FRAMES (SVG DATA URIS) ---
+  { 
+    id: 1, 
+    type: 'frame', 
+    name: 'Cyber Neon Ring', 
+    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="none" stroke="%2338b2f6" stroke-width="6" stroke-dasharray="10 4"/></svg>' 
+  },
+  { 
+    id: 2, 
+    type: 'frame', 
+    name: 'Golden Crown Ring', 
+    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" fill="none" stroke="%23fbbf24" stroke-width="5"/><polygon points="60,4 68,22 88,16 76,34 96,44 76,50 82,70 60,60 38,70 44,50 24,44 44,34 32,16 52,22" fill="%23fbbf24" transform="scale(0.3) translate(140, -40)"/></svg>' 
+  },
+  { 
+    id: 3, 
+    type: 'frame', 
+    name: 'Pixel Retro Box', 
+    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect x="4" y="4" width="112" height="112" fill="none" stroke="%2310b981" stroke-width="8" stroke-dasharray="16 8"/></svg>' 
+  },
+
+  // --- EFFECTS ---
+  { 
+    id: 4, 
+    type: 'effect', 
+    name: 'Matrix Rain', 
+    url: 'https://media.giphy.com/media/26bro9GJSo4M4yK40/giphy.gif' 
+  },
+  { 
+    id: 5, 
+    type: 'effect', 
+    name: 'Sparkle Aura', 
+    url: 'https://media.giphy.com/media/xTiTnMhJTwNHCHdAIU/giphy.gif' 
+  }
 ];
 
 // --- ERROR BOUNDARY WRAPPER TO PREVENT APP UNMOUNTS ---
@@ -316,7 +345,7 @@ function SettingsModalContent({
   isLightMode = false, setIsLightMode,
   activeCloak = '', setActiveCloak,
   selectedFrame = shopItems[0].url, setSelectedFrame,
-  selectedEffect = shopItems[2].url, setSelectedEffect
+  selectedEffect = shopItems[3].url, setSelectedEffect
 }) {
   const [friendInput, setFriendInput] = useState('');
   const [friendInputError, setFriendInputError] = useState('');
@@ -775,7 +804,7 @@ function SettingsModalContent({
                         <span className="text-[8px] font-bold bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full uppercase">All Free</span>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                      <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
                         {shopItems.map(item => {
                           const isEquipped = (item.type === 'frame' && selectedFrame === item.url) || (item.type === 'effect' && selectedEffect === item.url);
                           return (
@@ -796,7 +825,7 @@ function SettingsModalContent({
                                     : 'bg-[var(--theme)] text-black hover:opacity-80'
                                 }`}
                               >
-                                {isEquipped ? 'Equipped' : 'Get Free'}
+                                {isEquipped ? 'Equipped' : 'Equip'}
                               </button>
                             </div>
                           );
