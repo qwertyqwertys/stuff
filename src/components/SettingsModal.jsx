@@ -60,8 +60,8 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      {/* Inner Avatar Content (Slightly smaller so the scaled frame fits safely inside the outer box) */}
-      <div className="absolute w-14 h-14 rounded-full overflow-hidden flex items-center justify-center z-10">
+      {/* Inner Avatar Content (Scales down slightly so frame has padding inside the bounding box) */}
+      <div className="w-[78%] h-[78%] rounded-full overflow-hidden flex items-center justify-center relative z-10 shadow-sm">
         {/* Underlying Profile Picture */}
         <img 
           src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
@@ -75,18 +75,18 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
             src={effectUrl} 
             alt="Profile Effect" 
             onError={() => setEffectError(true)}
-            className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-90 mix-blend-screen"
+            className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-90 mix-blend-screen z-20"
           />
         )}
       </div>
 
-      {/* Equipped Frame Overlay (Fits completely within the allocated size without getting clipped) */}
+      {/* Equipped Frame Overlay (Fits 100% within outer bounds without getting clipped) */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
           alt="Profile Frame" 
           onError={() => setFrameError(true)}
-          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-110 z-20"
+          className="absolute inset-0 w-full h-full pointer-events-none object-contain z-30"
         />
       )}
     </div>
