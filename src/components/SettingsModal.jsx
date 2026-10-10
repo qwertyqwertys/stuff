@@ -60,8 +60,12 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      {/* Inner Avatar Content (Scales down slightly so frame has padding inside the bounding box) */}
-      <div className="w-[78%] h-[78%] rounded-full overflow-hidden flex items-center justify-center relative z-10 shadow-sm">
+      {/* Inner Avatar Content: Fills 100% when no frame is equipped, scales to 78% only when a frame is active */}
+      <div 
+        className={`${
+          hasValidFrame ? 'w-[78%] h-[78%]' : 'w-full h-full'
+        } rounded-full overflow-hidden flex items-center justify-center relative z-10 transition-all duration-200`}
+      >
         {/* Underlying Profile Picture */}
         <img 
           src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
@@ -80,7 +84,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
         )}
       </div>
 
-      {/* Equipped Frame Overlay (Fits 100% within outer bounds without getting clipped) */}
+      {/* Equipped Frame Overlay (Fits 100% within outer bounds) */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
