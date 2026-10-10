@@ -51,36 +51,57 @@ const shopItems = [
 ];
 
 // --- REUSABLE PROFILE AVATAR WRAPPER ---
-export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-10 h-10", className = "" }) {
+export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", className = "" }) {
   const [effectError, setEffectError] = useState(false);
   const [frameError, setFrameError] = useState(false);
+  const [pfpError, setPfpError] = useState(false);
 
-  // Strict check for valid frame URLs (handles null, undefined, empty strings)
+  // Reset error state when pfpUrl changes
+  useEffect(() => {
+    setPfpError(false);
+  }, [pfpUrl]);
+
+  const isValidUrl = (url) => 
+    url && 
+    typeof url === 'string' && 
+    url.trim() !== '' && 
+    url !== 'null' && 
+    url !== 'undefined' && 
+    !url.includes('i.imgur.com/7gK1QvK.png');
+
+  const hasValidPfp = isValidUrl(pfpUrl) && !pfpError;
+
   const hasValidFrame = Boolean(
-    frameUrl && 
-    frameUrl !== 'null' && 
-    frameUrl !== 'undefined' && 
-    frameUrl.trim() !== '' && 
+    isValidUrl(frameUrl) && 
     !frameError
   );
 
   const hasValidEffect = Boolean(
-    effectUrl && 
-    effectUrl !== 'null' && 
-    effectUrl !== 'undefined' && 
-    effectUrl.trim() !== '' && 
+    isValidUrl(effectUrl) && 
     !effectError
   );
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      {/* PFP and Effect Layer: Always fills 100% of the bounding box */}
-      <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative z-10">
-        <img 
-          src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
-          alt="Profile" 
-          className="w-full h-full rounded-full object-cover"
-        />
+      {/* PFP and Effect Container */}
+      <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative z-10 bg-[#111923]">
+        {hasValidPfp ? (
+          <img 
+            src={pfpUrl} 
+            alt="Profile" 
+            onError={() => setPfpError(true)}
+            className="w-full h-full rounded-full object-cover"
+          />
+        ) : (
+          /* Default Avatar SVG when PFP is cleared or fails to load */
+          <div className="w-full h-full rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <svg className="w-1/2 h-1/2 text-[#22d3ee]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="9" />
+              <circle cx="12" cy="9" r="3" />
+              <path d="M6.5 17.5c1.2-2 3.3-3 5.5-3s4.3 1 5.5 3" />
+            </svg>
+          </div>
+        )}
 
         {hasValidEffect && (
           <img 
@@ -92,7 +113,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-10 h-10",
         )}
       </div>
 
-      {/* Frame Layer: Scaled outward so it never adds outer padding or pushes message layout */}
+      {/* Frame Layer */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
