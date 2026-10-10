@@ -59,14 +59,14 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
   const hasValidEffect = effectUrl && effectUrl !== 'null' && effectUrl !== '' && !effectError;
 
   return (
-    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className} mt-4 mb-2 mx-3`}>
-      {/* Container for PFP and Effect with circular clipping */}
-      <div className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center">
+    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
+      {/* Inner Avatar Content (Slightly smaller so the scaled frame fits safely inside the outer box) */}
+      <div className="absolute w-14 h-14 rounded-full overflow-hidden flex items-center justify-center z-10">
         {/* Underlying Profile Picture */}
         <img 
           src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
           alt="Profile" 
-          className="w-full h-full rounded-full object-cover relative z-10"
+          className="w-full h-full rounded-full object-cover"
         />
 
         {/* Equipped Effect Layer */}
@@ -75,18 +75,18 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
             src={effectUrl} 
             alt="Profile Effect" 
             onError={() => setEffectError(true)}
-            className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-90 mix-blend-screen z-20"
+            className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-90 mix-blend-screen"
           />
         )}
       </div>
 
-      {/* Equipped Frame Overlay (Scaled up to sit perfectly around the outside of the avatar) */}
+      {/* Equipped Frame Overlay (Fits completely within the allocated size without getting clipped) */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
           alt="Profile Frame" 
           onError={() => setFrameError(true)}
-          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-125 z-30"
+          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-110 z-20"
         />
       )}
     </div>
