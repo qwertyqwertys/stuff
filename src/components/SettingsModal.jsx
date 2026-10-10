@@ -234,7 +234,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
     if (!isDragging || e.touches.length !== 1) return;
     setOffset({
       x: e.touches[0].clientX - dragStart.x,
-      y: e.touches[0].clientY - dragStart.y
+      y: e.touches[0].clientY - offset.y
     });
   };
 
@@ -885,6 +885,7 @@ function SettingsModalContent({
                                 if (typeof setSelectedFrame === 'function') {
                                   setSelectedFrame('');
                                   try { localStorage.removeItem('capy-selected-frame'); } catch (e) {}
+                                  window.dispatchEvent(new Event('capy-pfp-updated'));
                                 }
                               }}
                               className="text-[8px] font-black bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-0.5 rounded-full uppercase transition-colors"
@@ -899,6 +900,7 @@ function SettingsModalContent({
                                 if (typeof setSelectedEffect === 'function') {
                                   setSelectedEffect('');
                                   try { localStorage.removeItem('capy-selected-effect'); } catch (e) {}
+                                  window.dispatchEvent(new Event('capy-pfp-updated'));
                                 }
                               }}
                               className="text-[8px] font-black bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-0.5 rounded-full uppercase transition-colors"
@@ -929,6 +931,7 @@ function SettingsModalContent({
                                     setSelectedEffect(item.url);
                                     try { localStorage.setItem('capy-selected-effect', item.url); } catch (e) {}
                                   }
+                                  window.dispatchEvent(new Event('capy-pfp-updated'));
                                 }}
                                 className={`mt-2 w-full py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
                                   isEquipped 
