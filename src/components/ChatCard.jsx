@@ -109,11 +109,11 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Fast fetch: select only light fields needed for feed rendering
+  // Fast fetch including frame and effect URLs for cross-device sync
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
       .from('messages')
-      .select('id, username, content, created_at, user_id, avatar_url, is_edited, favs, achievements, times')
+      .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times')
       .order('created_at', { ascending: true })
       .limit(30);
     if (data) setMessages(data);
@@ -124,6 +124,9 @@ export function ChatCard({
     if (!currentName) return;
 
     const currentAvatar = ownPfp || getStoredAvatar();
+    const currentFrame = localStorage.getItem('capy-selected-frame') || null;
+    const currentEffect = localStorage.getItem('capy-selected-effect') || null;
+
     const savedFavs = JSON.parse(localStorage.getItem('capy-favs') || '[]');
     let currentFavs = (userFavs && userFavs.length > 0) ? userFavs : savedFavs;
 
@@ -134,24 +137,23 @@ export function ChatCard({
     const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
-    if (currentFavs.length > 0 || currentAchievements.length > 0 || Object.keys(currentTimes).length > 0) {
-      await supabase
-        .from('messages')
-        .update({ 
-          favs: currentFavs, 
-          achievements: currentAchievements, 
-          times: currentTimes,
-          avatar_url: currentAvatar || null,
-          user_id: myId
-        })
-        .ilike('username', currentName);
-    }
+    await supabase
+      .from('messages')
+      .update({ 
+        favs: currentFavs, 
+        achievements: currentAchievements, 
+        times: currentTimes,
+        avatar_url: currentAvatar || null,
+        frame_url: currentFrame,
+        effect_url: currentEffect,
+        user_id: myId
+      })
+      .ilike('username', currentName);
   }, [myId, username, ownPfp, userFavs, userTimes, myAchievements]);
 
   useEffect(() => {
     fetchMessages();
 
-    // Subscribe to realtime changes efficiently
     const channel = supabase
       .channel('realtime-messages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, 
@@ -161,6 +163,7 @@ export function ChatCard({
 
     const handlePfpUpdated = () => {
       fetchMessages();
+      syncUserStatsToDatabase();
     };
 
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
@@ -169,7 +172,7 @@ export function ChatCard({
       supabase.removeChannel(channel);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
-  }, [fetchMessages]);
+  }, [fetchMessages, syncUserStatsToDatabase]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -192,6 +195,8 @@ export function ChatCard({
   const handleSend = async () => {
     if (!text.trim()) return;
     const currentAvatar = ownPfp || getStoredAvatar();
+    const currentFrame = localStorage.getItem('capy-selected-frame') || null;
+    const currentEffect = localStorage.getItem('capy-selected-effect') || null;
 
     const currentFavs = userFavs.length > 0 ? userFavs : JSON.parse(localStorage.getItem('capy-favs') || '[]');
     const currentTimes = Object.keys(userTimes).length > 0 ? userTimes : JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
@@ -201,13 +206,14 @@ export function ChatCard({
     const messageText = text.trim();
     setText(''); 
 
-    // Optimistic UI update for instant feedback
     const tempMessage = {
       id: 'temp_' + Date.now(),
       username,
       content: messageText,
       user_id: myId,
       avatar_url: currentAvatar || null,
+      frame_url: currentFrame,
+      effect_url: currentEffect,
       created_at: new Date().toISOString(),
       favs: currentFavs,
       achievements: currentAchievements,
@@ -222,11 +228,14 @@ export function ChatCard({
         content: messageText, 
         user_id: myId,
         avatar_url: currentAvatar || null,
+        frame_url: currentFrame,
+        effect_url: currentEffect,
         favs: currentFavs,
         achievements: currentAchievements,
         times: currentTimes
       }]);
 
+    syncUserStatsToDatabase();
     fetchMessages();
   };
 
@@ -256,6 +265,9 @@ export function ChatCard({
       ? m.avatar_url 
       : (isSelf ? (ownPfp || getStoredAvatar()) : '');
 
+    const liveFrame = m.frame_url || (isSelf ? (localStorage.getItem('capy-selected-frame') || '') : '');
+    const liveEffect = m.effect_url || (isSelf ? (localStorage.getItem('capy-selected-effect') || '') : '');
+
     setSelectedUserProfile({
       isOwnProfile: isSelf,
       friend: {
@@ -268,8 +280,8 @@ export function ChatCard({
         achievements: liveAchievements,
         a: liveAchievements,
         pfp: livePfp,
-        frameUrl: isSelf ? (localStorage.getItem('capy-selected-frame') || '') : '',
-        effectUrl: isSelf ? (localStorage.getItem('capy-selected-effect') || '') : '',
+        frameUrl: liveFrame,
+        effectUrl: liveEffect,
         code: generateFriendCode(m.username, livePfp, liveFavs, liveTimes, liveAchievements),
         decoded: {
           n: m.username,
@@ -351,6 +363,10 @@ export function ChatCard({
                 const isOwner = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
                 const isEditingThis = editingId === m.id;
 
+                const avatarUrlToUse = m.avatar_url || (isOwner ? (ownPfp || getStoredAvatar()) : '');
+                const frameUrlToUse = m.frame_url || (isOwner ? (localStorage.getItem('capy-selected-frame') || '') : '');
+                const effectUrlToUse = m.effect_url || (isOwner ? (localStorage.getItem('capy-selected-effect') || '') : '');
+
                 return (
                   <div key={m.id || i} className="group/msg flex items-start gap-2 text-left relative py-1">
                     <button 
@@ -361,13 +377,13 @@ export function ChatCard({
                       <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                         {isOwner ? (
                           <ProfileAvatar 
-                            pfpUrl={m.avatar_url || ownPfp || getStoredAvatar()} 
-                            frameUrl={localStorage.getItem('capy-selected-frame')} 
-                            effectUrl={localStorage.getItem('capy-selected-effect')} 
+                            pfpUrl={avatarUrlToUse} 
+                            frameUrl={frameUrlToUse} 
+                            effectUrl={effectUrlToUse} 
                             size="w-8 h-8" 
                           />
                         ) : (
-                          <UserAvatar src={m.avatar_url} alt={m.username} />
+                          <UserAvatar src={avatarUrlToUse} alt={m.username} />
                         )}
                       </div>
                     </button>
