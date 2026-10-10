@@ -537,6 +537,13 @@
     "url": "/stores/games-html/basket-random.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fbasketballlegends.pro%2Fdata%2Fimage%2Fmenu%2Fbasket-random.jpg&f=1&nofb=1&ipt=e621b588712393da15f640473acf507556174dd3a6b313a9c5c30cdbe5370c84&ipo=images",
     "category": "Sports"
+  },
+  {
+    "id": "chess-classic",
+    "title": "Chess Classic",
+    "url": "/stores/games-html/chess-clasic.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.gamenora.com%2Fupload%2Fgames%2Fthumbnails%2FChess%2520Classic.webp&f=1&nofb=1&ipt=c28c33610fd7c8edb5aaf59ead40d4fb894af89401d4529865f6bf1bddb46429&ipo=images",
+    "category": "Strategy"
   }
 ]
 
