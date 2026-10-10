@@ -45,8 +45,8 @@ const shopItems = [
   { 
     id: 5, 
     type: 'effect', 
-    name: 'Sparkle Aura', 
-    url: 'https://media.giphy.com/media/xTiTnMhJTwNHCHdAIU/giphy.gif' 
+    name: 'Topographic', 
+    url: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExY3MycmlrM3F6M293bTh5ZGU3MGM3eDlvNW11dHU1Nm5kYWhkN2xjZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/daMMlb1K9ERQ4L0xU4/giphy.gif' 
   }
 ];
 
