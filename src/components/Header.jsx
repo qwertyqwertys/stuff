@@ -39,31 +39,31 @@ export function Header({
           </span>
         </div>
 
-        {/* CENTER: Spacious & Unclipped Search Bar */}
-        <div className="flex-1 max-w-sm mx-2 relative">
-          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isLightMode || isHeaderLight ? 'text-zinc-600' : 'text-zinc-400'}`} />
-          <input 
-            type="text" 
-            placeholder="Search games..." 
-            aria-label="Search games" 
-            value={searchQuery} 
-            onChange={(e) => setSearchQuery(e.target.value)} 
-            className={`w-full ${containerBgClass} ${textColorClass} ${placeholderClass} border rounded-full py-2 pl-9 pr-8 text-xs outline-none focus:border-[var(--theme)]/60 transition-colors`} 
-          />
-          {searchQuery && (
-            <button 
-              onClick={() => setSearchQuery('')} 
-              aria-label="Clear search text"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 hover:bg-white/10 rounded-full text-[var(--theme)]"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-
-        {/* RIGHT: Tools, Widgets, Controls */}
+        {/* CENTER / RIGHT TOOLS FLOW */}
         <div className="flex items-center gap-2 flex-shrink-0">
           
+          {/* COMPACT SEARCH BAR (Fixed w-48 so it's not stretched) */}
+          <div className="relative w-48 flex-shrink-0">
+            <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isLightMode || isHeaderLight ? 'text-zinc-600' : 'text-zinc-400'}`} />
+            <input 
+              type="text" 
+              placeholder="Search games..." 
+              aria-label="Search games" 
+              value={searchQuery} 
+              onChange={(e) => setSearchQuery(e.target.value)} 
+              className={`w-full ${containerBgClass} ${textColorClass} ${placeholderClass} border rounded-full py-2 pl-8 pr-7 text-xs outline-none focus:border-[var(--theme)]/60 transition-colors`} 
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')} 
+                aria-label="Clear search text"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 hover:bg-white/10 rounded-full text-[var(--theme)]"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
           {/* Provider Selector */}
           <div className="relative flex items-center">
             <select 
