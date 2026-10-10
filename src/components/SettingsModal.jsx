@@ -51,11 +51,10 @@ const shopItems = [
 ];
 
 // --- REUSABLE PROFILE AVATAR WRAPPER ---
-export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20", className = "" }) {
+export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-10 h-10", className = "" }) {
   const [effectError, setEffectError] = useState(false);
   const [frameError, setFrameError] = useState(false);
 
-  // Strict check: ensures unequipped, null, empty string, or undefined frames evaluate to false
   const hasValidFrame = Boolean(
     frameUrl && 
     frameUrl !== 'null' && 
@@ -74,12 +73,8 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      {/* Inner Avatar Content: Expands to 100% when no frame is equipped, scales down ONLY when a frame is present */}
-      <div 
-        className={`${
-          hasValidFrame ? 'w-[78%] h-[78%]' : 'w-full h-full'
-        } rounded-full overflow-hidden flex items-center justify-center relative z-10 transition-all duration-150`}
-      >
+      {/* PFP & Effect Container: Always 100% size so text sits tightly right next to it */}
+      <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative z-10">
         {/* Underlying Profile Picture */}
         <img 
           src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
@@ -98,13 +93,13 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
         )}
       </div>
 
-      {/* Equipped Frame Overlay */}
+      {/* Equipped Frame Overlay: Scales outward so it doesn't push adjacent text away */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
           alt="Profile Frame" 
           onError={() => setFrameError(true)}
-          className="absolute inset-0 w-full h-full pointer-events-none object-contain z-30"
+          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-125 z-30"
         />
       )}
     </div>
