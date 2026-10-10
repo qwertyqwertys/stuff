@@ -22,24 +22,49 @@ export function Header({
 
   return (
     <header className={`bg-transparent h-16 flex items-center px-4 sticky top-0 z-50 transition-colors ${textColorClass}`}>
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-3 items-center">
+      <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
         
-        {/* LEFT SECTION: Logo + Provider Dropdown */}
-        <div className="flex items-center gap-3 justify-self-start">
-          <div className="flex items-center gap-2">
-            <img src={DEFAULT_ICON} alt="Capybara Science Logo" className="w-7 h-7 object-contain" />
-            <span 
-              className="text-xl font-semibold hidden lg:block tracking-tighter"
-              style={{ 
-                fontFamily: "'Fredoka', sans-serif",
-                fontWeight: 600,
-                color: isLightMode || isHeaderLight ? '#000000' : '#ffffff'
-              }}
-            >
-              Capybara Science
-            </span>
-          </div>
+        {/* LEFT: Branding */}
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          <img src={DEFAULT_ICON} alt="Capybara Science Logo" className="w-7 h-7 object-contain" />
+          <span 
+            className="text-xl font-semibold hidden md:block tracking-tighter select-none"
+            style={{ 
+              fontFamily: "'Fredoka', sans-serif",
+              fontWeight: 600,
+              color: isLightMode || isHeaderLight ? '#000000' : '#ffffff'
+            }}
+          >
+            Capybara Science
+          </span>
+        </div>
 
+        {/* CENTER: Spacious & Unclipped Search Bar */}
+        <div className="flex-1 max-w-sm mx-2 relative">
+          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isLightMode || isHeaderLight ? 'text-zinc-600' : 'text-zinc-400'}`} />
+          <input 
+            type="text" 
+            placeholder="Search games..." 
+            aria-label="Search games" 
+            value={searchQuery} 
+            onChange={(e) => setSearchQuery(e.target.value)} 
+            className={`w-full ${containerBgClass} ${textColorClass} ${placeholderClass} border rounded-full py-2 pl-9 pr-8 text-xs outline-none focus:border-[var(--theme)]/60 transition-colors`} 
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')} 
+              aria-label="Clear search text"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 hover:bg-white/10 rounded-full text-[var(--theme)]"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* RIGHT: Tools, Widgets, Controls */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          
+          {/* Provider Selector */}
           <div className="relative flex items-center">
             <select 
               value={supplier} 
@@ -48,53 +73,29 @@ export function Header({
                 setSupplier(e.target.value);
                 localStorage.setItem('capy-supplier', e.target.value);
               }}
-              className={`text-xs font-bold uppercase py-2 pl-3 pr-8 rounded-xl border transition-all outline-none cursor-pointer appearance-none ${containerBgClass} ${textColorClass}`}
+              className={`text-[11px] font-bold uppercase py-2 pl-3 pr-7 rounded-xl border transition-all outline-none cursor-pointer appearance-none ${containerBgClass} ${textColorClass}`}
               style={{ fontFamily: "'Baloo 2', cursive" }}
             >
               <option value="Default" className="bg-[#09090b] text-white">Capybara Science</option>
               <option value="GN Math" className="bg-[#09090b] text-white">gn-math</option>
               <option value="Truffled" className="bg-[#09090b] text-white">Truffled</option>
             </select>
-            <div className="absolute right-2.5 pointer-events-none flex items-center justify-center">
-              <span style={{ fontSize: '10px', color: 'var(--theme)', opacity: 0.9 }}>▼</span>
+            <div className="absolute right-2 pointer-events-none flex items-center justify-center">
+              <span style={{ fontSize: '9px', color: 'var(--theme)', opacity: 0.9 }}>▼</span>
             </div>
           </div>
-        </div>
 
-        {/* CENTER SECTION: Perfectly Centered Search Bar & Dice */}
-        <div className="flex items-center justify-center gap-2.5 w-full justify-self-center max-w-md">
-          <div className="relative flex-1">
-            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isLightMode || isHeaderLight ? 'text-zinc-600' : 'text-zinc-400'}`} />
-            <input 
-              type="text" 
-              placeholder="Search games..." 
-              aria-label="Search games" 
-              value={searchQuery} 
-              onChange={(e) => setSearchQuery(e.target.value)} 
-              className={`w-full ${containerBgClass} ${textColorClass} ${placeholderClass} border rounded-full py-2 pl-9 pr-8 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors`} 
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')} 
-                aria-label="Clear search text"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 hover:bg-white/10 rounded-full text-[var(--theme)]"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
+          {/* Random Game Dice */}
           <button 
             onClick={onRandomGame} 
             aria-label="Play a random game"
-            className={`p-2 ${containerBgClass} border rounded-full text-[var(--theme)] hover:bg-[var(--theme)] hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-rgb),0.1)] flex-shrink-0`}
+            className={`p-2 ${containerBgClass} border rounded-xl text-[var(--theme)] hover:bg-[var(--theme)] hover:text-black transition-all shadow-[0_0_12px_rgba(var(--theme-rgb),0.1)]`}
+            title="Random Game"
           >
             <Dices className="w-4 h-4" />
           </button>
-        </div>
 
-        {/* RIGHT SECTION: Chat, Soundboard, Time/Date Widget, Profile/Settings */}
-        <div className="flex items-center justify-end gap-2.5 justify-self-end">
+          {/* Chat Toggle */}
           <button 
             onClick={() => setIsChatOpen(prev => !prev)} 
             className={`p-2 border rounded-xl transition-all hover:scale-105 active:scale-95 ${
@@ -108,6 +109,7 @@ export function Header({
             <MessageSquare className="w-4 h-4" />
           </button>
 
+          {/* Soundboard Toggle */}
           <button 
             onClick={() => setShowSoundboard ? setShowSoundboard(prev => !prev) : null} 
             className={`p-2 border rounded-xl transition-all hover:scale-105 active:scale-95 ${
@@ -121,8 +123,9 @@ export function Header({
             <Volume2 className="w-4 h-4" />
           </button>
 
+          {/* Date / Time Widget */}
           <div 
-            className={`hidden sm:flex items-center gap-4 text-xs font-bold uppercase ${textColorClass} ${containerBgClass} px-4 py-2 rounded-full border`}
+            className={`hidden lg:flex items-center gap-3.5 text-xs font-bold uppercase ${textColorClass} ${containerBgClass} px-3.5 py-1.5 rounded-full border`}
             style={{ fontFamily: "'Baloo 2', cursive" }}
           >
             <span className="flex items-center gap-1.5">
@@ -136,12 +139,13 @@ export function Header({
             
             {battery.level !== null && (
               <div className="flex items-center gap-1.5">
-                <Battery className={`w-4 h-4 ${battery.charging ? 'text-green-500 animate-pulse' : ''}`} />
+                <Battery className={`w-3.5 h-3.5 ${battery.charging ? 'text-green-500 animate-pulse' : ''}`} />
                 <span className="translate-y-[1px] font-medium">{battery.level}%</span>
               </div>
             )}
           </div>
           
+          {/* Profile & Settings Container */}
           <div className={`flex items-center gap-1 ${containerBgClass} rounded-full p-1 border`}>
             <button 
               onClick={() => onViewProfile?.()} 
@@ -169,6 +173,7 @@ export function Header({
               />
             </button>
           </div>
+
         </div>
 
       </div>
