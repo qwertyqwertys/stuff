@@ -59,25 +59,28 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
   const hasValidEffect = effectUrl && effectUrl !== 'null' && effectUrl !== '' && !effectError;
 
   return (
-    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className} overflow-hidden rounded-full`}>
-      {/* Underlying Profile Picture (100% solid, crisp, and fully visible) */}
-      <img 
-        src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
-        alt="Profile" 
-        className="w-full h-full rounded-full object-cover relative z-10"
-      />
-
-      {/* Equipped Effect Layer (Uses mix-blend-screen to make black backgrounds vanish, letting the effect shine brightly over your PFP) */}
-      {hasValidEffect && (
+    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
+      {/* Container for PFP and Effect with circular clipping */}
+      <div className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center">
+        {/* Underlying Profile Picture */}
         <img 
-          src={effectUrl} 
-          alt="Profile Effect" 
-          onError={() => setEffectError(true)}
-          className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-90 mix-blend-screen z-20"
+          src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
+          alt="Profile" 
+          className="w-full h-full rounded-full object-cover relative z-10"
         />
-      )}
 
-      {/* Equipped Frame Overlay (Centered Perfectly via Inset-0 & Scale) */}
+        {/* Equipped Effect Layer */}
+        {hasValidEffect && (
+          <img 
+            src={effectUrl} 
+            alt="Profile Effect" 
+            onError={() => setEffectError(true)}
+            className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-90 mix-blend-screen z-20"
+          />
+        )}
+      </div>
+
+      {/* Equipped Frame Overlay (Outside overflow container so it renders fully around the avatar) */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
