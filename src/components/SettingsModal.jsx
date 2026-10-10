@@ -59,7 +59,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
   const hasValidEffect = effectUrl && effectUrl !== 'null' && effectUrl !== '' && !effectError;
 
   return (
-    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className} my-3 mx-3`}>
+    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className} mt-4 mb-2 mx-3`}>
       {/* Container for PFP and Effect with circular clipping */}
       <div className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center">
         {/* Underlying Profile Picture */}
