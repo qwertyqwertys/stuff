@@ -55,6 +55,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-10 h-10",
   const [effectError, setEffectError] = useState(false);
   const [frameError, setFrameError] = useState(false);
 
+  // Strict check for valid frame URLs (handles null, undefined, empty strings)
   const hasValidFrame = Boolean(
     frameUrl && 
     frameUrl !== 'null' && 
@@ -73,16 +74,14 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-10 h-10",
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      {/* PFP & Effect Container: Always 100% size so text sits tightly right next to it */}
+      {/* PFP and Effect Layer: Always fills 100% of the bounding box */}
       <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative z-10">
-        {/* Underlying Profile Picture */}
         <img 
           src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
           alt="Profile" 
           className="w-full h-full rounded-full object-cover"
         />
 
-        {/* Equipped Effect Layer */}
         {hasValidEffect && (
           <img 
             src={effectUrl} 
@@ -93,7 +92,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-10 h-10",
         )}
       </div>
 
-      {/* Equipped Frame Overlay: Scales outward so it doesn't push adjacent text away */}
+      {/* Frame Layer: Scaled outward so it never adds outer padding or pushes message layout */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
