@@ -109,7 +109,7 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Fast fetch including frame and effect URLs for cross-device sync
+  // Fast fetch including frame and effect URLs
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
       .from('messages')
@@ -161,9 +161,9 @@ export function ChatCard({
       )
       .subscribe();
 
+    // Fast event listener: only re-fetches messages without heavy syncing loops[cite: 10]
     const handlePfpUpdated = () => {
       fetchMessages();
-      syncUserStatsToDatabase();
     };
 
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
@@ -172,7 +172,7 @@ export function ChatCard({
       supabase.removeChannel(channel);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
-  }, [fetchMessages, syncUserStatsToDatabase]);
+  }, [fetchMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -235,7 +235,6 @@ export function ChatCard({
         times: currentTimes
       }]);
 
-    syncUserStatsToDatabase();
     fetchMessages();
   };
 
