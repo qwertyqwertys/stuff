@@ -59,7 +59,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
   const hasValidEffect = effectUrl && effectUrl !== 'null' && effectUrl !== '' && !effectError;
 
   return (
-    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className} my-2`}>
+    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className} my-3 mx-3`}>
       {/* Container for PFP and Effect with circular clipping */}
       <div className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center">
         {/* Underlying Profile Picture */}
@@ -80,13 +80,13 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
         )}
       </div>
 
-      {/* Equipped Frame Overlay (Slightly adjusted scale so it fits inside the container without getting cut off) */}
+      {/* Equipped Frame Overlay (Scaled up to sit perfectly around the outside of the avatar) */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
           alt="Profile Frame" 
           onError={() => setFrameError(true)}
-          className="absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] pointer-events-none object-contain z-30"
+          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-125 z-30"
         />
       )}
     </div>
