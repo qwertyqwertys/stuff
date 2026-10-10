@@ -109,16 +109,22 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
+  // Fast fetch: select only light fields needed for feed rendering
+  const fetchMessages = useCallback(async () => {
+    const { data } = await supabase
+      .from('messages')
+      .select('id, username, content, created_at, user_id, avatar_url, is_edited, favs, achievements, times')
+      .order('created_at', { ascending: true })
+      .limit(30);
+    if (data) setMessages(data);
+  }, []);
+
   const syncUserStatsToDatabase = useCallback(async () => {
     const currentName = username || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
     if (!currentName) return;
 
     const currentAvatar = ownPfp || getStoredAvatar();
-    const savedFavs = JSON.parse(
-      localStorage.getItem('capy-favs') || 
-      localStorage.getItem('favorites') || 
-      '[]'
-    );
+    const savedFavs = JSON.parse(localStorage.getItem('capy-favs') || '[]');
     let currentFavs = (userFavs && userFavs.length > 0) ? userFavs : savedFavs;
 
     const savedTimes = JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
@@ -127,31 +133,6 @@ export function ChatCard({
     const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
     const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
-
-    if (currentFavs.length === 0 && currentAchievements.length === 0 && Object.keys(currentTimes).length === 0) {
-      const { data: remoteData } = await supabase
-        .from('messages')
-        .select('favs, achievements, times, avatar_url')
-        .ilike('username', currentName)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (remoteData) {
-        if (remoteData.favs && remoteData.favs.length > 0) {
-          currentFavs = remoteData.favs;
-          localStorage.setItem('capy-favs', JSON.stringify(currentFavs));
-        }
-        if (remoteData.achievements && remoteData.achievements.length > 0) {
-          currentAchievements = remoteData.achievements;
-          remoteData.achievements.forEach(id => localStorage.getItem(`achievement_${id}`, 'true'));
-        }
-        if (remoteData.times && Object.keys(remoteData.times).length > 0) {
-          currentTimes = remoteData.times;
-          localStorage.setItem('capy-playtimes', JSON.stringify(currentTimes));
-        }
-      }
-    }
 
     if (currentFavs.length > 0 || currentAchievements.length > 0 || Object.keys(currentTimes).length > 0) {
       await supabase
@@ -167,32 +148,19 @@ export function ChatCard({
     }
   }, [myId, username, ownPfp, userFavs, userTimes, myAchievements]);
 
-  const fetchMessages = async () => {
-    const { data } = await supabase
-      .from('messages')
-      .select('*')
-      .order('created_at', { ascending: true })
-      .limit(50);
-    if (data) setMessages(data);
-  };
-
   useEffect(() => {
     fetchMessages();
-    
-    setTimeout(() => {
-      syncUserStatsToDatabase();
-    }, 100);
 
+    // Subscribe to realtime changes efficiently
     const channel = supabase
       .channel('realtime-messages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, 
-        () => fetchMessages() 
+        () => fetchMessages()
       )
       .subscribe();
 
     const handlePfpUpdated = () => {
       fetchMessages();
-      syncUserStatsToDatabase();
     };
 
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
@@ -201,7 +169,7 @@ export function ChatCard({
       supabase.removeChannel(channel);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
-  }, [syncUserStatsToDatabase]);
+  }, [fetchMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -233,6 +201,20 @@ export function ChatCard({
     const messageText = text.trim();
     setText(''); 
 
+    // Optimistic UI update for instant feedback
+    const tempMessage = {
+      id: 'temp_' + Date.now(),
+      username,
+      content: messageText,
+      user_id: myId,
+      avatar_url: currentAvatar || null,
+      created_at: new Date().toISOString(),
+      favs: currentFavs,
+      achievements: currentAchievements,
+      times: currentTimes
+    };
+    setMessages(prev => [...prev, tempMessage]);
+
     await supabase
       .from('messages')
       .insert([{ 
@@ -245,48 +227,36 @@ export function ChatCard({
         times: currentTimes
       }]);
 
-    syncUserStatsToDatabase();
+    fetchMessages();
   };
 
   const handleSaveEdit = async (id) => {
     if (!editText.trim()) return;
 
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, content: editText.trim(), is_edited: true } : m));
+    setEditingId(null);
+    setEditText('');
+
     await supabase
       .from('messages')
       .update({ content: editText.trim(), is_edited: true })
       .eq('id', id);
-
-    setEditingId(null);
-    setEditText('');
-    fetchMessages();
   };
 
-  const handleOpenProfile = async (m) => {
+  const handleOpenProfile = (m) => {
     const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
 
-    let liveFavs = m.favs || [];
-    let liveAchievements = m.achievements || [];
-    let liveTimes = m.times || {};
+    const liveFavs = m.favs || [];
+    const liveAchievements = m.achievements || [];
+    const liveTimes = m.times || {};
 
     const isValidImg = (url) => url && typeof url === 'string' && !url.includes('i.imgur.com/7gK1QvK.png') && url.trim() !== '';
 
-    let livePfp = isValidImg(m.avatar_url) 
+    const livePfp = isValidImg(m.avatar_url) 
       ? m.avatar_url 
       : (isSelf ? (ownPfp || getStoredAvatar()) : '');
 
-    if (isSelf) {
-      const savedFavs = JSON.parse(localStorage.getItem('capy-favs') || '[]');
-      if (savedFavs.length > 0) liveFavs = savedFavs;
-
-      const savedTimes = JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
-      if (Object.keys(savedTimes).length > 0) liveTimes = savedTimes;
-
-      const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
-      const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
-      if (savedAchievements.length > 0) liveAchievements = savedAchievements;
-    }
-
-    const initialProfile = {
+    setSelectedUserProfile({
       isOwnProfile: isSelf,
       friend: {
         name: m.username,
@@ -309,51 +279,7 @@ export function ChatCard({
           t: liveTimes
         }
       }
-    };
-
-    setSelectedUserProfile(initialProfile);
-
-    if (!isSelf && m.username) {
-      const { data: latestMsg } = await supabase
-        .from('messages')
-        .select('favs, achievements, times, avatar_url')
-        .ilike('username', m.username)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (latestMsg) {
-        const fetchedFavs = latestMsg.favs || liveFavs;
-        const fetchedAchievements = latestMsg.achievements || liveAchievements;
-        const fetchedTimes = latestMsg.times || liveTimes;
-        const fetchedPfp = isValidImg(latestMsg.avatar_url) ? latestMsg.avatar_url : '';
-
-        setSelectedUserProfile({
-          isOwnProfile: false,
-          friend: {
-            name: m.username,
-            displayName: m.username,
-            favs: fetchedFavs,
-            f: fetchedFavs,
-            times: fetchedTimes,
-            t: fetchedTimes,
-            achievements: fetchedAchievements,
-            a: fetchedAchievements,
-            pfp: fetchedPfp,
-            frameUrl: '',
-            effectUrl: '',
-            code: generateFriendCode(m.username, fetchedPfp, fetchedFavs, fetchedTimes, fetchedAchievements),
-            decoded: {
-              n: m.username,
-              p: fetchedPfp,
-              f: fetchedFavs,
-              a: fetchedAchievements,
-              t: fetchedTimes
-            }
-          }
-        });
-      }
-    }
+    });
   };
   
   return (
