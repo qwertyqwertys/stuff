@@ -426,13 +426,13 @@ export function ChatCard({
                 const isEditingThis = editingId === m.id;
 
                 return (
-                  <div key={m.id || i} className="group/msg flex items-start gap-3 text-left relative py-1">
+                  <div key={m.id || i} className="group/msg flex items-start gap-2 text-left relative py-1">
                     <button 
                       onClick={() => handleOpenProfile(m)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none flex-shrink-0 pt-0.5"
+                      className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none flex-shrink-0"
                       title={`View ${m.username}'s profile`}
                     >
-                      <div className="w-10 h-10 flex items-center justify-center">
+                      <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                         {isOwner ? (
                           <ProfileAvatar 
                             pfpUrl={m.avatar_url || ownPfp || getStoredAvatar()} 
