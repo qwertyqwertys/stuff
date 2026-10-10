@@ -50,21 +50,35 @@ const shopItems = [
   }
 ];
 
-// --- REUSABLE PROFILE AVATAR WRAPPER (SHOWS FRAMES & EFFECTS ANYWHERE) ---
+// --- REUSABLE PROFILE AVATAR WRAPPER ---
 export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20", className = "" }) {
   const [effectError, setEffectError] = useState(false);
   const [frameError, setFrameError] = useState(false);
 
-  const hasValidFrame = frameUrl && frameUrl !== 'null' && frameUrl !== '' && !frameError;
-  const hasValidEffect = effectUrl && effectUrl !== 'null' && effectUrl !== '' && !effectError;
+  // Strict check: ensures unequipped, null, empty string, or undefined frames evaluate to false
+  const hasValidFrame = Boolean(
+    frameUrl && 
+    frameUrl !== 'null' && 
+    frameUrl !== 'undefined' && 
+    frameUrl.trim() !== '' && 
+    !frameError
+  );
+
+  const hasValidEffect = Boolean(
+    effectUrl && 
+    effectUrl !== 'null' && 
+    effectUrl !== 'undefined' && 
+    effectUrl.trim() !== '' && 
+    !effectError
+  );
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      {/* Inner Avatar Content: Fills 100% when no frame is equipped, scales to 78% only when a frame is active */}
+      {/* Inner Avatar Content: Expands to 100% when no frame is equipped, scales down ONLY when a frame is present */}
       <div 
         className={`${
           hasValidFrame ? 'w-[78%] h-[78%]' : 'w-full h-full'
-        } rounded-full overflow-hidden flex items-center justify-center relative z-10 transition-all duration-200`}
+        } rounded-full overflow-hidden flex items-center justify-center relative z-10 transition-all duration-150`}
       >
         {/* Underlying Profile Picture */}
         <img 
@@ -84,7 +98,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
         )}
       </div>
 
-      {/* Equipped Frame Overlay (Fits 100% within outer bounds) */}
+      {/* Equipped Frame Overlay */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
