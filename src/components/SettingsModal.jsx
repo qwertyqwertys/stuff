@@ -59,21 +59,21 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-20 h-20",
   const hasValidEffect = effectUrl && effectUrl !== 'null' && effectUrl !== '' && !effectError;
 
   return (
-    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      {/* Underlying Profile Picture (Slightly transparent/muted so the effect stands out) */}
+    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className} overflow-hidden rounded-full`}>
+      {/* Underlying Profile Picture (100% solid, crisp, and fully visible) */}
       <img 
         src={pfpUrl || 'https://i.imgur.com/7gK1QvK.png'} 
         alt="Profile" 
-        className="w-full h-full rounded-full object-cover opacity-50 relative z-10"
+        className="w-full h-full rounded-full object-cover relative z-10"
       />
 
-      {/* Equipped Effect Layer (Vivid, bright, and clearly visible right over the PFP) */}
+      {/* Equipped Effect Layer (Uses mix-blend-screen to make black backgrounds vanish, letting the effect shine brightly over your PFP) */}
       {hasValidEffect && (
         <img 
           src={effectUrl} 
           alt="Profile Effect" 
           onError={() => setEffectError(true)}
-          className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-90 z-20"
+          className="absolute inset-0 w-full h-full pointer-events-none object-cover rounded-full opacity-90 mix-blend-screen z-20"
         />
       )}
 
