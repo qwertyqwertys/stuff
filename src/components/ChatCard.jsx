@@ -109,13 +109,13 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Fast fetch: select only light fields needed for feed rendering
+  // Ultra-fast fetch: selects only core lightweight fields and limits to 20 messages for instant load
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
       .from('messages')
-      .select('id, username, content, created_at, user_id, avatar_url, is_edited, favs, achievements, times')
+      .select('id, username, content, created_at, user_id, avatar_url, is_edited')
       .order('created_at', { ascending: true })
-      .limit(30);
+      .limit(20);
     if (data) setMessages(data);
   }, []);
 
@@ -134,18 +134,18 @@ export function ChatCard({
     const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
-    if (currentFavs.length > 0 || currentAchievements.length > 0 || Object.keys(currentTimes).length > 0) {
-      await supabase
-        .from('messages')
-        .update({ 
-          favs: currentFavs, 
-          achievements: currentAchievements, 
-          times: currentTimes,
-          avatar_url: currentAvatar || null,
-          user_id: myId
-        })
-        .ilike('username', currentName);
-    }
+    // Background non-blocking update
+    supabase
+      .from('messages')
+      .update({ 
+        favs: currentFavs, 
+        achievements: currentAchievements, 
+        times: currentTimes,
+        avatar_url: currentAvatar || null,
+        user_id: myId
+      })
+      .ilike('username', currentName)
+      .then(() => {});
   }, [myId, username, ownPfp, userFavs, userTimes, myAchievements]);
 
   useEffect(() => {
@@ -192,12 +192,6 @@ export function ChatCard({
   const handleSend = async () => {
     if (!text.trim()) return;
     const currentAvatar = ownPfp || getStoredAvatar();
-
-    const currentFavs = userFavs.length > 0 ? userFavs : JSON.parse(localStorage.getItem('capy-favs') || '[]');
-    const currentTimes = Object.keys(userTimes).length > 0 ? userTimes : JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
-    const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
-    const currentAchievements = myAchievements.length > 0 ? myAchievements : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
-
     const messageText = text.trim();
     setText(''); 
 
@@ -208,10 +202,7 @@ export function ChatCard({
       content: messageText,
       user_id: myId,
       avatar_url: currentAvatar || null,
-      created_at: new Date().toISOString(),
-      favs: currentFavs,
-      achievements: currentAchievements,
-      times: currentTimes
+      created_at: new Date().toISOString()
     };
     setMessages(prev => [...prev, tempMessage]);
 
@@ -221,10 +212,7 @@ export function ChatCard({
         username, 
         content: messageText, 
         user_id: myId,
-        avatar_url: currentAvatar || null,
-        favs: currentFavs,
-        achievements: currentAchievements,
-        times: currentTimes
+        avatar_url: currentAvatar || null
       }]);
 
     fetchMessages();
