@@ -8,6 +8,7 @@ import {
 
 // Optional import fallback to prevent crashes if DB file isn't present
 import * as db from '../utils/db';
+import { supabase } from '../supabaseClient';
 
 const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
@@ -233,7 +234,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
   const handleTouchMove = (e) => {
     if (!isDragging || e.touches.length !== 1) return;
     setOffset({
-      x: e.touches[0].clientX - dragStart.x,
+      x: e.touches[0].clientX - offset.x,
       y: e.touches[0].clientY - offset.y
     });
   };
@@ -282,7 +283,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
         outputSize / 2 + offset.x * scaleToOutput,
         outputSize / 2 + offset.y * scaleToOutput
       );
-      ctx.scale(zoom * scaleToOutput, zoom * scaleToOutput);
+      ctx.scale(zoom * scaleToOutput, scaleToOutput);
       ctx.drawImage(img, -baseRenderWidth / 2, -baseRenderHeight / 2, baseRenderWidth, baseRenderHeight);
       ctx.restore();
 
@@ -881,10 +882,20 @@ function SettingsModalContent({
                           {selectedFrame && (
                             <button
                               type="button"
-                              onClick={() => {
+                              onClick={async () => {
                                 if (typeof setSelectedFrame === 'function') {
                                   setSelectedFrame('');
                                   try { localStorage.removeItem('capy-selected-frame'); } catch (e) {}
+                                  
+                                  // Sync frame unequip globally
+                                  const currentName = displayName || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
+                                  if (currentName) {
+                                    const activeEffect = localStorage.getItem('capy-selected-effect') || null;
+                                    await supabase
+                                      .from('messages')
+                                      .update({ frame_url: null, effect_url: activeEffect })
+                                      .ilike('username', currentName);
+                                  }
                                   window.dispatchEvent(new Event('capy-pfp-updated'));
                                 }
                               }}
@@ -896,10 +907,20 @@ function SettingsModalContent({
                           {selectedEffect && (
                             <button
                               type="button"
-                              onClick={() => {
+                              onClick={async () => {
                                 if (typeof setSelectedEffect === 'function') {
                                   setSelectedEffect('');
                                   try { localStorage.removeItem('capy-selected-effect'); } catch (e) {}
+                                  
+                                  // Sync effect unequip globally
+                                  const currentName = displayName || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
+                                  if (currentName) {
+                                    const activeFrame = localStorage.getItem('capy-selected-frame') || null;
+                                    await supabase
+                                      .from('messages')
+                                      .update({ frame_url: activeFrame, effect_url: null })
+                                      .ilike('username', currentName);
+                                  }
                                   window.dispatchEvent(new Event('capy-pfp-updated'));
                                 }
                               }}
@@ -922,7 +943,7 @@ function SettingsModalContent({
                               </div>
                               <button
                                 type="button"
-                                onClick={() => {
+                                onClick={async () => {
                                   if (item.type === 'frame' && typeof setSelectedFrame === 'function') {
                                     setSelectedFrame(item.url);
                                     try { localStorage.setItem('capy-selected-frame', item.url); } catch (e) {}
@@ -931,6 +952,21 @@ function SettingsModalContent({
                                     setSelectedEffect(item.url);
                                     try { localStorage.setItem('capy-selected-effect', item.url); } catch (e) {}
                                   }
+                                  
+                                  // Instantly sync active frame and effect to Supabase globally
+                                  const currentName = displayName || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
+                                  if (currentName) {
+                                    const activeFrame = localStorage.getItem('capy-selected-frame') || null;
+                                    const activeEffect = localStorage.getItem('capy-selected-effect') || null;
+                                    await supabase
+                                      .from('messages')
+                                      .update({ 
+                                        frame_url: activeFrame, 
+                                        effect_url: activeEffect 
+                                      })
+                                      .ilike('username', currentName);
+                                  }
+
                                   window.dispatchEvent(new Event('capy-pfp-updated'));
                                 }}
                                 className={`mt-2 w-full py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
