@@ -1,5 +1,3 @@
-CURRENT CHATCARD.JSX
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, RefreshCcw, Pencil, Check, X, Headphones } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
