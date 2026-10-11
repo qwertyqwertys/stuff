@@ -2,17 +2,24 @@
 
 <base href = "https://cdn.jsdelivr.net/gh/Pok12d/ta@main/sma/">
 
-<script src = "jszip.js"></script>
+<!-- Uses your jjszip_2.js library file -->
+<script src = "jszip_2.js"></script>
 
-<body>
+<body style="background: #000; margin: 0; overflow: hidden;">
 
-<h1 id = "loadingg" style="color: white; font-family: sans-serif; text-align: center; margin-top: 20vh;">Loading Smash Karts...</h1>
+<div id="loadingg" style="color: white; font-family: sans-serif; text-align: center; margin-top: 40vh;">
+  <h2 id="load-status">Connecting to CDN...</h2>
+  <p style="color: #888; font-size: 14px; margin-top: 8px;">Downloading and unpacking game assets (First load may take a moment)</p>
+</div>
 
 <script>    
-	
   async function fetchAndCombineZip(binUrls) {
+    document.getElementById("load-status").innerText = "Downloading game data parts (Parallel)...";
+    // Fetch all parts simultaneously to maximize download speed
     const responses = await Promise.all(binUrls.map(url => fetch(url)));
     const buffers = await Promise.all(responses.map(res => res.arrayBuffer()));
+    
+    document.getElementById("load-status").innerText = "Combining binary buffers...";
     let totalLength = buffers.reduce((acc, buf) => acc + buf.byteLength, 0);
     let combined = new Uint8Array(totalLength);
     let offset = 0;
@@ -26,7 +33,10 @@
 async function unzipWebpFromExternalBins(binUrls) {
     const blobUrls = {};
     const bytes = await fetchAndCombineZip(binUrls);
+    
+    document.getElementById("load-status").innerText = "Unpacking ZIP archive in memory...";
     const zip = await JSZip.loadAsync(bytes);
+    
     for (const [filename, file] of Object.entries(zip.files)) {
         if (!file.dir) {
             let mime = '';
@@ -197,7 +207,6 @@ window.Audio.prototype = OriginalAudio.prototype;
 function rewriteURL(original) {
   if (!original) return original;
   
-  // Forcefully strip and redirect any blocked domain requests to the clean CDN mirror
   if (original.includes("smashkarts.io") || original.includes("smashkartsgc.b-cdn.net")) {
     let cleanPath = original.replace(/https?:\/\/[^\/]+/, "");
     return "https://cdn.jsdelivr.net/gh/Pok12d/ta@main/sma" + cleanPath;
@@ -280,7 +289,6 @@ document.write(`<!DOCTYPE html>
 };
 	firebase.initializeApp(firebaseConfig);
 	
-	var timerStart = Date.now();
 	const buildUrl = "Build";
 	const loaderUrl = buildUrl + "/76f034cff49013ce85bd6945ebf32347.loader.js";
 	const config = {
