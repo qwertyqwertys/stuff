@@ -109,14 +109,18 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Fast fetch including frame and effect URLs
+  // Blazing fast fetch: queries lightweight fields and limits to 20 messages for instant load
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
       .from('messages')
       .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times')
-      .order('created_at', { ascending: true })
-      .limit(30);
-    if (data) setMessages(data);
+      .order('created_at', { ascending: false })
+      .limit(20);
+    
+    if (data) {
+      // Reverse so oldest is at the top and newest at the bottom
+      setMessages(data.reverse());
+    }
   }, []);
 
   const syncUserStatsToDatabase = useCallback(async () => {
@@ -137,7 +141,8 @@ export function ChatCard({
     const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
-    await supabase
+    // Background sync without blocking UI
+    supabase
       .from('messages')
       .update({ 
         favs: currentFavs, 
@@ -148,7 +153,8 @@ export function ChatCard({
         effect_url: currentEffect,
         user_id: myId
       })
-      .ilike('username', currentName);
+      .ilike('username', currentName)
+      .then(() => {});
   }, [myId, username, ownPfp, userFavs, userTimes, myAchievements]);
 
   useEffect(() => {
@@ -161,7 +167,6 @@ export function ChatCard({
       )
       .subscribe();
 
-    // Fast event listener: only re-fetches messages without heavy syncing loops[cite: 10]
     const handlePfpUpdated = () => {
       fetchMessages();
     };
@@ -206,6 +211,7 @@ export function ChatCard({
     const messageText = text.trim();
     setText(''); 
 
+    // Instant optimistic UI update
     const tempMessage = {
       id: 'temp_' + Date.now(),
       username,
