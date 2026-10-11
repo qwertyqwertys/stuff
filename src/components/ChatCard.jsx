@@ -109,17 +109,20 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Blazing fast fetch: queries lightweight fields and limits to 20 messages for instant load
+  // Instant lightweight fetch limited to 15 messages
   const fetchMessages = useCallback(async () => {
-    const { data } = await supabase
-      .from('messages')
-      .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times')
-      .order('created_at', { ascending: false })
-      .limit(20);
-    
-    if (data) {
-      // Reverse so oldest is at the top and newest at the bottom
-      setMessages(data.reverse());
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times')
+        .order('created_at', { ascending: false })
+        .limit(15);
+      
+      if (!error && data) {
+        setMessages(data.reverse());
+      }
+    } catch (err) {
+      console.warn("Fetch skipped/failed:", err);
     }
   }, []);
 
@@ -141,7 +144,6 @@ export function ChatCard({
     const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
-    // Background sync without blocking UI
     supabase
       .from('messages')
       .update({ 
@@ -160,12 +162,11 @@ export function ChatCard({
   useEffect(() => {
     fetchMessages();
 
-    const channel = supabase
-      .channel('realtime-messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, 
-        () => fetchMessages()
-      )
-      .subscribe();
+    // Removed heavy real-time websocket channel listener which causes severe lag loops.
+    // Using a clean 5-second background poll instead for zero-lag performance.
+    const pollInterval = setInterval(() => {
+      fetchMessages();
+    }, 5000);
 
     const handlePfpUpdated = () => {
       fetchMessages();
@@ -174,7 +175,7 @@ export function ChatCard({
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
   }, [fetchMessages]);
@@ -211,7 +212,6 @@ export function ChatCard({
     const messageText = text.trim();
     setText(''); 
 
-    // Instant optimistic UI update
     const tempMessage = {
       id: 'temp_' + Date.now(),
       username,
