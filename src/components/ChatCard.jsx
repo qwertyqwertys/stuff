@@ -18,6 +18,39 @@ function formatTimestamp(isoString) {
   });
 }
 
+function DefaultAvatar() {
+  return (
+    <div className="w-8 h-8 rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center flex-shrink-0 overflow-hidden">
+      <svg className="w-5 h-5 text-[#22d3ee]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="9" r="3" />
+        <path d="M6.5 17.5c1.2-2 3.3-3 5.5-3s4.3 1 5.5 3" />
+      </svg>
+    </div>
+  );
+}
+
+function UserAvatar({ src, alt }) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [src]);
+
+  if (!src || hasError) {
+    return <DefaultAvatar />;
+  }
+
+  return (
+    <img 
+      src={src} 
+      alt={alt || 'User avatar'} 
+      onError={() => setHasError(true)}
+      className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-white/10"
+    />
+  );
+}
+
 const getPersistentId = () => {
   let id = localStorage.getItem('capy-uid');
   if (!id) {
@@ -76,7 +109,7 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Fast fetch: includes frame_url and effect_url for global syncing
+  // Fast fetch: select light fields needed for feed rendering plus frame_url & effect_url
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
       .from('messages')
@@ -104,18 +137,20 @@ export function ChatCard({
     const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
-    await supabase
-      .from('messages')
-      .update({ 
-        favs: currentFavs, 
-        achievements: currentAchievements, 
-        times: currentTimes,
-        avatar_url: currentAvatar || null,
-        frame_url: currentFrame,
-        effect_url: currentEffect,
-        user_id: myId
-      })
-      .ilike('username', currentName);
+    if (currentFavs.length > 0 || currentAchievements.length > 0 || Object.keys(currentTimes).length > 0) {
+      await supabase
+        .from('messages')
+        .update({ 
+          favs: currentFavs, 
+          achievements: currentAchievements, 
+          times: currentTimes,
+          avatar_url: currentAvatar || null,
+          frame_url: currentFrame,
+          effect_url: currentEffect,
+          user_id: myId
+        })
+        .ilike('username', currentName);
+    }
   }, [myId, username, ownPfp, userFavs, userTimes, myAchievements]);
 
   useEffect(() => {
