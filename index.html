@@ -12,80 +12,59 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
-  :root {
-    --bg-color: #0d1117; /* Deep matte charcoal */
-  }
+      :root {
+        --bg-color: #0d1117; /* Deep matte charcoal */
+      }
 
-  body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    min-height: 100%;
-    background-color: var(--bg-color);
-    color: #c9d1d9; /* Muted gray text */
-    font-family: 'Fredoka', sans-serif; /* Playful, rounded font */
-    overflow-y: auto; 
-  }
+      body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100%;
+        background-color: var(--bg-color);
+        color: #c9d1d9; /* Muted gray text */
+        font-family: 'Fredoka', sans-serif; /* Playful, rounded font */
+        overflow-y: auto; 
+      }
 
-  #root {
-    width: 100%;
-    min-height: 100vh;
-  }
+      #root {
+        width: 100%;
+        min-height: 100vh;
+      }
 
-  /* === 1. CARD LAYER & SUBTLE BORDER === */
-  .card, .game-card {
-    background-color: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-  }
+      /* === 1. CARD LAYER & SUBTLE BORDER === */
+      .card, .game-card {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+      }
 
-  /* === 2. SMOOTH HOVER TRANSITIONS === */
-  button, .card, .game-card {
-    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
-  }
+      /* === 2. SMOOTH HOVER TRANSITIONS === */
+      button, .card, .game-card {
+        transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+      }
 
-  .card:hover, .game-card:hover {
-    background-color: #1f242c;
-    border-color: #8b949e;
-  }
+      .card:hover, .game-card:hover {
+        background-color: #1f242c;
+        border-color: #8b949e;
+      }
 
-  /* === 3. CLEAN CUSTOM SCROLLBARS === */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #0d1117;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #30363d;
-    border-radius: 4px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #484f58;
-  }
-
-  /* === 4. CLEAN BUTTONS & SEARCH INPUTS === */
-  button, input, select {
-    background-color: #161b22;
-    color: #c9d1d9;
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-family: 'Fredoka', sans-serif;
-  }
-
-  button:hover {
-    background-color: #1f242c;
-    border-color: #8b949e;
-    cursor: pointer;
-  }
-
-  input:focus, select:focus {
-    outline: none;
-    border-color: #58a6ff; /* Clean tech-blue highlight when typing */
-  }
-</style>
+      /* === 3. CLEAN CUSTOM SCROLLBARS === */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0d1117;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #30363d;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #484f58;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
