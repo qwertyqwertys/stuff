@@ -530,6 +530,13 @@
     "url": "/stores/games-html/basket-random.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fbasketballlegends.pro%2Fdata%2Fimage%2Fmenu%2Fbasket-random.jpg&f=1&nofb=1&ipt=e621b588712393da15f640473acf507556174dd3a6b313a9c5c30cdbe5370c84&ipo=images",
     "category": "Sports"
+  },
+  {
+    "id": "smash-karts",
+    "title": "Smash Karts",
+    "url": "/stores/games-html/smash-karts.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimg.poki-cdn.com%2Fcdn-cgi%2Fimage%2Fq%3D78%2Cscq%3D50%2Cwidth%3D1200%2Cheight%3D1200%2Cfit%3Dcover%2Cf%3Dpng%2F9c9e529b14731be871b07b89660bbc2a%2Fsmash-karts.png&f=1&nofb=1&ipt=6e247ced10086b40cc7b35347fb48ace7d10f6dca0cfbaf2c8b3de1cb7513f03&ipo=images",
+    "category": "Driving"
   }
 ]
 
