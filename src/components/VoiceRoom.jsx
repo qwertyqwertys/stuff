@@ -75,7 +75,7 @@ export default function VoiceRoom({
 
   const [localStream, setLocalStream] = useState(null);
   const [remoteStreams, setRemoteStreams] = useState({});
-  const [remoteCameraStatuses, setRemoteCameraStatuses] = useState({}); // <--- Tracks remote camera states
+  const [remoteCameraStatuses, setRemoteCameraStatuses] = useState({});
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [participants, setParticipants] = useState([]);
@@ -97,7 +97,7 @@ export default function VoiceRoom({
     }
   };
 
-  // Toggle camera using track.enabled
+  // Toggle camera with locked hardware constraints to prevent screen flickering
   const toggleCamera = async () => {
     if (localStream && localStream.getVideoTracks().length > 0) {
       const videoTrack = localStream.getVideoTracks()[0];
@@ -110,7 +110,14 @@ export default function VoiceRoom({
       }
     } else {
       try {
-        const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        // Explicitly set frame rate and resolution bounds to lock GPU composition
+        const cameraStream = await navigator.mediaDevices.getUserMedia({ 
+          video: {
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 30, max: 60 }
+          }
+        });
         const videoTrack = cameraStream.getVideoTracks()[0];
         
         if (localStream) {
@@ -278,8 +285,15 @@ export default function VoiceRoom({
         </span>
       </div>
 
-      {/* Grid container */}
-      <div className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-6 items-center justify-center max-w-6xl mx-auto w-full">
+      {/* Grid container with hardware GPU acceleration layer to prevent flicker */}
+      <div 
+        className="participants-grid flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-6 items-center justify-center max-w-6xl mx-auto w-full"
+        style={{
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          backfaceVisibility: 'hidden'
+        }}
+      >
         {sortedParticipants.map((participant) => {
           const isSelf = participant.id === localUserId || participant.sessionKey === sessionKey;
           const remoteCamStatus = remoteCameraStatuses[participant.id];
@@ -296,12 +310,18 @@ export default function VoiceRoom({
               } 
             : {
                 ...participant,
-                // Override with direct signal camera status if available, fallback to presence
                 isCameraOn: remoteCamStatus !== undefined ? remoteCamStatus : participant.isCameraOn
               };
 
           return (
-            <div key={participant.id || participant.sessionKey} className="w-full max-w-lg mx-auto aspect-video">
+            <div 
+              key={participant.id || participant.sessionKey} 
+              className="w-full max-w-lg mx-auto aspect-video overflow-hidden rounded-xl"
+              style={{
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden'
+              }}
+            >
               <ParticipantTile 
                 participant={participantData} 
                 user={participantData}
