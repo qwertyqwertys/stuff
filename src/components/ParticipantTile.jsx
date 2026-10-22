@@ -5,89 +5,44 @@ import { MicOff, User, VolumeX } from 'lucide-react';
 export default function ParticipantTile({ participant, user, stream, currentUserId }) {
   const p = participant || user || {};
   
-  // Checks all common name keys to guarantee display
   const name = p.name || p.username || p.displayName || p.handle || 'User';
   const avatar = p.avatar || p.avatar_url || p.pfp || p.photoURL;
-  
   const isSelf = p.isSelf || p.id === currentUserId || p.id === 'self' || p.id === 'self_user';
   
   const videoRef = useRef(null);
   const audioRef = useRef(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
-  const [isTrackMuted, setIsTrackMuted] = useState(false);
 
-  const videoTrack = stream?.getVideoTracks()?.[0];
   const audioTrack = stream?.getAudioTracks()?.[0];
+  const videoTrack = stream?.getVideoTracks()?.[0];
 
-  // For remote users, prioritize Supabase presence `p.isMuted`.
-  // For local user, check the local audioTrack.enabled status.
   const isMuted = isSelf
     ? (audioTrack ? !audioTrack.enabled : Boolean(p.isMuted))
-    : (p.isMuted !== undefined ? Boolean(p.isMuted) : isTrackMuted);
+    : Boolean(p.isMuted);
 
-  // Listen to remote WebRTC track mute/unmute events
+  const showVideo = Boolean(videoTrack && videoTrack.enabled && !videoTrack.muted && videoTrack.readyState === 'live');
+
+  // Keep video stream attached permanently without resetting
   useEffect(() => {
-    if (!audioTrack) {
-      setIsTrackMuted(true);
-      return;
+    if (videoRef.current && stream) {
+      if (videoRef.current.srcObject !== stream) {
+        videoRef.current.srcObject = stream;
+      }
     }
+  }, [stream]);
 
-    const updateAudioTrackStatus = () => {
-      setIsTrackMuted(!audioTrack.enabled || audioTrack.muted);
-    };
-
-    updateAudioTrackStatus();
-
-    audioTrack.addEventListener('mute', updateAudioTrackStatus);
-    audioTrack.addEventListener('unmute', updateAudioTrackStatus);
-
-    const interval = setInterval(updateAudioTrackStatus, 300);
-
-    return () => {
-      audioTrack.removeEventListener('mute', updateAudioTrackStatus);
-      audioTrack.removeEventListener('unmute', updateAudioTrackStatus);
-      clearInterval(interval);
-    };
-  }, [audioTrack]);
-
-  // INSTANT video tracking: Checks live track properties immediately
-  const videoTrackObj = stream?.getVideoTracks()?.[0];
-  const showVideo = Boolean(videoTrackObj && videoTrackObj.enabled && !videoTrackObj.muted && videoTrackObj.readyState === 'live');
-  const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
-
-  // Unmute and play remote audio with browser autoplay error catching
-  const playRemoteAudio = () => {
-    if (!isSelf && audioRef.current && stream && hasAudioTrack) {
+  // Audio playback for remote users
+  useEffect(() => {
+    if (!isSelf && audioRef.current && stream && stream.getAudioTracks().length > 0) {
       if (audioRef.current.srcObject !== stream) {
         audioRef.current.srcObject = stream;
       }
-      audioRef.current.volume = 1.0;
-      audioRef.current.play()
-        .then(() => {
-          setAudioBlocked(false);
-        })
-        .catch((err) => {
-          console.warn('Remote audio playback prevented by browser autoplay policy:', err);
-          setAudioBlocked(true);
-        });
+      audioRef.current.play().catch(() => setAudioBlocked(true));
     }
-  };
+  }, [stream, isSelf]);
 
-  useEffect(() => {
-    playRemoteAudio();
-  }, [stream, isSelf, hasAudioTrack]);
-
-  // User click handler to unlock audio if blocked by browser policy
-  const handleUserUnlockAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.play()
-        .then(() => setAudioBlocked(false))
-        .catch(console.error);
-    }
-  };
-
-  // Audio volume analyzer for speaking indicator border
+  // Speaking indicator volume check
   useEffect(() => {
     if (!stream || isMuted) {
       setIsSpeaking(false);
@@ -105,18 +60,9 @@ export default function ParticipantTile({ participant, user, stream, currentUser
 
     try {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-      if (audioContext.state === 'suspended') {
-        const resumeAudio = () => {
-          audioContext.resume();
-          window.removeEventListener('click', resumeAudio);
-        };
-        window.addEventListener('click', resumeAudio);
-      }
-
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.4;
+      analyser.smoothingTimeConstant = 0.5;
 
       const source = audioContext.createMediaStreamSource(stream);
       source.connect(analyser);
@@ -126,11 +72,16 @@ export default function ParticipantTile({ participant, user, stream, currentUser
       const checkVolume = () => {
         analyser.getByteFrequencyData(dataArray);
         let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i];
-        }
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
         const average = sum / dataArray.length;
-        setIsSpeaking(average > 12 && !isMuted);
+        
+        // Hysteresis to prevent constant rapid toggling
+        setIsSpeaking(prev => {
+          if (average > 18 && !prev) return true;
+          if (average < 8 && prev) return false;
+          return prev;
+        });
+
         animationFrameId = requestAnimationFrame(checkVolume);
       };
 
@@ -141,105 +92,61 @@ export default function ParticipantTile({ participant, user, stream, currentUser
 
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (audioContext && audioContext.state !== 'closed') {
-        audioContext.close();
-      }
+      if (audioContext && audioContext.state !== 'closed') audioContext.close();
     };
   }, [stream, isMuted]);
 
-  // Strictly controlled srcObject assignment to prevent video flickering
-  useEffect(() => {
-    if (videoRef.current && stream && showVideo) {
-      if (videoRef.current.srcObject !== stream) {
-        videoRef.current.srcObject = stream;
-      }
-      videoRef.current.play().catch((err) => console.log('Video play catch:', err));
-    }
-  }, [stream, showVideo]);
-
   return (
     <div 
-      onClick={audioBlocked ? handleUserUnlockAudio : undefined}
-      className={`relative w-full h-full aspect-video rounded-2xl overflow-hidden flex items-center justify-center bg-[#c84b2c] transition-all duration-150 ${
-        audioBlocked ? 'cursor-pointer' : ''
-      } ${
+      className={`relative w-full h-full aspect-video rounded-2xl overflow-hidden flex items-center justify-center bg-zinc-900 transition-all duration-150 ${
         isSpeaking 
-          ? 'ring-4 ring-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.7)] scale-[1.01]' 
+          ? 'ring-4 ring-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]' 
           : isMuted 
           ? 'ring-2 ring-red-500/50'
-          : 'border border-white/10 shadow-lg'
+          : 'border border-white/10'
       }`}
     >
-      {/* Remote Audio Element */}
       {!isSelf && <audio ref={audioRef} autoPlay playsInline controls={false} />}
 
-      {/* Autoplay Blocked Banner Overlay */}
-      {!isSelf && audioBlocked && (
-        <button 
-          onClick={handleUserUnlockAudio}
-          className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 text-white p-4 text-center cursor-pointer hover:bg-black/85 transition-all"
-        >
-          <VolumeX className="w-8 h-8 text-amber-400 animate-bounce" />
-          <span className="text-sm font-bold">Audio Blocked by Browser</span>
-          <span className="text-xs text-zinc-300 bg-white/10 px-3 py-1 rounded-full border border-white/20">
-            Click anywhere on this tile to enable sound
-          </span>
-        </button>
-      )}
+      {/* Persistent Video Element - Hidden via CSS when off to prevent DOM unmounting flicker */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted={isSelf}
+        style={{
+          display: showVideo ? 'block' : 'none',
+          transform: isSelf ? 'scaleX(-1) translateZ(0)' : 'translateZ(0)',
+          willChange: 'transform'
+        }}
+        className="absolute inset-0 w-full h-full object-cover rounded-2xl z-0"
+      />
 
-      {/* Speaking Badge (Top Left) */}
-      {isSpeaking && (
-        <div className="absolute top-3 left-3 bg-emerald-500 text-black text-[10px] font-black uppercase px-2.5 py-1 rounded-full z-20 animate-pulse shadow-md">
-          Speaking
-        </div>
-      )}
-
-      {/* Muted Badge (Top Right) */}
-      {isMuted && (
-        <div className="absolute top-3 right-3 bg-red-600/90 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full z-20 flex items-center gap-1 shadow-md border border-red-400/30 backdrop-blur-sm">
-          <MicOff className="w-3.5 h-3.5" />
-          <span>MUTED</span>
-        </div>
-      )}
-
-      {/* Video Feed OR Centered Avatar Graphic */}
-      {showVideo ? (
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted={isSelf}
-          style={{ 
-            transform: isSelf ? 'scaleX(-1) translateZ(0)' : 'scaleX(1) translateZ(0)',
-            willChange: 'transform',
-            backfaceVisibility: 'hidden'
-          }}
-          className="absolute inset-0 w-full h-full object-cover rounded-2xl"
-        />
-      ) : (
+      {/* Avatar Graphic fallback shown when video is inactive */}
+      {!showVideo && (
         <div className="flex items-center justify-center w-full h-full p-4 z-10">
-          <div className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center overflow-hidden transition-all ${
-            isSpeaking 
-              ? 'ring-4 ring-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]' 
-              : isMuted
-              ? 'ring-2 ring-red-500/50'
-              : ''
-          }`}>
+          <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden bg-black/40 border border-white/10">
             {avatar ? (
-              <img src={avatar} alt={name} className="w-full h-full object-contain drop-shadow-md" />
+              <img src={avatar} alt={name} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-black/20 rounded-full flex items-center justify-center text-white">
-                <User className="w-12 h-12 text-white/80" />
-              </div>
+              <User className="w-12 h-12 text-white/80" />
             )}
           </div>
         </div>
       )}
 
-      {/* Bottom-left Username Pill Badge */}
-      <div className="absolute bottom-3 left-3 bg-neutral-900/80 backdrop-blur-md text-white text-sm font-semibold px-3 py-1.5 rounded-xl shadow-md flex items-center gap-2 z-20 pointer-events-none">
-        <span>{name}</span>
+      {/* Username Tag */}
+      <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-1 rounded-lg z-20 pointer-events-none">
+        {name}
       </div>
+
+      {/* Muted Badge */}
+      {isMuted && (
+        <div className="absolute top-3 right-3 bg-red-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md z-20 flex items-center gap-1">
+          <MicOff className="w-3 h-3" />
+          <span>MUTED</span>
+        </div>
+      )}
     </div>
   );
 }
