@@ -51,7 +51,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     };
   }, [audioTrack]);
 
-  // INSTANT video tracking: Checks live track properties immediately without interval lag
+  // INSTANT video tracking: Checks live track properties immediately
   const videoTrackObj = stream?.getVideoTracks()?.[0];
   const showVideo = Boolean(videoTrackObj && videoTrackObj.enabled && !videoTrackObj.muted && videoTrackObj.readyState === 'live');
   const hasAudioTrack = stream && stream.getAudioTracks().length > 0;
@@ -59,7 +59,9 @@ export default function ParticipantTile({ participant, user, stream, currentUser
   // Unmute and play remote audio with browser autoplay error catching
   const playRemoteAudio = () => {
     if (!isSelf && audioRef.current && stream && hasAudioTrack) {
-      audioRef.current.srcObject = stream;
+      if (audioRef.current.srcObject !== stream) {
+        audioRef.current.srcObject = stream;
+      }
       audioRef.current.volume = 1.0;
       audioRef.current.play()
         .then(() => {
@@ -145,9 +147,13 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     };
   }, [stream, isMuted]);
 
+  // Strictly controlled srcObject assignment to prevent video flickering
   useEffect(() => {
     if (videoRef.current && stream && showVideo) {
-      videoRef.current.srcObject = stream;
+      if (videoRef.current.srcObject !== stream) {
+        videoRef.current.srcObject = stream;
+      }
+      videoRef.current.play().catch((err) => console.log('Video play catch:', err));
     }
   }, [stream, showVideo]);
 
@@ -196,20 +202,18 @@ export default function ParticipantTile({ participant, user, stream, currentUser
         </div>
       )}
 
-     {/* Video Feed OR Centered Avatar Graphic */}
+      {/* Video Feed OR Centered Avatar Graphic */}
       {showVideo ? (
         <video
+          ref={videoRef}
           autoPlay
           playsInline
           muted={isSelf}
-          ref={(node) => {
-            videoRef.current = node;
-            if (node && stream) {
-              node.srcObject = stream;
-              node.play().catch((err) => console.log('Video play catch:', err));
-            }
+          style={{ 
+            transform: isSelf ? 'scaleX(-1) translateZ(0)' : 'scaleX(1) translateZ(0)',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden'
           }}
-          style={{ transform: isSelf ? 'scaleX(-1)' : 'scaleX(1)' }}
           className="absolute inset-0 w-full h-full object-cover rounded-2xl"
         />
       ) : (
