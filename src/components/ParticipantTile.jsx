@@ -42,7 +42,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     }
   }, [stream, isSelf]);
 
-  // Speaking indicator volume check
+  // Audio volume analyzer for speaking indicator
   useEffect(() => {
     if (!stream || isMuted) {
       setIsSpeaking(false);
@@ -62,7 +62,7 @@ export default function ParticipantTile({ participant, user, stream, currentUser
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.5;
+      analyser.smoothingTimeConstant = 0.4;
 
       const source = audioContext.createMediaStreamSource(stream);
       source.connect(analyser);
@@ -75,10 +75,10 @@ export default function ParticipantTile({ participant, user, stream, currentUser
         for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
         const average = sum / dataArray.length;
         
-        // Hysteresis to prevent constant rapid toggling
+        // Instant & sensitive volume detection (average > 8)
         setIsSpeaking(prev => {
-          if (average > 18 && !prev) return true;
-          if (average < 8 && prev) return false;
+          if (average > 8 && !prev) return true;
+          if (average < 4 && prev) return false;
           return prev;
         });
 
@@ -100,15 +100,30 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     <div 
       className={`relative w-full h-full aspect-video rounded-2xl overflow-hidden flex items-center justify-center bg-zinc-900 transition-all duration-150 ${
         isSpeaking 
-          ? 'ring-4 ring-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]' 
+          ? 'border-4 border-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.6)] scale-[1.01]' 
           : isMuted 
-          ? 'ring-2 ring-red-500/50'
+          ? 'border-2 border-red-500/60'
           : 'border border-white/10'
       }`}
     >
       {!isSelf && <audio ref={audioRef} autoPlay playsInline controls={false} />}
 
-      {/* Persistent Video Element - Hidden via CSS when off to prevent DOM unmounting flicker */}
+      {/* Speaking Badge (Top Left) */}
+      {isSpeaking && (
+        <div className="absolute top-3 left-3 bg-emerald-500 text-black text-[10px] font-black uppercase px-2.5 py-1 rounded-full z-20 animate-pulse shadow-md">
+          Speaking
+        </div>
+      )}
+
+      {/* Muted Badge (Top Right) */}
+      {isMuted && (
+        <div className="absolute top-3 right-3 bg-red-600/90 text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full z-20 flex items-center gap-1 shadow-md border border-red-400/30 backdrop-blur-sm">
+          <MicOff className="w-3.5 h-3.5" />
+          <span>MUTED</span>
+        </div>
+      )}
+
+      {/* Persistent Video Element - Hidden via CSS display property when off to prevent DOM unmounting flicker */}
       <video
         ref={videoRef}
         autoPlay
@@ -125,7 +140,13 @@ export default function ParticipantTile({ participant, user, stream, currentUser
       {/* Avatar Graphic fallback shown when video is inactive */}
       {!showVideo && (
         <div className="flex items-center justify-center w-full h-full p-4 z-10">
-          <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden bg-black/40 border border-white/10">
+          <div className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center overflow-hidden transition-all ${
+            isSpeaking 
+              ? 'ring-4 ring-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.6)]' 
+              : isMuted
+              ? 'ring-2 ring-red-500/50'
+              : 'bg-black/40 border border-white/10'
+          }`}>
             {avatar ? (
               <img src={avatar} alt={name} className="w-full h-full object-cover" />
             ) : (
@@ -139,14 +160,6 @@ export default function ParticipantTile({ participant, user, stream, currentUser
       <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-1 rounded-lg z-20 pointer-events-none">
         {name}
       </div>
-
-      {/* Muted Badge */}
-      {isMuted && (
-        <div className="absolute top-3 right-3 bg-red-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md z-20 flex items-center gap-1">
-          <MicOff className="w-3 h-3" />
-          <span>MUTED</span>
-        </div>
-      )}
     </div>
   );
 }
