@@ -431,6 +431,21 @@ function SettingsModalContent({
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
+  // Local buffer state to keep the input text cursor locked while typing
+  const [localDisplayName, setLocalDisplayName] = useState(displayName);
+
+  useEffect(() => {
+    setLocalDisplayName(displayName);
+  }, [displayName]);
+
+  const commitDisplayName = (val) => {
+    const trimmed = val.slice(0, 25);
+    setLocalDisplayName(trimmed);
+    if (typeof setDisplayName === 'function') {
+      setDisplayName(trimmed);
+    }
+  };
+
   const [isMusicReset, setIsMusicReset] = useState(() => {
     try {
       return localStorage.getItem('capy-music-reset') === 'true';
@@ -864,11 +879,20 @@ function SettingsModalContent({
                         <RotateCcw className="w-3 h-3" /> Reset Avatar
                       </button>
                     </div>
+                    
+                    {/* Fixed focus-locking display name input */}
                     <input 
                       type="text" 
                       placeholder="Custom Display Name..."
-                      value={displayName} 
-                      onChange={(e) => typeof setDisplayName === 'function' && setDisplayName(e.target.value.slice(0, 25))}
+                      value={localDisplayName} 
+                      onChange={(e) => setLocalDisplayName(e.target.value)}
+                      onBlur={(e) => commitDisplayName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          commitDisplayName(localDisplayName);
+                        }
+                      }}
                       className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
                     />
 
