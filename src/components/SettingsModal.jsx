@@ -6,7 +6,6 @@ import {
   Sun, Moon, Play, Pause, Search, Loader2, Crop, Sparkles
 } from 'lucide-react';
 
-// Optional import fallback to prevent crashes if DB file isn't present
 import * as db from '../utils/db';
 import { supabase } from '../supabaseClient';
 
@@ -14,9 +13,7 @@ const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
 const safeDeleteSong = db?.deleteSongFromIDB || (async () => {});
 
-// --- SHOP INVENTORY (BUILT-IN SVG BORDERS & EFFECTS) ---
 const shopItems = [
-  // --- FRAMES (SVG DATA URIS) ---
   { 
     id: 1, 
     type: 'frame', 
@@ -35,8 +32,6 @@ const shopItems = [
     name: 'Pixel Retro Box', 
     url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect x="4" y="4" width="112" height="112" fill="none" stroke="%2310b981" stroke-width="8" stroke-dasharray="16 8"/></svg>' 
   },
-
-  // --- EFFECTS ---
   { 
     id: 4, 
     type: 'effect', 
@@ -51,13 +46,11 @@ const shopItems = [
   }
 ];
 
-// --- REUSABLE PROFILE AVATAR WRAPPER ---
 export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", className = "" }) {
   const [effectError, setEffectError] = useState(false);
   const [frameError, setFrameError] = useState(false);
   const [pfpError, setPfpError] = useState(false);
 
-  // Reset error state when pfpUrl changes
   useEffect(() => {
     setPfpError(false);
   }, [pfpUrl]);
@@ -71,20 +64,11 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
     !url.includes('i.imgur.com/7gK1QvK.png');
 
   const hasValidPfp = isValidUrl(pfpUrl) && !pfpError;
-
-  const hasValidFrame = Boolean(
-    isValidUrl(frameUrl) && 
-    !frameError
-  );
-
-  const hasValidEffect = Boolean(
-    isValidUrl(effectUrl) && 
-    !effectError
-  );
+  const hasValidFrame = Boolean(isValidUrl(frameUrl) && !frameError);
+  const hasValidEffect = Boolean(isValidUrl(effectUrl) && !effectError);
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      {/* PFP and Effect Container */}
       <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative z-10 bg-[#111923]">
         {hasValidPfp ? (
           <img 
@@ -94,7 +78,6 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
             className="w-full h-full rounded-full object-cover"
           />
         ) : (
-          /* Default Avatar SVG when PFP is cleared or fails to load */
           <div className="w-full h-full rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center flex-shrink-0 overflow-hidden">
             <svg className="w-1/2 h-1/2 text-[#22d3ee]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="9" />
@@ -114,7 +97,6 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
         )}
       </div>
 
-      {/* Frame Layer */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
@@ -127,7 +109,6 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
   );
 }
 
-// --- ERROR BOUNDARY WRAPPER TO PREVENT APP UNMOUNTS ---
 class SettingsErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -171,7 +152,6 @@ class SettingsErrorBoundary extends Component {
   }
 }
 
-// --- HELPER: ENSURE STRICT 7-CHAR HEX FOR INPUT COLOR ---
 const getValidHexColor = () => {
   if (typeof document === 'undefined') return '#38b2f6';
   try {
@@ -186,7 +166,6 @@ const getValidHexColor = () => {
   }
 };
 
-// --- INTERACTIVE AVATAR CROPPER SUB-COMPONENT ---
 function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -431,18 +410,19 @@ function SettingsModalContent({
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  // Local buffer state to keep the input text cursor locked while typing
+  // Dedicated focus ref for the display name input
+  const nameInputRef = useRef(null);
   const [localDisplayName, setLocalDisplayName] = useState(displayName);
 
   useEffect(() => {
     setLocalDisplayName(displayName);
   }, [displayName]);
 
-  const commitDisplayName = (val) => {
-    const trimmed = val.slice(0, 25);
-    setLocalDisplayName(trimmed);
+  const handleNameInputChange = (e) => {
+    const text = e.target.value.slice(0, 25);
+    setLocalDisplayName(text);
     if (typeof setDisplayName === 'function') {
-      setDisplayName(trimmed);
+      setDisplayName(text);
     }
   };
 
@@ -512,37 +492,18 @@ function SettingsModalContent({
     };
   }, []);
 
+  // Keyboard navigation focus trap
   useEffect(() => {
     if (!show || cropperOpen || uploadModalOpen) return;
     const modalElement = modalRef.current;
     if (!modalElement) return;
 
-    const focusableElements = modalElement.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && typeof onClose === 'function') {
         onClose();
       }
-      if (e.key === 'Tab' && focusableElements.length > 0) {
-        if (e.shiftKey) {
-          if (document.activeElement === firstElement) {
-            lastElement?.focus();
-            e.preventDefault();
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            firstElement?.focus();
-            e.preventDefault();
-          }
-        }
-      }
     };
 
-    firstElement?.focus();
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [show, onClose, cropperOpen, uploadModalOpen]);
@@ -880,18 +841,15 @@ function SettingsModalContent({
                       </button>
                     </div>
                     
-                    {/* Fixed focus-locking display name input */}
+                    {/* Focus-locked display name input field */}
                     <input 
+                      ref={nameInputRef}
                       type="text" 
                       placeholder="Custom Display Name..."
                       value={localDisplayName} 
-                      onChange={(e) => setLocalDisplayName(e.target.value)}
-                      onBlur={(e) => commitDisplayName(e.target.value)}
+                      onChange={handleNameInputChange}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          commitDisplayName(localDisplayName);
-                        }
+                        e.stopPropagation();
                       }}
                       className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
                     />
@@ -911,7 +869,6 @@ function SettingsModalContent({
                                   setSelectedFrame('');
                                   try { localStorage.removeItem('capy-selected-frame'); } catch (e) {}
                                   
-                                  // Sync frame unequip globally
                                   const currentName = displayName || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
                                   if (currentName) {
                                     const activeEffect = localStorage.getItem('capy-selected-effect') || null;
@@ -936,7 +893,6 @@ function SettingsModalContent({
                                   setSelectedEffect('');
                                   try { localStorage.removeItem('capy-selected-effect'); } catch (e) {}
                                   
-                                  // Sync effect unequip globally
                                   const currentName = displayName || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
                                   if (currentName) {
                                     const activeFrame = localStorage.getItem('capy-selected-frame') || null;
@@ -977,7 +933,6 @@ function SettingsModalContent({
                                     try { localStorage.setItem('capy-selected-effect', item.url); } catch (e) {}
                                   }
                                   
-                                  // Instantly sync active frame and effect to Supabase globally
                                   const currentName = displayName || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
                                   if (currentName) {
                                     const activeFrame = localStorage.getItem('capy-selected-frame') || null;
