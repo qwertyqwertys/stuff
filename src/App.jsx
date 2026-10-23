@@ -82,9 +82,22 @@ function MainDashboard() {
   const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
 
-  // --- EQUIPPED SHOP STATES (DEFAULT TO EMPTY STRINGS TO ALLOW UNEQUIPPING) ---
+  // --- EQUIPPED SHOP STATES ---
   const [selectedFrame, setSelectedFrame] = useState(() => localStorage.getItem('capy-selected-frame') || '');
   const [selectedEffect, setSelectedEffect] = useState(() => localStorage.getItem('capy-selected-effect') || '');
+
+  // --- TOP-LEVEL DISPLAY NAME STATE WITH INSTANT EVENT SYNC ---
+  const [displayName, setDisplayNameState] = useState(() => {
+    return localStorage.getItem('capy-display-name') || localStorage.getItem('username') || 'CapyUser';
+  });
+
+  const setDisplayName = useCallback((val) => {
+    const trimmed = (val || '').slice(0, 25);
+    setDisplayNameState(trimmed);
+    localStorage.setItem('capy-display-name', trimmed);
+    localStorage.setItem('username', trimmed);
+    window.dispatchEvent(new Event('capy-username-updated'));
+  }, []);
 
   useEffect(() => {
     if (selectedFrame) {
@@ -139,7 +152,6 @@ function MainDashboard() {
     return [...main, ...gn];
   }, []);
 
-  // Filter supplier games
   const supplierGames = useMemo(() => {
     let sourceData = Array.isArray(gamesDataRaw) ? gamesDataRaw : [];
     if (supplier === 'GN Math') {
@@ -152,7 +164,6 @@ function MainDashboard() {
     return sourceData;
   }, [supplier]);
 
-  // Available games excluding removed games
   const activeGames = useMemo(() => {
     return supplierGames.filter(g => g && !removedGames.includes(String(g.id)));
   }, [supplierGames, removedGames]);
@@ -232,7 +243,6 @@ function MainDashboard() {
   });
   
   const [performanceMode, setPerformanceMode] = useState(() => localStorage.getItem('capy-perf-mode') === 'true');
-  const [displayName, setDisplayName] = useState(() => localStorage.getItem('capy-display-name') || 'CapyUser');
   const [profilePic, setProfilePic] = useState(() => localStorage.getItem('capy-pfp') || '');
   const [friends, setFriends] = useState(() => JSON.parse(localStorage.getItem('capy-friends') || '[]'));
   const [selectedFriendId, setSelectedFriendId] = useState(null);
@@ -945,6 +955,7 @@ function MainDashboard() {
                  userTimes={playtimes}
                  isInVoice={isInVoice}
                  onToggleVoice={handleToggleVoice}
+                 displayName={displayName}
                />
             </div>
           </div>
@@ -1147,7 +1158,6 @@ function MainDashboard() {
             return;
           }
           setDisplayName(val);
-          localStorage.setItem('capy-display-name', val);
         }}
         friendCode={friendCode}
         fullSyncCode={fullSyncCode}
@@ -1155,7 +1165,6 @@ function MainDashboard() {
           const decoded = safeDecode(code);
           if (decoded && decoded.n) {
             setDisplayName(decoded.n);
-            localStorage.setItem('capy-display-name', decoded.n);
             if (decoded.p) {
               setProfilePic(decoded.p);
               localStorage.setItem('capy-pfp', decoded.p);
