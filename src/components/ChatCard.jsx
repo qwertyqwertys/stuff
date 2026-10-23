@@ -8,13 +8,11 @@ import { ProfileAvatar } from './SettingsModal';
 function formatTimestamp(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
-  return date.toLocaleString('en-US', {
-    month: 'numeric',
-    day: 'numeric',
-    year: '2-digit',
-    hour: 'numericThe error happens because the code pasted into your `ChatCard.jsx` got cut off at line 422 before closing all the tags and the main function. 
+  return dateYou accidentally pasted conversational prose text (like *"The error happens because..."*) directly into line 15 of your code file when copying the previous response!
 
-To fix `Unexpected end of file`, replace the entire contents of your **`src/components/ChatCard.jsx`** file with this exact complete version:
+Here is the exact code for **`ChatCard.jsx`**. 
+
+Clear out `src/components/ChatCard.jsx` completely, make sure no conversational text gets copied, and paste this:
 
 ```jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
