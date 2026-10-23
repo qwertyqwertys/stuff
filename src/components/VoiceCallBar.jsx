@@ -76,20 +76,16 @@ export default function VoiceCallBar({
         remoteStreamsRef.current[targetUserId] = stream;
       }
 
-      // Check if we already have a track of this kind in the stream
       const existingTrack = event.track.kind === 'video' 
         ? stream.getVideoTracks()[0] 
         : stream.getAudioTracks()[0];
 
       if (!existingTrack) {
-        // If no track exists yet, add it safely
         stream.addTrack(event.track);
       } else if (existingTrack.id !== event.track.id) {
-        // If it's a brand new track replacement, swap it cleanly
         stream.removeTrack(existingTrack);
         stream.addTrack(event.track);
       }
-      // If it's the exact same track, we do nothing — keeping it perfectly stable!
 
       if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
     };
@@ -242,47 +238,39 @@ export default function VoiceCallBar({
 
   const toggleVideo = async () => {
     try {
-      const nextVideoState = !isVideoOn;
       let videoTrack = localStreamRef.current?.getVideoTracks()[0];
 
-      if (nextVideoState) {
-        if (!videoTrack) {
-          // First time turning on camera: acquire track and add to peer connections
-          const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-          videoTrack = videoStream.getVideoTracks()[0];
+      if (!videoTrack) {
+        // First time initialization: get user media once and attach to all peer connections safely
+        const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoTrack = videoStream.getVideoTracks()[0];
 
-          if (localStreamRef.current) {
-            localStreamRef.current.addTrack(videoTrack);
-          } else {
-            localStreamRef.current = videoStream;
-          }
-
-          for (const [targetUserId, pc] of Object.entries(peerConnectionsRef.current)) {
-            pc.addTrack(videoTrack, localStreamRef.current);
-            await createAndSendOffer(targetUserId);
-          }
+        if (localStreamRef.current) {
+          localStreamRef.current.addTrack(videoTrack);
         } else {
-          // Track already exists: just enable it (turns hardware light back on instantly)
-          videoTrack.enabled = true;
+          localStreamRef.current = videoStream;
         }
 
+        for (const [targetUserId, pc] of Object.entries(peerConnectionsRef.current)) {
+          pc.addTrack(videoTrack, localStreamRef.current);
+          await createAndSendOffer(targetUserId);
+        }
+        videoTrack.enabled = true;
         setIsVideoOn(true);
       } else {
-        if (videoTrack) {
-          // Just disable the track (turns hardware light off, stream remains intact!)
-          videoTrack.enabled = false;
-        }
-        setIsVideoOn(false);
+        // Subsequent toggles: just flip track enabled state cleanly without renegotiation offers
+        videoTrack.enabled = !isVideoOn;
+        setIsVideoOn(videoTrack.enabled);
       }
 
       channelRef.current?.send({
         type: 'broadcast',
         event: 'signal',
-        payload: { senderId: myUserId, type: 'camera-status', isVideoOn: nextVideoState },
+        payload: { senderId: myUserId, type: 'camera-status', isVideoOn: videoTrack.enabled },
       });
 
       if (onStreamUpdate && localStreamRef.current) {
-        onStreamUpdate(localStreamRef.current);
+        onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
       }
     } catch (err) {
       console.error('Toggle video error:', err);
