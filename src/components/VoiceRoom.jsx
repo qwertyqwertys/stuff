@@ -190,8 +190,8 @@ export default function VoiceRoom({
     };
 
     const channel = supabase.channel('voiceroom_capy-global-voice-room', {
-  config: { presence: { key: sessionKey } }
-});
+      config: { presence: { key: sessionKey } }
+    });
 
     roomChannelRef.current = channel;
 
@@ -229,7 +229,7 @@ export default function VoiceRoom({
     }
   }, [displayName, avatarUrl, isMuted, isCameraOn, isConnected]);
 
-  // De-duplicate participants based on localUserId or remote user id so self only appears once
+  // Stable participant mapping and merging to prevent tiles from dropping or disappearing on state syncs
   const sortedParticipants = useMemo(() => {
     const map = new Map();
     
@@ -245,7 +245,7 @@ export default function VoiceRoom({
     };
     map.set(localUserId, selfParticipant);
 
-    // 2. Iterate through incoming presence participants from Supabase
+    // 2. Iterate through incoming presence participants from Supabase and merge safely in-place
     participants.forEach((p) => {
       const pId = p.id || p.sessionKey;
       if (!pId) return;
@@ -254,7 +254,10 @@ export default function VoiceRoom({
         return; 
       }
 
-      if (!map.has(pId)) {
+      if (map.has(pId)) {
+        const existing = map.get(pId);
+        map.set(pId, { ...existing, ...p });
+      } else {
         map.set(pId, p);
       }
     });
