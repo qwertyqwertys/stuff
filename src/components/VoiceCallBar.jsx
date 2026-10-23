@@ -236,7 +236,7 @@ export default function VoiceCallBar({
     }
   };
 
- const toggleVideo = async () => {
+const toggleVideo = async () => {
     try {
       let videoTrack = localStreamRef.current?.getVideoTracks()[0];
 
@@ -273,8 +273,9 @@ export default function VoiceCallBar({
         payload: { senderId: myUserId, type: 'camera-status', isVideoOn: activeVideoState },
       });
 
+      // Pass the exact same persistent stream reference without wrapping it in a new MediaStream
       if (onStreamUpdate && localStreamRef.current) {
-        onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
+        onStreamUpdate(localStreamRef.current);
       }
     } catch (err) {
       console.error('Toggle video error:', err);
