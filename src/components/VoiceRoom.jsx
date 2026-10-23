@@ -15,6 +15,9 @@ export const RTC_CONFIG = {
   ]
 };
 
+// Use a static global room ID across the entire component & signaling bar
+const GLOBAL_ROOM_ID = 'capy-global-voice-room';
+
 export default function VoiceRoom({ 
   currentUser, 
   user,
@@ -25,13 +28,6 @@ export default function VoiceRoom({
   onLeaveRoom 
 }) {
   const handleLeave = onLeave || onLeaveRoom;
-
-  // Standardize the room ID slug from the channelName prop to ensure consistency across devices
-  const ROOM_SLUG = useMemo(() => {
-    return (channelName || 'global-voice-room')
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '_');
-  }, [channelName]);
 
   const [localUserId] = useState(() => {
     const u = currentUser || user;
@@ -83,6 +79,12 @@ export default function VoiceRoom({
 
   const roomChannelRef = useRef(null);
   const trackPayloadRef = useRef({});
+  const localStreamRef = useRef(null);
+
+  // Keep localStreamRef in sync whenever localStream changes
+  useEffect(() => {
+    localStreamRef.current = localStream;
+  }, [localStream]);
 
   // Sync state whenever local stream changes
   const handleStreamUpdate = (stream) => {
@@ -96,14 +98,6 @@ export default function VoiceRoom({
       setIsCameraOn(false);
     }
   };
-
-  // Add a ref to hold the stream persistently without triggering re-renders
-  const localStreamRef = useRef(null);
-
-  // Keep localStreamRef in sync whenever localStream changes
-  useEffect(() => {
-    localStreamRef.current = localStream;
-  }, [localStream]);
 
   // Toggle camera smoothly by enabling/disabling the existing track
   const toggleCamera = async () => {
@@ -189,7 +183,7 @@ export default function VoiceRoom({
       }
     };
 
-    const channel = supabase.channel('voiceroom_capy-global-voice-room', {
+    const channel = supabase.channel(`voiceroom_${GLOBAL_ROOM_ID}`, {
       config: { presence: { key: sessionKey } }
     });
 
@@ -220,7 +214,7 @@ export default function VoiceRoom({
       supabase.removeChannel(channel);
       roomChannelRef.current = null;
     };
-  }, [ROOM_SLUG, sessionKey]);
+  }, [sessionKey]);
 
   // Broadcast presence updates when camera/mute toggles
   useEffect(() => {
@@ -341,7 +335,7 @@ export default function VoiceRoom({
       {/* Controls Bar */}
       <div className="w-full flex justify-center pb-4">
         <VoiceCallBar 
-          roomId={ROOM_SLUG} 
+          roomId={GLOBAL_ROOM_ID} 
           myUserId={localUserId}
           myUsername={displayName} 
           userAvatar={avatarUrl}
