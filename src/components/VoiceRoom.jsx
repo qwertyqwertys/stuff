@@ -187,9 +187,9 @@ export default function VoiceRoom({
       }
     };
 
-    const channel = supabase.channel(`voiceroom_${ROOM_SLUG}`, {
-      config: { presence: { key: sessionKey } }
-    });
+    const channel = supabase.channel('voiceroom_capy-global-voice-room', {
+  config: { presence: { key: sessionKey } }
+});
 
     roomChannelRef.current = channel;
 
