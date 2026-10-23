@@ -236,12 +236,12 @@ export default function VoiceCallBar({
     }
   };
 
-  const toggleVideo = async () => {
+ const toggleVideo = async () => {
     try {
       let videoTrack = localStreamRef.current?.getVideoTracks()[0];
 
       if (!videoTrack) {
-        // First time initialization: get user media once and attach to all peer connections safely
+        // First time initialization: request camera media stream
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         videoTrack = videoStream.getVideoTracks()[0];
 
@@ -255,18 +255,22 @@ export default function VoiceCallBar({
           pc.addTrack(videoTrack, localStreamRef.current);
           await createAndSendOffer(targetUserId);
         }
+        
         videoTrack.enabled = true;
         setIsVideoOn(true);
       } else {
-        // Subsequent toggles: just flip track enabled state cleanly without renegotiation offers
-        videoTrack.enabled = !isVideoOn;
-        setIsVideoOn(videoTrack.enabled);
+        // Toggle the existing track enabled state
+        const nextState = !videoTrack.enabled;
+        videoTrack.enabled = nextState;
+        setIsVideoOn(nextState);
       }
+
+      const activeVideoState = videoTrack.enabled;
 
       channelRef.current?.send({
         type: 'broadcast',
         event: 'signal',
-        payload: { senderId: myUserId, type: 'camera-status', isVideoOn: videoTrack.enabled },
+        payload: { senderId: myUserId, type: 'camera-status', isVideoOn: activeVideoState },
       });
 
       if (onStreamUpdate && localStreamRef.current) {
