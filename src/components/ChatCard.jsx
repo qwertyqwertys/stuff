@@ -118,133 +118,6 @@ export function ChatCard({
   }, []);
 
   const syncUserStatsToDatabase = useCallback(async () => {
-    const currentName = username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');The error is happening because text from the previous message (`You accidentally pasted conversational prose text...`) got embedded directly inside line 11 of your `ChatCard.jsx` file!
-
-Additionally, near the bottom of the file in the JSX rendering (`ProfileAvatar`, `ChatPrivacyModal`, and `FriendViewModal`), string literals were accidentally wrapped in double quotes instead of standard JSX braces `{}`.
-
-Here is the clean, error-free version of **`src/components/ChatCard.jsx`**. Clear out your entire `ChatCard.jsx` file and replace it completely with this code:
-
-```jsx
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, RefreshCcw, Pencil, Check, X, Headphones } from 'lucide-react'; 
-import { supabase } from '../supabaseClient';
-import { ChatPrivacyModal } from './ChatPrivacyModal';
-import { FriendViewModal } from './FriendViewModal';
-import { ProfileAvatar } from './SettingsModal';
-
-function formatTimestamp(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  return date.toLocaleString('en-US', {
-    month: 'numeric',
-    day: 'numeric',
-    year: '2-digit',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
-}
-
-function DefaultAvatar() {
-  return (
-    <div className="w-8 h-8 rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center flex-shrink-0 overflow-hidden">
-      <svg className="w-5 h-5 text-[#22d3ee]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="9" />
-        <circle cx="12" cy="9" r="3" />
-        <path d="M6.5 17.5c1.2-2 3.3-3 5.5-3s4.3 1 5.5 3" />
-      </svg>
-    </div>
-  );
-}
-
-const getPersistentId = () => {
-  let id = localStorage.getItem('capy-uid');
-  if (!id) {
-    id = 'user_' + Math.random().toString(36).substring(2, 11);
-    localStorage.setItem('capy-uid', id);
-  }
-  return id;
-};
-
-const getStoredAvatar = () => {
-  return localStorage.getItem('capy-pfp') || 
-         localStorage.getItem('capy-avatar') || 
-         localStorage.getItem('user-avatar') || 
-         '';
-};
-
-function generateFriendCode(name, pfp, favs, times, achievements) {
-  try {
-    const payload = {
-      n: name || 'User',
-      p: pfp || '',
-      f: Array.isArray(favs) ? favs : [],
-      t: times || {},
-      a: Array.isArray(achievements) ? achievements : []
-    };
-    const jsonStr = JSON.stringify(payload);
-    return btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) =>
-      String.fromCharCode('0x' + p1)
-    ));
-  } catch (e) {
-    return '';
-  }
-}
-
-export function ChatCard({ 
-  isLightMode, 
-  gamesData = [], 
-  ownPfp, 
-  myAchievements = [], 
-  userFavs = [], 
-  userTimes = {},
-  isInVoice = false,
-  onToggleVoice,
-  displayName
-}) {
-  const [username, setUsername] = useState(() => {
-    return displayName || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || 'CapyUser';
-  });
-
-  const [isJoined, setIsJoined] = useState(true);
-  const [messages, setMessages] = useState([]);
-  const [text, setText] = useState('');
-  const [showPrivacy, setShowPrivacy] = useState(false);
-  const [selectedUserProfile, setSelectedUserProfile] = useState(null);
-  const [editingId, setEditingId] = useState(null);
-  const [editText, setEditText] = useState('');
-
-  const messagesEndRef = useRef(null);
-  const myId = getPersistentId();
-
-  useEffect(() => {
-    if (displayName) {
-      setUsername(displayName);
-    }
-  }, [displayName]);
-
-  useEffect(() => {
-    const handleNameUpdate = () => {
-      const freshName = localStorage.getItem('capy-display-name') || localStorage.getItem('username') || localStorage.getItem('capy-username');
-      if (freshName) {
-        setUsername(freshName);
-      }
-    };
-
-    window.addEventListener('capy-username-updated', handleNameUpdate);
-    return () => window.removeEventListener('capy-username-updated', handleNameUpdate);
-  }, []);
-
-  const fetchMessages = useCallback(async () => {
-    const { data } = await supabase
-      .from('messages')
-      .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times')
-      .order('created_at', { ascending: true })
-      .limit(30);
-    if (data) setMessages(data);
-  }, []);
-
-  const syncUserStatsToDatabase = useCallback(async () => {
     const currentName = username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
     if (!currentName) return;
 
@@ -384,7 +257,7 @@ export function ChatCard({
     const liveAchievements = m.achievements || [];
     const liveTimes = m.times || {};
 
-    const isValidImg = (url) => url && typeof url === 'string' && !url.includes('[i.imgur.com/7gK1QvK.png](https://i.imgur.com/7gK1QvK.png)') && url.trim() !== '';
+    const isValidImg = (url) => url && typeof url === 'string' && !url.includes('i.imgur.com/7gK1QvK.png') && url.trim() !== '';
 
     const livePfp = isValidImg(m.avatar_url) 
       ? m.avatar_url 
@@ -497,7 +370,7 @@ export function ChatCard({
                       className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none flex-shrink-0"
                     >
                       <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                        <ProfileAvatar effectUrl="{effectUrlToUse}" frameUrl="{frameUrlToUse}" pfpUrl="{avatarUrlToUse}" size="w-8 h-8"/>
+                        <ProfileAvatar effectUrl={effectUrlToUse} frameUrl={frameUrlToUse} pfpUrl={avatarUrlToUse} size="w-8 h-8"/>
                       </div>
                     </button>
 
@@ -597,10 +470,16 @@ export function ChatCard({
         </button>
       </div>
 
-      <ChatPrivacyModal isOpen="{showPrivacy}" onClose="{()"> setShowPrivacy(false)} />
+      <ChatPrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
 
       {selectedUserProfile && (
-        <FriendViewModal (ownPfp : ? friend="{selectedUserProfile.friend}" gamesData="{gamesData}" getStoredAvatar()) isOwnProfile="{selectedUserProfile.isOwnProfile}" myAchievements="{myAchievements}" onClose="{()" ownPfp="{selectedUserProfile.isOwnProfile" selectedUserProfile.friend?.decoded?.p} ||> setSelectedUserProfile(null)}
+        <FriendViewModal 
+          friend={selectedUserProfile.friend} 
+          gamesData={gamesData} 
+          isOwnProfile={selectedUserProfile.isOwnProfile} 
+          myAchievements={myAchievements} 
+          ownPfp={selectedUserProfile.isOwnProfile ? (ownPfp || getStoredAvatar()) : selectedUserProfile.friend?.decoded?.p}
+          onClose={() => setSelectedUserProfile(null)}
         />
       )}
     </div>
