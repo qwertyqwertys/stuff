@@ -93,12 +93,14 @@ export function ChatCard({
   userFavs = [], 
   userTimes = {},
   isInVoice = false,
-  onToggleVoice
+  onToggleVoice,
+  displayName // Accept displayName prop from App.jsx
 }) {
   const [username, setUsername] = useState(() => {
-    return localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name') || '';
+    return displayName || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || 'CapyUser';
   });
-  const [isJoined, setIsJoined] = useState(!!username);
+
+  const [isJoined, setIsJoined] = useState(true);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [showPrivacy, setShowPrivacy] = useState(false);
@@ -109,7 +111,27 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Fast fetch including frame_url and effect_url columns
+  // Sync prop changes instantly
+  useEffect(() => {
+    if (displayName) {
+      setUsername(displayName);
+    }
+  }, [displayName]);
+
+  // Listen for local browser updates when name changes in SettingsModal
+  useEffect(() => {
+    const handleNameUpdate = () => {
+      const freshName = localStorage.getItem('capy-display-name') || localStorage.getItem('username') || localStorage.getItem('capy-username');
+      if (freshName) {
+        setUsername(freshName);
+      }
+    };
+
+    window.addEventListener('capy-username-updated', handleNameUpdate);
+    return () => window.removeEventListener('capy-username-updated', handleNameUpdate);
+  }, []);
+
+  // Fetch messages from Supabase
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
       .from('messages')
@@ -120,7 +142,7 @@ export function ChatCard({
   }, []);
 
   const syncUserStatsToDatabase = useCallback(async () => {
-    const currentName = username || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
+    const currentName = username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
     if (!currentName) return;
 
     const currentAvatar = ownPfp || getStoredAvatar();
@@ -154,7 +176,6 @@ export function ChatCard({
   useEffect(() => {
     fetchMessages();
 
-    // Subscribe to realtime changes efficiently
     const channel = supabase
       .channel('realtime-messages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, 
@@ -185,6 +206,8 @@ export function ChatCard({
 
     localStorage.setItem('capy-username', newName);
     localStorage.setItem('capy-display-name', newName);
+    localStorage.setItem('username', newName);
+    window.dispatchEvent(new Event('capy-username-updated'));
     setUsername(newName);
     setIsJoined(true);
 
@@ -349,165 +372,50 @@ export function ChatCard({
               }`}
             />
           </div>
-          <button type="submit" className="w-full py-3 bg-[var(--theme)] text-black font-bold text-[10px] rounded-xl hover:scale-[1.02] active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--theme)]">
-            {username ? "Update Name" : "AUTHORIZE ACCESS"}
-          </button>
-        </form>
-      ) : (
-        <div className="flex flex-col h-full gap-3 overflow-hidden">
-          <div className={`flex-1 overflow-y-auto rounded-xl p-3 text-[11px] font-sans space-y-3 ${isLightMode ? 'bg-black/5' : 'bg-black/45'}`}>
-            {messages.length === 0 ? (
-              <div className="text-zinc-400 italic text-[10px] font-mono text-center py-4">Waiting for Messages...</div>
-            ) : (
-              messages.map((m, i) => {
-                const isOwner = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
-                const isEditingThis = editingId === m.id;
+          <button type="submit" className="w-full py-3 bg-[var(--theme)] text-black font-bold text-[10px] rounded-xl hover:scale-[1.02] active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-I ran into a temporary hiccup processing the response due to the length of the code block in the message, but everything is totally fine!
 
-                const avatarUrlToUse = m.avatar_url || (isOwner ? (ownPfp || getStoredAvatar()) : '');
-                const frameUrlToUse = m.frame_url || (isOwner ? (localStorage.getItem('capy-selected-frame') || '') : '');
-                const effectUrlToUse = m.effect_url || (isOwner ? (localStorage.getItem('capy-selected-effect') || '') : '');
+To update your **`ChatCard.jsx`**, you just need to make sure it handles the top-level `displayName` prop and listens for the local custom event (`capy-username-updated`) we added to `App.jsx`. 
 
-                return (
-                  <div key={m.id || i} className="group/msg flex items-start gap-2 text-left relative py-1">
-                    <button 
-                      onClick={() => handleOpenProfile(m)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none flex-shrink-0"
-                      title={`View ${m.username}'s profile`}
-                    >
-                      <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                        <ProfileAvatar 
-                          pfpUrl={avatarUrlToUse} 
-                          frameUrl={frameUrlToUse} 
-                          effectUrl={effectUrlToUse} 
-                          size="w-8 h-8" 
-                        />
-                      </div>
-                    </button>
+Here are the specific lines to adjust inside your `ChatCard.jsx`:
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => handleOpenProfile(m)}
-                            className="text-[var(--theme)] font-bold text-xs hover:underline cursor-pointer focus:outline-none"
-                          >
-                            {m.username}
-                          </button>
-                          <span className="text-[9px] text-zinc-400 font-sans">
-                            {formatTimestamp(m.created_at)}
-                          </span>
-                        </div>
+---
 
-                        {isOwner && !isEditingThis && (
-                          <button
-                            onClick={() => {
-                              setEditingId(m.id);
-                              setEditText(m.content);
-                            }}
-                            className="opacity-0 group-hover/msg:opacity-100 p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white transition-all"
-                            title="Edit message"
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
+### Step 1: Update the Component Props and State
+Find where your `ChatCard` function starts and update the prop list and `username` state:
 
-                      {isEditingThis ? (
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSaveEdit(m.id);
-                              if (e.key === 'Escape') setEditingId(null);
-                            }}
-                            className={`flex-1 text-xs p-1.5 rounded-lg border outline-none ${
-                              isLightMode 
-                                ? 'bg-white border-black/20 text-black' 
-                                : 'bg-white/10 border-white/20 text-white focus:border-[var(--theme)]'
-                            }`}
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => handleSaveEdit(m.id)}
-                            className="p-1.5 rounded-lg bg-[var(--theme)] text-black font-bold hover:opacity-90"
-                            title="Save"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="p-1.5 rounded-lg bg-white/10 text-zinc-300 hover:bg-white/20"
-                            title="Cancel"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <p className={`mt-0.5 text-xs break-words leading-relaxed ${isLightMode ? 'text-black' : 'text-zinc-100'}`}>
-                          {m.content}
-                          {m.is_edited && (
-                            <span className="text-[10px] text-zinc-500 font-normal ml-1 select-none">
-                              (edited)
-                            </span>
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-          
-          <div className="relative flex items-center">
-            <input 
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Message..."
-              className={`w-full text-xs p-2.5 pr-10 rounded-lg border outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] ${
-                isLightMode ? 'bg-black/5 border-black/10 text-black placeholder:text-zinc-500' : 'bg-white/5 border-white/10 text-zinc-100 placeholder:text-zinc-400 focus:border-[var(--theme)]'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={handleSend}
-              aria-label="Send message"
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-white/10 rounded-md transition-all cursor-pointer text-[var(--theme)] flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)]"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
+```jsx
+export function ChatCard({ 
+  isLightMode, 
+  gamesData = [], 
+  ownPfp, 
+  myAchievements = [], 
+  userFavs = [], 
+  userTimes = {},
+  isInVoice = false,
+  onToggleVoice,
+  displayName // 1. Add displayName to props
+}) {
+  // 2. Sync local username with the prop or localStorage
+  const [username, setUsername] = useState(() => {
+    return displayName || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || '';
+  });
 
-      <div className="text-center mt-1">
-        <button 
-          type="button"
-          onClick={() => setShowPrivacy(true)}
-          className="text-[9px] text-zinc-400 hover:text-zinc-200 underline tracking-wide transition-colors uppercase font-mono outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme)] rounded px-1"
-        >
-          Privacy & Data Notice
-        </button>
-      </div>
+  // 3. Keep username updated if the prop changes
+  useEffect(() => {
+    if (displayName) {
+      setUsername(displayName);
+    }
+  }, [displayName]);
 
-      <ChatPrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+  // 4. Listen for the local browser event when settings update
+  useEffect(() => {
+    const handleNameUpdate = () => {
+      const freshName = localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
+      if (freshName) {
+        setUsername(freshName);
+      }
+    };
 
-      {selectedUserProfile && (
-        <FriendViewModal
-          friend={selectedUserProfile.friend}
-          isOwnProfile={selectedUserProfile.isOwnProfile}
-          gamesData={gamesData}
-          ownPfp={selectedUserProfile.isOwnProfile ? (ownPfp || getStoredAvatar()) : selectedUserProfile.friend?.decoded?.p}
-          myAchievements={myAchievements}
-          onClose={() => setSelectedUserProfile(null)}
-        />
-      )}
-    </div>
-  );
-}
-
-export default ChatCard;
+    window.addEventListener('capy-username-updated', handleNameUpdate);
+    return () => window.removeEventListener('capy-username-updated', handleNameUpdate);
+  }, []);
