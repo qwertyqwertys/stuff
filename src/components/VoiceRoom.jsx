@@ -97,20 +97,22 @@ export default function VoiceRoom({
     }
   };
 
-  // Toggle camera with locked hardware constraints to prevent screen flickering
+  // Add a ref to hold the stream persistently without triggering re-renders
+  const localStreamRef = useRef(null);
+
+  // Keep localStreamRef in sync whenever localStream changes
+  useEffect(() => {
+    localStreamRef.current = localStream;
+  }, [localStream]);
+
+  // Toggle camera smoothly by enabling/disabling the existing track
   const toggleCamera = async () => {
-    if (localStream && localStream.getVideoTracks().length > 0) {
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (isCameraOn) {
-        videoTrack.enabled = false;
-        setIsCameraOn(false);
-      } else {
-        videoTrack.enabled = true;
-        setIsCameraOn(true);
-      }
+    if (localStreamRef.current && localStreamRef.current.getVideoTracks().length > 0) {
+      const videoTrack = localStreamRef.current.getVideoTracks()[0];
+      videoTrack.enabled = !videoTrack.enabled;
+      setIsCameraOn(videoTrack.enabled);
     } else {
       try {
-        // Explicitly set frame rate and resolution bounds to lock GPU composition
         const cameraStream = await navigator.mediaDevices.getUserMedia({ 
           video: {
             width: { ideal: 1280, max: 1920 },
@@ -120,9 +122,9 @@ export default function VoiceRoom({
         });
         const videoTrack = cameraStream.getVideoTracks()[0];
         
-        if (localStream) {
-          localStream.addTrack(videoTrack);
-          setLocalStream(new MediaStream(localStream.getTracks()));
+        if (localStreamRef.current) {
+          localStreamRef.current.addTrack(videoTrack);
+          setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
         } else {
           setLocalStream(cameraStream);
         }
