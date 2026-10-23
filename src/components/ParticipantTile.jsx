@@ -21,7 +21,9 @@ export default function ParticipantTile({ participant, user, stream, currentUser
     ? (audioTrack ? !audioTrack.enabled : Boolean(p.isMuted))
     : Boolean(p.isMuted);
 
-  const showVideo = Boolean(videoTrack && videoTrack.enabled && !videoTrack.muted && videoTrack.readyState === 'live');
+  // Require both the tracking state (p.isCameraOn) and an active live video track to display video
+  const cameraActiveState = p.isCameraOn !== undefined ? p.isCameraOn : true;
+  const showVideo = Boolean(cameraActiveState && videoTrack && videoTrack.enabled && !videoTrack.muted && videoTrack.readyState === 'live');
 
   // Keep video stream attached permanently without resetting
   useEffect(() => {
