@@ -530,6 +530,13 @@
     "url": "/stores/games-html/yohoho.io.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimg.poki-cdn.com%2Fcdn-cgi%2Fimage%2Fquality%3D78%2Cwidth%3D1200%2Cheight%3D1200%2Cfit%3Dcover%2Cf%3Dpng%2F9b373b5219cd66a82389d81d7cda8e23.jpeg&f=1&nofb=1&ipt=425c84834ca2402310f63638893ec83e586c642cebbb7dcbbf36eff34d308d8a&ipo=images",
     "category": "Io"
+  },
+  {
+    "id": "bank-robbery",
+    "title": "Bank Robbery",
+    "url": "/stores/games-html/bank-robbery.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.miniplay.io%2Fcover%2Fbank-robbery.jpg&f=1&nofb=1&ipt=1080c413758d24c909f8aef4c3261f260062295d9b2977efe32e6ae1b76204f1&ipo=images",
+    "category": "Action"
   }
 ]
 
