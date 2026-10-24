@@ -307,7 +307,10 @@ export default function VoiceRoom({
       >
         {sortedParticipants.map((participant) => {
           const isSelf = participant.id === localUserId || participant.sessionKey === sessionKey;
-          const remoteCamStatus = remoteCameraStatuses[participant.id];
+          
+          const remoteCamStatus = remoteCameraStatuses[participant.id] !== undefined 
+            ? remoteCameraStatuses[participant.id] 
+            : remoteCameraStatuses[participant.sessionKey];
           
           const participantData = isSelf 
             ? { 
@@ -321,7 +324,7 @@ export default function VoiceRoom({
               } 
             : {
                 ...participant,
-                isCameraOn: remoteCamStatus !== undefined ? remoteCamStatus : participant.isCameraOn
+                isCameraOn: remoteCamStatus !== undefined ? remoteCamStatus : (participant.isCameraOn || false)
               };
 
           return (
