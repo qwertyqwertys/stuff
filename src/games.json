@@ -287,6 +287,41 @@
     "category": "Platformer"
   },
   {
+    "id": "vex-7",
+    "title": "Vex 7",
+    "url": "/stores/games-html/vex-7.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fsnowrider3d.com%2Fdata%2Fimage%2Fvex-7.jpg&f=1&nofb=1&ipt=ddca8212369dc98f33884b155c100d59c2958f65e6460c2dd63cfac84c7e63c5&ipo=images",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-8",
+    "title": "Vex 8",
+    "url": "/stores/games-html/vex-8.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimgs2.dab3games.com%2Fvex-8-game-ft16.png&f=1&nofb=1&ipt=c4afa6ab6b5a895827c2782f2470d69371e533ef41e45ade340c3196ff98fedc&ipo=images",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-challenges",
+    "title": "Vex Challenges",
+    "url": "/stores/games-html/vex-challenges.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.coolmathgames.com%2Fsites%2Fdefault%2Ffiles%2Fstyles%2Fmobile_game_image%2Fpublic%2FVex-Challenges_OG-logo.jpg.webp%3Fitok%3DYu8G_1pM&f=1&nofb=1&ipt=758e2b3a55d473c7ef871d78a5495f7f46b21cd030d08b357606ff7a31fff60b&ipo=images",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-x3m",
+    "title": "Vex X3M",
+    "url": "/stores/games-html/vex-x3m.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimgs2.dab3games.com%2Fvex-x3m-1373484.png&f=1&nofb=1&ipt=fd09b2def57f729591092493306aca26be14b4c93799c4f2c82f25c71d5526b3&ipo=images",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-x3m-2",
+    "title": "Vex X3M 2",
+    "url": "/stores/games-html/vex-x3m-2.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.y9freegames.com%2Fwp-content%2Fuploads%2Fthumbs%2Fcustom%2FV%2FVex-X3M-2.jpg&f=1&nofb=1&ipt=7ea8875feca213851265154407a71a1fa2740a02509238c21a0bfed284f00532&ipo=images",
+    "category": "Platformer"
+  },
+  {
     "id": "crossy-road",
     "title": "Crossy Road",
     "url": "/stores/games-html/crossy-road.html",
