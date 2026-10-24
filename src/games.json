@@ -698,6 +698,13 @@
     "url": "/stores/games-html/candy-crush.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fget.cobra-games.com%2Fcandy-crush-saga.png&f=1&nofb=1&ipt=218c47fc0747b679e15e4d7b56719f8b2f7eaf4895cceaa69eac7dd1785e67ff&ipo=images",
     "category": "Puzzle"
+  },
+  {
+    "id": "fortzone-battle-royale",
+    "title": "Fortzone Battle Royale",
+    "url": "/stores/games-html/fortzone-battle-royale.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.gamenora.com%2Fupload%2Fgames%2Fthumbnails%2FFortzone%2520Battle%2520Royale.webp&f=1&nofb=1&ipt=d0935686f3061f411ae5102a773325da76618772f5220df919bbd4109219f45f&ipo=images",
+    "category": "Action"
   }
 ]
     
