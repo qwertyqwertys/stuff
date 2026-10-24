@@ -537,6 +537,13 @@
     "url": "/stores/games-html/bank-robbery.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.miniplay.io%2Fcover%2Fbank-robbery.jpg&f=1&nofb=1&ipt=1080c413758d24c909f8aef4c3261f260062295d9b2977efe32e6ae1b76204f1&ipo=images",
     "category": "Action"
+  },
+  {
+    "id": "bank-robbery-2",
+    "title": "Bank Robbery 2",
+    "url": "/stores/games-html/bank-robbery-2.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fw8.snokido.com%2Fimg%2Flarge%2Fbank-robbery-2.jpg&f=1&nofb=1&ipt=4025cf92fac18b7c2fa02290d38adacdb1c07a83c748cda7ea61803e0795d162&ipo=images",
+    "category": "Action"
   }
 ]
 
