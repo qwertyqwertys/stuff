@@ -250,7 +250,6 @@ export default function VoiceRoom({
 
       if (map.has(pId)) {
         const existing = map.get(pId);
-        // Merge updates, ensuring camera status and properties update without dropping the key
         map.set(pId, { ...existing, ...p });
       } else {
         map.set(pId, p);
@@ -262,7 +261,8 @@ export default function VoiceRoom({
       if (remoteId && !map.has(remoteId)) {
         map.set(remoteId, {
           id: remoteId,
-          name: 'Participant',
+          name: remoteCameraStatuses[`name_${remoteId}`] || 'Participant',
+          avatar: remoteCameraStatuses[`avatar_${remoteId}`] || '',
           isCameraOn: remoteCameraStatuses[remoteId] !== undefined ? remoteCameraStatuses[remoteId] : false
         });
       }
@@ -312,6 +312,9 @@ export default function VoiceRoom({
             ? remoteCameraStatuses[participant.id] 
             : remoteCameraStatuses[participant.sessionKey];
           
+          const syncedName = remoteCameraStatuses[`name_${participant.id}`] || remoteCameraStatuses[`name_${participant.sessionKey}`];
+          const syncedAvatar = remoteCameraStatuses[`avatar_${participant.id}`] || remoteCameraStatuses[`avatar_${participant.sessionKey}`];
+
           const participantData = isSelf 
             ? { 
                 ...participant, 
@@ -324,6 +327,8 @@ export default function VoiceRoom({
               } 
             : {
                 ...participant,
+                name: syncedName || participant.name || 'Participant',
+                avatar: syncedAvatar || participant.avatar,
                 isCameraOn: remoteCamStatus !== undefined ? remoteCamStatus : (participant.isCameraOn || false)
               };
 
