@@ -768,6 +768,13 @@
     "url": "/stores/games-html/elastic-man.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimgs2.dab3games.com%2Felastic-man-game-2.png&f=1&nofb=1&ipt=62ff61aaeb1c7014d28a636d04c1f4df47396539b440b4de320e808bef32889f&ipo=images",
     "category": "Casual"
+  },
+  {
+    "id": "drift-hunters",
+    "title": "Drift Hunters",
+    "url": "/stores/games-html/drift-hunters.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fw8.snokido.com%2Fimg%2Flarge%2Fdrift-hunters.jpg%3F080124&f=1&nofb=1&ipt=85865f8c4688963652833bb6d1181165cb478bc8d2f79b1fffbf9c10f8727670&ipo=images",
+    "category": "Driving"
   }
 ]
 
