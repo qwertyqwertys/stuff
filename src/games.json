@@ -782,6 +782,20 @@
     "url": "/stores/games-html/gladihoppers.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Flokvy.com%2Fwp-content%2Fuploads%2F2025%2F08%2FGladihoppers-300x300.webp&f=1&nofb=1&ipt=79ad01ae5b5fbeadd18615a37c469edccde79061164c24862b65f9d66097d675&ipo=images",
     "category": "Action"
+  },
+  {
+    "id": "survival-race",
+    "title": "Survival Race",
+    "url": "/stores/games-html/survival-race.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fmoto-x3m.io%2Fdata%2Fimage%2Fgame%2Fsurvival-race.png&f=1&nofb=1&ipt=f4485f6be8787734ec693a5376f67c325b6c0b0344ba87c5d76c65da265aa3d7&ipo=images",
+    "category": "Driving"
+  },
+  {
+    "id": "speed-stars",
+    "title": "Speed Stars",
+    "url": "/stores/games-html/speed-stars.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%2Fid%2FOIP.vAtT0K6GDtH5D0K84wT4xwHaHa%3Fr%3D0%26pid%3DApi&f=1&ipt=ce32639f251748a6eb8a5d8041e56d36aea6c4830171b029b3806940fe7bf46a&ipo=images",
+    "category": "Sports"
   }
 ]
 
