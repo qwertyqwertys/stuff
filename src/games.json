@@ -761,6 +761,13 @@
     "url": "/stores/games-html/crazy-kitty-3d.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fphrazle.io%2Fupload%2Fimgs%2Fcrazy-kitty-3d.html.jpg&f=1&nofb=1&ipt=73057842f6832d667822023c7e9bc4d5462f634350f40a690b0488258be1acfb&ipo=images",
     "category": "Arcade"
+  },
+  {
+    "id": "elastic-man",
+    "title": "Elastic Man",
+    "url": "/stores/games-html/elastic-man.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimgs2.dab3games.com%2Felastic-man-game-2.png&f=1&nofb=1&ipt=62ff61aaeb1c7014d28a636d04c1f4df47396539b440b4de320e808bef32889f&ipo=images",
+    "category": "Casual"
   }
 ]
 
