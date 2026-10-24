@@ -364,6 +364,13 @@
     "category": "Platformer"
   },
   {
+    "id": "achievement-unlocked-3",
+    "title": "Achievement Unlocked 3",
+    "url": "/stores/games-html/achievement-unlocked-3.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.gamekb.com%2Fthumbs_v2%2F01131%2F1131245-kongregate-achievement-unlocked-3.jpg&f=1&nofb=1&ipt=4d3b3ba478fab2cb422a438e70c1fb312b5cff8ad477f701a5583ab5af1c8b76&ipo=images",
+    "category": "Platformer"
+  },
+  {
     "id": "solitaire",
     "title": "Solitaire",
     "url": "https://bind.strongson.com/games/solitaire/index.html",
