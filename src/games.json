@@ -740,6 +740,27 @@
     "url": "/stores/games-html/jelly-restaurant.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fslice-master.io%2Fdata%2Fimage%2Fgame%2Fjelly-restaurant%2Fjelly-restaurant.jpg&f=1&nofb=1&ipt=b635a70ad59afa740ef4a99c0b36fbb1f8a44334cc2efb4e07ca388ba69bbc32&ipo=images",
     "category": "Casual"
+  },
+  {
+    "id": "crazy-cattle-3d",
+    "title": "Crazy Cattle 3D",
+    "url": "/stores/games-html/crazy-cattle-3d.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcrazycattle3dgithub.io%2Fdata%2Fimage%2Fcrazy-cattle-3d-online.png&f=1&nofb=1&ipt=1632f51e7292aa8e276f960a2b4f29d419b2ac39794f7424e24215fb209d216c&ipo=images",
+    "category": "Arcade"
+  },
+  {
+    "id": "crazy-chicken-3d",
+    "title": "Crazy Chicken 3D",
+    "url": "/stores/games-html/crazy-chicken-3d.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fbrainrotclicker.io%2Fdata%2Fimage%2Fcrazy-chicken-3d.jpeg&f=1&nofb=1&ipt=e75d59bad84d8d9547fd27762b81e9deaf87d22f5c72d091cb159fe4e2632fed&ipo=images",
+    "category": "Arcade"
+  },
+  {
+    "id": "crazy-kitty-3d",
+    "title": "Crazy Kitty 3D",
+    "url": "/stores/games-html/crazy-kitty-3d.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fphrazle.io%2Fupload%2Fimgs%2Fcrazy-kitty-3d.html.jpg&f=1&nofb=1&ipt=73057842f6832d667822023c7e9bc4d5462f634350f40a690b0488258be1acfb&ipo=images",
+    "category": "Arcade"
   }
 ]
 
