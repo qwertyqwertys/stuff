@@ -136,7 +136,7 @@ export default function VoiceCallBar({
       channel
         .on('broadcast', { event: 'signal' }, async ({ payload }) => {
           if (!payload || payload.senderId === myUserId) return;
-          const { senderId, targetId, type, offer, answer, candidate, isVideoOn: remoteVideoState, name: remoteName, avatar: remoteAvatar } = payload;
+          const { senderId, targetId, type, offer, answer, candidate, isVideoOn: remoteVideoState, name: remoteName, avatar: remoteAvatar, isMuted: remoteMuteState } = payload;
           if (targetId && targetId !== myUserId) return;
 
           try {
@@ -158,6 +158,11 @@ export default function VoiceCallBar({
               if (remoteName) remoteCameraStatusesRef.current[`name_${senderId}`] = remoteName;
               if (remoteAvatar) remoteCameraStatusesRef.current[`avatar_${senderId}`] = remoteAvatar;
 
+              if (onRemoteCameraStatusUpdate) {
+                onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
+              }
+            } else if (type === 'mute-status') {
+              remoteCameraStatusesRef.current[`mute_${senderId}`] = remoteMuteState;
               if (onRemoteCameraStatusUpdate) {
                 onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
               }
@@ -195,6 +200,7 @@ export default function VoiceCallBar({
               delete remoteCameraStatusesRef.current[senderId];
               delete remoteCameraStatusesRef.current[`name_${senderId}`];
               delete remoteCameraStatusesRef.current[`avatar_${senderId}`];
+              delete remoteCameraStatusesRef.current[`mute_${senderId}`];
               if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
               if (onRemoteCameraStatusUpdate) onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
             }
@@ -217,7 +223,7 @@ export default function VoiceCallBar({
 
     return () => {
       isMounted = false;
-      isSetupDoneRef.current = false; // Reset setup flag so re-entry works cleanly!
+      isSetupDoneRef.current = false;
 
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -246,6 +252,18 @@ export default function VoiceCallBar({
         const nextMuteState = !isMuted;
         audioTracks[0].enabled = !nextMuteState;
         setIsMuted(nextMuteState);
+
+        // Broadcast mute status immediately to remote participants
+        channelRef.current?.send({
+          type: 'broadcast',
+          event: 'signal',
+          payload: { 
+            senderId: myUserId, 
+            type: 'mute-status', 
+            isMuted: nextMuteState 
+          },
+        });
+
         if (onStreamUpdate) onStreamUpdate(localStreamRef.current);
       }
     }
