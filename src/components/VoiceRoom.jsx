@@ -216,7 +216,7 @@ export default function VoiceRoom({
     };
   }, [sessionKey]);
 
-  // Broadcast presence updates when camera/mute toggles
+  // Broadcast presence updates instantly when camera/mute toggles
   useEffect(() => {
     if (roomChannelRef.current && isConnected) {
       roomChannelRef.current.track(trackPayloadRef.current);
@@ -329,6 +329,7 @@ export default function VoiceRoom({
                 ...participant,
                 name: syncedName || participant.name || 'Participant',
                 avatar: syncedAvatar || participant.avatar,
+                isMuted: participant.isMuted !== undefined ? participant.isMuted : false,
                 isCameraOn: remoteCamStatus !== undefined ? remoteCamStatus : (participant.isCameraOn || false)
               };
 
