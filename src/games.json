@@ -251,6 +251,13 @@
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fhapagames.com%2Fwp-content%2Fuploads%2F2024%2F05%2Fvex-2-unblocked.jpg&f=1&nofb=1&ipt=f5bcd27f3890220cb7b35ac75e478af871e417338bdd59a83404e5a68013b5de&ipo=images",
     "category": "Platformer"
   },
+  { 
+    "id": "vex-3",
+    "title": "Vex 3",
+    "url": "/stores/games-html/vex-3.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ffreegames.io%2Ffiles%2Fimages%2Fvex_512.jpg&f=1&nofb=1&ipt=dc134e12317838cd96fe1b77e9dfbb16f982424feab9721cadaf017b92b7cb42&ipo=images",
+    "category": "Platformer"
+  },
   {
     "id": "crossy-road",
     "title": "Crossy Road",
