@@ -211,8 +211,11 @@ export default function VoiceRoom({
 
     return () => {
       if (heartbeatTimer) clearInterval(heartbeatTimer);
-      supabase.removeChannel(channel);
-      roomChannelRef.current = null;
+      if (roomChannelRef.current) {
+        roomChannelRef.current.untrack().catch(() => {});
+        supabase.removeChannel(roomChannelRef.current);
+        roomChannelRef.current = null;
+      }
     };
   }, [sessionKey]);
 
