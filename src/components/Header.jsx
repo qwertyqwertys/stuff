@@ -42,8 +42,8 @@ export function Header({
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isLightMode || isHeaderLight ? 'text-zinc-600' : 'text-zinc-400'}`} />
             <input 
               type="text" 
-              placeholder="Search games..." 
-              aria-label="Search games" 
+              placeholder="Search..." 
+              aria-label="Search" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
               className={`w-full ${containerBgClass} ${textColorClass} ${placeholderClass} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors`} 
