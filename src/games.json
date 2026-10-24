@@ -258,6 +258,34 @@
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ffreegames.io%2Ffiles%2Fimages%2Fvex_512.jpg&f=1&nofb=1&ipt=dc134e12317838cd96fe1b77e9dfbb16f982424feab9721cadaf017b92b7cb42&ipo=images",
     "category": "Platformer"
   },
+  { 
+    "id": "vex-3-xmas",
+    "title": "Vex 3 XMAS",
+    "url": "/stores/games-html/vex-3-xmas.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.keygames.com%2F6%2F117106%2F103113%2F672x448%2Fvex-3-xmas.webp&f=1&nofb=1&ipt=641cb2d96624d0a89f3e98e980381d0339a48a39fbdc55c4afad0a85a6e381b8&ipo=images",
+    "category": "Platformer"
+  },
+  {
+    "id": "vex-4",
+    "title": "Vex 4",
+    "url": "/stores/games-html/vex-4.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%2Fid%2FOIP.YsYHjEDCLatGJuMGzWH7NgAAAA%3Fr%3D0%26pid%3DApi&f=1&ipt=7af2e88c465b8bf29f443711aa9acef29abb3ba106f260e5895dbc751ee56c92&ipo=images",
+    "category": "Platformer"
+  },
+  { 
+    "id": "vex-5",
+    "title": "Vex 5",
+    "url": "/stores/games-html/vex-5.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.keygames.com%2F0%2F114160%2F99829%2F672x448%2Fvex-5.webp&f=1&nofb=1&ipt=a5c0751a4eba66d9a0f7596ab1f835006035be5d6d17a09809fb7bd736b41861&ipo=images",
+    "category": "Platformer"
+  },
+  { 
+    "id": "vex-6",
+    "title": "Vex 6",
+    "url": "/stores/games-html/vex-6.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimgs2.dab3games.com%2Fvex-6-game-big.png&f=1&nofb=1&ipt=45503104ab3277899ebe97ff2484da6b4328b0318861e1619b9caffec4c83a12&ipo=images",
+    "category": "Platformer"
+  },
   {
     "id": "crossy-road",
     "title": "Crossy Road",
