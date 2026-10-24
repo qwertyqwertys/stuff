@@ -217,8 +217,11 @@ export default function VoiceCallBar({
 
     return () => {
       isMounted = false;
+      isSetupDoneRef.current = false; // Reset setup flag so re-entry works cleanly!
+
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => track.stop());
+        localStreamRef.current = null;
       }
       if (channelRef.current) {
         channelRef.current.send({
@@ -227,9 +230,12 @@ export default function VoiceCallBar({
           payload: { senderId: myUserId, type: 'leave-voice' },
         });
         supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
       Object.values(peerConnectionsRef.current).forEach((pc) => pc.close());
       peerConnectionsRef.current = {};
+      remoteStreamsRef.current = {};
+      remoteCameraStatusesRef.current = {};
     };
   }, [roomId, myUserId, myUsername, userAvatar]);
 
