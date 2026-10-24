@@ -684,8 +684,23 @@
     "url": "/stores/games-html/cuphead.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fgmedia.playstation.com%2Fis%2Fimage%2FSIEPDC%2Fcuphead-keyart-01-en-15dec21%3F%24native%24&f=1&nofb=1&ipt=7cc069bf59c12f31729d823c6ee7dc2fd665e3727d1d820ed47a7b52de0ca5ae&ipo=images",
     "category": "Platformer"
+  },
+  {
+    "id": "buildnow-gg",
+    "title": "BuildNow GG",
+    "url": "/stores/games-html/buildnow-gg.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fplay-lh.googleusercontent.com%2FMdtXwEOt43tY6GV3-IHAwhdmoW-jY4B1rqvA0m1Yj89Bj4et8FfWGL3cCt_lkDvWbWk&f=1&nofb=1&ipt=af026cb716a6dd2d377ee06bf010ca2bde860e04e1ef6420c65450f688921b75&ipo=images",
+    "category": "Action"
+  },
+  {
+    "id": "candy-crush",
+    "title": "Candy Crush (fake)",
+    "url": "/stores/games-html/candy-crush.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fget.cobra-games.com%2Fcandy-crush-saga.png&f=1&nofb=1&ipt=218c47fc0747b679e15e4d7b56719f8b2f7eaf4895cceaa69eac7dd1785e67ff&ipo=images",
+    "category": "Puzzle"
   }
 ]
+    
 
 
 
