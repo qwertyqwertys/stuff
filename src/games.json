@@ -565,6 +565,27 @@
     "url": "/stores/games-html/bank-robbery-3.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.seeles.ai%2Fmedia%2Fprod%2Fgame%2Fcover%2F642_08144e16-b57f-481f-8555-befbdf6406d0.jpg&f=1&nofb=1&ipt=8af18868a07e9446b33b02e72f005f6373b905e17c5d160e219de5d4091dc87b&ipo=images",
     "category": "Action"
+  },
+  {
+    "id": "ultrakill",
+    "title": "ULTRAKILL",
+    "url": "/stores/games-html/ultrakill.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2F1games.io%2Fdata%2Fimage%2Fgame%2Fultrakill%2Fultrakill.png&f=1&nofb=1&ipt=15df57217099fa35fae22f1bae5451d7ccd9c02d14087c8756d2089a64ed99fe&ipo=images",
+    "category": "Action"
+  },
+  {
+    "id": "tunnel-rush",
+    "title": "Tunnel Rush",
+    "url": "/stores/games-html/tunnel-rush.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2F2games.io%2Fdata%2Fimage%2Fgame%2Ftunnel-rush%2Ftunnel-rush.png&f=1&nofb=1&ipt=9f0361394d4af09963f12cce11ef6496d1fd0520323ecc75c1f1944da6bcd285&ipo=images",
+    "category": "Casual"
+  },
+  {
+    "id": "blade-ball",
+    "title": "Blade Ball (fake)",
+    "url": "/stores/games-html/blade-ball.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwatchdocumentaries.com%2Fwp-content%2Fuploads%2Fblade-ball-game.jpg&f=1&nofb=1&ipt=e9a037560927e348d5559099843d61c91286bff881b62c71df0fdbfbd4f18feb&ipo=images",
+    "category": "Skill"
   }
 ]
 
