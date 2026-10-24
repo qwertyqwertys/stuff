@@ -227,7 +227,7 @@ export default function VoiceRoom({
   const sortedParticipants = useMemo(() => {
     const map = new Map();
     
-    // 1. Inject the local user entry explicitly using localUserId as the unique primary key
+    // 1. Inject the local user entry explicitly
     const selfParticipant = {
       id: localUserId,
       sessionKey,
@@ -250,9 +250,21 @@ export default function VoiceRoom({
 
       if (map.has(pId)) {
         const existing = map.get(pId);
+        // Merge updates, ensuring camera status and properties update without dropping the key
         map.set(pId, { ...existing, ...p });
       } else {
         map.set(pId, p);
+      }
+    });
+
+    // 3. Ensure any remote user that has an active remote stream or remote camera status is NEVER dropped
+    Object.keys(remoteStreams).forEach((remoteId) => {
+      if (remoteId && !map.has(remoteId)) {
+        map.set(remoteId, {
+          id: remoteId,
+          name: 'Participant',
+          isCameraOn: remoteCameraStatuses[remoteId] !== undefined ? remoteCameraStatuses[remoteId] : false
+        });
       }
     });
 
@@ -263,7 +275,7 @@ export default function VoiceRoom({
       if (bIsSelf) return 1;
       return 0;
     });
-  }, [participants, sessionKey, localUserId, displayName, avatarUrl, isMuted, isCameraOn]);
+  }, [participants, remoteStreams, remoteCameraStatuses, sessionKey, localUserId, displayName, avatarUrl, isMuted, isCameraOn]);
 
   return (
     <div className="voice-room relative w-full h-full min-h-screen flex flex-col justify-between p-6 bg-[#0b0e14] text-white">
