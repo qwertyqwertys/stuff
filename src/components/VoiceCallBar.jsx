@@ -136,21 +136,28 @@ export default function VoiceCallBar({
       channel
         .on('broadcast', { event: 'signal' }, async ({ payload }) => {
           if (!payload || payload.senderId === myUserId) return;
-          const { senderId, targetId, type, offer, answer, candidate, isVideoOn: remoteVideoState } = payload;
+          const { senderId, targetId, type, offer, answer, candidate, isVideoOn: remoteVideoState, name: remoteName, avatar: remoteAvatar } = payload;
           if (targetId && targetId !== myUserId) return;
 
           try {
             if (type === 'join-voice') {
               setConnectedUsers((prev) => Array.from(new Set([...prev, senderId])));
+              
+              if (remoteName) remoteCameraStatusesRef.current[`name_${senderId}`] = remoteName;
+              if (remoteAvatar) remoteCameraStatusesRef.current[`avatar_${senderId}`] = remoteAvatar;
+
               await createAndSendOffer(senderId);
               
               channel.send({
                 type: 'broadcast',
                 event: 'signal',
-                payload: { senderId: myUserId, type: 'camera-status', isVideoOn },
+                payload: { senderId: myUserId, type: 'camera-status', isVideoOn, name: myUsername, avatar: userAvatar },
               });
             } else if (type === 'camera-status') {
               remoteCameraStatusesRef.current[senderId] = remoteVideoState;
+              if (remoteName) remoteCameraStatusesRef.current[`name_${senderId}`] = remoteName;
+              if (remoteAvatar) remoteCameraStatusesRef.current[`avatar_${senderId}`] = remoteAvatar;
+
               if (onRemoteCameraStatusUpdate) {
                 onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
               }
@@ -186,6 +193,8 @@ export default function VoiceCallBar({
               delete peerConnectionsRef.current[senderId];
               delete remoteStreamsRef.current[senderId];
               delete remoteCameraStatusesRef.current[senderId];
+              delete remoteCameraStatusesRef.current[`name_${senderId}`];
+              delete remoteCameraStatusesRef.current[`avatar_${senderId}`];
               if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
               if (onRemoteCameraStatusUpdate) onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
             }
@@ -198,7 +207,7 @@ export default function VoiceCallBar({
             channel.send({
               type: 'broadcast',
               event: 'signal',
-              payload: { senderId: myUserId, type: 'join-voice' },
+              payload: { senderId: myUserId, type: 'join-voice', name: myUsername, avatar: userAvatar },
             });
           }
         });
@@ -222,7 +231,7 @@ export default function VoiceCallBar({
       Object.values(peerConnectionsRef.current).forEach((pc) => pc.close());
       peerConnectionsRef.current = {};
     };
-  }, [roomId, myUserId]);
+  }, [roomId, myUserId, myUsername, userAvatar]);
 
   const toggleMute = () => {
     if (localStreamRef.current) {
@@ -236,12 +245,11 @@ export default function VoiceCallBar({
     }
   };
 
-const toggleVideo = async () => {
+  const toggleVideo = async () => {
     try {
       let videoTrack = localStreamRef.current?.getVideoTracks()[0];
 
       if (!videoTrack) {
-        // First time initialization: request camera media stream
         const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
         videoTrack = videoStream.getVideoTracks()[0];
 
@@ -259,7 +267,6 @@ const toggleVideo = async () => {
         videoTrack.enabled = true;
         setIsVideoOn(true);
       } else {
-        // Toggle the existing track enabled state
         const nextState = !videoTrack.enabled;
         videoTrack.enabled = nextState;
         setIsVideoOn(nextState);
@@ -270,10 +277,9 @@ const toggleVideo = async () => {
       channelRef.current?.send({
         type: 'broadcast',
         event: 'signal',
-        payload: { senderId: myUserId, type: 'camera-status', isVideoOn: activeVideoState },
+        payload: { senderId: myUserId, type: 'camera-status', isVideoOn: activeVideoState, name: myUsername, avatar: userAvatar },
       });
 
-      // Pass the exact same persistent stream reference without wrapping it in a new MediaStream
       if (onStreamUpdate && localStreamRef.current) {
         onStreamUpdate(localStreamRef.current);
       }
