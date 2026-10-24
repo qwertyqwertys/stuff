@@ -356,6 +356,13 @@
     "thumbnail": "https://assets-prd.ignimgs.com/2021/12/14/minecraft-1639513933156.jpg?crop=1%3A1%2Csmart&format=jpg&auto=webp&quality=80",
     "category": "Creative"
   },
+  { 
+    "id": "minecraft-chromium-client",
+    "title": "Minecraft Chromium Client (fake)",
+    "url": "https://chromiumclient.com/Chromium-Client-vanilla.html#mods=&launcher=https%3A%2F%2Fchromiumclient.com%2F&perf=0&c1=%232e7bff&c2=%238a3dff&cx=30&cy=41&iname=My%20instance",
+    "thumbnail": "https://assets-prd.ignimgs.com/2021/12/14/minecraft-1639513933156.jpg?crop=1%3A1%2Csmart&format=jpg&auto=webp&quality=80",
+    "category": "Creative"
+  },
   {
     "id": "doodle-jump",
     "title": "Doodle Jump",
