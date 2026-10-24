@@ -72,7 +72,6 @@ const formatPlaytime = (seconds) => {
 
 // Main App Layout & Dashboard Component
 function MainDashboard() {
-  const [supplier, setSupplier] = useState(() => localStorage.getItem('capy-supplier') || 'Default');
   const [playtimes, setPlaytimes] = useState(() => JSON.parse(localStorage.getItem('capy-playtimes') || '{}'));
   const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('capy-favs') || '[]'));
   const [removedGames, setRemovedGames] = useState(() => JSON.parse(localStorage.getItem('capy-removed-games') || '[]'));
@@ -152,21 +151,10 @@ function MainDashboard() {
     return [...main, ...gn];
   }, []);
 
-  const supplierGames = useMemo(() => {
-    let sourceData = Array.isArray(gamesDataRaw) ? gamesDataRaw : [];
-    if (supplier === 'GN Math') {
-      sourceData = Array.isArray(gnMathDataRaw) ? gnMathDataRaw : [];
-    } else if (supplier === 'Truffled') {
-      sourceData = [];
-    } else {
-      sourceData = sourceData.filter(g => !(g?.urls?.['GN Math'] || g?.urls?.['GN-MATH'] || g?.urls?.['Truffled']));
-    }
-    return sourceData;
-  }, [supplier]);
-
   const activeGames = useMemo(() => {
-    return supplierGames.filter(g => g && !removedGames.includes(String(g.id)));
-  }, [supplierGames, removedGames]);
+    const sourceData = Array.isArray(gamesDataRaw) ? gamesDataRaw : [];
+    return sourceData.filter(g => g && !removedGames.includes(String(g.id)));
+  }, [removedGames]);
 
   const audioRef = useRef(null);
   const categoryScrollRef = useRef(null);
@@ -233,8 +221,7 @@ function MainDashboard() {
 
   const [recentlyPlayed, setRecentlyPlayed] = useState(() => {
     try {
-      const recentKey = `capy-recent-${supplier}`;
-      const saved = localStorage.getItem(recentKey);
+      const saved = localStorage.getItem('capy-recent');
       return (saved && saved !== "undefined") ? JSON.parse(saved) : [];
     } catch (e) {
       console.error("History error:", e);
@@ -264,30 +251,24 @@ function MainDashboard() {
     return `${uniqueId}-${Math.random().toString(36).substring(2, 9)}`;
   }, [uniqueId]);
 
-  const getLaunchUrl = (game, currentSupplier) => {
-    if (currentSupplier !== 'Default' && game.urls && game.urls[currentSupplier]) {
-      return game.urls[currentSupplier];
-    }
+  const getLaunchUrl = (game) => {
     return game.url || `/stores/${game.id}.html`;
   };
 
   const handleClearRecent = () => {
-    const recentKey = `capy-recent-${supplier}`;
-    localStorage.removeItem(recentKey);
+    localStorage.removeItem('capy-recent');
     setRecentlyPlayed([]);
     setNotification("Recently Played history cleared!");
   };
 
   const launchContent = (item) => {
-    const finalUrl = getLaunchUrl(item, supplier); 
+    const finalUrl = getLaunchUrl(item); 
     if (!finalUrl) return;
 
-    const recentKey = `capy-recent-${supplier}`; 
-    
     setRecentlyPlayed(prev => {
       const filtered = prev.filter(id => id !== item.id);
       const updated = [item.id, ...filtered].slice(0, 4);
-      localStorage.setItem(recentKey, JSON.stringify(updated));
+      localStorage.setItem('capy-recent', JSON.stringify(updated));
       return updated;
     });
 
@@ -845,13 +826,10 @@ function MainDashboard() {
       })
       .filter(g => {
         if (!g) return false;
-        if (removedGames.includes(String(g.id))) return false;
-        if (supplier === 'GN Math') return true;
-        if (supplier === 'Truffled') return false;
-        return !(g.urls?.['GN Math'] || g.urls?.['GN-MATH'] || g.urls?.['Truffled']);
+        return !removedGames.includes(String(g.id));
       })
       .slice(0, 4); 
-  }, [recentlyPlayed, gamesDataRaw, gnMathDataRaw, supplier, removedGames]);
+  }, [recentlyPlayed, gamesDataRaw, gnMathDataRaw, removedGames]);
 
   const currentFriend = useMemo(() => {
     if (!selectedFriendId || selectedFriendId === 'me') return null;
@@ -860,20 +838,6 @@ function MainDashboard() {
     const decoded = safeDecode(selectedFriendId);
     return decoded ? { ...friend, decoded } : friend;
   }, [friends, selectedFriendId]);
-
-  useEffect(() => {
-    setRecentlyPlayed([]); 
-    const recentKey = `capy-recent-${supplier}`;
-    const saved = localStorage.getItem(recentKey);
-    try {
-      if (saved && saved !== "undefined") {
-        setRecentlyPlayed(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.error("History error:", e);
-      setRecentlyPlayed([]);
-    }
-  }, [supplier]);
 
   return (
     <div
@@ -965,8 +929,6 @@ function MainDashboard() {
           <Header 
             searchQuery={searchQuery} 
             setSearchQuery={setSearchQuery}
-            supplier={supplier}       
-            setSupplier={setSupplier} 
             time={time}
             battery={battery}
             profilePic={profilePic}
