@@ -8,7 +8,6 @@ export function Header({
   onRandomGame, DEFAULT_ICON,
   onViewProfile,
   isLightMode,
-  supplier, setSupplier,
   isChatOpen, setIsChatOpen,
   setShowSoundboard,
   isSoundboardOpen,
@@ -69,26 +68,6 @@ export function Header({
           </button>
 
           <div className="flex items-center gap-2">
-            <div className="relative flex items-center">
-              <select 
-                value={supplier} 
-                aria-label="Select game source provider"
-                onChange={(e) => {
-                  setSupplier(e.target.value);
-                  localStorage.setItem('capy-supplier', e.target.value);
-                }}
-                className={`text-xs font-bold uppercase py-2.5 pl-4 pr-10 rounded-xl border transition-all outline-none cursor-pointer appearance-none ${containerBgClass} ${textColorClass}`}
-                style={{ fontFamily: "'Baloo 2', cursive" }}
-              >
-                <option value="Default" className="bg-[#09090b] text-white">Capybara Science</option>
-                <option value="GN Math" className="bg-[#09090b] text-white">gn-math</option>
-                <option value="Truffled" className="bg-[#09090b] text-white">Truffled</option>
-              </select>
-              <div className="absolute right-3 pointer-events-none flex items-center justify-center">
-                <span style={{ fontSize: '10px', color: 'var(--theme)', opacity: 0.9 }}>▼</span>
-              </div>
-            </div>
-
             <button 
               onClick={() => setIsChatOpen(prev => !prev)} 
               className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
