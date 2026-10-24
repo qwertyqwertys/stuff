@@ -266,6 +266,7 @@ export default function VoiceRoom({
           id: remoteId,
           name: remoteCameraStatuses[`name_${remoteId}`] || 'Participant',
           avatar: remoteCameraStatuses[`avatar_${remoteId}`] || '',
+          isMuted: remoteCameraStatuses[`mute_${remoteId}`] !== undefined ? remoteCameraStatuses[`mute_${remoteId}`] : false,
           isCameraOn: remoteCameraStatuses[remoteId] !== undefined ? remoteCameraStatuses[remoteId] : false
         });
       }
@@ -317,6 +318,12 @@ export default function VoiceRoom({
           
           const syncedName = remoteCameraStatuses[`name_${participant.id}`] || remoteCameraStatuses[`name_${participant.sessionKey}`];
           const syncedAvatar = remoteCameraStatuses[`avatar_${participant.id}`] || remoteCameraStatuses[`avatar_${participant.sessionKey}`];
+          
+          const syncedMute = remoteCameraStatuses[`mute_${participant.id}`] !== undefined 
+            ? remoteCameraStatuses[`mute_${participant.id}`] 
+            : (remoteCameraStatuses[`mute_${participant.sessionKey}`] !== undefined 
+                ? remoteCameraStatuses[`mute_${participant.sessionKey}`] 
+                : (participant.isMuted !== undefined ? participant.isMuted : false));
 
           const participantData = isSelf 
             ? { 
@@ -332,7 +339,7 @@ export default function VoiceRoom({
                 ...participant,
                 name: syncedName || participant.name || 'Participant',
                 avatar: syncedAvatar || participant.avatar,
-                isMuted: participant.isMuted !== undefined ? participant.isMuted : false,
+                isMuted: syncedMute,
                 isCameraOn: remoteCamStatus !== undefined ? remoteCamStatus : (participant.isCameraOn || false)
               };
 
