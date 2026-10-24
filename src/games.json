@@ -593,6 +593,13 @@
     "url": "/stores/games-html/smash-karts.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fgogamego.io%2Fwp-content%2Fuploads%2Fthumbs%2Fcustom%2FS%2Fsmash-karts-unblocked.webp&f=1&nofb=1&ipt=57e0e2d932e3632f581986d30a84d033e1dc0f5377a236dc0ce61168e146c7d8&ipo=images",
     "category": "Driving"
+  },
+  {
+    "id": "cuphead",
+    "title": "Cuphead",
+    "url": "/stores/games-html/cuphead.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fgmedia.playstation.com%2Fis%2Fimage%2FSIEPDC%2Fcuphead-keyart-01-en-15dec21%3F%24native%24&f=1&nofb=1&ipt=7cc069bf59c12f31729d823c6ee7dc2fd665e3727d1d820ed47a7b52de0ca5ae&ipo=images",
+    "category": "Platformer"
   }
 ]
 
