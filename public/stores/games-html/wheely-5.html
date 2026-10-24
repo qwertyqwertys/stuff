@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wheely 5</title>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-L7856P3VNT"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-L7856P3VNT');
+    </script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 100vw !important;
+        height: 100vh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        background-color: #000 !important;
+      }
+      #player-container {
+        width: 100vw !important;
+        height: 100vh !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+      }
+      ruffle-player, ruffle-embed, canvas {
+        width: 100% !important;
+        height: 100% !important;
+        display: block !important;
+      }
+    </style>
+</head>
+<body>
+    <div id="player-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle@0.2.0-nightly.2025.10.2/ruffle.min.js"></script>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const ruffle = window.RufflePlayer.newest();
+        const player = ruffle.createPlayer();
+        const container = document.getElementById("player-container");
+        
+        container.appendChild(player);
+
+        player.style.width = "100%";
+        player.style.height = "100%";
+
+        player.load({
+          url: "https://cdn.jsdelivr.net/gh/Buss-beep-3/Omygayyatta@13ed2774c457b7e829d7d73be624e3c3a6f2b884/games/flash/swf/wheely-5.swf",
+          autoplay: "on",
+          unmuteOverlay: "hidden",
+          letterbox: "off",
+          scale: "exactFit",
+          forceScale: true,
+          forceAlign: true,
+          quality: "high"
+        });
+      });
+    </script>
+</body>
+</html>
