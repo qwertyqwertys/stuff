@@ -609,6 +609,13 @@
     "category": "Action"
   },
   {
+    "id": "growden.io",
+    "title": "Growden.io",
+    "url": "/stores/games-html/growden.io.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimgs2.dab3games.com%2Fgrowden48.png&f=1&nofb=1&ipt=ac5c675566737727931a4534a222c183bbd59a8ac31343d85142ac2ce991ca02&ipo=images",
+    "category": "Casual"
+  },
+  {
     "id": "grow-a-garden",
     "title": "Grow a Garden (fake)",
     "url": "/stores/games-html/grow-a-garden.html",
