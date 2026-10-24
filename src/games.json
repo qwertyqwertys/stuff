@@ -357,6 +357,13 @@
     "category": "Platformer"
   },
   {
+    "id": "achievement-unlocked-2",
+    "title": "Achievement Unlocked 2",
+    "url": "/stores/games-html/achievement-unlocked-2.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fjayisgames.com%2Fimages%2Fdora_achievement2_title.jpg&f=1&nofb=1&ipt=83361c28d397e1b9a5320ba05c15ebae5a9965ce5397c14c04e3cbfc169948c7&ipo=images",
+    "category": "Platformer"
+  },
+  {
     "id": "solitaire",
     "title": "Solitaire",
     "url": "https://bind.strongson.com/games/solitaire/index.html",
