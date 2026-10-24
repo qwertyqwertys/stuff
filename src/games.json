@@ -613,7 +613,7 @@
     "title": "Growden.io",
     "url": "/stores/games-html/growden.io.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimgs2.dab3games.com%2Fgrowden48.png&f=1&nofb=1&ipt=ac5c675566737727931a4534a222c183bbd59a8ac31343d85142ac2ce991ca02&ipo=images",
-    "category": "Casual"
+    "category": "Roblox"
   },
   {
     "id": "grow-a-garden",
@@ -676,7 +676,7 @@
     "title": "Blade Ball (fake)",
     "url": "/stores/games-html/blade-ball.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwatchdocumentaries.com%2Fwp-content%2Fuploads%2Fblade-ball-game.jpg&f=1&nofb=1&ipt=e9a037560927e348d5559099843d61c91286bff881b62c71df0fdbfbd4f18feb&ipo=images",
-    "category": "Skill"
+    "category": "Roblox"
   },
   {
     "id": "smash-karts",
@@ -712,6 +712,13 @@
     "url": "/stores/games-html/fortzone-battle-royale.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.gamenora.com%2Fupload%2Fgames%2Fthumbnails%2FFortzone%2520Battle%2520Royale.webp&f=1&nofb=1&ipt=d0935686f3061f411ae5102a773325da76618772f5220df919bbd4109219f45f&ipo=images",
     "category": "Action"
+  },
+  {
+    "id": "steal-a-brainrot",
+    "title": "Steal a Brainrot (fake)",
+    "url": "/stores/games-html/steal-a-brainrot.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstaticg.sportskeeda.com%2Feditor%2F2026%2F10%2F024b0-17920427606630-1920.jpg&f=1&nofb=1&ipt=15a3e11d5475996bcca10f6f557f89e66941c1197238da6d084e36322f143233&ipo=images",
+    "category": "Roblox"
   }
 ]
     
