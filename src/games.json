@@ -1188,8 +1188,13 @@
     "url": "/stores/games-html/grand-theft-auto-3.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.gamespot.com%2Fa%2Fuploads%2Fscale_medium%2Fmig%2F0%2F6%2F0%2F7%2F2210607-box_gta3.png&f=1&nofb=1&ipt=ac37f8e191b6fe95f7a67ba3aedb2837f6dfcd01788f1df1d2800baf07d83ae0&ipo=images",
     "category": "Action"
-  }
-]
+  },
+  {
+    "id": "test",
+    "title": "test",
+    "url": "/stores/games-html/eaglercraft-26.2-u2.html",
+    "thumbnail": "https://assets-prd.ignimgs.com/2021/12/14/minecraft-1639513933156.jpg?crop=1%3A1%2Csmart&format=jpg&auto=webp&quality=80",
+    "category": "Creative"
 
     
 
