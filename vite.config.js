@@ -29,6 +29,9 @@ export default defineConfig(({mode}) => {
   return {
     base: './', 
     plugins: [react(), tailwindcss(), copyGamesFolderPlugin()],
+    build: {
+      chunkSizeWarningLimit: 1000, 
+    },
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
     },
