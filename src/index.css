@@ -1,0 +1,308 @@
+/* Baloo 2 */
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/baloo-2-v23-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/baloo-2-v23-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/baloo-2-v23-latin-800.woff2') format('woff2');
+}
+
+/* Fredoka */
+@font-face {
+  font-family: 'Fredoka';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/fredoka-v17-latin-600.woff2') format('woff2');
+}
+
+/* Inter */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/inter-v20-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/inter-v20-latin-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/inter-v20-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/inter-v20-latin-700.woff2') format('woff2');
+}
+
+/* JetBrains Mono */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-v24-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-v24-latin-500.woff2') format('woff2');
+}
+
+@import "tailwindcss";
+
+:root {
+  --bg-main: #0a0a0a;
+  --text-main: #f4f4f5; 
+  --card-bg: #18181b;   
+  --border-main: rgba(255, 255, 255, 0.1);
+  --theme: #38bdf8; 
+}
+
+.light-mode {
+  --bg-main: #ffffff !important;
+  --text-main: #18181b !important;
+  --card-bg: #f4f4f5 !important;
+  --border-main: rgba(0, 0, 0, 0.1) !important;
+  background-color: #ffffff !important;
+  color: #18181b !important;
+}
+
+.light-mode .bg-zinc-900,
+.light-mode .bg-zinc-950,
+.light-mode .bg-black {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+}
+
+.light-mode .sticky, .light-mode header, .light-mode .backdrop-blur-md {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode header input,
+.light-mode .bg-white\/5 {
+  background-color: #f4f4f5 !important;
+  color: #18181b !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode .bg-zinc-900\/50 {
+  background-color: #f4f4f5 !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode .text-white,
+.light-mode .text-zinc-100,
+.light-mode .text-zinc-200,
+.light-mode .text-zinc-300 {
+  color: #18181b !important;
+}
+
+.light-mode .text-zinc-400,
+.light-mode .text-zinc-500 {
+  color: #71717a !important; 
+}
+
+.light-mode .border-white\/5,
+.light-mode .border-white\/10,
+.light-mode .border-zinc-800 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-background: var(--bg-main);
+  --color-foreground: var(--text-main);
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    @apply antialiased transition-colors duration-300;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--theme);
+  border: 2px solid var(--bg-main);
+  @apply rounded-full transition-colors;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.2);
+}
+
+.no-scrollbar {
+  overflow-x: scroll !important;
+  overflow-y: hidden !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  height: 58px !important;
+  padding-bottom: 16px !important;
+  margin-bottom: -16px !important;
+  scrollbar-width: thin !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  height: 8px !important;
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.no-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #71717a !important; 
+  border-radius: 10px !important;
+  border: 2px solid white !important;
+}
+
+.show-vertical-bar {
+  overflow-y: scroll !important; 
+  overflow-x: hidden !important;
+  scrollbar-width: thin !important;
+  display: block !important;
+}
+
+.show-vertical-bar::-webkit-scrollbar {
+  width: 8px !important; 
+  display: block !important;
+}
+
+.show-vertical-bar::-webkit-scrollbar-track {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+}
+
+.show-vertical-bar::-webkit-scrollbar-thumb {
+  background-color: var(--theme) !important;
+  border-radius: 10px !important;
+  min-height: 40px !important; 
+  border: 2px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+.no-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme) transparent;
+}
+
+.bg-zinc-900\/40, .bg-zinc-900\/50 {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 320px;
+}
+
+.bg-zinc-900\/40, .bg-zinc-900\/50 {
+  cursor: url('https://img.icons8.com/color/28/capybara.png'), pointer !important;
+}
+
+.bg-zinc-900\/40:active, .bg-zinc-900\/50:active {
+  cursor: url('https://img.icons8.com/color/28/test-tube.png'), pointer !important;
+}
+
+/* --- STATUS BAR TEXT & SPACING OVERRIDES --- */
+
+header div[class*="justify-self-end"], 
+header .flex.items-center.justify-end {
+  gap: 1.5rem !important; 
+}
+
+header div[class*="justify-self-end"] span,
+header div[class*="justify-self-end"] p,
+header div[class*="justify-self-end"] div {
+  font-family: 'Baloo 2', cursive !important;
+  font-size: 0.95rem !important; 
+  font-weight: 600 !important; /* Matches downloaded Baloo 2 weight */
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+header .flex.items-center.gap-2 span, 
+header h1, 
+.logo-text {
+  font-family: 'Fredoka', sans-serif !important;
+  font-weight: 600 !important;
+}
+
+/* --- UI GEOMETRY: CONCENTRIC NESTED RADIUS RULES --- */
+
+.card, .game-card {
+  --R: 24px;   /* Outer Radius */
+  --p: 12px;   /* Padding */
+  --b: 1px;    /* Border Width */
+  
+  border-radius: var(--R);
+  padding: var(--p);
+  position: relative;
+  overflow: hidden;
+}
+
+.game-card button,
+.game-card input,
+.game-card .inner-box {
+  border-radius: calc(var(--R) - var(--p) - var(--b));
+}
+
+.game-card img.card-banner {
+  border-radius: 23px 23px 0 0;
+}
+
+.control-group {
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.control-group button {
+  border-radius: 4px;
+}

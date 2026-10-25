@@ -1,0 +1,489 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Send, RefreshCcw, Pencil, Check, X, Headphones } from 'lucide-react'; 
+import { supabase } from '../supabaseClient';
+import { ChatPrivacyModal } from './ChatPrivacyModal';
+import { FriendViewModal } from './FriendViewModal';
+import { ProfileAvatar } from './SettingsModal';
+
+function formatTimestamp(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  return date.toLocaleString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: '2-digit',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+}
+
+function DefaultAvatar() {
+  return (
+    <div className="w-8 h-8 rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center flex-shrink-0 overflow-hidden">
+      <svg className="w-5 h-5 text-[#22d3ee]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="9" r="3" />
+        <path d="M6.5 17.5c1.2-2 3.3-3 5.5-3s4.3 1 5.5 3" />
+      </svg>
+    </div>
+  );
+}
+
+const getPersistentId = () => {
+  let id = localStorage.getItem('capy-uid');
+  if (!id) {
+    id = 'user_' + Math.random().toString(36).substring(2, 11);
+    localStorage.setItem('capy-uid', id);
+  }
+  return id;
+};
+
+const getStoredAvatar = () => {
+  return localStorage.getItem('capy-pfp') || 
+         localStorage.getItem('capy-avatar') || 
+         localStorage.getItem('user-avatar') || 
+         '';
+};
+
+function generateFriendCode(name, pfp, favs, times, achievements) {
+  try {
+    const payload = {
+      n: name || 'User',
+      p: pfp || '',
+      f: Array.isArray(favs) ? favs : [],
+      t: times || {},
+      a: Array.isArray(achievements) ? achievements : []
+    };
+    const jsonStr = JSON.stringify(payload);
+    return btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) =>
+      String.fromCharCode('0x' + p1)
+    ));
+  } catch (e) {
+    return '';
+  }
+}
+
+export function ChatCard({ 
+  isLightMode, 
+  gamesData = [], 
+  ownPfp, 
+  myAchievements = [], 
+  userFavs = [], 
+  userTimes = {},
+  isInVoice = false,
+  onToggleVoice,
+  displayName
+}) {
+  const [username, setUsername] = useState(() => {
+    return displayName || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || 'CapyUser';
+  });
+
+  const [isJoined, setIsJoined] = useState(true);
+  const [messages, setMessages] = useState([]);
+  const [text, setText] = useState('');
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [selectedUserProfile, setSelectedUserProfile] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
+
+  const messagesEndRef = useRef(null);
+  const myId = getPersistentId();
+
+  useEffect(() => {
+    if (displayName) {
+      setUsername(displayName);
+    }
+  }, [displayName]);
+
+  useEffect(() => {
+    const handleNameUpdate = () => {
+      const freshName = localStorage.getItem('capy-display-name') || localStorage.getItem('username') || localStorage.getItem('capy-username');
+      if (freshName) {
+        setUsername(freshName);
+      }
+    };
+
+    window.addEventListener('capy-username-updated', handleNameUpdate);
+    return () => window.removeEventListener('capy-username-updated', handleNameUpdate);
+  }, []);
+
+  const fetchMessages = useCallback(async () => {
+    const { data } = await supabase
+      .from('messages')
+      .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times')
+      .order('created_at', { ascending: true })
+      .limit(30);
+    if (data) setMessages(data);
+  }, []);
+
+  const syncUserStatsToDatabase = useCallback(async () => {
+    const currentName = username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
+    if (!currentName) return;
+
+    const currentAvatar = ownPfp || getStoredAvatar();
+    const currentFrame = localStorage.getItem('capy-selected-frame') || null;
+    const currentEffect = localStorage.getItem('capy-selected-effect') || null;
+
+    const savedFavs = JSON.parse(localStorage.getItem('capy-favs') || '[]');
+    let currentFavs = (userFavs && userFavs.length > 0) ? userFavs : savedFavs;
+
+    const savedTimes = JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
+    let currentTimes = (userTimes && Object.keys(userTimes).length > 0) ? userTimes : savedTimes;
+
+    const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
+    const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+    let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
+
+    await supabase
+      .from('messages')
+      .update({ 
+        favs: currentFavs, 
+        achievements: currentAchievements, 
+        times: currentTimes,
+        avatar_url: currentAvatar || null,
+        frame_url: currentFrame,
+        effect_url: currentEffect,
+        user_id: myId
+      })
+      .ilike('username', currentName);
+  }, [myId, username, ownPfp, userFavs, userTimes, myAchievements]);
+
+  useEffect(() => {
+    fetchMessages();
+
+    const channel = supabase
+      .channel('realtime-messages')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, 
+        () => fetchMessages()
+      )
+      .subscribe();
+
+    const handlePfpUpdated = () => {
+      fetchMessages();
+    };
+
+    window.addEventListener('capy-pfp-updated', handlePfpUpdated);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
+    };
+  }, [fetchMessages]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleJoinOrUpdate = async (e) => {
+    e.preventDefault();
+    const newName = e.target.username?.value.trim() || username;
+    if (!newName) return;
+
+    localStorage.setItem('capy-username', newName);
+    localStorage.setItem('capy-display-name', newName);
+    localStorage.setItem('username', newName);
+    window.dispatchEvent(new Event('capy-username-updated'));
+    setUsername(newName);
+    setIsJoined(true);
+
+    syncUserStatsToDatabase();
+    fetchMessages();
+  };
+
+  const handleSend = async () => {
+    if (!text.trim()) return;
+    const currentAvatar = ownPfp || getStoredAvatar();
+    const currentFrame = localStorage.getItem('capy-selected-frame') || null;
+    const currentEffect = localStorage.getItem('capy-selected-effect') || null;
+
+    const currentFavs = userFavs.length > 0 ? userFavs : JSON.parse(localStorage.getItem('capy-favs') || '[]');
+    const currentTimes = Object.keys(userTimes).length > 0 ? userTimes : JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
+    const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
+    const currentAchievements = myAchievements.length > 0 ? myAchievements : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+
+    const messageText = text.trim();
+    setText(''); 
+
+    const tempMessage = {
+      id: 'temp_' + Date.now(),
+      username,
+      content: messageText,
+      user_id: myId,
+      avatar_url: currentAvatar || null,
+      frame_url: currentFrame,
+      effect_url: currentEffect,
+      created_at: new Date().toISOString(),
+      favs: currentFavs,
+      achievements: currentAchievements,
+      times: currentTimes
+    };
+    setMessages(prev => [...prev, tempMessage]);
+
+    await supabase
+      .from('messages')
+      .insert([{ 
+        username, 
+        content: messageText, 
+        user_id: myId,
+        avatar_url: currentAvatar || null,
+        frame_url: currentFrame,
+        effect_url: currentEffect,
+        favs: currentFavs,
+        achievements: currentAchievements,
+        times: currentTimes
+      }]);
+
+    fetchMessages();
+  };
+
+  const handleSaveEdit = async (id) => {
+    if (!editText.trim()) return;
+
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, content: editText.trim(), is_edited: true } : m));
+    setEditingId(null);
+    setEditText('');
+
+    await supabase
+      .from('messages')
+      .update({ content: editText.trim(), is_edited: true })
+      .eq('id', id);
+  };
+
+  const handleOpenProfile = (m) => {
+    const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
+
+    const liveFavs = m.favs || [];
+    const liveAchievements = m.achievements || [];
+    const liveTimes = m.times || {};
+
+    const isValidImg = (url) => url && typeof url === 'string' && !url.includes('i.imgur.com/7gK1QvK.png') && url.trim() !== '';
+
+    const livePfp = isValidImg(m.avatar_url) 
+      ? m.avatar_url 
+      : (isSelf ? (ownPfp || getStoredAvatar()) : '');
+
+    const liveFrame = m.frame_url || (isSelf ? (localStorage.getItem('capy-selected-frame') || '') : '');
+    const liveEffect = m.effect_url || (isSelf ? (localStorage.getItem('capy-selected-effect') || '') : '');
+
+    setSelectedUserProfile({
+      isOwnProfile: isSelf,
+      friend: {
+        name: m.username,
+        displayName: m.username,
+        favs: liveFavs,
+        f: liveFavs,
+        times: liveTimes,
+        t: liveTimes,
+        achievements: liveAchievements,
+        a: liveAchievements,
+        pfp: livePfp,
+        frameUrl: liveFrame,
+        effectUrl: liveEffect,
+        code: generateFriendCode(m.username, livePfp, liveFavs, liveTimes, liveAchievements),
+        decoded: {
+          n: m.username,
+          p: livePfp,
+          f: liveFavs,
+          a: liveAchievements,
+          t: liveTimes
+        }
+      }
+    });
+  };
+  
+  return (
+    <div className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 ${
+      isLightMode ? 'bg-white border-black/5 shadow-sm' : 'bg-[#0f0f11] border-white/5 hover:border-[var(--theme)]/50'
+    } p-5 h-full flex flex-col gap-4`}>
+      
+      <div className="flex items-center justify-between pb-1 border-b border-white/5">
+        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--theme)]">
+          Chat
+        </h3>
+        
+        <div className="flex items-center gap-2">
+          {isJoined && onToggleVoice && (
+            <button
+              type="button"
+              onClick={onToggleVoice}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border transition-all ${
+                isInVoice
+                  ? 'bg-emerald-500 text-black border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                  : 'bg-white/5 border-white/10 hover:bg-white/10 text-zinc-300'
+              }`}
+              title={isInVoice ? "Leave Voice Channel" : "Join Voice Channel"}
+            >
+              <Headphones className="w-3 h-3"/>
+              {isInVoice ? 'In Voice' : 'Join Voice'}
+            </button>
+          )}
+
+          {isJoined && (
+            <button 
+              onClick={() => setIsJoined(false)} 
+              className="text-zinc-200 hover:text-[var(--theme)] p-1 hover:bg-white/5 rounded-md transition-all outline-none"
+              title="Change Identity"
+            >
+              <RefreshCcw className="w-3.5 h-3.5"/>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!isJoined ? (
+        <form onSubmit={handleJoinOrUpdate} className="flex flex-col gap-3 my-auto">
+          <div className="space-y-1">
+            <p className="text-[11px] font-medium text-zinc-200">Change Name</p>
+            <input 
+              name="username"
+              type="text"
+              defaultValue={username}
+              placeholder="Enter Custom Handle..."
+              className={`w-full text-xs p-3 rounded-xl border outline-none ${
+                isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-zinc-100'
+              }`}
+            />
+          </div>
+          <button type="submit" className="w-full py-3 bg-[var(--theme)] text-black font-bold text-[10px] rounded-xl hover:scale-[1.02] active:scale-95 transition-all">
+            {username ? "Update Name" : "AUTHORIZE ACCESS"}
+          </button>
+        </form>
+      ) : (
+        <div className="flex flex-col h-full gap-3 overflow-hidden">
+          <div className={`flex-1 overflow-y-auto rounded-xl p-3 text-[11px] font-sans space-y-3 ${isLightMode ? 'bg-black/5' : 'bg-black/45'}`}>
+            {messages.length === 0 ? (
+              <div className="text-zinc-400 italic text-[10px] font-mono text-center py-4">Waiting for Messages...</div>
+            ) : (
+              messages.map((m, i) => {
+                const isOwner = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
+                const isEditingThis = editingId === m.id;
+
+                const avatarUrlToUse = m.avatar_url || (isOwner ? (ownPfp || getStoredAvatar()) : '');
+                const frameUrlToUse = m.frame_url || (isOwner ? (localStorage.getItem('capy-selected-frame') || '') : '');
+                const effectUrlToUse = m.effect_url || (isOwner ? (localStorage.getItem('capy-selected-effect') || '') : '');
+
+                return (
+                  <div key={m.id || i} className="group/msg flex items-start gap-2 text-left relative py-1">
+                    <button 
+                      onClick={() => handleOpenProfile(m)}
+                      className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none flex-shrink-0"
+                    >
+                      <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                        <ProfileAvatar effectUrl={effectUrlToUse} frameUrl={frameUrlToUse} pfpUrl={avatarUrlToUse} size="w-8 h-8"/>
+                      </div>
+                    </button>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            onClick={() => handleOpenProfile(m)}
+                            className="text-[var(--theme)] font-bold text-xs hover:underline cursor-pointer focus:outline-none"
+                          >
+                            {m.username}
+                          </button>
+                          <span className="text-[9px] text-zinc-400 font-sans">
+                            {formatTimestamp(m.created_at)}
+                          </span>
+                        </div>
+
+                        {isOwner && !isEditingThis && (
+                          <button
+                            onClick={() => {
+                              setEditingId(m.id);
+                              setEditText(m.content);
+                            }}
+                            className="opacity-0 group-hover/msg:opacity-100 p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white transition-all"
+                          >
+                            <Pencil className="w-3 h-3"/>
+                          </button>
+                        )}
+                      </div>
+
+                      {isEditingThis ? (
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveEdit(m.id);
+                              if (e.key === 'Escape') setEditingId(null);
+                            }}
+                            className={isLightMode ? 'bg-white border-black/20 text-black' : 'bg-white/10 border-white/20 text-white'}
+                            autoFocus
+                          />
+                          <button onClick={() => handleSaveEdit(m.id)}>
+                            <Check className="w-3.5 h-3.5"/>
+                          </button>
+                          <button onClick={() => setEditingId(null)}>
+                            <X className="w-3.5 h-3.5"/>
+                          </button>
+                        </div>
+                      ) : (
+                        <p className={`mt-0.5 text-xs break-words leading-relaxed ${isLightMode ? 'text-black' : 'text-zinc-100'}`}>
+                          {m.content}
+                          {m.is_edited && (
+                            <span className="text-[10px] text-zinc-500 font-normal ml-1 select-none">
+                              (edited)
+                            </span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          
+          <div className="relative flex items-center">
+            <input 
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Message..."
+              className={`w-full text-xs p-2.5 pr-10 rounded-lg border outline-none ${
+                isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-zinc-100'
+              }`}
+            />
+            <button
+              type="button"
+              onClick={handleSend}
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-white/10 rounded-md transition-all text-[var(--theme)]"
+            >
+              <Send className="w-4 h-4"/>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="text-center mt-1">
+        <button 
+          type="button"
+          onClick={() => setShowPrivacy(true)}
+          className="text-[9px] text-zinc-400 hover:text-zinc-200 underline tracking-wide transition-colors uppercase font-mono rounded px-1"
+        >
+          Privacy & Data Notice
+        </button>
+      </div>
+
+      <ChatPrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+
+      {selectedUserProfile && (
+        <FriendViewModal 
+          friend={selectedUserProfile.friend} 
+          gamesData={gamesData} 
+          isOwnProfile={selectedUserProfile.isOwnProfile} 
+          myAchievements={myAchievements} 
+          ownPfp={selectedUserProfile.isOwnProfile ? (ownPfp || getStoredAvatar()) : selectedUserProfile.friend?.decoded?.p}
+          onClose={() => setSelectedUserProfile(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+export default ChatCard;
