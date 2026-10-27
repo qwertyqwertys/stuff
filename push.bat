@@ -1,5 +1,7 @@
+@echo off
 git add .
-set /p msg="Enter commit message: "
-git commit -m "%msg%"
-git push
+set /p commit_msg="Enter commit message: "
+git commit -m "%commit_msg%"
+git pull --rebase origin main
+git push origin main
 pause
