@@ -70,6 +70,13 @@
     "category": "Horror"
   },
   {
+    "id": "granny-2",
+    "title": "Granny 2",
+    "url": "/stores/games-html/granny-2.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.wikia.nocookie.net%2Fuppishgames-official-granny-chapter-2%2Fimages%2F0%2F0c%2FGranny_Chapter_Two_App_Icon.png%2Frevision%2Flatest%2Fscale-to-width-down%2F1200%3Fcb%3D20240826183644&f=1&nofb=1&ipt=15f44977444ed3fe45d0dc61912628b25674467d2b6b0e56f8b14265f085b5d0&ipo=images",
+    "category": "Horror"
+  },
+  {
     "id": "snowrider-3d",
     "title": "Snow Rider 3d",
     "url": "https://bind.strongson.com/games/snowrider3D-main/index.html",
