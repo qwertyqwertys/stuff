@@ -3,7 +3,7 @@ import {
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
   Image as ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check, 
-  Sun, Moon, Play, Pause, Search, Loader2, Crop, Sparkles, Gamepad2
+  Sun, Moon, Play, Pause, Search, Loader2, Crop, Sparkles, Gamepad2, Database
 } from 'lucide-react';
 
 import * as db from '../utils/db';
@@ -410,28 +410,198 @@ function SettingsModalContent({
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  // GTA III Disclaimer setting state: true means hidden (accepted), false means active (will show)
+  // GTA III Disclaimer setting state
   const [gta3DisclaimerHidden, setGta3DisclaimerHidden] = useState(false);
+
+  // Game List state for the Data Saving dropdown synced from games.json
+  const [gamesList, setGamesList] = useState([]);
+  const [selectedGameForData, setSelectedGameForData] = useState('ALL');
 
   useEffect(() => {
     if (show) {
       setGta3DisclaimerHidden(localStorage.getItem('gta3_disclaimer_accepted') === 'true');
+      
+      // Fetch games.json for the data manager dropdown
+      fetch('games.json')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            const validGames = data.filter(game => {
+              const titleLower = (game.title || game.name || "").toLowerCase();
+              return !titleLower.includes('request') && 
+                     !titleLower.includes('report') && 
+                     !titleLower.includes('form');
+            });
+            setGamesList(validGames);
+          }
+        })
+        .catch(err => console.warn("Could not load games.json for data manager:", err));
     }
   }, [show]);
 
   const handleToggleGta3Disclaimer = () => {
     if (gta3DisclaimerHidden) {
-      // Currently hidden -> Click to Reset (so it will show again)
       localStorage.removeItem('gta3_disclaimer_accepted');
       setGta3DisclaimerHidden(false);
     } else {
-      // Currently active -> Click to Hide permanently
       localStorage.setItem('gta3_disclaimer_accepted', 'true');
       setGta3DisclaimerHidden(true);
     }
   };
 
-  // Dedicated focus ref for the display name input
+  // --- DATA SAVING FUNCTIONS ---
+  const dumpIDB = (dbName) => {
+    return new Promise((resolve) => {
+      const req = indexedDB.open(dbName);
+      req.onsuccess = (e) => {
+        const db = e.target.result;
+        const dbData = {};
+        const storeNames = Array.from(db.objectStoreNames);
+        if (storeNames.length === 0) return resolve(dbData);
+        let done = 0;
+        const tx = db.transaction(storeNames, "readonly");
+        storeNames.forEach((s) => {
+          const store = tx.objectStore(s);
+          const getReq = store.getAll();
+          getReq.onsuccess = () => {
+            dbData[s] = getReq.result;
+            done++;
+            if (done === storeNames.length) resolve(dbData);
+          };
+          getReq.onerror = () => {
+            done++;
+            if (done === storeNames.length) resolve(dbData);
+          };
+        });
+      };
+      req.onerror = () => resolve({});
+    });
+  };
+
+  const restoreIDB = (dbName, storesData) => {
+    return new Promise((resolve) => {
+      const storeNames = Object.keys(storesData);
+      if (storeNames.length === 0) return resolve();
+      const req = indexedDB.open(dbName);
+      req.onsuccess = (e) => {
+        const db = e.target.result;
+        try {
+          const tx = db.transaction(storeNames, "readwrite");
+          storeNames.forEach((s) => {
+            const store = tx.objectStore(s);
+            store.clear();
+            storesData[s].forEach((item) => store.put(item));
+          });
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        } catch (err) {
+          resolve();
+        }
+      };
+      req.onerror = () => resolve();
+    });
+  };
+
+  const handleExportGameData = async () => {
+    const saveData = {
+      game: selectedGameForData,
+      timestamp: new Date().toISOString(),
+      localStorage: {},
+      indexedDB: {}
+    };
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (selectedGameForData === "ALL" || key.toLowerCase().includes(selectedGameForData.toLowerCase())) {
+        saveData.localStorage[key] = localStorage.getItem(key);
+      }
+    }
+
+    if (window.indexedDB && indexedDB.databases) {
+      try {
+        const dbs = await indexedDB.databases();
+        for (const dbInfo of dbs) {
+          if (!dbInfo.name) continue;
+          if (selectedGameForData === "ALL" || dbInfo.name.toLowerCase().includes(selectedGameForData.toLowerCase())) {
+            saveData.indexedDB[dbInfo.name] = await dumpIDB(dbInfo.name);
+          }
+        }
+      } catch (e) {
+        console.warn("IndexedDB export error:", e);
+      }
+    }
+
+    const fileName = `${selectedGameForData.toLowerCase().replace(/[^a-z0-9]/g, "-")}-save-${new Date().toISOString().slice(0, 10)}.json`;
+    const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportGameData = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+
+        if (data.localStorage) {
+          Object.keys(data.localStorage).forEach((key) => {
+            localStorage.setItem(key, data.localStorage[key]);
+          });
+        }
+
+        if (data.indexedDB) {
+          for (const dbName of Object.keys(data.indexedDB)) {
+            await restoreIDB(dbName, data.indexedDB[dbName]);
+          }
+        }
+
+        alert("Save data imported successfully!");
+      } catch (err) {
+        alert("Error importing save file: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  };
+
+  const handleClearGameData = async () => {
+    const gameName = selectedGameForData === "ALL" ? "ALL games" : selectedGameForData;
+
+    if (!window.confirm(`Are you sure you want to clear saved data for ${gameName}?`)) return;
+
+    if (selectedGameForData === "ALL") {
+      localStorage.clear();
+      if (window.indexedDB && indexedDB.databases) {
+        const dbs = await indexedDB.databases();
+        dbs.forEach((db) => indexedDB.deleteDatabase(db.name));
+      }
+    } else {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.toLowerCase().includes(selectedGameForData.toLowerCase())) {
+          localStorage.removeItem(key);
+        }
+      });
+      if (window.indexedDB && indexedDB.databases) {
+        const dbs = await indexedDB.databases();
+        dbs.forEach((db) => {
+          if (db.name.toLowerCase().includes(selectedGameForData.toLowerCase())) {
+            indexedDB.deleteDatabase(db.name);
+          }
+        });
+      }
+    }
+
+    alert(`Data cleared for ${gameName}.`);
+  };
+
+  // Dedicated focus ref for display name
   const nameInputRef = useRef(null);
   const [localDisplayName, setLocalDisplayName] = useState(displayName);
 
@@ -457,6 +627,7 @@ function SettingsModalContent({
 
   const modalRef = useRef(null);
   const pfpInputRef = useRef(null);
+  const dataImportInputRef = useRef(null);
 
   const [cropperOpen, setCropperOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState(null);
@@ -513,7 +684,6 @@ function SettingsModalContent({
     };
   }, []);
 
-  // Keyboard navigation focus trap
   useEffect(() => {
     if (!show || cropperOpen || uploadModalOpen) return;
     const modalElement = modalRef.current;
@@ -780,6 +950,14 @@ function SettingsModalContent({
         className="hidden" 
       />
 
+      <input 
+        ref={dataImportInputRef}
+        type="file" 
+        accept=".json" 
+        onChange={handleImportGameData} 
+        className="hidden" 
+      />
+
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
         <div 
           ref={modalRef}
@@ -810,7 +988,7 @@ function SettingsModalContent({
               <Search className={`absolute left-3 top-3 w-4 h-4 ${isLightMode ? 'text-zinc-400' : 'text-zinc-500'}`} />
               <input
                 type="text"
-                placeholder="Type to search settings (e.g., theme, audio, gta)..."
+                placeholder="Type to search settings (e.g., data, theme, audio, gta)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full pl-9 pr-4 py-2.5 ${inputBg} border rounded-xl text-xs outline-none font-medium transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
@@ -827,6 +1005,83 @@ function SettingsModalContent({
             </div>
 
             <div className="space-y-6">
+              
+              {/* DATA SAVING CARD SECTION */}
+              {matchesSearch(['data', 'saving', 'export', 'import', 'clear', 'backup', 'games']) && (
+                <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0d1a18] border-[#1e3a35]'} p-5 rounded-2xl border transition-all shadow-md`}>
+                  <div>
+                    <h3 className={`text-lg font-extrabold tracking-tight ${isLightMode ? 'text-zinc-900' : 'text-white'}`}>data saving</h3>
+                    <p className={`text-[11px] font-medium ${isLightMode ? 'text-zinc-600' : 'text-[#8fa3a0]'}`}>
+                      export, import, or clear browser data saved by the site
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className={`text-[10px] uppercase font-bold tracking-wider ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>
+                      select game:
+                    </label>
+                    <select
+                      value={selectedGameForData}
+                      onChange={(e) => setSelectedGameForData(e.target.value)}
+                      className={`w-full py-2.5 px-3 rounded-xl border text-xs font-medium outline-none cursor-pointer transition-colors ${
+                        isLightMode 
+                          ? 'bg-white border-zinc-300 text-black' 
+                          : 'bg-[#142623] border-[#1e3a35] text-white hover:border-[#2e574f]'
+                      }`}
+                    >
+                      <option value="ALL">All Games (Full Backup)</option>
+                      {gamesList.map((game, idx) => {
+                        const val = game.id || game.title || game.name;
+                        const label = game.title || game.name;
+                        return (
+                          <option key={idx} value={val}>
+                            {label}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleExportGameData}
+                      className={`px-4 py-2.5 rounded-xl border text-xs font-bold uppercase transition-all shadow-sm ${
+                        isLightMode
+                          ? 'bg-zinc-100 border-zinc-300 text-zinc-900 hover:bg-zinc-200'
+                          : 'bg-[#142623] border-[#23423c] text-white hover:bg-[#1c3631]'
+                      }`}
+                    >
+                      export data
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => dataImportInputRef.current?.click()}
+                      className={`px-4 py-2.5 rounded-xl border text-xs font-bold uppercase transition-all shadow-sm ${
+                        isLightMode
+                          ? 'bg-zinc-100 border-zinc-300 text-zinc-900 hover:bg-zinc-200'
+                          : 'bg-[#142623] border-[#23423c] text-white hover:bg-[#1c3631]'
+                      }`}
+                    >
+                      import data
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleClearGameData}
+                      className={`px-4 py-2.5 rounded-xl border text-xs font-bold uppercase transition-all shadow-sm ${
+                        isLightMode
+                          ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
+                          : 'bg-[#142623] border-[#3b1818] text-[#ff6b6b] hover:bg-[#281414]'
+                      }`}
+                    >
+                      clear data
+                    </button>
+                  </div>
+                </section>
+              )}
+
               {/* PROFILE IDENTITY & SHOP */}
               {matchesSearch(['identity', 'profile', 'name', 'avatar', 'shop', 'border', 'effect', 'cropper', 'crop', 'friend', 'code']) && (
                 <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} p-4 rounded-2xl border transition-all`}>
@@ -862,7 +1117,6 @@ function SettingsModalContent({
                       </button>
                     </div>
                     
-                    {/* Focus-locked display name input field */}
                     <input 
                       ref={nameInputRef}
                       type="text" 
