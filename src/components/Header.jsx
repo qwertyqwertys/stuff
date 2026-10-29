@@ -1,5 +1,7 @@
+import React from 'react';
 import { Search, Dices, Calendar, Clock, Battery, UserCircle, Settings, X, MessageSquare, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import useChatNotifications from '../hooks/useChatNotifications'; // Adjust import path if needed
 
 export function Header({ 
   searchQuery, setSearchQuery, 
@@ -11,9 +13,30 @@ export function Header({
   isChatOpen, setIsChatOpen,
   setShowSoundboard,
   isSoundboardOpen,
-  isHeaderLight
+  isHeaderLight,
+  currentUserId,
+  activeChannel = 'global'
 }) {
   const navigate = useNavigate();
+
+  // Initialize chat notifications hook
+  const { unreadCounts, markAsRead } = useChatNotifications({ 
+    currentUserId, 
+    activeChannelId: isChatOpen ? activeChannel : null 
+  });
+
+  // Sum up total unread messages
+  const totalUnreads = Object.values(unreadCounts).reduce((acc, count) => acc + count, 0);
+
+  const handleToggleChat = () => {
+    setIsChatOpen(prev => {
+      const nextState = !prev;
+      if (nextState) {
+        markAsRead(activeChannel); // Clear badge when chat is opened
+      }
+      return nextState;
+    });
+  };
 
   const textColorClass = isLightMode || isHeaderLight ? 'text-zinc-900' : 'text-zinc-100';
   const containerBgClass = isLightMode || isHeaderLight ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10';
@@ -68,9 +91,10 @@ export function Header({
           </button>
 
           <div className="flex items-center gap-2">
+            {/* CHAT BUTTON WITH UNREAD NOTIFICATION BADGE */}
             <button 
-              onClick={() => setIsChatOpen(prev => !prev)} 
-              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
+              onClick={handleToggleChat} 
+              className={`relative p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
                 isChatOpen 
                   ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
                   : `${containerBgClass} text-[var(--theme)]`
@@ -79,6 +103,13 @@ export function Header({
               aria-label="Toggle chat sidebar"
             >
               <MessageSquare className="w-4 h-4" />
+
+              {/* Notification Badge */}
+              {!isChatOpen && totalUnreads > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-bounce shadow-md">
+                  {totalUnreads > 9 ? '9+' : totalUnreads}
+                </span>
+              )}
             </button>
 
             <button 
