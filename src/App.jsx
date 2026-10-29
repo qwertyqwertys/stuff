@@ -927,28 +927,30 @@ function MainDashboard() {
       ) : (
         <>
           <Header 
-            searchQuery={searchQuery} 
-            setSearchQuery={setSearchQuery}
-            time={time}
-            battery={battery}
-            profilePic={profilePic}
-            setShowSettings={setShowSettings}
-            DEFAULT_ICON={CAPY_LOGO}
-            theme={theme}   
-            onViewProfile={() => setSelectedFriendId('me')} 
-            onRandomGame={() => {
-              const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
-              if (playable.length > 0) {
-                launchContent(playable[Math.floor(Math.random() * playable.length)]);
-              }
-            }}
-            isChatOpen={isChatOpen}
-            setIsChatOpen={setIsChatOpen}
-            setShowSoundboard={setIsSoundboardOpen}
-            isSoundboardOpen={isSoundboardOpen}
-            isHeaderLight={isHeaderLight}
-            isLightMode={isLightMode}
-          />
+  searchQuery={searchQuery} 
+  setSearchQuery={setSearchQuery}
+  time={time}
+  battery={battery}
+  profilePic={profilePic}
+  setShowSettings={setShowSettings}
+  DEFAULT_ICON={CAPY_LOGO}
+  theme={theme} 
+  onViewProfile={() => setSelectedFriendId('me')} 
+  onRandomGame={() => {
+    const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
+    if (playable.length > 0) {
+      launchContent(playable[Math.floor(Math.random() * playable.length)]);
+    }
+  }}
+  isChatOpen={isChatOpen}
+  setIsChatOpen={setIsChatOpen}
+  setShowSoundboard={setIsSoundboardOpen}
+  isSoundboardOpen={isSoundboardOpen}
+  isHeaderLight={isHeaderLight}
+  isLightMode={isLightMode}
+  currentUserId={uniqueId}
+  activeChannel="global"
+/>
 
           <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
             <div className="max-w-7xl mx-auto relative flex items-center">
