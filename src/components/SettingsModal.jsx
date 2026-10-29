@@ -3,7 +3,7 @@ import {
   X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
   Image as ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check, 
-  Sun, Moon, Play, Pause, Search, Loader2, Crop, Sparkles, Gamepad2, Database, Save
+  Sun, Moon, Play, Pause, Search, Loader2, Crop, Sparkles, Gamepad2, Database
 } from 'lucide-react';
 
 import * as db from '../utils/db';
@@ -69,7 +69,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
-      <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative z-10 bg-[#0d1a18]">
+      <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative z-10 bg-[#111923]">
         {hasValidPfp ? (
           <img 
             src={pfpUrl} 
@@ -78,7 +78,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
             className="w-full h-full rounded-full object-cover"
           />
         ) : (
-          <div className="w-full h-full rounded-full bg-[#0d1a18] border border-[#1e3a35] flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div className="w-full h-full rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center flex-shrink-0 overflow-hidden">
             <svg className="w-1/2 h-1/2 text-[#22d3ee]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="9" />
               <circle cx="12" cy="9" r="3" />
@@ -128,10 +128,10 @@ class SettingsErrorBoundary extends Component {
       if (!this.props.show) return null;
       return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
-          <div className="bg-[#0b1413] border border-red-500/40 p-6 rounded-3xl max-w-sm w-full space-y-4 text-center shadow-2xl text-white">
+          <div className="bg-zinc-900 border border-red-500/40 p-6 rounded-3xl max-w-sm w-full space-y-4 text-center shadow-2xl text-white">
             <ShieldAlert className="w-10 h-10 text-red-500 mx-auto" />
             <h3 className="text-base font-bold">Settings Encountered an Error</h3>
-            <p className="text-xs text-[#8fa3a0] font-mono break-words bg-black/40 p-3 rounded-xl border border-white/5">
+            <p className="text-xs text-zinc-400 font-mono break-words bg-black/40 p-3 rounded-xl border border-white/5">
               {this.state.error?.message || "An unexpected rendering exception occurred."}
             </p>
             <button
@@ -153,16 +153,16 @@ class SettingsErrorBoundary extends Component {
 }
 
 const getValidHexColor = () => {
-  if (typeof document === 'undefined') return '#22d3ee';
+  if (typeof document === 'undefined') return '#38b2f6';
   try {
     const val = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim();
     if (/^#[0-9A-F]{6}$/i.test(val)) return val;
     if (/^#[0-9A-F]{3}$/i.test(val)) {
       return '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
     }
-    return '#22d3ee';
+    return '#38b2f6';
   } catch (e) {
-    return '#22d3ee';
+    return '#38b2f6';
   }
 };
 
@@ -290,18 +290,18 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
 
   return (
     <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 select-none animate-fadeIn">
-      <div className={`p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-2xl border ${isLightMode ? 'bg-white text-zinc-900 border-zinc-200' : 'bg-[#0b1413] text-white border-[#1e3a35]'}`}>
+      <div className={`p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-2xl border ${isLightMode ? 'bg-white text-zinc-900 border-zinc-200' : 'bg-zinc-900 text-white border-white/10'}`}>
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold flex items-center gap-2">
             <Crop className="w-4 h-4 text-[var(--theme)]" /> Adjust Avatar
           </h3>
-          <button type="button" onClick={onClose} className="p-1 rounded-lg hover:bg-white/10 text-[#8fa3a0] hover:text-white transition-colors">
+          <button type="button" onClick={onClose} className="p-1 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div 
-          className="relative w-52 h-52 mx-auto rounded-full overflow-hidden border-4 border-[var(--theme)] cursor-grab active:cursor-grabbing bg-[#050b0a] flex items-center justify-center shadow-inner touch-none"
+          className="relative w-52 h-52 mx-auto rounded-full overflow-hidden border-4 border-[var(--theme)] cursor-grab active:cursor-grabbing bg-zinc-950 flex items-center justify-center shadow-inner touch-none"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -311,7 +311,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
           onTouchEnd={handleTouchEnd}
         >
           {!isImageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#0b1413]/80 z-10">
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/80 z-10">
               <Loader2 className="w-6 h-6 animate-spin text-[var(--theme)]" />
             </div>
           )}
@@ -339,7 +339,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
         </div>
 
         <div className="space-y-1 pt-2">
-          <div className="flex justify-between text-[10px] uppercase font-bold text-[#8fa3a0]">
+          <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400">
             <span>Zoom Scale</span>
             <span>{Math.round(zoom * 100)}%</span>
           </div>
@@ -351,11 +351,11 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
             value={zoom} 
             disabled={!isImageLoaded}
             onChange={(e) => setZoom(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-[#142623] rounded-lg appearance-none cursor-pointer accent-[var(--theme)] disabled:opacity-50"
+            className="w-full h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[var(--theme)] disabled:opacity-50"
           />
         </div>
 
-        <p className="text-[9px] text-center text-[#8fa3a0] font-medium">
+        <p className="text-[9px] text-center text-zinc-400 font-medium">
           Drag image to reposition • Use slider to zoom
         </p>
 
@@ -412,6 +412,7 @@ function SettingsModalContent({
 
   const [gta3DisclaimerHidden, setGta3DisclaimerHidden] = useState(false);
 
+  // Game List state for the Data Saving dropdown synced from games.json
   const [gamesList, setGamesList] = useState([]);
   const [selectedGameForData, setSelectedGameForData] = useState('ALL');
 
@@ -446,6 +447,7 @@ function SettingsModalContent({
     }
   };
 
+  // --- DATA SAVING FUNCTIONS ---
   const dumpIDB = (dbName) => {
     return new Promise((resolve) => {
       const req = indexedDB.open(dbName);
@@ -527,7 +529,7 @@ function SettingsModalContent({
       }
     }
 
-    const fileName = `${selectedGameForData.toLowerCase().replace(/[^a-z0-9]/g, "-")}-capybara-save-${new Date().toISOString().slice(0, 10)}.json`;
+    const fileName = `${selectedGameForData.toLowerCase().replace(/[^a-z0-9]/g, "-")}-save-${new Date().toISOString().slice(0, 10)}.json`;
     const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -924,11 +926,10 @@ function SettingsModalContent({
   const safeTracklist = Array.isArray(tracklist) ? tracklist : [];
   const fullTracklist = [...safeCustomSongs, ...safeTracklist];
 
-  // Capybara Science Specific Themed CSS Variables & Classes
-  const modalBg = isLightMode ? "bg-white border-zinc-200 text-zinc-900" : "bg-[#0b1413] border-[#1e3a35] text-white";
-  const sectionBg = isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-[#0d1a18] border-[#1e3a35]";
-  const inputBg = isLightMode ? "bg-white border-zinc-300 text-black placeholder:text-zinc-400" : "bg-[#142623] border-[#1e3a35] text-white placeholder:text-[#8fa3a0]";
-  const headerText = isLightMode ? "text-zinc-900" : "text-[#22d3ee]";
+  const modalBg = isLightMode ? "bg-white border-zinc-200 text-zinc-900" : "bg-zinc-900 border-white/10 text-white";
+  const sectionBg = isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-white/5 border-white/5";
+  const inputBg = isLightMode ? "bg-white border-zinc-300 text-black placeholder:text-zinc-400" : "bg-zinc-800 border-white/10 text-white";
+  const headerText = isLightMode ? "text-zinc-900" : "text-[var(--theme)]";
 
   const matchesSearch = (keywords) => {
     if (!deferredSearchQuery.trim()) return true;
@@ -954,7 +955,7 @@ function SettingsModalContent({
         className="hidden" 
       />
 
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
         <div 
           ref={modalRef}
           role="dialog"
@@ -962,15 +963,15 @@ function SettingsModalContent({
           aria-labelledby="settings-title"
           className={`${modalBg} border rounded-3xl max-w-md w-full relative shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}
         >
-          {/* CAPYBARA SCIENCE HEADER */}
-          <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-[#1e3a35]'} px-6 pt-6 pb-4 ${modalBg} z-20 flex-shrink-0`}>
-            <h2 id="settings-title" className={`text-xl font-black flex items-center gap-2 ${headerText}`}>
-              <ShieldAlert className="w-5 h-5 text-[#22d3ee]" /> System Settings
+          {/* HEADER */}
+          <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-white/5'} px-6 pt-6 pb-4 ${modalBg} z-20 flex-shrink-0`}>
+            <h2 id="settings-title" className={`text-xl font-bold flex items-center gap-2 ${headerText}`}>
+              <ShieldAlert className={`w-5 h-5 ${isLightMode ? 'text-[var(--theme)]' : ''}`} /> System Settings
             </h2>
             <button 
               type="button"
               onClick={onClose} 
-              className={`${isLightMode ? 'text-zinc-700 hover:text-black hover:bg-zinc-100' : 'text-[#8fa3a0] hover:text-white hover:bg-white/5'} p-1 rounded-lg transition-colors focus:ring-2 focus:ring-[#22d3ee] outline-none`}
+              className={`${isLightMode ? 'text-zinc-700 hover:text-black hover:bg-zinc-100' : 'text-zinc-300 hover:text-white hover:bg-white/5'} p-1 rounded-lg transition-colors focus:ring-2 focus:ring-[var(--theme)] outline-none`}
               aria-label="Close settings"
             >
               <X className="w-6 h-6" />
@@ -981,13 +982,13 @@ function SettingsModalContent({
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar">
             
             <div className="relative">
-              <Search className={`absolute left-3 top-3 w-4 h-4 ${isLightMode ? 'text-zinc-400' : 'text-[#8fa3a0]'}`} />
+              <Search className={`absolute left-3 top-3 w-4 h-4 ${isLightMode ? 'text-zinc-400' : 'text-zinc-500'}`} />
               <input
                 type="text"
                 placeholder="Type to search settings (e.g., data, theme, audio, gta)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2.5 ${inputBg} border rounded-xl text-xs outline-none font-medium transition-all focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee]`}
+                className={`w-full pl-9 pr-4 py-2.5 ${inputBg} border rounded-xl text-xs outline-none font-medium transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
               />
               {searchQuery && (
                 <button 
@@ -1002,28 +1003,26 @@ function SettingsModalContent({
 
             <div className="space-y-6">
               
-              {/* DATA SAVING CARD - MATCHING YOUR CAPYBARA SCIENCE DESIGN */}
+              {/* DATA SAVING CARD - THEME RESTORED */}
               {matchesSearch(['data', 'saving', 'export', 'import', 'clear', 'backup', 'games']) && (
-                <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0d1a18] border-[#1e3a35]'} p-5 rounded-2xl border transition-all shadow-lg`}>
+                <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} p-4 rounded-2xl border transition-all`}>
                   <div>
-                    <h3 className={`text-xl font-black tracking-tight ${isLightMode ? 'text-zinc-900' : 'text-white'}`}>data saving</h3>
-                    <p className={`text-[11px] font-medium ${isLightMode ? 'text-zinc-600' : 'text-[#8fa3a0]'}`}>
+                    <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
+                      <Database className="w-3 h-3" /> Data Saving
+                    </label>
+                    <p className={`text-[9px] mt-1 ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
                       export, import, or clear browser data saved by the site
                     </p>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className={`text-[10px] uppercase font-bold tracking-wider ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>
-                      select game:
+                  <div className="space-y-2">
+                    <label className={`text-[9px] uppercase font-bold ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                      Select Game:
                     </label>
                     <select
                       value={selectedGameForData}
                       onChange={(e) => setSelectedGameForData(e.target.value)}
-                      className={`w-full py-2.5 px-3 rounded-xl border text-xs font-bold outline-none cursor-pointer transition-colors ${
-                        isLightMode 
-                          ? 'bg-white border-zinc-300 text-black' 
-                          : 'bg-[#142623] border-[#1e3a35] text-white hover:border-[#2e574f]'
-                      }`}
+                      className={`w-full ${inputBg} border rounded-xl p-2.5 text-xs outline-none font-medium cursor-pointer transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
                     >
                       <option value="ALL">All Games (Full Backup)</option>
                       {gamesList.map((game, idx) => {
@@ -1038,41 +1037,27 @@ function SettingsModalContent({
                     </select>
                   </div>
 
-                  <div className="flex flex-wrap gap-2.5 pt-1">
+                  <div className="grid grid-cols-3 gap-2 pt-1">
                     <button
                       type="button"
                       onClick={handleExportGameData}
-                      className={`px-4 py-2.5 rounded-xl border text-xs font-black uppercase transition-all shadow-sm ${
-                        isLightMode
-                          ? 'bg-zinc-100 border-zinc-300 text-zinc-900 hover:bg-zinc-200'
-                          : 'bg-[#142623] border-[#23423c] text-white hover:bg-[#1c3631]'
-                      }`}
+                      className={`p-2.5 border rounded-xl text-[9px] font-black uppercase transition-all outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-white border-zinc-300 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-white hover:border-[var(--theme)]'}`}
                     >
-                      export data
+                      Export
                     </button>
-
                     <button
                       type="button"
                       onClick={() => dataImportInputRef.current?.click()}
-                      className={`px-4 py-2.5 rounded-xl border text-xs font-black uppercase transition-all shadow-sm ${
-                        isLightMode
-                          ? 'bg-zinc-100 border-zinc-300 text-zinc-900 hover:bg-zinc-200'
-                          : 'bg-[#142623] border-[#23423c] text-white hover:bg-[#1c3631]'
-                      }`}
+                      className={`p-2.5 border rounded-xl text-[9px] font-black uppercase transition-all outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-white border-zinc-300 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-white hover:border-[var(--theme)]'}`}
                     >
-                      import data
+                      Import
                     </button>
-
                     <button
                       type="button"
                       onClick={handleClearGameData}
-                      className={`px-4 py-2.5 rounded-xl border text-xs font-black uppercase transition-all shadow-sm ${
-                        isLightMode
-                          ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
-                          : 'bg-[#142623] border-[#3b1818] text-[#ff6b6b] hover:bg-[#281414]'
-                      }`}
+                      className={`p-2.5 border rounded-xl text-[9px] font-black uppercase transition-all outline-none focus:ring-1 focus:ring-red-400 ${isLightMode ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100' : 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'}`}
                     >
-                      clear data
+                      Clear
                     </button>
                   </div>
                 </section>
@@ -1080,15 +1065,15 @@ function SettingsModalContent({
 
               {/* PROFILE IDENTITY & SHOP */}
               {matchesSearch(['identity', 'profile', 'name', 'avatar', 'shop', 'border', 'effect', 'cropper', 'crop', 'friend', 'code']) && (
-                <section className={`space-y-4 ${sectionBg} p-4 rounded-2xl border transition-all`}>
+                <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} p-4 rounded-2xl border transition-all`}>
                   <div className="flex items-center justify-between">
-                    <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[#22d3ee]'}`}>
+                    <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
                       <Type className="w-3 h-3" /> Profile Identity & Shop
                     </label>
                     <button 
                       type="button"
                       onClick={onViewOwnProfile}
-                      className="flex items-center gap-1.5 px-3 py-1 bg-[#22d3ee] text-black rounded-full text-[9px] font-black uppercase hover:opacity-80 transition-opacity focus:ring-2 focus:ring-offset-1 focus:ring-[#22d3ee] outline-none"
+                      className="flex items-center gap-1.5 px-3 py-1 bg-[var(--theme)] text-black rounded-full text-[9px] font-black uppercase hover:opacity-80 transition-opacity focus:ring-2 focus:ring-offset-1 focus:ring-[var(--theme)] outline-none"
                     >
                       <Eye className="w-3 h-3" /> View My Profile
                     </button>
@@ -1099,9 +1084,9 @@ function SettingsModalContent({
                       <button 
                         type="button"
                         onClick={() => pfpInputRef.current?.click()}
-                        className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[#22d3ee] transition-colors flex flex-col items-center justify-center`}
+                        className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-colors flex flex-col items-center justify-center`}
                       >
-                        <Crop className="w-3 h-3 mx-auto mb-1 text-[#22d3ee]" />
+                        <Crop className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                         Upload & Crop PFP
                       </button>
                       <button 
@@ -1122,14 +1107,14 @@ function SettingsModalContent({
                       onKeyDown={(e) => {
                         e.stopPropagation();
                       }}
-                      className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold transition-all focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee]`}
+                      className={`w-full ${inputBg} border rounded-xl p-3 text-xs outline-none font-bold transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
                     />
 
-                    {/* SHOP SECTION */}
-                    <div className={`${isLightMode ? 'bg-white border-zinc-200' : 'bg-[#050b0a] border-[#1e3a35]'} p-3 rounded-xl border space-y-3`}>
+                    {/* FREE AVATAR & PROFILE SHOP SECTION */}
+                    <div className={`${isLightMode ? 'bg-white border-zinc-200' : 'bg-black/30 border-white/5'} p-3 rounded-xl border space-y-3`}>
                       <div className="flex items-center justify-between">
                         <span className={`text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 ${headerText}`}>
-                          <Sparkles className="w-3 h-3 text-[#22d3ee]" /> Free Profile Shop
+                          <Sparkles className="w-3 h-3 text-[var(--theme)]" /> Free Profile Shop
                         </span>
                         <div className="flex items-center gap-1.5">
                           {selectedFrame && (
@@ -1187,10 +1172,10 @@ function SettingsModalContent({
                         {shopItems.map(item => {
                           const isEquipped = (item.type === 'frame' && selectedFrame === item.url) || (item.type === 'effect' && selectedEffect === item.url);
                           return (
-                            <div key={item.id} className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-[#142623] border-[#1e3a35]'} p-2.5 rounded-xl border flex flex-col justify-between`}>
+                            <div key={item.id} className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-zinc-800/80 border-white/5'} p-2.5 rounded-xl border flex flex-col justify-between`}>
                               <div>
                                 <span className={`text-[10px] font-bold block truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{item.name}</span>
-                                <span className="text-[8px] uppercase tracking-tighter text-[#8fa3a0]">{item.type}</span>
+                                <span className="text-[8px] uppercase tracking-tighter text-zinc-400">{item.type}</span>
                               </div>
                               <button
                                 type="button"
@@ -1222,7 +1207,7 @@ function SettingsModalContent({
                                 className={`mt-2 w-full py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
                                   isEquipped 
                                     ? 'bg-green-500 text-black shadow-sm' 
-                                    : 'bg-[#22d3ee] text-black hover:opacity-80'
+                                    : 'bg-[var(--theme)] text-black hover:opacity-80'
                                 }`}
                               >
                                 {isEquipped ? 'Equipped' : 'Equip'}
@@ -1233,20 +1218,20 @@ function SettingsModalContent({
                       </div>
                     </div>
 
-                    <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-[#050b0a] border-[#1e3a35]'} p-3 rounded-xl border space-y-3`}>
+                    <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-black/20 border-white/5'} p-3 rounded-xl border space-y-3`}>
                       <div className="flex items-center justify-between">
-                        <p className={`text-[8px] font-black uppercase leading-none ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>Your Friend Code</p>
+                        <p className={`text-[8px] font-black uppercase leading-none ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>Your Friend Code</p>
                         <button 
                           type="button"
                           onClick={handleCopyCode}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all outline-none focus:ring-2 focus:ring-[#22d3ee] ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-200' : 'bg-[#142623] text-[#8fa3a0] hover:text-white border border-[#1e3a35]'}`}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all outline-none focus:ring-2 focus:ring-[var(--theme)] ${copied ? 'bg-green-500 text-black' : isLightMode ? 'bg-white text-zinc-700 border border-zinc-200' : 'bg-white/5 text-zinc-300 hover:text-white'}`}
                         >
                           {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                           {copied ? 'Copied' : 'Copy'}
                         </button>
                       </div>
-                      <div className={`${isLightMode ? 'bg-white border-zinc-200' : 'bg-[#142623] border-[#1e3a35]'} p-2 rounded-lg border max-h-20 overflow-y-auto`}>
-                        <p className="text-[10px] font-mono font-black text-[#22d3ee] break-all leading-relaxed tracking-tight">
+                      <div className={`${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-lg border max-h-20 overflow-y-auto`}>
+                        <p className="text-[10px] font-mono font-black text-[var(--theme)] break-all leading-relaxed tracking-tight">
                           {friendCode || 'No code generated'}
                         </p>
                       </div>
@@ -1258,8 +1243,8 @@ function SettingsModalContent({
               {/* FRIENDS LIST */}
               {matchesSearch(['friends', 'list', 'social', 'add friend']) && (
                 <section className={`space-y-4 ${sectionBg} p-4 rounded-2xl border transition-all`}>
-                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>
-                    <Users className="w-3 h-3 text-[#22d3ee]" /> Friends List
+                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                    <Users className="w-3 h-3 text-[var(--theme)]" /> Friends List
                   </label>
                   
                   <div className="space-y-1">
@@ -1273,12 +1258,12 @@ function SettingsModalContent({
                           setFriendInput(e.target.value.slice(0, 100));
                           if (friendInputError) setFriendInputError('');
                         }}
-                        className={`flex-1 ${inputBg} border rounded-xl p-2.5 text-xs outline-none transition-all focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee]`}
+                        className={`flex-1 ${inputBg} border rounded-xl p-2.5 text-xs outline-none transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
                       />
                       <button 
                         type="button"
                         onClick={handleAddFriendClick}
-                        className="p-2.5 bg-[#22d3ee] text-black rounded-xl hover:opacity-80 transition-opacity focus:ring-2 focus:ring-offset-1 focus:ring-[#22d3ee] outline-none font-bold"
+                        className="p-2.5 bg-[var(--theme)] text-black rounded-xl hover:opacity-80 transition-opacity focus:ring-2 focus:ring-offset-1 focus:ring-[var(--theme)] outline-none"
                       >
                         <UserPlus className="w-4 h-4" />
                       </button>
@@ -1290,13 +1275,13 @@ function SettingsModalContent({
 
                   <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar pr-1">
                     {Array.isArray(friends) && friends.length > 0 ? friends.map(friend => (
-                      <div key={friend.code} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-[#142623] border-[#1e3a35]'} p-2 rounded-xl border`}>
+                      <div key={friend.code} className={`flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/5'} p-2 rounded-xl border`}>
                         <span title={friend.name} className={`text-[10px] font-bold truncate max-w-[120px] ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>{friend.name}</span>
                         <div className="flex gap-1 items-center">
                           <button 
                             type="button"
                             onClick={() => typeof onViewFriend === 'function' && onViewFriend(friend)}
-                            className={`p-1.5 rounded-lg transition-colors outline-none focus:ring-1 focus:ring-[#22d3ee] ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[#22d3ee] hover:text-black' : 'bg-[#0d1a18] text-[#8fa3a0] hover:bg-[#22d3ee] hover:text-black'}`}
+                            className={`p-1.5 rounded-lg transition-colors outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-zinc-100 text-zinc-800 hover:bg-[var(--theme)] hover:text-black' : 'bg-white/5 text-zinc-200 hover:bg-[var(--theme)] hover:text-black'}`}
                           >
                             <Eye className="w-3 h-3" />
                           </button>
@@ -1310,7 +1295,7 @@ function SettingsModalContent({
                         </div>
                       </div>
                     )) : (
-                      <p className={`text-[9px] text-center py-2 italic font-medium uppercase tracking-tighter ${isLightMode ? 'text-zinc-600' : 'text-[#8fa3a0]'}`}>No friends added yet</p>
+                      <p className={`text-[9px] text-center py-2 italic font-medium uppercase tracking-tighter ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>No friends added yet</p>
                     )}
                   </div>
                 </section>
@@ -1345,12 +1330,12 @@ function SettingsModalContent({
               {/* MEDIA UPLOADS */}
               {matchesSearch(['media', 'background', 'audio', 'mp3', 'upload', 'image', 'video', 'music']) && (
                 <section className={`space-y-4 ${sectionBg} p-4 rounded-2xl border transition-all`}>
-                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>
-                    <ImageIcon className="w-3 h-3 text-[#22d3ee]" /> Custom Media
+                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                    <ImageIcon className="w-3 h-3 text-[var(--theme)]" /> Custom Media
                   </label>
                   <div className="grid grid-cols-2 gap-2">
-                    <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[#22d3ee] transition-colors`}>
-                      <Upload className="w-3 h-3 mx-auto mb-1 text-[#22d3ee]" />
+                    <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-colors`}>
+                      <Upload className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                       Upload BG IMG/GIF
                       <input 
                         type="file" 
@@ -1359,8 +1344,8 @@ function SettingsModalContent({
                         className="hidden" 
                       />
                     </label>
-                    <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[#22d3ee] transition-colors`}>
-                      <Music className="w-3 h-3 mx-auto mb-1 text-[#22d3ee]" />
+                    <label className={`p-3 ${inputBg} border rounded-xl text-[9px] font-black uppercase text-center cursor-pointer hover:border-[var(--theme)] transition-colors`}>
+                      <Music className="w-3 h-3 mx-auto mb-1 text-[var(--theme)]" />
                       Upload MP3
                       <input type="file" accept="audio/mp3,audio/*" onChange={handleCustomAudioSelect} className="hidden" />
                     </label>
@@ -1398,10 +1383,10 @@ function SettingsModalContent({
 
                   {/* VOLUME & PLAY/PAUSE */}
                   {effectiveBgMusic && (
-                    <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-[#1e3a35]'} space-y-3 ${performanceMode ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3 ${performanceMode ? 'opacity-50 pointer-events-none' : ''}`}>
                       <div className="flex items-center justify-between">
-                        <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>
-                          <Volume2 className="w-3 h-3 text-[#22d3ee]" /> Music Controls
+                        <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                          <Volume2 className="w-3 h-3 text-[var(--theme)]" /> Music Controls
                         </label>
                         <div className="flex items-center gap-2">
                           <button
@@ -1412,16 +1397,16 @@ function SettingsModalContent({
                               e.stopPropagation();
                               if (typeof onTogglePlay === 'function') onTogglePlay();
                             }}
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer z-10 outline-none focus:ring-1 focus:ring-[#22d3ee] ${
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer z-10 outline-none focus:ring-1 focus:ring-[var(--theme)] ${
                               isLightMode 
                                 ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-300' 
-                                : 'bg-[#142623] text-white hover:bg-[#1c3631]'
+                                : 'bg-white/10 text-zinc-200 hover:bg-white/20'
                             }`}
                           >
-                            {isPlaying !== false ? <Pause className="w-3 h-3 text-[#22d3ee]" /> : <Play className="w-3 h-3 text-[#22d3ee]" />}
+                            {isPlaying !== false ? <Pause className="w-3 h-3 text-[var(--theme)]" /> : <Play className="w-3 h-3 text-[var(--theme)]" />}
                             {isPlaying !== false ? 'Pause' : 'Play'}
                           </button>
-                          <span className="text-[10px] font-mono text-[#22d3ee]">{Math.round((volume ?? 1) * 100)}%</span>
+                          <span className="text-[10px] font-mono text-[var(--theme)]">{Math.round((volume ?? 1) * 100)}%</span>
                         </div>
                       </div>
                       <input 
@@ -1430,26 +1415,26 @@ function SettingsModalContent({
                         value={volume ?? 1} 
                         disabled={performanceMode}
                         onChange={(e) => typeof setVolume === 'function' && setVolume(parseFloat(e.target.value))}
-                        className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-[#142623]'} rounded-lg appearance-none cursor-pointer accent-[#22d3ee]`}
+                        className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
                       />
                     </div>
                   )}
 
                   {/* BG OPACITY SLIDER */}
                   {hasBackground && !performanceMode && (
-                    <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-[#1e3a35]'} space-y-3`}>
+                    <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
                       <div className="flex items-center justify-between">
-                        <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>
-                          <ImageIcon className="w-3 h-3 text-[#22d3ee]" /> BG Opacity
+                        <label className={`text-[9px] uppercase font-black flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                          <ImageIcon className="w-3 h-3 text-[var(--theme)]" /> BG Opacity
                         </label>
-                        <span className="text-[10px] font-mono text-[#22d3ee]">{bgOpacity}%</span>
+                        <span className="text-[10px] font-mono text-[var(--theme)]">{bgOpacity}%</span>
                       </div>
                       <input 
                         type="range" 
                         min="0" max="100" 
                         value={bgOpacity} 
                         onChange={(e) => typeof setBgOpacity === 'function' && setBgOpacity(Number(e.target.value))}
-                        className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-[#142623]'} rounded-lg appearance-none cursor-pointer accent-[#22d3ee]`}
+                        className={`w-full h-1.5 ${isLightMode ? 'bg-zinc-200' : 'bg-white/20'} rounded-lg appearance-none cursor-pointer accent-[var(--theme)]`}
                       />
                     </div>
                   )}
@@ -1458,8 +1443,8 @@ function SettingsModalContent({
 
               {/* MUSIC LIBRARY */}
               {matchesSearch(['library', 'music', 'songs', 'tracks', 'playlist']) && (
-                <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0d1a18] border-[#1e3a35]'} ${performanceMode ? 'opacity-50 pointer-events-none' : ''}`}>
-                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[#22d3ee]'}`}>
+                <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} ${performanceMode ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
                     <Music className="w-3 h-3" /> Music Library
                   </label>
                   <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
@@ -1476,22 +1461,22 @@ function SettingsModalContent({
                             handleAudioUpload({ presetUrl: song.url });
                           }
                         }}
-                        className={`p-3 border rounded-xl text-left flex items-center justify-between cursor-pointer transition-all ${isLightMode ? 'bg-white border-zinc-200 hover:border-[#22d3ee]' : 'bg-[#142623] border-[#1e3a35] hover:border-[#22d3ee]'}`}
+                        className={`p-3 border rounded-xl text-left flex items-center justify-between cursor-pointer transition-all ${isLightMode ? 'bg-white border-zinc-200 hover:border-[var(--theme)]' : 'bg-zinc-800/50 border-white/5 hover:border-[var(--theme)]/50'}`}
                       >
                         <div className="flex items-center gap-3 truncate mr-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#22d3ee] flex-shrink-0" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-[var(--theme)] flex-shrink-0" />
                           <div className="flex flex-col truncate">
                             <div className="flex items-center gap-2">
                               <span className={`text-[11px] font-bold truncate ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`}>
                                 {song.title || 'Untitled Track'}
                               </span>
                               {song.isCustom && (
-                                <span className="text-[8px] font-black bg-[#22d3ee]/20 text-[#22d3ee] px-1.5 py-0.5 rounded uppercase flex-shrink-0">
+                                <span className="text-[8px] font-black bg-[var(--theme)]/20 text-[var(--theme)] px-1.5 py-0.5 rounded uppercase flex-shrink-0">
                                   Uploaded
                                 </span>
                               )}
                             </div>
-                            <span className={`text-[9px] font-medium uppercase tracking-tight truncate ${isLightMode ? 'text-zinc-600' : 'text-[#8fa3a0]'}`}>
+                            <span className={`text-[9px] font-medium uppercase tracking-tight truncate ${isLightMode ? 'text-zinc-600' : 'text-zinc-300'}`}>
                               {song.artist || "Unknown Artist"}
                             </span>
                           </div>
@@ -1499,7 +1484,7 @@ function SettingsModalContent({
 
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {song.isClean && !song.isCustom && (
-                            <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${isLightMode ? 'bg-zinc-100 text-zinc-700' : 'bg-[#0b1413] text-[#8fa3a0]'}`}>
+                            <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${isLightMode ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-700 text-zinc-200'}`}>
                               Clean
                             </span>
                           )}
@@ -1522,9 +1507,9 @@ function SettingsModalContent({
 
               {/* TAB DISGUISE */}
               {matchesSearch(['disguise', 'tab', 'cloak', 'google', 'classroom', 'drive']) && (
-                <section className={`space-y-4 p-4 rounded-2xl border transition-all ${sectionBg}`}>
-                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>
-                    <Eye className="w-3 h-3 text-[#22d3ee]" /> Tab Disguise
+                <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                    <Eye className="w-3 h-3 text-[var(--theme)]" /> Tab Disguise
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {['google', 'drive', 'classroom', 'powerschool'].map((cloak) => (
@@ -1532,10 +1517,10 @@ function SettingsModalContent({
                         key={cloak}
                         type="button"
                         onClick={() => typeof setActiveCloak === 'function' && setActiveCloak(cloak)}
-                        className={`p-3 border rounded-xl text-[10px] font-black uppercase transition-all outline-none focus:ring-2 focus:ring-[#22d3ee] ${
+                        className={`p-3 border rounded-xl text-[10px] font-black uppercase transition-all outline-none focus:ring-2 focus:ring-[var(--theme)] ${
                           activeCloak === cloak 
-                          ? 'bg-[#22d3ee] text-black border-[#22d3ee] shadow-md' 
-                          : isLightMode ? 'bg-white border-zinc-200 text-zinc-700 hover:border-zinc-400' : 'bg-[#142623] border-[#1e3a35] text-zinc-300 hover:text-white hover:border-[#2e574f]'
+                          ? 'bg-[var(--theme)] text-black border-[var(--theme)] shadow-md' 
+                          : isLightMode ? 'bg-white border-zinc-200 text-zinc-700 hover:border-zinc-400' : 'bg-white/5 border-white/10 text-zinc-300 hover:text-white hover:border-white/20'
                         }`}
                       >
                         {cloak}
@@ -1557,7 +1542,7 @@ function SettingsModalContent({
                       placeholder="Press key..."
                       value={panicKey} 
                       onKeyDown={handlePanicKeyDown}
-                      className={`flex-1 border rounded-xl p-3 text-xs outline-none text-center font-mono font-bold ${isLightMode ? 'bg-white border-red-200 text-zinc-900' : 'bg-[#142623] border-[#1e3a35] text-white'}`} 
+                      className={`flex-1 border rounded-xl p-3 text-xs outline-none text-center font-mono font-bold ${isLightMode ? 'bg-white border-red-200 text-zinc-900' : 'bg-zinc-800 border-white/10 text-white'}`} 
                       readOnly 
                     />
                     {panicKey && (
@@ -1571,13 +1556,13 @@ function SettingsModalContent({
 
               {/* GAME DISCLAIMERS */}
               {matchesSearch(['disclaimer', 'gta', 'gta3', 'warning', 'school', 'game']) && (
-                <section className={`space-y-4 p-4 rounded-2xl border transition-all ${sectionBg}`}>
+                <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>
-                        <Gamepad2 className="w-3.5 h-3.5 text-[#22d3ee]" /> GTA III Launch Disclaimer
+                      <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                        <Gamepad2 className="w-3.5 h-3.5 text-[var(--theme)]" /> GTA III Launch Disclaimer
                       </label>
-                      <p className={`text-[8px] uppercase font-bold tracking-tight mt-1 ${isLightMode ? 'text-zinc-600' : 'text-[#8fa3a0]'}`}>
+                      <p className={`text-[8px] uppercase font-bold tracking-tight mt-1 ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
                         {gta3DisclaimerHidden 
                           ? "Currently hidden. Click 'Reset' to show the warning again upon launch." 
                           : "Currently active. Pops up before launching GTA III."}
@@ -1587,12 +1572,12 @@ function SettingsModalContent({
                     <button
                       type="button"
                       onClick={handleToggleGta3Disclaimer}
-                      className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[#22d3ee] ${
+                      className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
                         gta3DisclaimerHidden
-                          ? "bg-[#22d3ee] text-black hover:opacity-90 shadow-sm"
+                          ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
                           : isLightMode 
                             ? "bg-zinc-200 text-zinc-700" 
-                            : "bg-[#142623] text-zinc-300"
+                            : "bg-white/10 text-zinc-300"
                       }`}
                     >
                       {gta3DisclaimerHidden ? "Reset Disclaimer" : "Active"}
@@ -1603,11 +1588,11 @@ function SettingsModalContent({
 
               {/* ABOUT & ACCESSIBILITY */}
               {matchesSearch(['about', 'accessibility', 'contrast']) && (
-                <section className={`space-y-2 p-4 rounded-2xl border transition-all ${sectionBg}`}>
-                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>
-                    <ShieldAlert className="w-3 h-3 text-[#22d3ee]" /> About & Accessibility
+                <section className={`space-y-2 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                    <ShieldAlert className="w-3 h-3 text-[var(--theme)]" /> About & Accessibility
                   </label>
-                  <p className={`text-[9px] leading-relaxed ${isLightMode ? 'text-zinc-600' : 'text-[#8fa3a0]'}`}>
+                  <p className={`text-[9px] leading-relaxed ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
                     This website is committed to digital accessibility. If you encounter any contrast issues with custom themes or navigation barriers, feel free to adjust your theme.
                   </p>
                 </section>
@@ -1616,14 +1601,14 @@ function SettingsModalContent({
               {/* THEMES */}
               {matchesSearch(['themes', 'color', 'palette', 'light mode', 'dark mode']) && (
                 <section className="space-y-3">
-                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[#8fa3a0]'}`}>
+                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
                     <Palette className="w-3 h-3" /> Themes
                   </label>
                   
                   <button 
                     type="button"
                     onClick={() => typeof setIsLightMode === 'function' && setIsLightMode(!isLightMode)}
-                    className={`w-full p-3 mb-2 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all outline-none focus:ring-2 focus:ring-[#22d3ee] ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50' : 'bg-[#142623] border-[#1e3a35] text-white hover:bg-[#1c3631]'}`}
+                    className={`w-full p-3 mb-2 border rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all outline-none focus:ring-2 focus:ring-[var(--theme)] ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
                   >
                     {isLightMode ? <Sun className="w-3.5 h-3.5 text-yellow-500" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />} 
                     {isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
@@ -1635,16 +1620,16 @@ function SettingsModalContent({
                         key={id} 
                         type="button"
                         onClick={() => typeof applyTheme === 'function' && applyTheme(t)} 
-                        className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 transition-all outline-none focus:ring-1 focus:ring-[#22d3ee] ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[#22d3ee]' : 'bg-[#142623] border-[#1e3a35] text-zinc-100 hover:border-[#22d3ee]'}`}
+                        className={`p-3 border rounded-xl text-[10px] font-bold flex items-center gap-2 transition-all outline-none focus:ring-1 focus:ring-[var(--theme)] ${isLightMode ? 'bg-white border-zinc-200 text-zinc-900 hover:border-[var(--theme)]' : 'bg-white/5 border-white/10 text-zinc-100 hover:border-[var(--theme)]'}`}
                       >
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t?.color || '#22d3ee' }} /> {t?.name || 'Theme'}
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t?.color || '#38b2f6' }} /> {t?.name || 'Theme'}
                       </button>
                     ))}
                   </div>
 
                   {/* CUSTOM COLOR PICKER */}
                   <div 
-                    className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-[#142623] border-[#1e3a35]'}`}
+                    className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}
                     onBlur={(e) => {
                       if (!e.currentTarget.contains(e.relatedTarget)) {
                         setPreviousColor(null);
@@ -1689,13 +1674,13 @@ function SettingsModalContent({
                           className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase transition-colors outline-none focus:ring-1 focus:ring-zinc-400 ${
                             isLightMode 
                               ? 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300' 
-                              : 'bg-[#0d1a18] text-zinc-200 hover:bg-[#142623]'
+                              : 'bg-white/10 text-zinc-200 hover:bg-white/20'
                           }`}
                         >
                           Cancel
                         </button>
                       )}
-                      <span className="text-[10px] font-mono text-[#22d3ee]">Live Pick</span>
+                      <span className="text-[10px] font-mono text-[var(--theme)]">Live Pick</span>
                     </div>
                   </div>
                 </section>
@@ -1752,11 +1737,11 @@ function SettingsModalContent({
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
             <div className={`${modalBg} border p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4`}>
               <h3 className="text-lg font-bold">Edit Uploaded Song</h3>
-              <p className="text-[10px] text-[#8fa3a0]">Customize the details for your uploaded MP3 track before adding it to the library.</p>
+              <p className="text-[10px] text-zinc-400">Customize the details for your uploaded MP3 track before adding it to the library.</p>
               
               <div className="space-y-3">
                 <div>
-                  <label className="text-[9px] text-[#8fa3a0] uppercase font-black block mb-1">Song Name</label>
+                  <label className="text-[9px] text-zinc-400 uppercase font-black block mb-1">Song Name</label>
                   <input 
                     type="text" 
                     value={songTitle} 
@@ -1766,7 +1751,7 @@ function SettingsModalContent({
                 </div>
 
                 <div>
-                  <label className="text-[9px] text-[#8fa3a0] uppercase font-black block mb-1">Artist Name</label>
+                  <label className="text-[9px] text-zinc-400 uppercase font-black block mb-1">Artist Name</label>
                   <input 
                     type="text" 
                     placeholder="e.g. Green Day" 
@@ -1788,7 +1773,7 @@ function SettingsModalContent({
                     type="button"
                     onClick={saveCustomSong} 
                     aria-busy={isSavingSong}
-                    className="px-5 py-2.5 rounded-xl bg-[#22d3ee] text-black text-[10px] font-black uppercase hover:opacity-90 shadow-md transition-opacity flex items-center gap-2 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#22d3ee]"
+                    className="px-5 py-2.5 rounded-xl bg-[var(--theme)] text-black text-[10px] font-black uppercase hover:opacity-90 shadow-md transition-opacity flex items-center gap-2 outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[var(--theme)]"
                   >
                     {isSavingSong ? (
                       <>
