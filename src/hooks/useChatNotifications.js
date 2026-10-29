@@ -79,6 +79,7 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
 
     const channel = supabase
       .channel('realtime_chat_notifications')
+      // 1. LISTEN FOR NEW MESSAGES
       .on(
         'postgres_changes',
         {
@@ -120,6 +121,36 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
               return updated;
             });
           }
+        }
+      )
+      // 2. LISTEN FOR DELETED MESSAGES
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const oldMsg = payload.old;
+          if (!oldMsg) return;
+
+          const msgChannelId = oldMsg.channel_id || oldMsg.room_id || 'global';
+          
+          setUnreadCounts((prev) => {
+            const currentCount = prev[msgChannelId] || 0;
+            const updatedCount = Math.max(0, currentCount - 1);
+
+            const updated = {
+              ...prev,
+              [msgChannelId]: updatedCount,
+            };
+
+            try {
+              localStorage.setItem('capy-unread-counts', JSON.stringify(updated));
+            } catch (e) {}
+            return updated;
+          });
         }
       )
       .subscribe((status) => {
