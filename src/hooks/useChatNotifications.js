@@ -3,14 +3,26 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
 export default function useChatNotifications({ currentUserId, activeChannelId }) {
-  const [unreadCounts, setUnreadCounts] = useState({});
+  const [unreadCounts, setUnreadCounts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('capy-unread-counts');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
   const activeChannelRef = useRef(activeChannelId);
 
-  // Keep ref synced with active channel state
+  useEffect(() => {
+    try {
+      localStorage.setItem('capy-unread-counts', JSON.stringify(unreadCounts));
+    } catch (e) {}
+  }, [unreadCounts]);
+
   useEffect(() => {
     activeChannelRef.current = activeChannelId;
     
-    // Clear unread count for current channel when opened
     if (activeChannelId) {
       setUnreadCounts((prev) => ({
         ...prev,
@@ -19,14 +31,6 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
     }
   }, [activeChannelId]);
 
-  // Request native browser desktop notification permissions
-  const requestNotificationPermission = useCallback(async () => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      await Notification.requestPermission();
-    }
-  }, []);
-
-  // Self-contained sound effect using Web Audio API (no external mp3 files needed)
   const playNotificationSound = useCallback(() => {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -34,8 +38,8 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
       const gain = audioCtx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5 note
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); 
 
       gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
@@ -46,20 +50,18 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
       osc.start();
       osc.stop(audioCtx.currentTime + 0.25);
     } catch (e) {
-      console.warn('Audio play blocked by browser policy:', e);
+      console.warn('Audio play blocked:', e);
     }
   }, []);
 
-  // Trigger browser popup notification
   const triggerDesktopNotification = useCallback((senderName, text) => {
     if ('Notification' in window && Notification.permission === 'granted') {
       const notif = new Notification(`New message from ${senderName || 'Someone'}`, {
         body: text || 'Sent a message',
-        icon: '/favicon.ico', // path to your app icon
-        silent: true, // We handle our own audio chime above
+        icon: '/favicon.ico',
+        silent: true,
       });
 
-      // Focus tab if user clicks popup
       notif.onclick = () => {
         window.focus();
         notif.close();
@@ -67,12 +69,10 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
     }
   }, []);
 
-  // Supabase Realtime Listener
   useEffect(() => {
-    if (!currentUserId || !supabase) return;
+    if (!supabase) return;
 
-    // Prompt for browser notification permissions
-    requestNotificationPermission();
+    const myUsername = localStorage.getItem('capy-display-name') || localStorage.getItem('username');
 
     const channel = supabase
       .channel('realtime_chat_notifications')
@@ -81,31 +81,32 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages', // your Supabase messages table name
+          table: 'messages',
         },
         (payload) => {
           const newMsg = payload.new;
           if (!newMsg) return;
 
-          // Don't notify for your own messages
-          if (newMsg.sender_id === currentUserId || newMsg.user_id === currentUserId) {
+          console.log("Realtime message received:", newMsg);
+
+          // Check if message is from yourself using username or sender_id
+          const isOwnMessage = 
+            (newMsg.username && newMsg.username === myUsername) ||
+            (currentUserId && (newMsg.sender_id === currentUserId || newMsg.user_id === currentUserId));
+
+          if (isOwnMessage) {
+            console.log("Ignored message sent by self.");
             return;
           }
 
           const msgChannelId = newMsg.channel_id || newMsg.room_id || 'global';
           const isCurrentRoom = msgChannelId === activeChannelRef.current;
-          const isTabFocused = document.hasFocus();
 
-          // If user is in a different channel OR tabbed out of the browser
-          if (!isCurrentRoom || !isTabFocused) {
-            // 1. Play sound
+          if (!isCurrentRoom) {
+            console.log("Incrementing unread count!");
             playNotificationSound();
+            triggerDesktopNotification(newMsg.username || 'User', newMsg.content || newMsg.text);
 
-            // 2. Trigger desktop notification
-            const senderName = newMsg.sender_name || newMsg.username || 'User';
-            triggerDesktopNotification(senderName, newMsg.content || newMsg.text);
-
-            // 3. Increment unread count badge
             setUnreadCounts((prev) => ({
               ...prev,
               [msgChannelId]: (prev[msgChannelId] || 0) + 1,
@@ -113,14 +114,15 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Notification Listener Status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, requestNotificationPermission, playNotificationSound, triggerDesktopNotification]);
+  }, [currentUserId, playNotificationSound, triggerDesktopNotification]);
 
-  // Function to manually mark a channel as read
   const markAsRead = useCallback((channelId) => {
     setUnreadCounts((prev) => ({
       ...prev,
@@ -128,5 +130,5 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
     }));
   }, []);
 
-  return { unreadCounts, markAsRead, requestNotificationPermission };
+  return { unreadCounts, markAsRead };
 }
