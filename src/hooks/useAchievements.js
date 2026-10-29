@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
 export default function useChatNotifications({ currentUserId, activeChannelId }) {
-  // Load initial unread counts from localStorage so they survive a refresh
   const [unreadCounts, setUnreadCounts] = useState(() => {
     try {
       const saved = localStorage.getItem('capy-unread-counts');
@@ -15,18 +14,15 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
 
   const activeChannelRef = useRef(activeChannelId);
 
-  // Keep localStorage synced whenever unread counts change
   useEffect(() => {
     try {
       localStorage.setItem('capy-unread-counts', JSON.stringify(unreadCounts));
     } catch (e) {}
   }, [unreadCounts]);
 
-  // Keep ref synced with active channel state
   useEffect(() => {
     activeChannelRef.current = activeChannelId;
     
-    // Clear unread count for current channel when opened
     if (activeChannelId) {
       setUnreadCounts((prev) => ({
         ...prev,
@@ -35,14 +31,6 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
     }
   }, [activeChannelId]);
 
-  // Request native browser desktop notification permissions
-  const requestNotificationPermission = useCallback(async () => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      await Notification.requestPermission();
-    }
-  }, []);
-
-  // Self-contained sound effect using Web Audio API
   const playNotificationSound = useCallback(() => {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -62,31 +50,17 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
       osc.start();
       osc.stop(audioCtx.currentTime + 0.25);
     } catch (e) {
-      console.warn('Audio play blocked by browser policy:', e);
+      console.warn('Audio play blocked:', e);
     }
   }, []);
 
-  // Trigger browser popup notification
-  const triggerDesktopNotification = useCallback((senderName, text) => {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      const notif = new Notification(`New message from ${senderName || 'Someone'}`, {
-        body: text || 'Sent a message',
-        icon: '/favicon.ico',
-        silent: true,
-    });
-
-      notif.onclick = () => {
-        window.focus();
-        notif.close();
-      };
-    }
-  }, []);
-
-  // Supabase Realtime Listener
   useEffect(() => {
-    if (!currentUserId || !supabase) return;
+    console.log("Chat notification hook active. currentUserId:", currentUserId);
 
-    requestNotificationPermission();
+    if (!supabase) {
+      console.error("Supabase client missing in notification hook!");
+      return;
+    }
 
     const channel = supabase
       .channel('realtime_chat_notifications')
@@ -99,20 +73,26 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
         },
         (payload) => {
           const newMsg = payload.new;
+          console.log("Realtime message detected:", newMsg);
+
           if (!newMsg) return;
 
-          if (newMsg.sender_id === currentUserId || newMsg.user_id === currentUserId) {
+          // Check if message belongs to current user
+          const isOwnMessage = 
+            (currentUserId && (newMsg.sender_id === currentUserId || newMsg.user_id === currentUserId)) ||
+            (newMsg.username && newMsg.username === localStorage.getItem('capy-username'));
+
+          if (isOwnMessage) {
+            console.log("Ignored own message.");
             return;
           }
 
           const msgChannelId = newMsg.channel_id || newMsg.room_id || 'global';
           const isCurrentRoom = msgChannelId === activeChannelRef.current;
-          const isTabFocused = document.hasFocus();
 
-          if (!isCurrentRoom || !isTabFocused) {
+          if (!isCurrentRoom) {
+            console.log("Incrementing unread badge for channel:", msgChannelId);
             playNotificationSound();
-            const senderName = newMsg.sender_name || newMsg.username || 'User';
-            triggerDesktopNotification(senderName, newMsg.content || newMsg.text);
 
             setUnreadCounts((prev) => ({
               ...prev,
@@ -121,12 +101,14 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Supabase notification subscription status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, requestNotificationPermission, playNotificationSound, triggerDesktopNotification]);
+  }, [currentUserId, playNotificationSound]);
 
   const markAsRead = useCallback((channelId) => {
     setUnreadCounts((prev) => ({
@@ -135,5 +117,5 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
     }));
   }, []);
 
-  return { unreadCounts, markAsRead, requestNotificationPermission };
+  return { unreadCounts, markAsRead };
 }
