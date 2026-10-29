@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Search, Dices, Calendar, Clock, Battery, UserCircle, Settings, X, MessageSquare, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useChatNotifications from '../hooks/useChatNotifications'; // Adjust import path if needed
@@ -25,6 +25,13 @@ export function Header({
     activeChannelId: isChatOpen ? activeChannel : null 
   });
 
+  // Automatically clear unreads when chat opens
+  useEffect(() => {
+    if (isChatOpen) {
+      markAsRead(activeChannel);
+    }
+  }, [isChatOpen, activeChannel, markAsRead]);
+
   // Sum up total unread messages
   const totalUnreads = Object.values(unreadCounts).reduce((acc, count) => acc + count, 0);
 
@@ -32,7 +39,7 @@ export function Header({
     setIsChatOpen(prev => {
       const nextState = !prev;
       if (nextState) {
-        markAsRead(activeChannel); // Clear badge when chat is opened
+        markAsRead(activeChannel); // Clear badge immediately when opening
       }
       return nextState;
     });
