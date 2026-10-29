@@ -412,7 +412,6 @@ function SettingsModalContent({
 
   const [gta3DisclaimerHidden, setGta3DisclaimerHidden] = useState(false);
 
-  // Game List state for the Data Saving dropdown synced from games.json
   const [gamesList, setGamesList] = useState([]);
   const [selectedGameForData, setSelectedGameForData] = useState('ALL');
 
@@ -420,20 +419,34 @@ function SettingsModalContent({
     if (show) {
       setGta3DisclaimerHidden(localStorage.getItem('gta3_disclaimer_accepted') === 'true');
       
+      console.log("Fetching games data...");
+      
       fetch('/games.json')
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            const validGames = data.filter(game => {
-              const titleLower = (game.title || game.name || "").toLowerCase();
-              return !titleLower.includes('request') && 
-                     !titleLower.includes('report') && 
-                     !titleLower.includes('form');
-            });
-            setGamesList(validGames);
-          }
+        .then((res) => {
+          console.log("Fetch response status:", res.status);
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          return res.json();
         })
-        .catch(err => console.warn("Could not load games.json for data manager:", err));
+        .then((data) => {
+          console.log("Loaded raw games data:", data);
+
+          const gameArray = Array.isArray(data) ? data : (data.games || []);
+
+          const validGames = gameArray.filter((game) => {
+            const titleLower = (game.title || game.name || "").toLowerCase();
+            return (
+              !titleLower.includes('request') && 
+              !titleLower.includes('report') && 
+              !titleLower.includes('form')
+            );
+          });
+
+          console.log("Filtered games for dropdown:", validGames);
+          setGamesList(validGames);
+        })
+        .catch((err) => {
+          console.error("Could not load games data for data manager:", err);
+        });
     }
   }, [show]);
 
