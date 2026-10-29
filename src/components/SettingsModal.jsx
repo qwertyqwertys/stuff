@@ -8,6 +8,7 @@ import {
 
 import * as db from '../utils/db';
 import { supabase } from '../supabaseClient';
+import gamesData from '../games.json';
 
 const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
@@ -419,34 +420,16 @@ function SettingsModalContent({
     if (show) {
       setGta3DisclaimerHidden(localStorage.getItem('gta3_disclaimer_accepted') === 'true');
       
-      console.log("Fetching games data...");
-      
-      fetch('/games.json')
-        .then((res) => {
-          console.log("Fetch response status:", res.status);
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-          return res.json();
-        })
-        .then((data) => {
-          console.log("Loaded raw games data:", data);
-
-          const gameArray = Array.isArray(data) ? data : (data.games || []);
-
-          const validGames = gameArray.filter((game) => {
-            const titleLower = (game.title || game.name || "").toLowerCase();
-            return (
-              !titleLower.includes('request') && 
-              !titleLower.includes('report') && 
-              !titleLower.includes('form')
-            );
-          });
-
-          console.log("Filtered games for dropdown:", validGames);
-          setGamesList(validGames);
-        })
-        .catch((err) => {
-          console.error("Could not load games data for data manager:", err);
-        });
+      const gameArray = Array.isArray(gamesData) ? gamesData : (gamesData.games || []);
+      const validGames = gameArray.filter((game) => {
+        const titleLower = (game.title || game.name || "").toLowerCase();
+        return (
+          !titleLower.includes('request') && 
+          !titleLower.includes('report') && 
+          !titleLower.includes('form')
+        );
+      });
+      setGamesList(validGames);
     }
   }, [show]);
 
