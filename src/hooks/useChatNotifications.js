@@ -24,10 +24,13 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
     activeChannelRef.current = activeChannelId;
     
     if (activeChannelId) {
-      setUnreadCounts((prev) => ({
-        ...prev,
-        [activeChannelId]: 0,
-      }));
+      setUnreadCounts((prev) => {
+        const updated = { ...prev, [activeChannelId]: 0 };
+        try {
+          localStorage.setItem('capy-unread-counts', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
     }
   }, [activeChannelId]);
 
@@ -89,7 +92,6 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
 
           console.log("Realtime message received:", newMsg);
 
-          // Check if message is from yourself using username or sender_id
           const isOwnMessage = 
             (newMsg.username && newMsg.username === myUsername) ||
             (currentUserId && (newMsg.sender_id === currentUserId || newMsg.user_id === currentUserId));
@@ -107,10 +109,16 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
             playNotificationSound();
             triggerDesktopNotification(newMsg.username || 'User', newMsg.content || newMsg.text);
 
-            setUnreadCounts((prev) => ({
-              ...prev,
-              [msgChannelId]: (prev[msgChannelId] || 0) + 1,
-            }));
+            setUnreadCounts((prev) => {
+              const updated = {
+                ...prev,
+                [msgChannelId]: (prev[msgChannelId] || 0) + 1,
+              };
+              try {
+                localStorage.setItem('capy-unread-counts', JSON.stringify(updated));
+              } catch (e) {}
+              return updated;
+            });
           }
         }
       )
@@ -124,10 +132,16 @@ export default function useChatNotifications({ currentUserId, activeChannelId })
   }, [currentUserId, playNotificationSound, triggerDesktopNotification]);
 
   const markAsRead = useCallback((channelId) => {
-    setUnreadCounts((prev) => ({
-      ...prev,
-      [channelId]: 0,
-    }));
+    setUnreadCounts((prev) => {
+      const updated = {
+        ...prev,
+        [channelId]: 0,
+      };
+      try {
+        localStorage.setItem('capy-unread-counts', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
   }, []);
 
   return { unreadCounts, markAsRead };
