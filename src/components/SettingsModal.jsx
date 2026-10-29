@@ -420,7 +420,7 @@ function SettingsModalContent({
     if (show) {
       setGta3DisclaimerHidden(localStorage.getItem('gta3_disclaimer_accepted') === 'true');
       
-      fetch('games.json')
+      fetch('/games.json')
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
