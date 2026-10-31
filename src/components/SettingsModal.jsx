@@ -412,6 +412,7 @@ function SettingsModalContent({
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const [gta3DisclaimerHidden, setGta3DisclaimerHidden] = useState(false);
+  const [skipIntroHidden, setSkipIntroHidden] = useState(false);
 
   const [gamesList, setGamesList] = useState([]);
   const [selectedGameForData, setSelectedGameForData] = useState('ALL');
@@ -419,6 +420,7 @@ function SettingsModalContent({
   useEffect(() => {
     if (show) {
       setGta3DisclaimerHidden(localStorage.getItem('gta3_disclaimer_accepted') === 'true');
+      setSkipIntroHidden(localStorage.getItem('skipIntro') === 'true');
       
       const gameArray = Array.isArray(gamesData) ? gamesData : (gamesData.games || []);
       const validGames = gameArray.filter((game) => {
@@ -440,6 +442,16 @@ function SettingsModalContent({
     } else {
       localStorage.setItem('gta3_disclaimer_accepted', 'true');
       setGta3DisclaimerHidden(true);
+    }
+  };
+
+  const handleToggleSkipIntro = () => {
+    if (skipIntroHidden) {
+      localStorage.removeItem('skipIntro');
+      setSkipIntroHidden(false);
+    } else {
+      localStorage.setItem('skipIntro', 'true');
+      setSkipIntroHidden(true);
     }
   };
 
@@ -981,7 +993,7 @@ function SettingsModalContent({
               <Search className={`absolute left-3 top-3 w-4 h-4 ${isLightMode ? 'text-zinc-400' : 'text-zinc-500'}`} />
               <input
                 type="text"
-                placeholder="Type to search settings (e.g., data, theme, audio, gta)..."
+                placeholder="Type to search settings (e.g., data, theme, audio, intro)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full pl-9 pr-4 py-2.5 ${inputBg} border rounded-xl text-xs outline-none font-medium transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
@@ -999,7 +1011,7 @@ function SettingsModalContent({
 
             <div className="space-y-6">
               
-              {/* DATA SAVING CARD - THEME RESTORED */}
+              {/* DATA SAVING CARD */}
               {matchesSearch(['data', 'saving', 'export', 'import', 'clear', 'backup', 'games']) && (
                 <section className={`space-y-4 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} p-4 rounded-2xl border transition-all`}>
                   <div>
@@ -1546,6 +1558,38 @@ function SettingsModalContent({
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </button>
                     )}
+                  </div>
+                </section>
+              )}
+
+              {/* INTRO ANIMATION TOGGLE */}
+              {matchesSearch(['intro', 'animation', 'skip', 'startup']) && (
+                <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                        <Play className="w-3.5 h-3.5 text-[var(--theme)]" /> Intro Animation
+                      </label>
+                      <p className={`text-[8px] uppercase font-bold tracking-tight mt-1 ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                        {skipIntroHidden 
+                          ? "Intro is currently hidden (skipped on startup)." 
+                          : "Intro is currently active (plays on startup)."}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleToggleSkipIntro}
+                      className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+                        skipIntroHidden
+                          ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+                          : isLightMode 
+                            ? "bg-zinc-200 text-zinc-700" 
+                            : "bg-white/10 text-zinc-300"
+                      }`}
+                    >
+                      {skipIntroHidden ? "Hide Intro: ON" : "Hide Intro: OFF"}
+                    </button>
                   </div>
                 </section>
               )}
