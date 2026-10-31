@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, RefreshCcw, Pencil, Check, X, Headphones } from 'lucide-react'; 
+import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
@@ -250,6 +250,22 @@ export function ChatCard({
       .eq('id', id);
   };
 
+  const handleDeleteMessage = async (id) => {
+    // Optimistically remove message from local state immediately
+    setMessages(prev => prev.filter(m => m.id !== id));
+    if (editingId === id) setEditingId(null);
+
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error deleting message:", error);
+      fetchMessages(); // Rollback/refetch if delete failed
+    }
+  };
+
   const handleOpenProfile = (m) => {
     const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
 
@@ -389,15 +405,25 @@ export function ChatCard({
                         </div>
 
                         {isOwner && !isEditingThis && (
-                          <button
-                            onClick={() => {
-                              setEditingId(m.id);
-                              setEditText(m.content);
-                            }}
-                            className="opacity-0 group-hover/msg:opacity-100 p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white transition-all"
-                          >
-                            <Pencil className="w-3 h-3"/>
-                          </button>
+                          <div className="flex items-center gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => {
+                                setEditingId(m.id);
+                                setEditText(m.content);
+                              }}
+                              className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white transition-all"
+                              title="Edit message"
+                            >
+                              <Pencil className="w-3 h-3"/>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMessage(m.id)}
+                              className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-red-400 transition-all"
+                              title="Delete message"
+                            >
+                              <Trash2 className="w-3 h-3"/>
+                            </button>
+                          </div>
                         )}
                       </div>
 
