@@ -77,6 +77,13 @@
     "category": "Horror"
   },
   {
+    "id": "granny-3",
+    "title": "Granny 3",
+    "url": "/stores/games-html/granny-3.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpaperaccess.com%2Ffull%2F9405295.jpg&f=1&nofb=1&ipt=a25b42c18442ad175bd568b96d57c5308d69137c093ad99cc5b98c58787aa5d8&ipo=images",
+    "category": "Horror"
+  },
+  {
     "id": "snowrider-3d",
     "title": "Snow Rider 3d",
     "url": "/stores/games-html/snow-rider-3d.html",
