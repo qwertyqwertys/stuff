@@ -251,18 +251,25 @@ export function ChatCard({
   };
 
   const handleDeleteMessage = async (id) => {
-    // Optimistically remove message from local state immediately
+    // 1. Optimistically remove it from the local screen immediately
     setMessages(prev => prev.filter(m => m.id !== id));
     if (editingId === id) setEditingId(null);
 
-    const { error } = await supabase
+    // 2. Delete the row permanently from Supabase table editor
+    const { data, error } = await supabase
       .from('messages')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select(); // Returns deleted rows to confirm deletion went through
 
     if (error) {
-      console.error("Error deleting message:", error);
-      fetchMessages(); // Rollback/refetch if delete failed
+      console.error("Error deleting message from Supabase:", error.message);
+      fetchMessages(); // Rollback local state if server rejected it
+    } else if (!data || data.length === 0) {
+      console.warn("Delete request succeeded, but 0 rows were removed. Check your Supabase Table RLS delete policies!");
+      fetchMessages();
+    } else {
+      console.log("Successfully deleted row from Supabase table:", data);
     }
   };
 
