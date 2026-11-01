@@ -52,6 +52,7 @@
       width: 100%;
       height: 100%;
       z-index: 1;
+      will-change: opacity;
     }
 
     /* Cinematic Edge Vignette */
@@ -123,8 +124,10 @@
       object-fit: contain;
       margin-bottom: 20px;
       opacity: 0;
-      animation: blurReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+      transform: translateY(14px);
+      animation: smoothReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
       filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6));
+      will-change: transform, opacity;
     }
 
     .main-title {
@@ -135,8 +138,10 @@
       line-height: 1.1;
       margin-bottom: 16px;
       opacity: 0;
-      animation: blurReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+      transform: translateY(14px);
+      animation: smoothReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
       text-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+      will-change: transform, opacity;
     }
 
     .main-title span {
@@ -153,8 +158,10 @@
       margin-bottom: 36px;
       max-width: 600px;
       opacity: 0;
-      animation: blurReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
+      transform: translateY(14px);
+      animation: smoothReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
       text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+      will-change: transform, opacity;
     }
 
     /* Action Group & Button */
@@ -164,7 +171,9 @@
       align-items: center;
       gap: 14px;
       opacity: 0;
-      animation: blurReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
+      transform: translateY(14px);
+      animation: smoothReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+      will-change: transform, opacity;
     }
 
     .enter-btn {
@@ -268,7 +277,9 @@
       padding-top: 24px;
       border-top: 1px solid rgba(255, 255, 255, 0.06);
       opacity: 0;
-      animation: blurReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards;
+      transform: translateY(14px);
+      animation: smoothReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards;
+      will-change: transform, opacity;
     }
 
     .metric-item {
@@ -299,9 +310,9 @@
       background: rgba(255, 255, 255, 0.1);
     }
 
-    @keyframes blurReveal {
-      0% { opacity: 0; filter: blur(12px); transform: translateY(14px); }
-      100% { opacity: 1; filter: blur(0px); transform: translateY(0); }
+    @keyframes smoothReveal {
+      0% { opacity: 0; transform: translateY(14px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -466,7 +477,6 @@
       const currentTime = audio.currentTime;
       const drops = songDrops[randomSong] || [];
 
-      // 1. Frame-accurate timestamp drop synchronization (0.05s window)
       drops.forEach((dropTime) => {
         if (Math.abs(currentTime - dropTime) < 0.05 && !triggeredDrops.has(dropTime)) {
           triggerBassRipple();
@@ -474,7 +484,6 @@
         }
       });
 
-      // 2. Real-time frequency bin analysis for live beat/bass tracking
       if (!analyser) return;
       analyser.getByteFrequencyData(dataArray);
 
@@ -485,7 +494,6 @@
       let bassAverage = bassSum / 10;
 
       const now = Date.now();
-      // Sensitivity threshold for sudden beats and cooldown to avoid clustering
       if (bassAverage > 210 && (now - lastBeatTime) > 350) {
         triggerBassRipple();
         lastBeatTime = now;
@@ -676,7 +684,10 @@
       requestAnimationFrame(render);
     }
 
-    render();
+    // Defer start of render loop to ensure 0 frame-drop on initial load
+    requestAnimationFrame(() => {
+      render();
+    });
   </script>
 </body>
 </html>
