@@ -841,7 +841,7 @@ function MainDashboard() {
 
   return (
     <div
-      className={`min-h-screen pb-20 antialiased relative ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
+      className={`min-h-screen pb-20 antialiased relative overflow-x-hidden overflow-y-auto ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
       style={{ 
         '--theme': theme, 
         '--glow': `${performanceMode ? 0 : glowIntensity}px`
