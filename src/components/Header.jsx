@@ -51,15 +51,15 @@ export function Header({
       <div className="w-full grid grid-cols-3 items-center">
         
         {/* LEFT: BRANDING */}
-        <div className="flex items-center gap-2.5 justify-self-start cursor-pointer" onClick={() => navigate('/')}>
-          <img src={DEFAULT_ICON} alt="Capybara Science Logo" className="w-7 h-7 object-contain" />
-          <span 
-            className="text-lg font-semibold tracking-tight text-white hidden sm:block"
-            style={{ fontFamily: "'Fredoka', sans-serif" }}
-          >
-            Capybara Science
-          </span>
-        </div>
+<div className="flex items-center gap-2.5 justify-self-start cursor-pointer" onClick={() => navigate('/')}>
+  <img src={DEFAULT_ICON} alt="Capybara Science Logo" className="w-7 h-7 object-contain" />
+  <span 
+    className="text-xl font-semibold tracking-tighter text-white hidden lg:block"
+    style={{ fontFamily: "'Fredoka', sans-serif" }}
+  >
+    Capybara Science
+  </span>
+</div>
 
         {/* CENTER: SEARCH & INTERACTIVE CONTROLS */}
         <div className="flex items-center justify-center gap-2.5 w-full justify-self-center">
