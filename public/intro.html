@@ -64,31 +64,46 @@
       pointer-events: none;
     }
 
-    /* Minimalist Top Corner Audio Toggle */
+    /* Mini Music Player Top Corner Widget */
     .audio-control {
       position: fixed;
       top: 24px;
       right: 24px;
       z-index: 10;
       display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 16px;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 18px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
-      border-radius: 9999px;
+      border-radius: 16px;
       backdrop-filter: blur(12px);
       cursor: pointer;
       font-size: 0.85rem;
       font-weight: 500;
       color: var(--text-muted);
       transition: all 0.3s ease;
+      min-width: 220px;
     }
 
     .audio-control:hover {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.1);
       border-color: rgba(56, 189, 248, 0.4);
       color: var(--text-main);
+    }
+
+    .audio-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .audio-info-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .audio-dot {
@@ -97,11 +112,81 @@
       border-radius: 50%;
       background: #6b7280;
       transition: background 0.3s ease, box-shadow 0.3s ease;
+      flex-shrink: 0;
     }
 
     .audio-control.playing .audio-dot {
       background: var(--accent-blue);
       box-shadow: 0 0 10px var(--accent-blue);
+    }
+
+    .song-details {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.3;
+    }
+
+    #audioLabel {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .audio-control.playing #audioLabel {
+      color: var(--text-main);
+    }
+
+    #songTitleDisplay {
+      font-size: 0.75rem;
+      color: var(--accent-blue);
+      font-weight: 500;
+      display: none;
+    }
+
+    .audio-control.playing #songTitleDisplay {
+      display: block;
+    }
+
+    .skip-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+      display: none;
+    }
+
+    .audio-control.playing .skip-btn {
+      display: block;
+    }
+
+    .skip-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Mini Progress Bar */
+    .player-progress-container {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 99px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .audio-control.playing .player-progress-container {
+      display: block;
+    }
+
+    .player-progress-bar {
+      width: 0%;
+      height: 100%;
+      background: var(--accent-blue);
+      transition: width 0.1s linear;
     }
 
     /* Central Content Wrapper */
@@ -322,10 +407,21 @@
   <canvas id="topoCanvas"></canvas>
   <div class="vignette"></div>
 
-  <!-- Audio Toggle Button -->
-  <div class="audio-control" id="audioToggle" onclick="toggleAudio()">
-    <div class="audio-dot"></div>
-    <span id="audioLabel">Enable Bass Visualizer</span>
+  <!-- Mini Music Player Widget -->
+  <div class="audio-control" id="audioToggle">
+    <div class="audio-top-row" onclick="toggleAudio()">
+      <div class="audio-info-group">
+        <div class="audio-dot"></div>
+        <div class="song-details">
+          <span id="audioLabel">Enable Bass Visualizer</span>
+          <span id="songTitleDisplay"></span>
+        </div>
+      </div>
+      <button class="skip-btn" id="skipBtn" onclick="nextSong(event)" title="Next Song">⏭</button>
+    </div>
+    <div class="player-progress-container" id="progressContainer">
+      <div class="player-progress-bar" id="progressBar"></div>
+    </div>
   </div>
 
   <!-- Audio Element -->
@@ -390,9 +486,43 @@
       '/audio/yale.mp3': [8.5, 23.2, 38.0, 52.8, 67.5]
     };
 
-    const randomSong = playlist[Math.floor(Math.random() * playlist.length)];
+    let currentSongIndex = Math.floor(Math.random() * playlist.length);
+    let randomSong = playlist[currentSongIndex];
+    
     const audio = document.getElementById('bgMusic');
     audio.src = randomSong;
+
+    function getFormattedTitle(path) {
+      const filename = path.split('/').pop().replace('.mp3', '');
+      return filename.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+
+    const audioLabel = document.getElementById('audioLabel');
+    const songTitleDisplay = document.getElementById('songTitleDisplay');
+    const progressBar = document.getElementById('progressBar');
+    const audioToggle = document.getElementById('audioToggle');
+
+    function updatePlayerUI() {
+      songTitleDisplay.textContent = getFormattedTitle(randomSong);
+    }
+    updatePlayerUI();
+
+    function loadSong(index) {
+      currentSongIndex = index;
+      randomSong = playlist[currentSongIndex];
+      audio.src = randomSong;
+      updatePlayerUI();
+      triggeredDrops.clear();
+      if (isPlaying) {
+        audio.play().catch(err => console.log(err));
+      }
+    }
+
+    function nextSong(e) {
+      e.stopPropagation();
+      const nextIndex = (currentSongIndex + 1) % playlist.length;
+      loadSong(nextIndex);
+    }
 
     const canvas = document.getElementById('topoCanvas');
     const ctx = canvas.getContext('2d');
@@ -417,9 +547,6 @@
     // ==========================================
     // HIGH-PRECISION WEB AUDIO & BASS ANALYSER
     // ==========================================
-    const audioToggle = document.getElementById('audioToggle');
-    const audioLabel = document.getElementById('audioLabel');
-
     let isPlaying = false;
     let triggeredDrops = new Set();
     let audioCtx, analyser, dataArray, sourceConnected = false;
@@ -431,9 +558,8 @@
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioContext();
         analyser = audioCtx.createAnalyser();
-        // Higher fftSize gives finer frequency bin resolution for pinpoint accuracy
         analyser.fftSize = 512;
-        analyser.smoothingTimeConstant = 0.2; // Faster reaction time to transients
+        analyser.smoothingTimeConstant = 0.2;
 
         const source = audioCtx.createMediaElementSource(audio);
         source.connect(analyser);
@@ -460,7 +586,7 @@
         audio.play().then(() => {
           isPlaying = true;
           audioToggle.classList.add('playing');
-          audioLabel.textContent = 'Audio Visualizer Active';
+          audioLabel.textContent = 'Now Playing';
         }).catch(err => {
           console.error("Audio playback error:", err);
         });
@@ -468,9 +594,17 @@
     }
 
     audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progressBar.style.width = percent + '%';
+      }
       if (audio.currentTime < 0.5) {
         triggeredDrops.clear();
       }
+    });
+
+    audio.addEventListener('ended', () => {
+      nextSong({ stopPropagation: () => {} });
     });
 
     function detectBass() {
@@ -491,7 +625,6 @@
       if (!analyser) return;
       analyser.getByteFrequencyData(dataArray);
 
-      // Target sub-bass & kick frequency bins (bins 2 through 18)
       let bassSum = 0;
       const binStart = 2;
       const binEnd = 18;
@@ -501,7 +634,6 @@
       let bassAverage = bassSum / (binEnd - binStart + 1);
 
       const now = Date.now();
-      // Lower threshold (185) with a tight 280ms cooldown captures every rapid kick/drop smoothly
       if (bassAverage > 185 && (now - lastBeatTime) > 280) {
         triggerBassRipple();
         lastBeatTime = now;
