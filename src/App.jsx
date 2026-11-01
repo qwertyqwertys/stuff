@@ -81,6 +81,19 @@ function MainDashboard() {
   const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
 
+  // --- INTRO OVERLAY STATE ---
+  const [showIntro, setShowIntro] = useState(() => localStorage.getItem('skipIntro') !== 'true');
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data === 'hide-intro') {
+        setShowIntro(false);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   // --- EQUIPPED SHOP STATES ---
   const [selectedFrame, setSelectedFrame] = useState(() => localStorage.getItem('capy-selected-frame') || '');
   const [selectedEffect, setSelectedEffect] = useState(() => localStorage.getItem('capy-selected-effect') || '');
@@ -847,6 +860,17 @@ function MainDashboard() {
         '--glow': `${performanceMode ? 0 : glowIntensity}px`
       }}
     >
+      {/* Intro Overlay iframe */}
+      {showIntro && (
+        <div className="fixed inset-0 z-[99999] bg-[#050608]">
+          <iframe 
+            src="/intro.html" 
+            title="Capybara Science Intro"
+            className="w-full h-full border-none"
+          />
+        </div>
+      )}
+
       {notification && (
         <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="bg-zinc-900 border border-[var(--theme)]/50 px-6 py-3 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center gap-3">
@@ -927,33 +951,33 @@ function MainDashboard() {
       ) : (
         <>
           <Header 
-  searchQuery={searchQuery} 
-  setSearchQuery={setSearchQuery}
-  time={time}
-  battery={battery}
-  profilePic={profilePic}
-  setShowSettings={setShowSettings}
-  DEFAULT_ICON={CAPY_LOGO}
-  theme={theme} 
-  onViewProfile={() => setSelectedFriendId('me')} 
-  onRandomGame={() => {
-    const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
-    if (playable.length > 0) {
-      launchContent(playable[Math.floor(Math.random() * playable.length)]);
-    }
-  }}
-  isChatOpen={isChatOpen}
-  setIsChatOpen={setIsChatOpen}
-  setShowSoundboard={setIsSoundboardOpen}
-  isSoundboardOpen={isSoundboardOpen}
-  isHeaderLight={isHeaderLight}
-  isLightMode={isLightMode}
-  currentUserId={uniqueId}
-  activeChannel="global"
-/>
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery}
+            time={time}
+            battery={battery}
+            profilePic={profilePic}
+            setShowSettings={setShowSettings}
+            DEFAULT_ICON={CAPY_LOGO}
+            theme={theme} 
+            onViewProfile={() => setSelectedFriendId('me')} 
+            onRandomGame={() => {
+              const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
+              if (playable.length > 0) {
+                launchContent(playable[Math.floor(Math.random() * playable.length)]);
+              }
+            }}
+            isChatOpen={isChatOpen}
+            setIsChatOpen={setIsChatOpen}
+            setShowSoundboard={setIsSoundboardOpen}
+            isSoundboardOpen={isSoundboardOpen}
+            isHeaderLight={isHeaderLight}
+            isLightMode={isLightMode}
+            currentUserId={uniqueId}
+            activeChannel="global"
+          />
 
           <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
-                        <div className="max-w-7xl mx-auto relative flex items-center">
+            <div className="max-w-7xl mx-auto relative flex items-center">
               {canScrollLeft && (
                 <div className="absolute left-0 z-50 flex items-center pr-12 h-full bg-transparent pointer-events-none">
                   <button
@@ -1003,7 +1027,7 @@ function MainDashboard() {
             </div>
           </div>
 
-              <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12 relative z-10">
+          <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12 relative z-10">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
