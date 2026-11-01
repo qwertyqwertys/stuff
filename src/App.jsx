@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'; 
 import { Routes, Route, Link } from 'react-router-dom';
 import { useBackgroundContrast } from './hooks/useBackgroundContrast.js'; 
 import { 
@@ -927,30 +927,30 @@ function MainDashboard() {
       ) : (
         <>
           <Header 
-  searchQuery={searchQuery} 
-  setSearchQuery={setSearchQuery}
-  time={time}
-  battery={battery}
-  profilePic={profilePic}
-  setShowSettings={setShowSettings}
-  DEFAULT_ICON={CAPY_LOGO}
-  theme={theme} 
-  onViewProfile={() => setSelectedFriendId('me')} 
-  onRandomGame={() => {
-    const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
-    if (playable.length > 0) {
-      launchContent(playable[Math.floor(Math.random() * playable.length)]);
-    }
-  }}
-  isChatOpen={isChatOpen}
-  setIsChatOpen={setIsChatOpen}
-  setShowSoundboard={setIsSoundboardOpen}
-  isSoundboardOpen={isSoundboardOpen}
-  isHeaderLight={isHeaderLight}
-  isLightMode={isLightMode}
-  currentUserId={uniqueId}
-  activeChannel="global"
-/>
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery}
+            time={time}
+            battery={battery}
+            profilePic={profilePic}
+            setShowSettings={setShowSettings}
+            DEFAULT_ICON={CAPY_LOGO}
+            theme={theme} 
+            onViewProfile={() => setSelectedFriendId('me')} 
+            onRandomGame={() => {
+              const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
+              if (playable.length > 0) {
+                launchContent(playable[Math.floor(Math.random() * playable.length)]);
+              }
+            }}
+            isChatOpen={isChatOpen}
+            setIsChatOpen={setIsChatOpen}
+            setShowSoundboard={setIsSoundboardOpen}
+            isSoundboardOpen={isSoundboardOpen}
+            isHeaderLight={isHeaderLight}
+            isLightMode={isLightMode}
+            currentUserId={uniqueId}
+            activeChannel="global"
+          />
 
           <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
             <div className="max-w-7xl mx-auto relative flex items-center">
@@ -1236,11 +1236,45 @@ function NotFound() {
   );
 }
 
-// --- APP ENTRY ROUTER ---
+// --- INLINE INTRO OVERLAY COMPONENT ---
+function IntroWrapper() {
+  const [showIntro, setShowIntro] = useState(() => {
+    return localStorage.getItem('skipIntro') !== 'true';
+  });
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data === 'hide-intro') {
+        localStorage.setItem('skipIntro', 'true');
+        setShowIntro(false);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
+  if (!showIntro) {
+    return <MainDashboard />;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[999999] bg-[#050608]">
+      <iframe 
+        src="/intro.html" 
+        className="w-full h-full border-none block"
+        title="Intro"
+      />
+    </div>
+  );
+}
+
+// --- MAIN APP EXPORT ---
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<MainDashboard />} />
+      <Route path="/" element={<IntroWrapper />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
