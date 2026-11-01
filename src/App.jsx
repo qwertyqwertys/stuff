@@ -953,55 +953,55 @@ function MainDashboard() {
 />
 
           <div className="pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
-            <div className="w-full relative flex items-center">
-              {canScrollLeft && (
-                <div className="absolute left-0 z-50 flex items-center pl-2 pr-12 h-full bg-transparent pointer-events-none">
-                  <button
-                    onClick={() => scrollCategories('left')}
-                    aria-label="Scroll categories left"
-                    className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-                  >
-                    <ChevronLeft className="w-4 h-4 text-black" />
-                  </button>
-                </div>
-              )}
+  <div className="w-full relative flex items-center">
+    {canScrollLeft && (
+      <div className="absolute left-0 z-50 flex items-center pl-2 pr-12 h-full bg-transparent pointer-events-none">
+        <button
+          onClick={() => scrollCategories('left')}
+          aria-label="Scroll categories left"
+          className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+        >
+          <ChevronLeft className="w-4 h-4 text-black" />
+        </button>
+      </div>
+    )}
 
-              <div
-                ref={categoryScrollRef}
-                onScroll={checkScroll}
-                className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-4 w-full"
-              >
-                {categoriesWithCounts.map(cat => (
-                  <button
-                    key={cat.name}
-                    onClick={() => setActiveCategory(cat.name)}
-                    aria-current={activeCategory === cat.name ? 'page' : undefined}
-                    className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
-                      activeCategory === cat.name
-                        ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
-                        : isLightMode || isHeaderLight
-                          ? 'bg-zinc-100/90 border-zinc-200 text-zinc-800 hover:bg-zinc-200'
-                          : 'bg-zinc-900/90 border-white/20 text-white hover:bg-zinc-800'
-                    }`}
-                  >
-                    {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-70'}`}>{cat.count}</span>
-                  </button>
-                ))}
-              </div>
+    <div
+      ref={categoryScrollRef}
+      onScroll={checkScroll}
+      className="flex gap-2.5 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-6 w-full items-center"
+    >
+      {categoriesWithCounts.map(cat => (
+        <button
+          key={cat.name}
+          onClick={() => setActiveCategory(cat.name)}
+          aria-current={activeCategory === cat.name ? 'page' : undefined}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-tight border shrink-0 transition-all ${
+            activeCategory === cat.name
+              ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-sm'
+              : isLightMode || isHeaderLight
+                ? 'bg-zinc-100/90 border-zinc-200 text-zinc-800 hover:bg-zinc-200'
+                : 'bg-[#161b22] border-[#30363d] text-zinc-200 hover:border-[#8b949e] hover:bg-[#1f242c]'
+          }`}
+        >
+          {cat.name} <span className={`ml-1 text-[11px] ${activeCategory === cat.name ? 'opacity-90 font-bold' : 'opacity-60 font-medium'}`}>{cat.count}</span>
+        </button>
+      ))}
+    </div>
 
-              {canScrollRight && (
-                <div className="absolute right-0 z-50 flex items-center pr-2 pl-12 h-full bg-transparent pointer-events-none">
-                  <button 
-                    onClick={() => scrollCategories('right')}
-                    aria-label="Scroll categories right"
-                    className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
-                  >
-                    <ChevronRight className="w-4 h-4 text-black" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+    {canScrollRight && (
+      <div className="absolute right-0 z-50 flex items-center pr-2 pl-12 h-full bg-transparent pointer-events-none">
+        <button 
+          onClick={() => scrollCategories('right')}
+          aria-label="Scroll categories right"
+          className="p-1.5 bg-[var(--theme)] rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-white/20 pointer-events-auto"
+        >
+          <ChevronRight className="w-4 h-4 text-black" />
+        </button>
+      </div>
+    )}
+  </div>
+</div>
           
           <main className="w-full px-3 sm:px-6 lg:px-8 mt-8 space-y-12 relative z-10">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
