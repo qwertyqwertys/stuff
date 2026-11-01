@@ -1248,30 +1248,25 @@ function IntroWrapper() {
         setShowIntro(false);
       }
     };
-    const handleStorageChange = () => {
-      setShowIntro(localStorage.getItem('skipIntro') !== 'true');
-    };
     window.addEventListener('message', handleMessage);
-    window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('message', handleMessage);
-      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
-  if (showIntro) {
-    return (
-      <div className="fixed inset-0 z-[999999] bg-[#050608]">
-        <iframe 
-          src="/intro.html" 
-          className="w-full h-full border-none block"
-          title="Intro"
-        />
-      </div>
-    );
+  if (!showIntro) {
+    return <MainDashboard />;
   }
 
-  return <MainDashboard />;
+  return (
+    <div className="fixed inset-0 z-[999999] bg-[#050608]">
+      <iframe 
+        src="/intro.html" 
+        className="w-full h-full border-none block"
+        title="Intro"
+      />
+    </div>
+  );
 }
 
 // --- APP ENTRY ROUTER ---
