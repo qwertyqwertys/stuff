@@ -1,3 +1,679 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:feb8aee3bc8d3b4b67d929110e810fab55a66090482f4e071e1af30b4825c66a
-size 18437
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to Capybara Science</title>
+  
+  <!-- Google Font: Fredoka -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #050608;
+      --text-main: #ffffff;
+      --text-muted: #8890a0;
+      --accent-blue: #38bdf8;
+      --border: rgba(255, 255, 255, 0.1);
+      --font-main: 'Fredoka', sans-serif;
+    }
+
+    ::selection {
+      background: rgba(56, 189, 248, 0.25);
+      color: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      font-family: var(--font-main);
+      color: var(--text-main);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Full-Bleed Topographic Canvas */
+    #topoCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Cinematic Edge Vignette */
+    .vignette {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(5, 6, 8, 0.4) 0%, rgba(5, 6, 8, 0.95) 100%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Minimalist Top Corner Audio Toggle */
+    .audio-control {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+    }
+
+    .audio-control:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--text-main);
+    }
+
+    .audio-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #6b7280;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .audio-control.playing .audio-dot {
+      background: var(--accent-blue);
+      box-shadow: 0 0 10px var(--accent-blue);
+    }
+
+    /* Central Content Wrapper */
+    .hero-content {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 760px;
+      padding: 0 24px;
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
+    }
+
+    /* Custom Capybara Icon */
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: blurReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+      filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6));
+    }
+
+    .main-title {
+      font-size: 4.5rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: var(--text-main);
+      line-height: 1.1;
+      margin-bottom: 16px;
+      opacity: 0;
+      animation: blurReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+      text-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .main-title span {
+      background: linear-gradient(135deg, #ffffff 20%, var(--accent-blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 1.35rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 36px;
+      max-width: 600px;
+      opacity: 0;
+      animation: blurReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Action Group & Button */
+    .action-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      opacity: 0;
+      animation: blurReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
+    }
+
+    .enter-btn {
+      position: relative;
+      padding: 15px 42px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      color: var(--text-main);
+      font-family: var(--font-main);
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+      transition: background 0.3s ease, border-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .enter-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .enter-btn:hover::before {
+      left: 100%;
+    }
+
+    .enter-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(56, 189, 248, 0.2);
+    }
+
+    .enter-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Preference Checkbox Style */
+    .preference-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .preference-group:hover {
+      color: var(--text-main);
+    }
+
+    .preference-group input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      display: grid;
+      place-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .preference-group input[type="checkbox"]::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      transform: scale(0);
+      transition: 120ms transform ease-in-out;
+      box-shadow: inset 1em 1em var(--accent-blue);
+      clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 18%, 80% 0%, 43% 62%);
+    }
+
+    .preference-group input[type="checkbox"]:checked {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-blue);
+    }
+
+    .preference-group input[type="checkbox"]:checked::before {
+      transform: scale(1);
+    }
+
+    /* Minimalist Metric Counters */
+    .metrics-row {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      opacity: 0;
+      animation: blurReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards;
+    }
+
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .metric-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+    }
+
+    .metric-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .metric-divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes blurReveal {
+      0% { opacity: 0; filter: blur(12px); transform: translateY(14px); }
+      100% { opacity: 1; filter: blur(0px); transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Full-Bleed Topographic Canvas & Vignette -->
+  <canvas id="topoCanvas"></canvas>
+  <div class="vignette"></div>
+
+  <!-- Audio Toggle Button -->
+  <div class="audio-control" id="audioToggle" onclick="toggleAudio()">
+    <div class="audio-dot"></div>
+    <span id="audioLabel">Enable Bass Visualizer</span>
+  </div>
+
+  <!-- Audio Element -->
+  <audio id="bgMusic" loop crossorigin="anonymous"></audio>
+
+  <!-- Central Content Stage -->
+  <div class="hero-content" id="heroContent">
+    
+    <!-- Custom Capybara PNG Icon -->
+    <img class="brand-icon" src="https://img.icons8.com/color/32/capybara.png" alt="Capybara Icon">
+
+    <h1 class="main-title">Welcome to<br><span>Capybara Science</span></h1>
+    <p class="subtitle">The best website to play during school instead of doing your work</p>
+    
+    <div class="action-group">
+      <button class="enter-btn" onclick="enterSite()">Start Getting F's</button>
+      <label class="preference-group">
+        <input type="checkbox" id="dontShowAgain"> Don't show this intro again
+      </label>
+    </div>
+
+    <!-- Minimalist Metric Counters -->
+    <div class="metrics-row">
+      <div class="metric-item">
+        <span class="metric-value">100+</span>
+        <span class="metric-label">Games</span>
+      </div>
+      <div class="metric-divider"></div>
+      <div class="metric-item">
+        <span class="metric-value">100%</span>
+        <span class="metric-label">Customizable</span>
+      </div>
+      <div class="metric-divider"></div>
+      <div class="metric-item">
+        <span class="metric-value">0.0s</span>
+        <span class="metric-label">Instant Launch</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Simplex Noise Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+
+  <script>
+    // ==========================================
+    // SONG PLAYLIST & TIMESTAMP DROP DATABASE
+    // ==========================================
+    const playlist = [
+      '/audio/yale.mp3',
+      '/audio/acronym.mp3',
+      '/audio/new-tank.mp3',
+      '/audio/pop-out.mp3',
+      '/audio/rockstar-made.mp3'
+    ];
+
+    const songDrops = {
+      '/audio/rockstar-made.mp3': [0.0, 14.8, 29.5, 44.2, 59.0, 73.7, 88.5, 103.2, 118.0],
+      '/audio/pop-out.mp3': [15.2, 30.5, 45.8, 61.0, 76.3, 91.5, 106.8],
+      '/audio/new-tank.mp3': [4.5, 19.2, 33.8, 48.5, 63.2],
+      '/audio/acronym.mp3': [12.0, 27.5, 43.0, 58.5, 74.0, 89.5],
+      '/audio/yale.mp3': [8.5, 23.2, 38.0, 52.8, 67.5]
+    };
+
+    const randomSong = playlist[Math.floor(Math.random() * playlist.length)];
+    const audio = document.getElementById('bgMusic');
+    audio.src = randomSong;
+
+    const canvas = document.getElementById('topoCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    const simplex = new SimplexNoise();
+
+    const config = {
+      scale: 0.0028,
+      levels: 20,
+      subtleLine: 'rgba(255, 255, 255, 0.12)',
+      majorLine: 'rgba(255, 255, 255, 0.45)',
+      gridStep: 8,
+      speed: 0.0002
+    };
+
+    let time = 0;
+    let mapScanAlpha = 0;
+    let mouse = { x: -1000, y: -1000, targetX: -1000, targetY: -1000 };
+    let clickRipple = { x: 0, y: 0, radius: 0, active: false };
+
+    // ==========================================
+    // WEB AUDIO API ANALYSER & BASS DETECTOR
+    // ==========================================
+    const audioToggle = document.getElementById('audioToggle');
+    const audioLabel = document.getElementById('audioLabel');
+
+    let isPlaying = false;
+    let triggeredDrops = new Set();
+    let audioCtx, analyser, dataArray, sourceConnected = false;
+    let lastBeatTime = 0;
+
+    function setupAudioAnalyser() {
+      if (sourceConnected) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+
+        const source = audioCtx.createMediaElementSource(audio);
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        sourceConnected = true;
+      } catch (e) {
+        console.error("Web Audio API setup error:", e);
+      }
+    }
+
+    function toggleAudio() {
+      if (isPlaying) {
+        audio.pause();
+        isPlaying = false;
+        audioToggle.classList.remove('playing');
+        audioLabel.textContent = 'Enable Bass Visualizer';
+      } else {
+        setupAudioAnalyser();
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        audio.play().then(() => {
+          isPlaying = true;
+          audioToggle.classList.add('playing');
+          audioLabel.textContent = 'Audio Visualizer Active';
+        }).catch(err => {
+          console.error("Audio playback error:", err);
+        });
+      }
+    }
+
+    audio.addEventListener('timeupdate', () => {
+      if (audio.currentTime < 0.5) {
+        triggeredDrops.clear();
+      }
+    });
+
+    function detectBass() {
+      // 1. Check timestamp database drops
+      const currentTime = audio.currentTime;
+      const drops = songDrops[randomSong] || [];
+
+      drops.forEach((dropTime) => {
+        if (Math.abs(currentTime - dropTime) < 0.15 && !triggeredDrops.has(dropTime)) {
+          triggerBassRipple();
+          triggeredDrops.add(dropTime);
+        }
+      });
+
+      // 2. Real-time frequency analysis backup for sudden beat drops
+      if (!isPlaying || !analyser) return;
+      analyser.getByteFrequencyData(dataArray);
+
+      let bassSum = 0;
+      for (let i = 0; i < 10; i++) {
+        bassSum += dataArray[i];
+      }
+      let bassAverage = bassSum / 10;
+
+      const now = Date.now();
+      if (bassAverage > 215 && (now - lastBeatTime) > 400) {
+        triggerBassRipple();
+        lastBeatTime = now;
+      }
+    }
+
+    function triggerBassRipple() {
+      clickRipple.x = mouse.x > 0 ? mouse.x : width / 2;
+      clickRipple.y = mouse.y > 0 ? mouse.y : height / 2;
+      clickRipple.radius = 0;
+      clickRipple.active = true;
+    }
+
+    // ==========================================
+    // CANVAS & HIGH-DPI ANIMATION ENGINE
+    // ==========================================
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      width = window.innerWidth;
+      height = window.innerHeight;
+      
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      
+      ctx.scale(dpr, dpr);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.targetX = e.clientX;
+      mouse.targetY = e.clientY;
+    });
+
+    window.addEventListener('click', (e) => {
+      if (e.target.closest('.audio-control') || e.target.closest('.enter-btn') || e.target.closest('.preference-group')) return;
+      clickRipple.x = e.clientX;
+      clickRipple.y = e.clientY;
+      clickRipple.radius = 0;
+      clickRipple.active = true;
+    });
+
+    function enterSite() {
+      const dontShow = document.getElementById('dontShowAgain').checked;
+      if (dontShow) {
+        localStorage.setItem('skipIntro', 'true');
+      }
+
+      const content = document.getElementById('heroContent');
+      content.style.transform = 'scale(0.96) translateY(-20px)';
+      content.style.opacity = '0';
+
+      canvas.style.transition = 'opacity 0.8s ease';
+      canvas.style.opacity = '0';
+
+      setTimeout(() => {
+        if (typeof audio !== 'undefined' && audio) {
+          audio.pause();
+        }
+        
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage('hide-intro', '*');
+        }
+      }, 800);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        enterSite();
+      }
+    });
+
+    function getHeight(x, y, t) {
+      const dx = x - mouse.x;
+      const dy = y - mouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const warp = Math.exp(-dist * 0.003) * 0.35;
+
+      let ripple = 0;
+      if (clickRipple.active) {
+        const rdx = x - clickRipple.x;
+        const rdy = y - clickRipple.y;
+        const rDist = Math.sqrt(rdx * rdx + rdy * rdy);
+        const waveDist = Math.abs(rDist - clickRipple.radius);
+        if (waveDist < 70) {
+          ripple = Math.cos((waveDist / 70) * Math.PI) * 0.3 * (1 - clickRipple.radius / 900);
+        }
+      }
+
+      const n1 = simplex.noise3D(x * config.scale, y * config.scale, t);
+      const n2 = simplex.noise3D(x * config.scale * 2.2, y * config.scale * 2.2, t * 1.3) * 0.5;
+
+      return (n1 + n2 + warp + ripple + 1.5) / 3;
+    }
+
+    function render() {
+      detectBass();
+
+      mouse.x += (mouse.targetX - mouse.x) * 0.05;
+      mouse.y += (mouse.targetY - mouse.y) * 0.05;
+
+      if (mapScanAlpha < 0.8) {
+        mapScanAlpha += 0.008;
+      }
+
+      if (clickRipple.active) {
+        clickRipple.radius += 16;
+        if (clickRipple.radius > 900) clickRipple.active = false;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+      time += config.speed;
+
+      const cols = Math.ceil(width / config.gridStep) + 1;
+      const rows = Math.ceil(height / config.gridStep) + 1;
+
+      const grid = new Float32Array(cols * rows);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          grid[r * cols + c] = getHeight(c * config.gridStep, r * config.gridStep, time);
+        }
+      }
+
+      ctx.save();
+      ctx.globalAlpha = mapScanAlpha;
+
+      for (let level = 1; level <= config.levels; level++) {
+        const threshold = level / config.levels;
+        const isMajor = level % 5 === 0;
+
+        ctx.strokeStyle = isMajor ? config.majorLine : config.subtleLine;
+        ctx.lineWidth = isMajor ? 1.3 : 0.6;
+
+        ctx.beginPath();
+
+        for (let r = 0; r < rows - 1; r++) {
+          for (let c = 0; c < cols - 1; c++) {
+            const x = c * config.gridStep;
+            const y = r * config.gridStep;
+            const step = config.gridStep;
+
+            const v0 = grid[r * cols + c];
+            const v1 = grid[r * cols + (c + 1)];
+            const v2 = grid[(r + 1) * cols + (c + 1)];
+            const v3 = grid[(r + 1) * cols + c];
+
+            let cellIndex = 0;
+            if (v0 >= threshold) cellIndex |= 1;
+            if (v1 >= threshold) cellIndex |= 2;
+            if (v2 >= threshold) cellIndex |= 4;
+            if (v3 >= threshold) cellIndex |= 8;
+
+            if (cellIndex === 0 || cellIndex === 15) continue;
+
+            const tTop = (threshold - v0) / (v1 - v0 || 0.0001);
+            const tRight = (threshold - v1) / (v2 - v1 || 0.0001);
+            const tBottom = (threshold - v3) / (v2 - v3 || 0.0001);
+            const tLeft = (threshold - v0) / (v3 - v0 || 0.0001);
+
+            const pTop = [x + tTop * step, y];
+            const pRight = [x + step, y + tRight * step];
+            const pBottom = [x + tBottom * step, y + step];
+            const pLeft = [x, y + tLeft * step];
+
+            const drawSegment = (p1, p2) => {
+              ctx.moveTo(p1[0], p1[1]);
+              ctx.lineTo(p2[0], p2[1]);
+            };
+
+            switch (cellIndex) {
+              case 1: case 14: drawSegment(pLeft, pTop); break;
+              case 2: case 13: drawSegment(pTop, pRight); break;
+              case 3: case 12: drawSegment(pLeft, pRight); break;
+              case 4: case 11: drawSegment(pRight, pBottom); break;
+              case 5: drawSegment(pLeft, pTop); drawSegment(pRight, pBottom); break;
+              case 6: case 9:  drawSegment(pTop, pBottom); break;
+              case 7: case 8:  drawSegment(pLeft, pBottom); break;
+              case 10: drawSegment(pTop, pRight); drawSegment(pLeft, pBottom); break;
+            }
+          }
+        }
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+  </script>
+</body>
+</html>
