@@ -8,14 +8,9 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
   const isUtility = ['request', 'report'].includes(game.id);
   
   const handleCardClick = (e) => {
-    // Normalizes game ID and Title (converts to lowercase and strips special chars)
     const normalizedId = String(game.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const normalizedTitle = String(game.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-    // Debugging log: Open your browser console (F12) to see what your game object looks like!
-    console.log("Game clicked:", { id: game.id, title: game.title, normalizedId, normalizedTitle });
-
-    // Broad check to catch any GTA 3 variation (gta3, gtaiii, grandtheftauto3, grandtheftautoiii)
     const isGTA3 = 
       normalizedId.includes('gta3') || 
       normalizedId.includes('gtaiii') ||
@@ -28,11 +23,10 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
       if (hasAccepted === 'true') {
         onLaunch(game);
       } else {
-        setDontShowAgain(false); // Reset checkbox state so it's always UNCHECKED when triggered
-        setShowGTA3Modal(true); // Trigger disclaimer modal
+        setDontShowAgain(false);
+        setShowGTA3Modal(true);
       }
     } else {
-      // Launch any other game immediately
       onLaunch(game);
     }
   };
@@ -43,14 +37,14 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
       localStorage.setItem('gta3_disclaimer_accepted', 'true');
     }
     setShowGTA3Modal(false);
-    setDontShowAgain(false); // Reset checkbox for next time
+    setDontShowAgain(false);
     onLaunch(game);
   };
 
   const handleCancelDisclaimer = (e) => {
     e.stopPropagation();
     setShowGTA3Modal(false);
-    setDontShowAgain(false); // Reset checkbox state
+    setDontShowAgain(false);
   };
 
   return (
