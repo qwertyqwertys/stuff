@@ -1223,6 +1223,13 @@
     "url": "/stores/games-html/bowmasters.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fplay-lh.googleusercontent.com%2FrsQyCuie6S8Munc2Hv6IMpePP1g3c0okLkyKRXd1IimOryIBMZqymGKaOg7bZ6NMkhj3&f=1&nofb=1&ipt=fb45f801f00f209bf490e7d456424a7459e4e2dd019c1423b9e371656028a1e2&ipo=images",
     "category": "Action"
+  },
+  {
+    "id": "the-simpsons-hit-run",
+    "title": "The Simpsons: Hit & Run",
+    "url": "https://shar-wasm.cjoseph.workers.dev/?skipmovie",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic0.gamerantimages.com%2Fwordpress%2Fwp-content%2Fuploads%2F2023%2F10%2Fthe-simpsons_-hit-run.jpg&f=1&nofb=1&ipt=5785940af231522db999c4b05d789cf589e1d8c8b9287128958eadf46cef8e91&ipo=images",
+    "category": "Action"
   }
 ]
 
