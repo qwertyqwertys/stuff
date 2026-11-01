@@ -137,7 +137,7 @@ export function Header({
         <div className="flex items-center justify-end gap-4 justify-self-end">
           <div 
             className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase ${textColorClass} ${containerBgClass} px-5 py-2 rounded-full border`}
-            style={{ fontFamily: "'Baloo 2', cursive" }}
+            style={{ fontFamily: "'Fredoka', sans-serif" }}
           >
             <span className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[var(--theme)]" /> 
