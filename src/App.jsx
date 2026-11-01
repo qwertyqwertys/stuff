@@ -1243,11 +1243,20 @@ function IntroWrapper() {
   });
 
   useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data === 'hide-intro') {
+        setShowIntro(false);
+      }
+    };
     const handleStorageChange = () => {
       setShowIntro(localStorage.getItem('skipIntro') !== 'true');
     };
+    window.addEventListener('message', handleMessage);
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   if (showIntro) {
