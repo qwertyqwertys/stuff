@@ -51,7 +51,7 @@ export function Header({
 
   return (
     <header className={`bg-transparent h-16 flex items-center px-4 sticky top-0 z-50 transition-colors ${textColorClass}`}>
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-3 items-center">
+      <div className="w-full px-4 grid grid-cols-3 items-center">
         
         <div className="flex items-center gap-2 justify-self-start">
           <img src={DEFAULT_ICON} alt="Capybara Science Logo" className="w-7 h-7 object-contain" />
