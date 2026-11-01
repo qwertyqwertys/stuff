@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'; 
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { useBackgroundContrast } from './hooks/useBackgroundContrast.js'; 
 import { 
@@ -1236,39 +1236,12 @@ function NotFound() {
   );
 }
 
-// --- INLINE INTRO OVERLAY COMPONENT ---
-function IntroWrapper() {
-  const [showIntro, setShowIntro] = useState(() => {
-    return localStorage.getItem('skipIntro') !== 'true';
-  });
-
-  useEffect(() => {
-    const handleMessage = (event) => {
-      // Ensure the message is coming specifically from your intro iframe
-      if (event.data === 'hide-intro') {
-        localStorage.setItem('skipIntro', 'true');
-        setShowIntro(false);
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, []);
-
-  // If the user has skipped or clicked enter, render ONLY the MainDashboard
-  if (!showIntro) {
-    return <MainDashboard />;
-  }
-
-  // Otherwise, render ONLY the topographic intro iframe with zero fallback markup
+// --- APP ENTRY ROUTER ---
+export default function App() {
   return (
-    <div className="fixed inset-0 z-[999999] bg-[#050608]">
-      <iframe 
-        src="/intro.html" 
-        className="w-full h-full border-none block"
-        title="Intro"
-      />
-    </div>
+    <Routes>
+      <Route path="/" element={<MainDashboard />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
