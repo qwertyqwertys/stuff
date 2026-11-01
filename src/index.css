@@ -181,27 +181,16 @@
 }
 
 .no-scrollbar {
-  overflow-x: scroll !important;
+  overflow-x: auto !important;
   overflow-y: hidden !important;
   display: flex !important;
   flex-wrap: nowrap !important;
-  height: 58px !important;
-  padding-bottom: 16px !important;
-  margin-bottom: -16px !important;
-  scrollbar-width: thin !important;
+  scrollbar-width: none !important;
   -webkit-overflow-scrolling: touch !important;
 }
 
 .no-scrollbar::-webkit-scrollbar {
-  display: block !important;
-  height: 8px !important;
-  background-color: rgba(0, 0, 0, 0.05) !important;
-}
-
-.no-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #71717a !important; 
-  border-radius: 10px !important;
-  border: 2px solid white !important;
+  display: none !important;
 }
 
 .show-vertical-bar {
@@ -226,10 +215,6 @@
   border-radius: 10px !important;
   min-height: 40px !important; 
   border: 2px solid rgba(0, 0, 0, 0.2) !important;
-}
-
-.no-scrollbar::-webkit-scrollbar-button {
-  display: none !important;
 }
 
 * {
