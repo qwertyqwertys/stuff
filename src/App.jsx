@@ -961,7 +961,7 @@ function MainDashboard() {
             theme={theme} 
             onViewProfile={() => setSelectedFriendId('me')} 
             onRandomGame={() => {
-              const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
+              const playable = (filteredGames || []).filter(g => !['request', 'report', 'blooket-cheats'].includes(g?.id));
               if (playable.length > 0) {
                 launchContent(playable[Math.floor(Math.random() * playable.length)]);
               }
