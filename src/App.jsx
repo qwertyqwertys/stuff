@@ -841,10 +841,14 @@ function MainDashboard() {
 
   return (
     <div
-      className={`min-h-screen pb-20 antialiased relative ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
+      className={`min-h-screen pb-20 antialiased relative overflow-x-hidden overflow-y-auto ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
       style={{ 
         '--theme': theme, 
-        '--glow': `${performanceMode ? 0 : glowIntensity}px`
+        '--glow': `${performanceMode ? 0 : glowIntensity}px`,
+        width: '100vw',
+        maxWidth: '100%',
+        margin: '0 auto',
+        boxSizing: 'border-box'
       }}
     >
       {notification && (
@@ -1236,7 +1240,49 @@ function NotFound() {
   );
 }
 
+// --- INLINE INTRO OVERLAY COMPONENT ---
+function IntroWrapper() {
+  const [showIntro, setShowIntro] = useState(() => {
+    return localStorage.getItem('skipIntro') !== 'true';
+  });
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      // Ensure the message is coming specifically from your intro iframe
+      if (event.data === 'hide-intro') {
+        localStorage.setItem('skipIntro', 'true');
+        setShowIntro(false);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
+
+  // If the user has skipped or clicked enter, render ONLY the MainDashboard
+  if (!showIntro) {
+    return <MainDashboard />;
+  }
+
+  // Otherwise, render ONLY the topographic intro iframe with zero fallback markup
+  return (
+    <div className="fixed inset-0 z-[999999] bg-[#050608]">
+      <iframe 
+        src="/intro.html" 
+        className="w-full h-full border-none block"
+        title="Intro"
+      />
+    </div>
+  );
+}
+
 // --- MAIN APP EXPORT ---
 export default function App() {
-  return <MainDashboard />;
+  return (
+    <Routes>
+      <Route path="/" element={<IntroWrapper />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
 }
