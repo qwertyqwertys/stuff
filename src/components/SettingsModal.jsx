@@ -1021,7 +1021,7 @@ function SettingsModalContent({
                       <Database className="w-3 h-3" /> Data Saving
                     </label>
                     <p className={`text-[9px] mt-1 ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                      export, import, or clear browser data saved by the site
+                      Export, import, or clear browser data saved by this site
                     </p>
                   </div>
 
