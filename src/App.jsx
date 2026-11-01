@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'; 
 import { Routes, Route, Link } from 'react-router-dom';
 import { useBackgroundContrast } from './hooks/useBackgroundContrast.js'; 
 import { 
