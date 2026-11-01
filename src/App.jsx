@@ -844,7 +844,11 @@ function MainDashboard() {
       className={`min-h-screen pb-20 antialiased relative overflow-x-hidden overflow-y-auto ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
       style={{ 
         '--theme': theme, 
-        '--glow': `${performanceMode ? 0 : glowIntensity}px`
+        '--glow': `${performanceMode ? 0 : glowIntensity}px`,
+        width: '100vw',
+        maxWidth: '100%',
+        margin: '0 auto',
+        boxSizing: 'border-box'
       }}
     >
       {notification && (
@@ -952,7 +956,7 @@ function MainDashboard() {
             activeChannel="global"
           />
 
-          <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
+          <div className="w-full px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
             <div className="max-w-7xl mx-auto relative flex items-center">
               {canScrollLeft && (
                 <div className="absolute left-0 z-50 flex items-center pr-12 h-full bg-transparent pointer-events-none">
@@ -1003,7 +1007,7 @@ function MainDashboard() {
             </div>
           </div>
 
-          <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12 relative z-10">
+          <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12 relative z-10 w-full">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
