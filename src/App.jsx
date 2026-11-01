@@ -841,14 +841,10 @@ function MainDashboard() {
 
   return (
     <div
-      className={`min-h-screen pb-20 antialiased relative overflow-x-hidden overflow-y-auto ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
+      className={`min-h-screen pb-20 antialiased relative ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
       style={{ 
         '--theme': theme, 
-        '--glow': `${performanceMode ? 0 : glowIntensity}px`,
-        width: '100vw',
-        maxWidth: '100%',
-        margin: '0 auto',
-        boxSizing: 'border-box'
+        '--glow': `${performanceMode ? 0 : glowIntensity}px`
       }}
     >
       {notification && (
@@ -931,30 +927,30 @@ function MainDashboard() {
       ) : (
         <>
           <Header 
-            searchQuery={searchQuery} 
-            setSearchQuery={setSearchQuery}
-            time={time}
-            battery={battery}
-            profilePic={profilePic}
-            setShowSettings={setShowSettings}
-            DEFAULT_ICON={CAPY_LOGO}
-            theme={theme} 
-            onViewProfile={() => setSelectedFriendId('me')} 
-            onRandomGame={() => {
-              const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
-              if (playable.length > 0) {
-                launchContent(playable[Math.floor(Math.random() * playable.length)]);
-              }
-            }}
-            isChatOpen={isChatOpen}
-            setIsChatOpen={setIsChatOpen}
-            setShowSoundboard={setIsSoundboardOpen}
-            isSoundboardOpen={isSoundboardOpen}
-            isHeaderLight={isHeaderLight}
-            isLightMode={isLightMode}
-            currentUserId={uniqueId}
-            activeChannel="global"
-          />
+  searchQuery={searchQuery} 
+  setSearchQuery={setSearchQuery}
+  time={time}
+  battery={battery}
+  profilePic={profilePic}
+  setShowSettings={setShowSettings}
+  DEFAULT_ICON={CAPY_LOGO}
+  theme={theme} 
+  onViewProfile={() => setSelectedFriendId('me')} 
+  onRandomGame={() => {
+    const playable = (filteredGames || []).filter(g => !['request', 'report'].includes(g?.id));
+    if (playable.length > 0) {
+      launchContent(playable[Math.floor(Math.random() * playable.length)]);
+    }
+  }}
+  isChatOpen={isChatOpen}
+  setIsChatOpen={setIsChatOpen}
+  setShowSoundboard={setIsSoundboardOpen}
+  isSoundboardOpen={isSoundboardOpen}
+  isHeaderLight={isHeaderLight}
+  isLightMode={isLightMode}
+  currentUserId={uniqueId}
+  activeChannel="global"
+/>
 
           <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
             <div className="max-w-7xl mx-auto relative flex items-center">
@@ -1248,9 +1244,7 @@ function IntroWrapper() {
 
   useEffect(() => {
     const handleMessage = (event) => {
-      // Ensure the message is coming specifically from your intro iframe
       if (event.data === 'hide-intro') {
-        localStorage.setItem('skipIntro', 'true');
         setShowIntro(false);
       }
     };
@@ -1260,12 +1254,10 @@ function IntroWrapper() {
     };
   }, []);
 
-  // If the user has skipped or clicked enter, render ONLY the MainDashboard
   if (!showIntro) {
     return <MainDashboard />;
   }
 
-  // Otherwise, render ONLY the topographic intro iframe with zero fallback markup
   return (
     <div className="fixed inset-0 z-[999999] bg-[#050608]">
       <iframe 
@@ -1277,7 +1269,7 @@ function IntroWrapper() {
   );
 }
 
-// --- MAIN APP EXPORT ---
+// --- APP ENTRY ROUTER ---
 export default function App() {
   return (
     <Routes>
