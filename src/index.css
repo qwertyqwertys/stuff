@@ -250,7 +250,7 @@
   cursor: url('https://img.icons8.com/color/28/test-tube.png'), pointer !important;
 }
 
-/* --- UI GEOMETRY: CONCENTRIC NESTED RADIUS RULES --- */
+/* --- UI GEOMETRY: CONCENTRIC NESTED RADIUS & CARD SIZING RULES --- */
 
 .card, .game-card {
   --R: 24px;   /* Outer Radius */
@@ -263,20 +263,38 @@
   overflow: hidden;
 }
 
+.game-card {
+  background-color: #12141a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.game-card:hover {
+  border-color: var(--theme);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px var(--theme, rgba(56, 189, 248, 0.2));
+}
+
 .game-card button,
 .game-card input,
 .game-card .inner-box {
   border-radius: calc(var(--R) - var(--p) - var(--b));
 }
 
-.game-card img.card-banner {
-  border-radius: 23px 23px 0 0;
+.game-card img.card-banner, 
+.game-card .card-banner-container {
+  border-radius: 16px;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
 }
 
 .control-group {
   border-radius: 8px;
   padding: 4px;
-} 
+}
 
 .control-group button {
   border-radius: 4px;
