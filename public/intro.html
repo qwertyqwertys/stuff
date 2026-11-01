@@ -361,7 +361,7 @@
 
   <script>
     // ==========================================
-    // SONG PLAYLIST & TIMESTAMP DROP DATABASE
+    // SONG PLAYLIST & FRAME-LOCKED DROP DATABASE
     // ==========================================
     const playlist = [
       '/audio/yale.mp3',
@@ -404,7 +404,7 @@
     let clickRipple = { x: 0, y: 0, radius: 0, active: false };
 
     // ==========================================
-    // WEB AUDIO API ANALYSER & BASS DETECTOR
+    // AUDIO CONTROLLER & FRAME-ACCURATE BEAT LOCK
     // ==========================================
     const audioToggle = document.getElementById('audioToggle');
     const audioLabel = document.getElementById('audioLabel');
@@ -461,19 +461,21 @@
     });
 
     function detectBass() {
-      // 1. Check timestamp database drops
+      if (!isPlaying) return;
+
       const currentTime = audio.currentTime;
       const drops = songDrops[randomSong] || [];
 
+      // Frame-accurate 0.05s window locks ripples directly onto the beat
       drops.forEach((dropTime) => {
-        if (Math.abs(currentTime - dropTime) < 0.15 && !triggeredDrops.has(dropTime)) {
+        if (Math.abs(currentTime - dropTime) < 0.05 && !triggeredDrops.has(dropTime)) {
           triggerBassRipple();
           triggeredDrops.add(dropTime);
         }
       });
 
-      // 2. Real-time frequency analysis backup for sudden beat drops
-      if (!isPlaying || !analyser) return;
+      // Real-time frequency analysis fallback for extra bass energy spikes
+      if (!analyser) return;
       analyser.getByteFrequencyData(dataArray);
 
       let bassSum = 0;
