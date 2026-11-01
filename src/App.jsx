@@ -969,7 +969,7 @@ function MainDashboard() {
               <div
                 ref={categoryScrollRef}
                 onScroll={checkScroll}
-                className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-3 w-full"
+                className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-4 w-full"
               >
                 {categoriesWithCounts.map(cat => (
                   <button
@@ -1002,7 +1002,7 @@ function MainDashboard() {
               )}
             </div>
           </div>
-
+          
           <main className="w-full px-3 sm:px-6 lg:px-8 mt-8 space-y-12 relative z-10">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
