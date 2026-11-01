@@ -468,14 +468,14 @@
 
   <script>
     // ==========================================
-    // SONG PLAYLIST & TIMESTAMP DROP DATABASE
+    // CUSTOMIZABLE SONG PLAYLIST & TITLES
     // ==========================================
     const playlist = [
-      '/audio/yale.mp3',
-      '/audio/acronym.mp3',
-      '/audio/new-tank.mp3',
-      '/audio/pop-out.mp3',
-      '/audio/rockstar-made.mp3'
+      { src: '/audio/yale.mp3', title: 'Yale - Ken Carson' },
+      { src: '/audio/acronym.mp3', title: 'the acronym (with Destroy Lonely) - Ken Carson, Destroy Lonely' },
+      { src: '/audio/new-tank.mp3', title: 'New Tank - Playboi Carti' },
+      { src: '/audio/pop-out.mp3', title: 'POP OUT - Playboi Carti' },
+      { src: '/audio/rockstar-made.mp3', title: 'Rockstar Made - Playboi Carti' }
     ];
 
     const songDrops = {
@@ -487,15 +487,10 @@
     };
 
     let currentSongIndex = Math.floor(Math.random() * playlist.length);
-    let randomSong = playlist[currentSongIndex];
+    let currentSong = playlist[currentSongIndex];
     
     const audio = document.getElementById('bgMusic');
-    audio.src = randomSong;
-
-    function getFormattedTitle(path) {
-      const filename = path.split('/').pop().replace('.mp3', '');
-      return filename.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    }
+    audio.src = currentSong.src;
 
     const audioLabel = document.getElementById('audioLabel');
     const songTitleDisplay = document.getElementById('songTitleDisplay');
@@ -503,14 +498,14 @@
     const audioToggle = document.getElementById('audioToggle');
 
     function updatePlayerUI() {
-      songTitleDisplay.textContent = getFormattedTitle(randomSong);
+      songTitleDisplay.textContent = currentSong.title;
     }
     updatePlayerUI();
 
     function loadSong(index) {
       currentSongIndex = index;
-      randomSong = playlist[currentSongIndex];
-      audio.src = randomSong;
+      currentSong = playlist[currentSongIndex];
+      audio.src = currentSong.src;
       updatePlayerUI();
       triggeredDrops.clear();
       if (isPlaying) {
@@ -523,7 +518,7 @@
       const nextIndex = (currentSongIndex + 1) % playlist.length;
       loadSong(nextIndex);
     }
-
+    
     const canvas = document.getElementById('topoCanvas');
     const ctx = canvas.getContext('2d');
 
