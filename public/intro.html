@@ -361,7 +361,7 @@
 
   <script>
     // ==========================================
-    // SONG PLAYLIST & FRAME-LOCKED DROP DATABASE
+    // SONG PLAYLIST & TIMESTAMP DROP DATABASE
     // ==========================================
     const playlist = [
       '/audio/yale.mp3',
@@ -404,7 +404,7 @@
     let clickRipple = { x: 0, y: 0, radius: 0, active: false };
 
     // ==========================================
-    // AUDIO CONTROLLER & FRAME-ACCURATE BEAT LOCK
+    // HYBRID WEB AUDIO & TIMESTAMP ANALYSER
     // ==========================================
     const audioToggle = document.getElementById('audioToggle');
     const audioLabel = document.getElementById('audioLabel');
@@ -466,7 +466,7 @@
       const currentTime = audio.currentTime;
       const drops = songDrops[randomSong] || [];
 
-      // Frame-accurate 0.05s window locks ripples directly onto the beat
+      // 1. Frame-accurate timestamp drop synchronization (0.05s window)
       drops.forEach((dropTime) => {
         if (Math.abs(currentTime - dropTime) < 0.05 && !triggeredDrops.has(dropTime)) {
           triggerBassRipple();
@@ -474,7 +474,7 @@
         }
       });
 
-      // Real-time frequency analysis fallback for extra bass energy spikes
+      // 2. Real-time frequency bin analysis for live beat/bass tracking
       if (!analyser) return;
       analyser.getByteFrequencyData(dataArray);
 
@@ -485,7 +485,8 @@
       let bassAverage = bassSum / 10;
 
       const now = Date.now();
-      if (bassAverage > 215 && (now - lastBeatTime) > 400) {
+      // Sensitivity threshold for sudden beats and cooldown to avoid clustering
+      if (bassAverage > 210 && (now - lastBeatTime) > 350) {
         triggerBassRipple();
         lastBeatTime = now;
       }
