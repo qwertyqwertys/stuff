@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'; 
 import { Routes, Route, Link } from 'react-router-dom';
 import { useBackgroundContrast } from './hooks/useBackgroundContrast.js'; 
 import { 
@@ -1020,7 +1020,7 @@ function MainDashboard() {
                     Clear History
                   </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                   {recentGamesData.map(game => (
                     <GameCard 
                       key={`recent-${game.id}`} 
@@ -1037,7 +1037,7 @@ function MainDashboard() {
               </section>
             )}
 
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 pb-12">
               {filteredGames.map(game => (
                 <GameCard 
                   key={game.id} 
