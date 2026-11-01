@@ -955,7 +955,7 @@ function MainDashboard() {
           <div className="pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
             <div className="w-full relative flex items-center">
               {canScrollLeft && (
-                <div className="absolute left-0 z-50 flex items-center pr-12 h-full bg-transparent pointer-events-none">
+                <div className="absolute left-0 z-50 flex items-center pl-2 pr-12 h-full bg-transparent pointer-events-none">
                   <button
                     onClick={() => scrollCategories('left')}
                     aria-label="Scroll categories left"
@@ -969,14 +969,14 @@ function MainDashboard() {
               <div
                 ref={categoryScrollRef}
                 onScroll={checkScroll}
-                className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-2 w-full"
+                className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-3 w-full"
               >
                 {categoriesWithCounts.map(cat => (
                   <button
                     key={cat.name}
                     onClick={() => setActiveCategory(cat.name)}
                     aria-current={activeCategory === cat.name ? 'page' : undefined}
-                    className={`py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ...
+                    className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
                       activeCategory === cat.name
                         ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
                         : isLightMode || isHeaderLight
@@ -990,7 +990,7 @@ function MainDashboard() {
               </div>
 
               {canScrollRight && (
-                <div className="absolute -right-9 z-50 flex items-center pl-12 h-full bg-transparent pointer-events-none">
+                <div className="absolute right-0 z-50 flex items-center pr-2 pl-12 h-full bg-transparent pointer-events-none">
                   <button 
                     onClick={() => scrollCategories('right')}
                     aria-label="Scroll categories right"
@@ -1003,7 +1003,7 @@ function MainDashboard() {
             </div>
           </div>
 
-          <main className="w-full mt-8 space-y-12 relative z-10">
+          <main className="w-full px-3 sm:px-6 lg:px-8 mt-8 space-y-12 relative z-10">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
