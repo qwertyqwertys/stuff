@@ -1244,6 +1244,7 @@ function IntroWrapper() {
 
   useEffect(() => {
     const handleMessage = (event) => {
+      // Ensure the message is coming specifically from your intro iframe
       if (event.data === 'hide-intro') {
         localStorage.setItem('skipIntro', 'true');
         setShowIntro(false);
@@ -1255,10 +1256,12 @@ function IntroWrapper() {
     };
   }, []);
 
+  // If the user has skipped or clicked enter, render ONLY the MainDashboard
   if (!showIntro) {
     return <MainDashboard />;
   }
 
+  // Otherwise, render ONLY the topographic intro iframe with zero fallback markup
   return (
     <div className="fixed inset-0 z-[999999] bg-[#050608]">
       <iframe 
@@ -1267,15 +1270,5 @@ function IntroWrapper() {
         title="Intro"
       />
     </div>
-  );
-}
-
-// --- MAIN APP EXPORT ---
-export default function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<IntroWrapper />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
   );
 }
