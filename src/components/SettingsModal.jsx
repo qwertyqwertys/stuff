@@ -429,6 +429,7 @@ function SettingsModalContent({
           !titleLower.includes('request') && 
           !titleLower.includes('report') && 
           !titleLower.includes('form')
+          !titleLower.includes('blooket cheats')
         );
       });
       setGamesList(validGames);
