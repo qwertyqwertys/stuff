@@ -136,17 +136,17 @@ export function Header({
 
         <div className="flex items-center justify-end gap-4 justify-self-end">
           <div 
-            className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase ${textColorClass} ${containerBgClass} px-5 py-2 rounded-full border`}
+            className={`hidden sm:flex items-center gap-5 text-sm uppercase ${textColorClass} ${containerBgClass} px-5 py-2 rounded-full border`}
           >
             <span className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[var(--theme)]" /> 
-              <span className="translate-y-[1px] font-medium" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+              <span className="translate-y-[1px]" style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: '600' }}>
                 {time.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
               </span>
             </span>
             <span className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-[var(--theme)]" /> 
-              <span className="translate-y-[1px] font-medium" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+              <span className="translate-y-[1px]" style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: '600' }}>
                 {time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}
               </span>
             </span>
@@ -154,7 +154,7 @@ export function Header({
             {battery.level !== null && (
               <div className="flex items-center gap-2">
                 <Battery className={`w-5 h-5 ${battery.charging ? 'text-green-500 animate-pulse' : ''}`} />
-                <span className="translate-y-[1px] font-medium" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                <span className="translate-y-[1px]" style={{ fontFamily: "'Fredoka', sans-serif", fontWeight: '600' }}>
                   {battery.level}%
                 </span>
               </div>
