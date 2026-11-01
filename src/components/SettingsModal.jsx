@@ -969,7 +969,7 @@ function SettingsModalContent({
           role="dialog"
           aria-modal="true"
           aria-labelledby="settings-title"
-          className={`${modalBg} border rounded-3xl max-w-md w-full relative shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}
+          className={`${modalBg} border rounded-3xl max-w-lg w-full relative shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}
         >
           {/* HEADER */}
           <div className={`flex items-center justify-between border-b ${isLightMode ? 'border-zinc-200' : 'border-white/5'} px-6 pt-6 pb-4 ${modalBg} z-20 flex-shrink-0`}>
