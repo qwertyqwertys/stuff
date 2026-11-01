@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'; 
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { useBackgroundContrast } from './hooks/useBackgroundContrast.js'; 
 import { 
@@ -1236,44 +1236,11 @@ function NotFound() {
   );
 }
 
-// --- INLINE INTRO OVERLAY COMPONENT ---
-function IntroWrapper() {
-  const [showIntro, setShowIntro] = useState(() => {
-    return localStorage.getItem('skipIntro') !== 'true';
-  });
-
-  useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.data === 'hide-intro') {
-        setShowIntro(false);
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, []);
-
-  if (!showIntro) {
-    return <MainDashboard />;
-  }
-
-  return (
-    <div className="fixed inset-0 z-[999999] bg-[#050608]">
-      <iframe 
-        src="/intro.html" 
-        className="w-full h-full border-none block"
-        title="Intro"
-      />
-    </div>
-  );
-}
-
 // --- APP ENTRY ROUTER ---
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<IntroWrapper />} />
+      <Route path="/" element={<MainDashboard />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
