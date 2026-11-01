@@ -1236,18 +1236,30 @@ function NotFound() {
   );
 }
 
-// --- INTRO ROUTE CHECK WRAPPER ---
+// --- INLINE INTRO OVERLAY COMPONENT ---
 function IntroWrapper() {
+  const [showIntro, setShowIntro] = useState(() => {
+    return localStorage.getItem('skipIntro') !== 'true';
+  });
+
   useEffect(() => {
-    const skipIntro = localStorage.getItem('skipIntro') === 'true';
-    if (!skipIntro) {
-      window.location.replace('/intro.html');
-    }
+    const handleStorageChange = () => {
+      setShowIntro(localStorage.getItem('skipIntro') !== 'true');
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const skipIntro = localStorage.getItem('skipIntro') === 'true';
-  if (!skipIntro) {
-    return null;
+  if (showIntro) {
+    return (
+      <div className="fixed inset-0 z-[999999] bg-[#050608]">
+        <iframe 
+          src="/intro.html" 
+          className="w-full h-full border-none block"
+          title="Intro"
+        />
+      </div>
+    );
   }
 
   return <MainDashboard />;
