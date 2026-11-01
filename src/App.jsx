@@ -976,7 +976,7 @@ function MainDashboard() {
                     key={cat.name}
                     onClick={() => setActiveCategory(cat.name)}
                     aria-current={activeCategory === cat.name ? 'page' : undefined}
-                    className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
+                    className={`py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ...
                       activeCategory === cat.name
                         ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
                         : isLightMode || isHeaderLight
@@ -1003,7 +1003,7 @@ function MainDashboard() {
             </div>
           </div>
 
-          <main className="w-full px-4 sm:px-6 lg:px-8 mt-8 space-y-12 relative z-10">
+          <main className="w-full mt-8 space-y-12 relative z-10">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
