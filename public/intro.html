@@ -415,7 +415,7 @@
     let clickRipple = { x: 0, y: 0, radius: 0, active: false };
 
     // ==========================================
-    // HYBRID WEB AUDIO & TIMESTAMP ANALYSER
+    // HIGH-PRECISION WEB AUDIO & BASS ANALYSER
     // ==========================================
     const audioToggle = document.getElementById('audioToggle');
     const audioLabel = document.getElementById('audioLabel');
@@ -431,7 +431,9 @@
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioContext();
         analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
+        // Higher fftSize gives finer frequency bin resolution for pinpoint accuracy
+        analyser.fftSize = 512;
+        analyser.smoothingTimeConstant = 0.2; // Faster reaction time to transients
 
         const source = audioCtx.createMediaElementSource(audio);
         source.connect(analyser);
@@ -477,6 +479,7 @@
       const currentTime = audio.currentTime;
       const drops = songDrops[randomSong] || [];
 
+      // 1. Frame-accurate timestamp drops (0.05s window)
       drops.forEach((dropTime) => {
         if (Math.abs(currentTime - dropTime) < 0.05 && !triggeredDrops.has(dropTime)) {
           triggerBassRipple();
@@ -484,17 +487,22 @@
         }
       });
 
+      // 2. Ultra-sensitive real-time bass and drum kick tracking
       if (!analyser) return;
       analyser.getByteFrequencyData(dataArray);
 
+      // Target sub-bass & kick frequency bins (bins 2 through 18)
       let bassSum = 0;
-      for (let i = 0; i < 10; i++) {
+      const binStart = 2;
+      const binEnd = 18;
+      for (let i = binStart; i <= binEnd; i++) {
         bassSum += dataArray[i];
       }
-      let bassAverage = bassSum / 10;
+      let bassAverage = bassSum / (binEnd - binStart + 1);
 
       const now = Date.now();
-      if (bassAverage > 210 && (now - lastBeatTime) > 350) {
+      // Lower threshold (185) with a tight 280ms cooldown captures every rapid kick/drop smoothly
+      if (bassAverage > 185 && (now - lastBeatTime) > 280) {
         triggerBassRipple();
         lastBeatTime = now;
       }
@@ -684,7 +692,6 @@
       requestAnimationFrame(render);
     }
 
-    // Defer start of render loop to ensure 0 frame-drop on initial load
     requestAnimationFrame(() => {
       render();
     });
