@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Search, Dices, Calendar, Clock, Battery, UserCircle, Settings, X, MessageSquare, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import useChatNotifications from '../hooks/useChatNotifications';
+import useChatNotifications from '../hooks/useChatNotifications'; // Adjust import path if needed
 
 export function Header({ 
   searchQuery, setSearchQuery, 
@@ -19,65 +19,70 @@ export function Header({
 }) {
   const navigate = useNavigate();
 
+  // Initialize chat notifications hook
   const { unreadCounts, markAsRead } = useChatNotifications({ 
     currentUserId, 
     activeChannelId: isChatOpen ? activeChannel : null 
   });
 
+  // Automatically clear unreads when chat opens
   useEffect(() => {
     if (isChatOpen) {
       markAsRead(activeChannel);
     }
   }, [isChatOpen, activeChannel, markAsRead]);
 
+  // Sum up total unread messages
   const totalUnreads = Object.values(unreadCounts).reduce((acc, count) => acc + count, 0);
 
   const handleToggleChat = () => {
     setIsChatOpen(prev => {
       const nextState = !prev;
       if (nextState) {
-        markAsRead(activeChannel);
+        markAsRead(activeChannel); // Clear badge immediately when opening
       }
       return nextState;
     });
   };
 
-  const containerBgClass = isLightMode || isHeaderLight 
-    ? 'bg-black/5 border-black/10' 
-    : 'bg-[#161b22] border-[#30363d]';
+  const textColorClass = isLightMode || isHeaderLight ? 'text-zinc-900' : 'text-zinc-100';
+  const containerBgClass = isLightMode || isHeaderLight ? 'bg-black/5 border-black/10' : 'bg-white/5 border-white/10';
+  const placeholderClass = isLightMode || isHeaderLight ? 'placeholder:text-zinc-500' : 'placeholder:text-zinc-400';
 
   return (
-    <header className="w-full bg-[#0d1117] h-16 flex items-center px-6 sticky top-0 z-50 border-b border-[#21262d]">
-      <div className="w-full grid grid-cols-3 items-center">
+    <header className={`bg-transparent h-16 flex items-center px-4 sticky top-0 z-50 transition-colors ${textColorClass}`}>
+      <div className="max-w-7xl mx-auto w-full grid grid-cols-3 items-center">
         
-        {/* LEFT: BRANDING */}
-<div className="flex items-center gap-2.5 justify-self-start cursor-pointer" onClick={() => navigate('/')}>
-  <img src={DEFAULT_ICON} alt="Capybara Science Logo" className="w-7 h-7 object-contain" />
-  <span 
-    className="text-xl font-semibold tracking-tighter text-white hidden lg:block"
-    style={{ fontFamily: "'Fredoka', sans-serif" }}
-  >
-    Capybara Science
-  </span>
-</div>
+        <div className="flex items-center gap-2 justify-self-start">
+          <img src={DEFAULT_ICON} alt="Capybara Science Logo" className="w-7 h-7 object-contain" />
+          <span 
+            className="text-xl font-semibold hidden lg:block tracking-tighter"
+            style={{ 
+              fontFamily: "'Fredoka', sans-serif",
+              fontWeight: 600,
+              color: isLightMode || isHeaderLight ? '#000000' : '#ffffff'
+            }}
+          >
+            Capybara Science
+          </span>
+        </div>
 
-        {/* CENTER: SEARCH & INTERACTIVE CONTROLS */}
-        <div className="flex items-center justify-center gap-2.5 w-full justify-self-center">
+        <div className="flex items-center justify-center gap-3 w-full justify-self-center">
           <div className="relative w-full max-w-[280px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isLightMode || isHeaderLight ? 'text-zinc-600' : 'text-zinc-400'}`} />
             <input 
               type="text" 
               placeholder="Search..." 
               aria-label="Search" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="w-full bg-[#161b22] text-zinc-100 placeholder:text-zinc-500 border border-[#30363d] rounded-full py-1.5 pl-9 pr-8 text-xs outline-none focus:border-[#58a6ff] transition-all" 
+              className={`w-full ${containerBgClass} ${textColorClass} ${placeholderClass} border rounded-full py-2 pl-10 pr-10 text-xs outline-none focus:border-[var(--theme)]/50 transition-colors`} 
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')} 
                 aria-label="Clear search text"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 hover:bg-white/10 rounded-full text-zinc-400"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-white/10 rounded-full text-[var(--theme)]"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -87,26 +92,28 @@ export function Header({
           <button 
             onClick={onRandomGame} 
             aria-label="Play a random game"
-            className="p-1.5 bg-[#161b22] border border-[#30363d] rounded-full text-zinc-300 hover:text-white hover:border-[#58a6ff] transition-all"
-            title="Random Game"
+            className={`p-2 ${containerBgClass} border rounded-full text-[var(--theme)] hover:bg-[var(--theme)] hover:text-black transition-all shadow-[0_0_15px_rgba(var(--theme-rgb),0.1)]`}
           >
-            <Dices className="w-4 h-4" />
+            <Dices className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
+            {/* CHAT BUTTON WITH UNREAD NOTIFICATION BADGE */}
             <button 
               onClick={handleToggleChat} 
-              className={`relative p-1.5 border rounded-lg transition-all ${
+              className={`relative p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
                 isChatOpen 
-                  ? 'bg-[#58a6ff] border-[#58a6ff] text-[#0d1117]' 
-                  : 'bg-[#161b22] border-[#30363d] text-zinc-300 hover:text-white'
+                  ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
+                  : `${containerBgClass} text-[var(--theme)]`
               }`}
               title="Toggle Chat"
               aria-label="Toggle chat sidebar"
             >
               <MessageSquare className="w-4 h-4" />
+
+              {/* Notification Badge */}
               {!isChatOpen && totalUnreads > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-bounce shadow-md">
                   {totalUnreads > 9 ? '9+' : totalUnreads}
                 </span>
               )}
@@ -114,10 +121,10 @@ export function Header({
 
             <button 
               onClick={() => setShowSoundboard ? setShowSoundboard(prev => !prev) : null} 
-              className={`p-1.5 border rounded-lg transition-all ${
+              className={`p-2 border rounded-lg transition-all hover:scale-105 active:scale-95 ${
                 isSoundboardOpen 
-                  ? 'bg-[#58a6ff] border-[#58a6ff] text-[#0d1117]' 
-                  : 'bg-[#161b22] border-[#30363d] text-zinc-300 hover:text-white'
+                  ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-[0_0_10px_var(--theme)]' 
+                  : `${containerBgClass} text-[var(--theme)]`
               }`}
               title="Toggle Soundboard"
               aria-label="Toggle custom soundboard"
@@ -127,47 +134,53 @@ export function Header({
           </div>
         </div>
 
-        {/* RIGHT: SYSTEM STATUS & PROFILE */}
-        <div className="flex items-center justify-end gap-3 justify-self-end">
+        <div className="flex items-center justify-end gap-4 justify-self-end">
           <div 
-            className="hidden lg:flex items-center gap-4 text-xs font-medium text-zinc-300 bg-[#161b22] px-4 py-1.5 rounded-full border border-[#30363d]"
-            style={{ fontFamily: "'Fredoka', sans-serif" }}
+            className={`hidden sm:flex items-center gap-5 text-sm font-bold uppercase ${textColorClass} ${containerBgClass} px-5 py-2 rounded-full border`}
+            style={{ fontFamily: "'Baloo 2', cursive" }}
           >
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-[#58a6ff]" /> 
-              <span>{time.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+            <span className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[var(--theme)]" /> 
+              <span className="translate-y-[1px] font-medium">{time.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
             </span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-[#58a6ff]" /> 
-              <span>{time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+            <span className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[var(--theme)]" /> 
+              <span className="translate-y-[1px] font-medium">{time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
             </span>
+            
             {battery.level !== null && (
-              <div className="flex items-center gap-1.5">
-                <Battery className={`w-4 h-4 ${battery.charging ? 'text-green-400 animate-pulse' : 'text-zinc-400'}`} />
-                <span>{battery.level}%</span>
+              <div className="flex items-center gap-2">
+                <Battery className={`w-5 h-5 ${battery.charging ? 'text-green-500 animate-pulse' : ''}`} />
+                <span className="translate-y-[1px] font-medium">{battery.level}%</span>
               </div>
             )}
           </div>
           
-          <div className="flex items-center gap-1 bg-[#161b22] rounded-full p-1 border border-[#30363d]">
+          <div className={`flex items-center gap-1.5 ${containerBgClass} rounded-full p-1 border`}>
             <button 
               onClick={() => onViewProfile?.()} 
               aria-label="View user profile"
-              className="w-7 h-7 rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95"
+              className="w-8 h-8 rounded-full border border-transparent hover:border-[var(--theme)] overflow-hidden transition-all active:scale-90"
             >
               {profilePic ? (
                 <img src={profilePic} className="w-full h-full object-cover" alt="User avatar" />
               ) : (
-                <UserCircle className="w-full h-full p-0.5 text-[#58a6ff]" />
+                <UserCircle className="w-full h-full p-1 text-[var(--theme)]" />
               )}
             </button>
 
             <button 
               onClick={() => setShowSettings(true)} 
               aria-label="Open global dashboard settings"
-              className="p-1 text-zinc-400 hover:text-white transition-all hover:rotate-45"
+              className="p-1.5 transition-all hover:scale-110 active:rotate-90 group flex items-center justify-center"
             >
-              <Settings className="w-4 h-4" />
+              <Settings 
+                className="w-5 h-5" 
+                style={{ 
+                  color: 'var(--theme)',
+                  filter: 'drop-shadow(0 0 8px var(--theme))'
+                }}
+              />
             </button>
           </div>
         </div>
