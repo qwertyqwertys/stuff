@@ -59,11 +59,11 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
         className={`group bg-zinc-900/40 rounded-[2rem] overflow-hidden border border-white/5 hover:border-[var(--theme)]/30 transition-all flex flex-col cursor-pointer ${performanceMode ? '' : 'shadow-lg'}`} 
         onClick={handleCardClick}
       >
-        <div className={`relative w-full aspect-[4/3] bg-black/20 overflow-hidden transition-all duration-500 ${performanceMode ? '' : 'group-hover:shadow-[inset_0_0_var(--glow)_var(--theme)]'}`}>
+        <div className={`relative w-full aspect-[4/3] bg-black/20 overflow-hidden flex items-center justify-center transition-all duration-500 ${performanceMode ? '' : 'group-hover:shadow-[inset_0_0_var(--glow)_var(--theme)]'}`}>
           <img 
             src={game.thumbnail} 
             loading="lazy"
-            className={`absolute inset-0 m-auto transition-transform duration-500 group-hover:scale-110 ${isUtility ? 'w-24 h-24 object-contain' : 'w-full h-full object-cover'}`} 
+            className={`transition-transform duration-500 group-hover:scale-110 ${isUtility ? 'w-16 h-16 object-contain' : 'absolute inset-0 w-full h-full object-cover m-auto'}`} 
             alt={`${game.title} thumbnail`} 
           />
           {!isUtility && (
