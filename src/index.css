@@ -87,7 +87,7 @@
 :root {
   --bg-main: #0a0a0a;
   --text-main: #f4f4f5; 
-  --card-bg: #18181b;   
+  --card-bg: #18181b;    
   --border-main: rgba(255, 255, 255, 0.1);
   --theme: #38bdf8; 
 }
@@ -248,31 +248,6 @@
 
 .bg-zinc-900\/40:active, .bg-zinc-900\/50:active {
   cursor: url('https://img.icons8.com/color/28/test-tube.png'), pointer !important;
-}
-
-/* --- STATUS BAR TEXT & SPACING OVERRIDES --- */
-
-header div[class*="justify-self-end"], 
-header .flex.items-center.justify-end {
-  gap: 1.5rem !important; 
-}
-
-header div[class*="justify-self-end"] span,
-header div[class*="justify-self-end"] p,
-header div[class*="justify-self-end"] div {
-  font-family: 'Baloo 2', cursive !important;
-  font-size: 0.95rem !important; 
-  font-weight: 600 !important; /* Matches downloaded Baloo 2 weight */
-  line-height: 1 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-}
-
-header .flex.items-center.gap-2 span, 
-header h1, 
-.logo-text {
-  font-family: 'Fredoka', sans-serif !important;
-  font-weight: 600 !important;
 }
 
 /* --- UI GEOMETRY: CONCENTRIC NESTED RADIUS RULES --- */
