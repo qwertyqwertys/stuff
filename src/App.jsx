@@ -1236,11 +1236,28 @@ function NotFound() {
   );
 }
 
+// --- INTRO ROUTE CHECK WRAPPER ---
+function IntroWrapper() {
+  useEffect(() => {
+    const skipIntro = localStorage.getItem('skipIntro') === 'true';
+    if (!skipIntro) {
+      window.location.replace('/intro.html');
+    }
+  }, []);
+
+  const skipIntro = localStorage.getItem('skipIntro') === 'true';
+  if (!skipIntro) {
+    return null;
+  }
+
+  return <MainDashboard />;
+}
+
 // --- APP ENTRY ROUTER ---
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<MainDashboard />} />
+      <Route path="/" element={<IntroWrapper />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
