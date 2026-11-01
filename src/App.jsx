@@ -1003,7 +1003,7 @@ function MainDashboard() {
             </div>
           </div>
 
-          <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12 relative z-10 clear-both">
+          <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12 relative z-10">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
@@ -1020,7 +1020,7 @@ function MainDashboard() {
                     Clear History
                   </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {recentGamesData.map(game => (
                     <GameCard 
                       key={`recent-${game.id}`} 
@@ -1037,7 +1037,7 @@ function MainDashboard() {
               </section>
             )}
 
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {filteredGames.map(game => (
                 <GameCard 
                   key={game.id} 
