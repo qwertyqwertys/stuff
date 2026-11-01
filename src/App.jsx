@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import { useBackgroundContrast } from './hooks/useBackgroundContrast.js';  
+import { useBackgroundContrast } from './hooks/useBackgroundContrast.js'; 
 import { 
   X, CheckCircle2, ChevronLeft, ChevronRight, History 
 } from 'lucide-react';
@@ -952,10 +952,10 @@ function MainDashboard() {
   activeChannel="global"
 />
 
-          <div className="pt-3 pb-2 overflow-hidden sticky top-16 z-40 bg-[#0d1117]/80 backdrop-blur-md transition-colors group relative border-b border-[#21262d]/50">
-            <div className="w-full relative flex items-center px-4">
+          <div className="px-4 pt-3 pb-1 overflow-hidden sticky top-16 z-40 bg-transparent transition-colors group relative">
+            <div className="max-w-7xl mx-auto relative flex items-center">
               {canScrollLeft && (
-                <div className="absolute left-0 z-50 flex items-center pl-2 pr-12 h-full bg-gradient-to-r from-[#0d1117] via-[#0d1117]/80 to-transparent pointer-events-none">
+                <div className="absolute left-0 z-50 flex items-center pr-12 h-full bg-transparent pointer-events-none">
                   <button
                     onClick={() => scrollCategories('left')}
                     aria-label="Scroll categories left"
@@ -969,31 +969,28 @@ function MainDashboard() {
               <div
                 ref={categoryScrollRef}
                 onScroll={checkScroll}
-                className="flex gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth w-full items-center"
+                className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth px-2 w-full"
               >
                 {categoriesWithCounts.map(cat => (
                   <button
                     key={cat.name}
                     onClick={() => setActiveCategory(cat.name)}
                     aria-current={activeCategory === cat.name ? 'page' : undefined}
-                    className={`h-9 px-5 rounded-full text-[11px] font-black uppercase tracking-wider border shrink-0 flex items-center justify-center gap-1.5 transition-all ${
+                    className={`px-4 py-2 rounded-full text-xs font-black uppercase border shrink-0 transition-all ${
                       activeCategory === cat.name
-                        ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-md scale-[1.02]'
+                        ? 'bg-[var(--theme)] border-[var(--theme)] text-black'
                         : isLightMode || isHeaderLight
                           ? 'bg-zinc-100/90 border-zinc-200 text-zinc-800 hover:bg-zinc-200'
-                          : 'bg-[#161b22] border-[#30363d] text-zinc-200 hover:border-[#8b949e] hover:bg-[#1f242c]'
+                          : 'bg-zinc-900/90 border-white/20 text-white hover:bg-zinc-800'
                     }`}
                   >
-                    <span>{cat.name}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeCategory === cat.name ? 'bg-black/15 text-black font-bold' : 'bg-white/5 text-zinc-400 font-medium'}`}>
-                      {cat.count}
-                    </span>
+                    {cat.name} <span className={`ml-1 ${activeCategory === cat.name ? 'opacity-90' : 'opacity-70'}`}>{cat.count}</span>
                   </button>
                 ))}
               </div>
 
               {canScrollRight && (
-                <div className="absolute right-0 z-50 flex items-center pr-2 pl-12 h-full bg-gradient-to-l from-[#0d1117] via-[#0d1117]/80 to-transparent pointer-events-none">
+                <div className="absolute -right-9 z-50 flex items-center pl-12 h-full bg-transparent pointer-events-none">
                   <button 
                     onClick={() => scrollCategories('right')}
                     aria-label="Scroll categories right"
@@ -1005,8 +1002,8 @@ function MainDashboard() {
               )}
             </div>
           </div>
-          
-          <main className="w-full px-3 sm:px-6 lg:px-8 mt-8 space-y-12 relative z-10">
+
+          <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12 relative z-10">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
@@ -1023,7 +1020,7 @@ function MainDashboard() {
                     Clear History
                   </button>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {recentGamesData.map(game => (
                     <GameCard 
                       key={`recent-${game.id}`} 
@@ -1040,7 +1037,7 @@ function MainDashboard() {
               </section>
             )}
 
-            <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 pb-12">
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {filteredGames.map(game => (
                 <GameCard 
                   key={game.id} 
