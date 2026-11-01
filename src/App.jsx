@@ -973,19 +973,19 @@ function MainDashboard() {
     >
       {categoriesWithCounts.map(cat => (
         <button
-          key={cat.name}
-          onClick={() => setActiveCategory(cat.name)}
-          aria-current={activeCategory === cat.name ? 'page' : undefined}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-tight border shrink-0 transition-all ${
-            activeCategory === cat.name
-              ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-sm'
-              : isLightMode || isHeaderLight
-                ? 'bg-zinc-100/90 border-zinc-200 text-zinc-800 hover:bg-zinc-200'
-                : 'bg-[#161b22] border-[#30363d] text-zinc-200 hover:border-[#8b949e] hover:bg-[#1f242c]'
-          }`}
-        >
-          {cat.name} <span className={`ml-1 text-[11px] ${activeCategory === cat.name ? 'opacity-90 font-bold' : 'opacity-60 font-medium'}`}>{cat.count}</span>
-        </button>
+  key={cat.name}
+  onClick={() => setActiveCategory(cat.name)}
+  aria-current={activeCategory === cat.name ? 'page' : undefined}
+  className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider border shrink-0 transition-all ${
+    activeCategory === cat.name
+      ? 'bg-[var(--theme)] border-[var(--theme)] text-black shadow-sm'
+      : isLightMode || isHeaderLight
+        ? 'bg-zinc-100/90 border-zinc-200 text-zinc-800 hover:bg-zinc-200'
+        : 'bg-[#161b22] border-[#30363d] text-zinc-200 hover:border-[#8b949e] hover:bg-[#1f242c]'
+  }`}
+>
+  {cat.name} <span className={`ml-1.5 text-[11px] ${activeCategory === cat.name ? 'opacity-90 font-bold' : 'opacity-60 font-medium'}`}>{cat.count}</span>
+</button>
       ))}
     </div>
 
