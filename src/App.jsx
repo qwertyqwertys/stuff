@@ -1003,7 +1003,7 @@ function MainDashboard() {
             </div>
           </div>
 
-          <main className="max-w-7xl mx-auto px-4 mt-8 space-y-12 relative z-10">
+          <main className="w-full px-4 sm:px-6 lg:px-8 mt-8 space-y-12 relative z-10">
             <h1 className="sr-only text-black bg-white">Capybara Science</h1>
             
             {recentGamesData.length > 0 && activeCategory === 'All' && !searchQuery && (
