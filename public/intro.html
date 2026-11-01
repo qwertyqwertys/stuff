@@ -613,6 +613,7 @@
       if (!isPlaying) return;
 
       const currentTime = audio.currentTime;
+      // Fixed: Use currentSong.src instead of undefined randomSong
       const drops = songDrops[currentSong.src] || [];
 
       // 1. Frame-accurate timestamp drops (0.05s window)
