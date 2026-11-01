@@ -428,8 +428,9 @@ function SettingsModalContent({
         return (
           !titleLower.includes('request') && 
           !titleLower.includes('report') && 
-          !titleLower.includes('form')
-          !titleLower.includes('blooket cheats')
+          !titleLower.includes('form') &&
+          !titleLower.includes('blooket') && 
+          !titleLower.includes('cheat')
         );
       });
       setGamesList(validGames);
