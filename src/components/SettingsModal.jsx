@@ -68,8 +68,11 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
   const hasValidFrame = Boolean(isValidUrl(frameUrl) && !frameError);
   const hasValidEffect = Boolean(isValidUrl(effectUrl) && !effectError);
 
+  // Check if the frame URL or identifier indicates a square/box style vs circle
+  const isSquareFrame = frameUrl && (frameUrl.toLowerCase().includes('square') || frameUrl.toLowerCase().includes('box') || frameUrl.toLowerCase().includes('green'));
+
   return (
-    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
+    <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className} overflow-visible`}>
       {/* Inner Avatar Container */}
       <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative z-10 bg-[#111923]">
         {hasValidPfp ? (
@@ -99,13 +102,17 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
         )}
       </div>
 
-      {/* Frame Layer - Scaled down to scale-105 for a tight border fit */}
+      {/* Frame Layer with adaptive sizing for square vs circular assets */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
           alt="Profile Frame" 
           onError={() => setFrameError(true)}
-          className="absolute -inset-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none object-contain scale-105 z-30 transform-gpu"
+          className={`absolute pointer-events-none object-contain z-30 ${
+            isSquareFrame 
+              ? '-inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] scale-110' // Keeps square frames from collapsing in small views
+              : '-inset-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] scale-100' // Keeps circular frames snug without huge gaps
+          }`}
         />
       )}
     </div>
