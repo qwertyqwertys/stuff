@@ -68,7 +68,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
   const hasValidFrame = Boolean(isValidUrl(frameUrl) && !frameError);
   const hasValidEffect = Boolean(isValidUrl(effectUrl) && !effectError);
 
-  // Check if the frame URL or identifier indicates a square/box style vs circle
+  // Check if the frame is square/box style vs circle
   const isSquareFrame = frameUrl && (frameUrl.toLowerCase().includes('square') || frameUrl.toLowerCase().includes('box') || frameUrl.toLowerCase().includes('green'));
 
   return (
@@ -102,7 +102,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
         )}
       </div>
 
-      {/* Frame Layer with adaptive sizing for square vs circular assets */}
+      {/* Frame Layer with precise boundary offsets for square vs circle */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
@@ -110,8 +110,8 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
           onError={() => setFrameError(true)}
           className={`absolute pointer-events-none object-contain z-30 ${
             isSquareFrame 
-              ? '-inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] scale-110' // Keeps square frames from collapsing in small views
-              : '-inset-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] scale-100' // Keeps circular frames snug without huge gaps
+              ? '-inset-1.5 w-[calc(100%+12px)] h-[calc(100%+12px)] scale-100'
+              : '-inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] scale-100'
           }`}
         />
       )}
