@@ -119,14 +119,14 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
     <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
       <div className="bg-zinc-900 border border-[var(--theme)]/30 p-8 rounded-3xl max-w-sm w-full relative shadow-[0_0_50px_rgba(0,0,0,0.5)] space-y-6 flex flex-col max-h-[90vh] overflow-hidden">
         
-        <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors">
+        <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors z-30">
           <X />
         </button>
         
-        <div className="overflow-y-auto overflow-x-hidden space-y-6 pr-1 custom-scrollbar">
+        <div className="overflow-y-auto overflow-x-visible space-y-6 pr-1 custom-scrollbar">
           {/* Profile Header */}
-          <div className="text-center space-y-2">
-            <div className="w-24 h-24 mx-auto flex items-center justify-center">
+          <div className="text-center space-y-2 pt-2">
+            <div className="w-28 h-28 mx-auto flex items-center justify-center relative overflow-visible p-3">
               {displayPfp ? (
                 <ProfileAvatar 
                   pfpUrl={displayPfp} 
@@ -135,7 +135,7 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
                   size="w-24 h-24" 
                 />
               ) : (
-                <div className="relative w-24 h-24">
+                <div className="relative w-24 h-24 flex items-center justify-center overflow-visible">
                   <DefaultProfileIcon />
                   {activeFrame && (
                     <img 
