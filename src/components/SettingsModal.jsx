@@ -70,6 +70,7 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
 
   return (
     <div className={`relative flex items-center justify-center flex-shrink-0 ${size} ${className}`}>
+      {/* Inner Avatar Container */}
       <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative z-10 bg-[#111923]">
         {hasValidPfp ? (
           <img 
@@ -98,12 +99,13 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
         )}
       </div>
 
+      {/* Frame Layer - Scaled down to scale-105 for a tight border fit */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
           alt="Profile Frame" 
           onError={() => setFrameError(true)}
-          className="absolute inset-0 w-full h-full pointer-events-none object-contain scale-125 z-30"
+          className="absolute -inset-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none object-contain scale-105 z-30 transform-gpu"
         />
       )}
     </div>
