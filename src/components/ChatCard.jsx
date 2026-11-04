@@ -87,7 +87,7 @@ export function ChatCard({
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
 
-  // New states for Typing Indicator & Replies
+  // States for Typing Indicator & Quote Replies
   const [replyingTo, setReplyingTo] = useState(null);
   const [typingUsers, setTypingUsers] = useState({});
   const typingTimeoutRef = useRef(null);
@@ -164,7 +164,7 @@ export function ChatCard({
       )
       .subscribe();
 
-    // Setup Supabase Realtime Broadcast for typing indicators
+    // Supabase Realtime Broadcast for fast-clearing typing indicator
     const typingChannel = supabase.channel('global_typing', {
       config: { broadcast: { ack: true } }
     });
@@ -173,16 +173,15 @@ export function ChatCard({
       .on('broadcast', { event: 'typing' }, ({ payload }) => {
         if (payload.userId === myId) return;
 
-        setTypingUsers(prev => ({ ...prev, [payload.userId]: payload.name }));
-
-        clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => {
+        if (payload.isTyping) {
+          setTypingUsers(prev => ({ ...prev, [payload.userId]: payload.name }));
+        } else {
           setTypingUsers(prev => {
             const updated = { ...prev };
             delete updated[payload.userId];
             return updated;
           });
-        }, 3000);
+        }
       })
       .subscribe();
 
@@ -204,14 +203,38 @@ export function ChatCard({
   }, [messages, typingUsers]);
 
   const handleTypingInput = (e) => {
-    setText(e.target.value);
-    
-    // Broadcast typing event
-    supabase.channel('global_typing').send({
+    const currentVal = e.target.value;
+    setText(currentVal);
+
+    const channel = supabase.channel('global_typing');
+
+    // If input is completely empty, clear typing status immediately
+    if (!currentVal.trim()) {
+      clearTimeout(typingTimeoutRef.current);
+      channel.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { userId: myId, name: username, isTyping: false }
+      });
+      return;
+    }
+
+    // Broadcast that you are currently typing
+    channel.send({
       type: 'broadcast',
       event: 'typing',
-      payload: { userId: myId, name: username }
+      payload: { userId: myId, name: username, isTyping: true }
     });
+
+    // Auto-clear typing status after 800ms pause
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      channel.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { userId: myId, name: username, isTyping: false }
+      });
+    }, 800);
   };
 
   const handleJoinOrUpdate = async (e) => {
@@ -232,6 +255,15 @@ export function ChatCard({
 
   const handleSend = async () => {
     if (!text.trim()) return;
+
+    // Instantly notify everyone that typing has stopped on message send
+    clearTimeout(typingTimeoutRef.current);
+    supabase.channel('global_typing').send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { userId: myId, name: username, isTyping: false }
+    });
+
     const currentAvatar = ownPfp || getStoredAvatar();
     const currentFrame = localStorage.getItem('capy-selected-frame') || null;
     const currentEffect = localStorage.getItem('capy-selected-effect') || null;
