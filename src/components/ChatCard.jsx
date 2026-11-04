@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight, Image as ImageIcon, Loader2, Download } from 'lucide-react'; 
+\import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight, Image as ImageIcon, Loader2 } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
@@ -257,7 +257,6 @@ export function ChatCard({
         .upload(filePath, file);
 
       if (uploadError) {
-        // Fallback to local Data URL if bucket isn't setup
         const reader = new FileReader();
         reader.onloadend = () => {
           setPendingImageUrl(reader.result);
@@ -732,16 +731,8 @@ export function ChatCard({
             <img 
               src={lightboxImage} 
               alt="Full Preview" 
-              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/10"
             />
-            <a 
-              href={lightboxImage} 
-              target="_blank" 
-              rel="noreferrer" 
-              className="mt-3 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-xs text-white font-bold flex items-center gap-2 transition-all"
-            >
-              <Download className="w-3.5 h-3.5" /> Open Original
-            </a>
           </div>
         </div>
       )}
