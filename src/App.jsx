@@ -579,7 +579,7 @@ function MainDashboard() {
       if (!localStorage.getItem('achievement_first_game')) {
         localStorage.setItem('achievement_first_game', 'true');
         checkAndAdd('first_game');
-        setNotification("🏆 Achievement Unlocked: First Blood!");
+        setNotification("👑 Achievement Unlocked: The GOAT");
       }
     }
 
@@ -587,7 +587,7 @@ function MainDashboard() {
     if (totalTime >= 3600 && !localStorage.getItem('achievement_marathon')) {
       localStorage.setItem('achievement_marathon', 'true');
       checkAndAdd('marathon');
-      setNotification("⏱️ Achievement Unlocked: Marathoner!");
+      setNotification("🫡 Achievement Unlocked: F Student");
     }
 
     if (favorites.length >= 10 && !localStorage.getItem('achievement_collector')) {
@@ -599,14 +599,14 @@ function MainDashboard() {
     if (themeChangeCount >= 5 && !localStorage.getItem('achievement_styler')) {
       localStorage.setItem('achievement_styler', 'true');
       checkAndAdd('styler');
-      setNotification("🎨 Achievement Unlocked: Fashionista!");
+      setNotification("🎨 Achievement Unlocked: The Artist");
     }
 
     const hasLoyal = Object.values(playtimes || {}).some(time => time >= 1800);
     if (hasLoyal && !localStorage.getItem('achievement_loyal')) {
       localStorage.setItem('achievement_loyal', 'true');
       checkAndAdd('loyal');
-      setNotification("🎮 Achievement Unlocked: Capy-Loyalist!");
+      setNotification("🎮 Achievement Unlocked: D Student");
     }
 
     if (earnedNew || newAchievements.length !== (achievements?.length || 0)) {
