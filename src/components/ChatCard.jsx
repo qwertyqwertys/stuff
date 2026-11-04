@@ -125,8 +125,8 @@ export function ChatCard({
     if (data) setMessages(data);
   }, []);
 
-  const syncUserStatsToDatabase = useCallback(async () => {
-    const currentName = username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
+  const syncUserStatsToDatabase = useCallback(async (newName) => {
+    const currentName = newName || username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
     if (!currentName) return;
 
     const currentAvatar = ownPfp || getStoredAvatar();
@@ -143,18 +143,19 @@ export function ChatCard({
     const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
 
+    // Updates ALL existing messages matching user_id with the new name, avatar, and stats
     await supabase
       .from('messages')
       .update({ 
+        username: currentName,
         favs: currentFavs, 
         achievements: currentAchievements, 
         times: currentTimes,
         avatar_url: currentAvatar || null,
         frame_url: currentFrame,
-        effect_url: currentEffect,
-        user_id: myId
+        effect_url: currentEffect
       })
-      .ilike('username', currentName);
+      .eq('user_id', myId);
   }, [myId, username, ownPfp, userFavs, userTimes, myAchievements]);
 
   useEffect(() => {
@@ -291,7 +292,7 @@ export function ChatCard({
     setUsername(newName);
     setIsJoined(true);
 
-    syncUserStatsToDatabase();
+    await syncUserStatsToDatabase(newName);
     fetchMessages();
   };
 
