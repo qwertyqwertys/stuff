@@ -699,7 +699,7 @@ export function ChatCard({
                 value={text}
                 onChange={handleTypingInput}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Message or paste image URL..."
+                placeholder="Message..."
                 className={`w-full text-xs p-2.5 pr-10 rounded-lg border outline-none ${
                   isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-zinc-100'
                 }`}
