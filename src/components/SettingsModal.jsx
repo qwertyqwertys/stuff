@@ -1640,10 +1640,10 @@ function SettingsModalContent({
               {matchesSearch(['about', 'accessibility', 'contrast']) && (
                 <section className={`space-y-2 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
                   <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    <ShieldAlert className="w-3 h-3 text-[var(--theme)]" /> About & Accessibility
+                    <ShieldAlert className="w-3 h-3 text-[var(--theme)]" /> Note about Themes
                   </label>
                   <p className={`text-[9px] leading-relaxed ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                    This website is committed to digital accessibility. If you encounter any contrast issues with custom themes or navigation barriers, feel free to adjust your theme.
+                    This website is very customizable. If you encounter any issues with custom themes or anything else, feel free to adjust your theme.
                   </p>
                 </section>
               )}
