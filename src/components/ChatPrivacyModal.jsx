@@ -14,7 +14,7 @@ export function ChatPrivacyModal({ isOpen, onClose }) {
           </p>
           <ul className="list-disc list-inside space-y-2 pl-1">
             <li><strong className="text-white">Data Stored:</strong> This site stores messages including images and GIFs with a timestamp so everyone knows when messages and images/GIFs were sent.</li>
-            <li><strong className="text-white">Privacy First:</strong> Your messages are only used for this chat. Capybara Science willnever track, share, or sell your information.</li>
+            <li><strong className="text-white">Privacy First:</strong> Your messages are only used for this chat. Capybara Science will never track, share, or sell your information.</li>
             <li><strong className="text-white">Stay Safe:</strong> Please don't share personal and illegal information like your location, passwords or NSFW content!</li>
           </ul>
         </div>
