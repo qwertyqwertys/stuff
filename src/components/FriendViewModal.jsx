@@ -3,11 +3,11 @@ import { X, UserCircle, Heart, Trophy } from 'lucide-react';
 import { ProfileAvatar } from './SettingsModal';
 
 const TROPHIES = [
-  { id: 'first_game', name: 'First Blood', desc: 'Play your first game', icon: '🎯' },
-  { id: 'marathon', name: 'Marathoner', desc: 'Play for over 1 hour total', icon: '🏃' },
+  { id: 'first_game', name: 'THE GOAT', desc: 'Play your first game', icon: '👑' },
+  { id: 'marathon', name: 'F Student', desc: 'Play for over 1 hour total', icon: '🫡' },
   { id: 'collector', name: 'The Collector', desc: 'Favorite 10 different games', icon: '⭐' },
-  { id: 'loyal', name: 'Capy-Loyalist', desc: 'Play one game for 30 mins', icon: '👑' },
-  { id: 'styler', name: 'Fashionista', desc: 'Change your theme 5 times', icon: '🎨' }
+  { id: 'loyal', name: 'D Student', desc: 'Play one game for 30 mins', icon: '👑' },
+  { id: 'styler', name: 'The Artist', desc: 'Change your theme 5 times', icon: '🎨' }
 ];
 
 // Helper to validate and clean up avatar image URLs (filters out broken Imgur links)
