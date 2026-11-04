@@ -101,20 +101,18 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
         )}
       </div>
 
-      {/* Auto-Adjusting Frame Layer */}
+      {/* Perfectly Centered Auto-Adjusting Frame Layer */}
       {hasValidFrame && (
-        <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center overflow-visible">
-          <img 
-            src={frameUrl} 
-            alt="Profile Frame" 
-            onError={() => setFrameError(true)}
-            className={`max-none object-contain ${
-              isSquareFrame 
-                ? 'w-[125%] h-[125%]'
-                : 'w-[112%] h-[112%]'
-            }`}
-          />
-        </div>
+        <img 
+          src={frameUrl} 
+          alt="Profile Frame" 
+          onError={() => setFrameError(true)}
+          className={`absolute pointer-events-none z-30 select-none ${
+            isSquareFrame 
+              ? 'inset-[-12%] w-[124%] h-[124%] max-w-none object-contain' 
+              : 'inset-[-6%] w-[112%] h-[112%] max-w-none object-contain'
+          }`}
+        />
       )}
     </div>
   );
