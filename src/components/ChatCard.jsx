@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight } from 'lucide-react'; 
+import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight, Image as ImageIcon, Loader2, Download } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
@@ -18,15 +18,14 @@ function formatTimestamp(isoString) {
   });
 }
 
-function DefaultAvatar() {
+function isImageUrl(url) {
+  if (!url || typeof url !== 'string') return false;
   return (
-    <div className="w-8 h-8 rounded-full bg-[#111923] border border-[#1e3a5f] flex items-center justify-center flex-shrink-0 overflow-hidden">
-      <svg className="w-5 h-5 text-[#22d3ee]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="9" />
-        <circle cx="12" cy="9" r="3" />
-        <path d="M6.5 17.5c1.2-2 3.3-3 5.5-3s4.3 1 5.5 3" />
-      </svg>
-    </div>
+    url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) !== null ||
+    url.includes('supabase.co/storage/v1/object/public/') ||
+    url.includes('i.imgur.com/') ||
+    url.includes('media.discordapp.net/') ||
+    url.includes('cdn.discordapp.com/')
   );
 }
 
@@ -87,11 +86,15 @@ export function ChatCard({
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
 
-  // States for Typing Indicator & Quote Replies
+  // States for Typing Indicator, Quote Replies, and Image Attachments
   const [replyingTo, setReplyingTo] = useState(null);
   const [typingUsers, setTypingUsers] = useState({});
-  const typingTimeoutRef = useRef(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [pendingImageUrl, setPendingImageUrl] = useState('');
+  const [lightboxImage, setLightboxImage] = useState(null);
 
+  const typingTimeoutRef = useRef(null);
+  const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
@@ -116,7 +119,7 @@ export function ChatCard({
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
       .from('messages')
-      .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times, reply_to')
+      .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times, reply_to, image_url')
       .order('created_at', { ascending: true })
       .limit(30);
     if (data) setMessages(data);
@@ -164,7 +167,6 @@ export function ChatCard({
       )
       .subscribe();
 
-    // Supabase Realtime Broadcast for fast-clearing typing indicator
     const typingChannel = supabase.channel('global_typing', {
       config: { broadcast: { ack: true } }
     });
@@ -200,7 +202,7 @@ export function ChatCard({
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, typingUsers]);
+  }, [messages, typingUsers, pendingImageUrl]);
 
   const handleTypingInput = (e) => {
     const currentVal = e.target.value;
@@ -208,7 +210,6 @@ export function ChatCard({
 
     const channel = supabase.channel('global_typing');
 
-    // If input is completely empty, clear typing status immediately
     if (!currentVal.trim()) {
       clearTimeout(typingTimeoutRef.current);
       channel.send({
@@ -219,14 +220,12 @@ export function ChatCard({
       return;
     }
 
-    // Broadcast that you are currently typing
     channel.send({
       type: 'broadcast',
       event: 'typing',
       payload: { userId: myId, name: username, isTyping: true }
     });
 
-    // Auto-clear typing status after 800ms pause
     clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       channel.send({
@@ -235,6 +234,50 @@ export function ChatCard({
         payload: { userId: myId, name: username, isTyping: false }
       });
     }, 800);
+  };
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file.');
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+      const filePath = `chat-uploads/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('chat-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        // Fallback to local Data URL if bucket isn't setup
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPendingImageUrl(reader.result);
+          setUploadingImage(false);
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from('chat-images')
+        .getPublicUrl(filePath);
+
+      setPendingImageUrl(data.publicUrl);
+    } catch (err) {
+      console.error('Image upload failed:', err);
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleJoinOrUpdate = async (e) => {
@@ -254,9 +297,8 @@ export function ChatCard({
   };
 
   const handleSend = async () => {
-    if (!text.trim()) return;
+    if (!text.trim() && !pendingImageUrl) return;
 
-    // Instantly notify everyone that typing has stopped on message send
     clearTimeout(typingTimeoutRef.current);
     supabase.channel('global_typing').send({
       type: 'broadcast',
@@ -274,18 +316,22 @@ export function ChatCard({
     const currentAchievements = myAchievements.length > 0 ? myAchievements : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
 
     const messageText = text.trim();
+    const attachedImage = pendingImageUrl || (isImageUrl(messageText) ? messageText : null);
+
     const currentReply = replyingTo ? {
       username: replyingTo.username,
       content: replyingTo.content
     } : null;
 
     setText(''); 
+    setPendingImageUrl('');
     setReplyingTo(null);
 
     const tempMessage = {
       id: 'temp_' + Date.now(),
       username,
       content: messageText,
+      image_url: attachedImage,
       user_id: myId,
       avatar_url: currentAvatar || null,
       frame_url: currentFrame,
@@ -303,6 +349,7 @@ export function ChatCard({
       .insert([{ 
         username, 
         content: messageText, 
+        image_url: attachedImage,
         user_id: myId,
         avatar_url: currentAvatar || null,
         frame_url: currentFrame,
@@ -461,6 +508,8 @@ export function ChatCard({
                 const frameUrlToUse = m.frame_url || (isOwner ? (localStorage.getItem('capy-selected-frame') || '') : '');
                 const effectUrlToUse = m.effect_url || (isOwner ? (localStorage.getItem('capy-selected-effect') || '') : '');
 
+                const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
+
                 return (
                   <div key={m.id || i} className="group/msg flex items-start gap-2 text-left relative py-1">
                     <button 
@@ -548,14 +597,29 @@ export function ChatCard({
                           </button>
                         </div>
                       ) : (
-                        <p className={`mt-0.5 text-xs break-words leading-relaxed ${isLightMode ? 'text-black' : 'text-zinc-100'}`}>
-                          {m.content}
-                          {m.is_edited && (
-                            <span className="text-[10px] text-zinc-500 font-normal ml-1 select-none">
-                              (edited)
-                            </span>
+                        <div className="space-y-1.5">
+                          {m.content && !isImageUrl(m.content) && (
+                            <p className={`mt-0.5 text-xs break-words leading-relaxed ${isLightMode ? 'text-black' : 'text-zinc-100'}`}>
+                              {m.content}
+                              {m.is_edited && (
+                                <span className="text-[10px] text-zinc-500 font-normal ml-1 select-none">
+                                  (edited)
+                                </span>
+                              )}
+                            </p>
                           )}
-                        </p>
+
+                          {hasInlineImage && (
+                            <div className="mt-1.5 max-w-[220px] rounded-xl overflow-hidden border border-white/10 bg-black/40 group/img relative">
+                              <img 
+                                src={hasInlineImage} 
+                                alt="Chat attachment" 
+                                className="w-full h-auto object-cover max-h-48 rounded-xl hover:scale-105 transition-transform cursor-pointer"
+                                onClick={() => setLightboxImage(hasInlineImage)}
+                              />
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -569,6 +633,22 @@ export function ChatCard({
           {Object.keys(typingUsers).length > 0 && (
             <div className="text-[10px] text-[var(--theme)] italic px-1 animate-pulse">
               {Object.values(typingUsers).join(', ')} {Object.values(typingUsers).length === 1 ? 'is' : 'are'} typing...
+            </div>
+          )}
+
+          {/* Pending Image Attachment Banner */}
+          {pendingImageUrl && (
+            <div className="flex items-center justify-between bg-white/5 border border-white/10 p-2 rounded-xl text-xs">
+              <div className="flex items-center gap-2 truncate text-zinc-300">
+                <img src={pendingImageUrl} alt="Attachment Preview" className="w-8 h-8 object-cover rounded-lg border border-white/10" />
+                <span className="text-[10px] font-bold text-[var(--theme)]">Image Attached</span>
+              </div>
+              <button 
+                onClick={() => setPendingImageUrl('')}
+                className="text-zinc-500 hover:text-red-400 font-bold p-1"
+              >
+                ✕
+              </button>
             </div>
           )}
 
@@ -589,23 +669,79 @@ export function ChatCard({
             </div>
           )}
           
-          <div className="relative flex items-center">
+          <div className="relative flex items-center gap-1.5">
+            {/* Hidden File Input */}
             <input 
-              value={text}
-              onChange={handleTypingInput}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Message..."
-              className={`w-full text-xs p-2.5 pr-10 rounded-lg border outline-none ${
-                isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-zinc-100'
-              }`}
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileSelect} 
+              accept="image/*" 
+              className="hidden" 
             />
+
+            {/* Image Upload Button */}
             <button
               type="button"
-              onClick={handleSend}
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-white/10 rounded-md transition-all text-[var(--theme)]"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImage}
+              className="p-2.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-[var(--theme)] transition-all flex items-center justify-center shrink-0"
+              title="Attach Image"
             >
-              <Send className="w-4 h-4"/>
+              {uploadingImage ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[var(--theme)]" />
+              ) : (
+                <ImageIcon className="w-4 h-4" />
+              )}
             </button>
+
+            <div className="relative flex-1 flex items-center">
+              <input 
+                value={text}
+                onChange={handleTypingInput}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="Message or paste image URL..."
+                className={`w-full text-xs p-2.5 pr-10 rounded-lg border outline-none ${
+                  isLightMode ? 'bg-black/5 border-black/10 text-black' : 'bg-white/5 border-white/10 text-zinc-100'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={handleSend}
+                className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-white/10 rounded-md transition-all text-[var(--theme)]"
+              >
+                <Send className="w-4 h-4"/>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full-Screen Image Lightbox Modal */}
+      {lightboxImage && (
+        <div 
+          className="fixed inset-0 z-[700] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh] flex flex-col items-center" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setLightboxImage(null)}
+              className="absolute -top-10 right-0 text-white/70 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img 
+              src={lightboxImage} 
+              alt="Full Preview" 
+              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+            />
+            <a 
+              href={lightboxImage} 
+              target="_blank" 
+              rel="noreferrer" 
+              className="mt-3 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-xs text-white font-bold flex items-center gap-2 transition-all"
+            >
+              <Download className="w-3.5 h-3.5" /> Open Original
+            </a>
           </div>
         </div>
       )}
