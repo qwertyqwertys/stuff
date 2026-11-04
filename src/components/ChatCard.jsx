@@ -1,4 +1,4 @@
-\import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight, Image as ImageIcon, Loader2 } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
