@@ -641,7 +641,7 @@ export function ChatCard({
             <div className="flex items-center justify-between bg-white/5 border border-white/10 p-2 rounded-xl text-xs">
               <div className="flex items-center gap-2 truncate text-zinc-300">
                 <img src={pendingImageUrl} alt="Attachment Preview" className="w-8 h-8 object-cover rounded-lg border border-white/10" />
-                <span className="text-[10px] font-bold text-[var(--theme)]">Image Attached</span>
+                <span className="text-[10px] font-bold text-[var(--theme)]">Image/GIF Attached</span>
               </div>
               <button 
                 onClick={() => setPendingImageUrl('')}
