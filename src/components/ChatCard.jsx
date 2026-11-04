@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones } from 'lucide-react'; 
+import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight } from 'lucide-react'; 
 import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
@@ -87,6 +87,11 @@ export function ChatCard({
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
 
+  // New states for Typing Indicator & Replies
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [typingUsers, setTypingUsers] = useState({});
+  const typingTimeoutRef = useRef(null);
+
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
@@ -111,7 +116,7 @@ export function ChatCard({
   const fetchMessages = useCallback(async () => {
     const { data } = await supabase
       .from('messages')
-      .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times')
+      .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times, reply_to')
       .order('created_at', { ascending: true })
       .limit(30);
     if (data) setMessages(data);
@@ -159,6 +164,28 @@ export function ChatCard({
       )
       .subscribe();
 
+    // Setup Supabase Realtime Broadcast for typing indicators
+    const typingChannel = supabase.channel('global_typing', {
+      config: { broadcast: { ack: true } }
+    });
+
+    typingChannel
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (payload.userId === myId) return;
+
+        setTypingUsers(prev => ({ ...prev, [payload.userId]: payload.name }));
+
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+          setTypingUsers(prev => {
+            const updated = { ...prev };
+            delete updated[payload.userId];
+            return updated;
+          });
+        }, 3000);
+      })
+      .subscribe();
+
     const handlePfpUpdated = () => {
       fetchMessages();
     };
@@ -167,13 +194,25 @@ export function ChatCard({
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(typingChannel);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
-  }, [fetchMessages]);
+  }, [fetchMessages, myId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, typingUsers]);
+
+  const handleTypingInput = (e) => {
+    setText(e.target.value);
+    
+    // Broadcast typing event
+    supabase.channel('global_typing').send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { userId: myId, name: username }
+    });
+  };
 
   const handleJoinOrUpdate = async (e) => {
     e.preventDefault();
@@ -203,7 +242,13 @@ export function ChatCard({
     const currentAchievements = myAchievements.length > 0 ? myAchievements : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
 
     const messageText = text.trim();
+    const currentReply = replyingTo ? {
+      username: replyingTo.username,
+      content: replyingTo.content
+    } : null;
+
     setText(''); 
+    setReplyingTo(null);
 
     const tempMessage = {
       id: 'temp_' + Date.now(),
@@ -216,7 +261,8 @@ export function ChatCard({
       created_at: new Date().toISOString(),
       favs: currentFavs,
       achievements: currentAchievements,
-      times: currentTimes
+      times: currentTimes,
+      reply_to: currentReply
     };
     setMessages(prev => [...prev, tempMessage]);
 
@@ -231,7 +277,8 @@ export function ChatCard({
         effect_url: currentEffect,
         favs: currentFavs,
         achievements: currentAchievements,
-        times: currentTimes
+        times: currentTimes,
+        reply_to: currentReply
       }]);
 
     fetchMessages();
@@ -251,25 +298,21 @@ export function ChatCard({
   };
 
   const handleDeleteMessage = async (id) => {
-    // 1. Optimistically remove it from the local screen immediately
     setMessages(prev => prev.filter(m => m.id !== id));
     if (editingId === id) setEditingId(null);
 
-    // 2. Delete the row permanently from Supabase table editor
     const { data, error } = await supabase
       .from('messages')
       .delete()
       .eq('id', id)
-      .select(); // Returns deleted rows to confirm deletion went through
+      .select();
 
     if (error) {
       console.error("Error deleting message from Supabase:", error.message);
-      fetchMessages(); // Rollback local state if server rejected it
-    } else if (!data || data.length === 0) {
-      console.warn("Delete request succeeded, but 0 rows were removed. Check your Supabase Table RLS delete policies!");
       fetchMessages();
-    } else {
-      console.log("Successfully deleted row from Supabase table:", data);
+    } else if (!data || data.length === 0) {
+      console.warn("Delete request succeeded, but 0 rows were removed.");
+      fetchMessages();
     }
   };
 
@@ -411,28 +454,46 @@ export function ChatCard({
                           </span>
                         </div>
 
-                        {isOwner && !isEditingThis && (
-                          <div className="flex items-center gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => {
-                                setEditingId(m.id);
-                                setEditText(m.content);
-                              }}
-                              className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white transition-all"
-                              title="Edit message"
-                            >
-                              <Pencil className="w-3 h-3"/>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteMessage(m.id)}
-                              className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-red-400 transition-all"
-                              title="Delete message"
-                            >
-                              <Trash2 className="w-3 h-3"/>
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setReplyingTo(m)}
+                            className="opacity-0 group-hover/msg:opacity-100 p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-[var(--theme)] transition-all"
+                            title="Reply to message"
+                          >
+                            <CornerDownRight className="w-3 h-3"/>
+                          </button>
+
+                          {isOwner && !isEditingThis && (
+                            <div className="flex items-center gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => {
+                                  setEditingId(m.id);
+                                  setEditText(m.content);
+                                }}
+                                className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white transition-all"
+                                title="Edit message"
+                              >
+                                <Pencil className="w-3 h-3"/>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteMessage(m.id)}
+                                className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-red-400 transition-all"
+                                title="Delete message"
+                              >
+                                <Trash2 className="w-3 h-3"/>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Display Quoted Reply if present */}
+                      {m.reply_to && (
+                        <div className="bg-black/30 border-l-2 border-[var(--theme)] px-2 py-1 rounded-r-md my-1 text-[10px] text-zinc-400">
+                          <span className="font-bold text-white">{m.reply_to.username}</span>
+                          <p className="truncate opacity-80">{m.reply_to.content}</p>
+                        </div>
+                      )}
 
                       {isEditingThis ? (
                         <div className="mt-1 flex items-center gap-1.5">
@@ -471,11 +532,35 @@ export function ChatCard({
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Typing Indicator Banner */}
+          {Object.keys(typingUsers).length > 0 && (
+            <div className="text-[10px] text-[var(--theme)] italic px-1 animate-pulse">
+              {Object.values(typingUsers).join(', ')} {Object.values(typingUsers).length === 1 ? 'is' : 'are'} typing...
+            </div>
+          )}
+
+          {/* Replying-To Banner Preview */}
+          {replyingTo && (
+            <div className="flex items-center justify-between bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl text-xs">
+              <div className="flex items-center gap-2 truncate text-zinc-300">
+                <CornerDownRight className="w-3 h-3 text-[var(--theme)] shrink-0" />
+                <span className="font-bold text-[var(--theme)]">Replying to {replyingTo.username}:</span>
+                <span className="truncate opacity-75">{replyingTo.content}</span>
+              </div>
+              <button 
+                onClick={() => setReplyingTo(null)}
+                className="text-zinc-500 hover:text-white ml-2 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           
           <div className="relative flex items-center">
             <input 
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={handleTypingInput}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Message..."
               className={`w-full text-xs p-2.5 pr-10 rounded-lg border outline-none ${
