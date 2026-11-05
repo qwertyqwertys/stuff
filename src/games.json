@@ -385,6 +385,13 @@
     "category": "Creative"
   },
   {
+    "id": "html-viewer",
+    "title": "HTMl Viewer (to run Eaglercraft files)",
+    "url": "/stores/games-html/html-viewer.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcodybonney.com%2Fimages%2F16x9%2Ftags%2Fhtml.png&f=1&nofb=1&ipt=04110bdbeb2e068e2855e3f1dbd86135b2f971bd484f43b5995beb3915cdd0d9&ipo=images",
+    "category": "Other"
+  },
+  {
     "id": "doodle-jump",
     "title": "Doodle Jump",
     "url": "https://bind.strongson.com/gamefile/Doodle%20Jump.html",
