@@ -4,6 +4,8 @@ import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
 
+const API_BASE_URL = 'http://localhost:5000/api/messages';
+
 function formatTimestamp(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -117,7 +119,7 @@ export function ChatCard({
 
   const fetchMessages = useCallback(async () => {
     try {
-      const res = await fetch('/api/messages');
+      const res = await fetch(API_BASE_URL);
       if (res.ok) {
         const data = await res.json();
         setMessages(data);
@@ -237,7 +239,7 @@ export function ChatCard({
     setMessages(prev => [...prev, tempMessage]);
 
     try {
-      const res = await fetch('/api/messages', {
+      const res = await fetch(API_BASE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -273,7 +275,7 @@ export function ChatCard({
     setEditText('');
 
     try {
-      await fetch(`/api/messages/${id}`, {
+      await fetch(`${API_BASE_URL}/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: editText.trim() })
@@ -290,7 +292,7 @@ export function ChatCard({
     if (editingId === id) setEditingId(null);
 
     try {
-      await fetch(`/api/messages/${id}`, {
+      await fetch(`${API_BASE_URL}/${id}`, {
         method: 'DELETE'
       });
     } catch (err) {
