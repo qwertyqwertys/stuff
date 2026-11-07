@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight, Image as ImageIcon, Loader2 } from 'lucide-react'; 
-import { supabase } from '../supabaseClient';
+// Removed Supabase import - using local Express backend & CockroachDB
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
@@ -117,76 +117,27 @@ export function ChatCard({
   }, []);
 
   const fetchMessages = useCallback(async () => {
-    const { data } = await supabase
-      .from('messages')
-      .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times, reply_to, image_url')
-      .order('created_at', { ascending: true })
-      .limit(30);
-    if (data) setMessages(data);
+    try {
+      const res = await fetch('/api/messages');
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch messages:', err);
+    }
   }, []);
 
   const syncUserStatsToDatabase = useCallback(async (newName) => {
     const currentName = newName || username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
     if (!currentName) return;
-
-    const currentAvatar = ownPfp || getStoredAvatar();
-    const currentFrame = localStorage.getItem('capy-selected-frame') || null;
-    const currentEffect = localStorage.getItem('capy-selected-effect') || null;
-
-    const savedFavs = JSON.parse(localStorage.getItem('capy-favs') || '[]');
-    let currentFavs = (userFavs && userFavs.length > 0) ? userFavs : savedFavs;
-
-    const savedTimes = JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
-    let currentTimes = (userTimes && Object.keys(userTimes).length > 0) ? userTimes : savedTimes;
-
-    const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
-    const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
-    let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
-
-    // Updates ALL existing messages matching user_id with the new name, avatar, and stats
-    await supabase
-      .from('messages')
-      .update({ 
-        username: currentName,
-        favs: currentFavs, 
-        achievements: currentAchievements, 
-        times: currentTimes,
-        avatar_url: currentAvatar || null,
-        frame_url: currentFrame,
-        effect_url: currentEffect
-      })
-      .eq('user_id', myId);
-  }, [myId, username, ownPfp, userFavs, userTimes, myAchievements]);
+  }, [username]);
 
   useEffect(() => {
     fetchMessages();
 
-    const channel = supabase
-      .channel('realtime-messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, 
-        () => fetchMessages()
-      )
-      .subscribe();
-
-    const typingChannel = supabase.channel('global_typing', {
-      config: { broadcast: { ack: true } }
-    });
-
-    typingChannel
-      .on('broadcast', { event: 'typing' }, ({ payload }) => {
-        if (payload.userId === myId) return;
-
-        if (payload.isTyping) {
-          setTypingUsers(prev => ({ ...prev, [payload.userId]: payload.name }));
-        } else {
-          setTypingUsers(prev => {
-            const updated = { ...prev };
-            delete updated[payload.userId];
-            return updated;
-          });
-        }
-      })
-      .subscribe();
+    // Poll every 2 seconds to keep live messages fetched from CockroachDB
+    const interval = setInterval(fetchMessages, 2000);
 
     const handlePfpUpdated = () => {
       fetchMessages();
@@ -195,11 +146,10 @@ export function ChatCard({
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
 
     return () => {
-      supabase.removeChannel(channel);
-      supabase.removeChannel(typingChannel);
+      clearInterval(interval);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
-  }, [fetchMessages, myId]);
+  }, [fetchMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -208,33 +158,6 @@ export function ChatCard({
   const handleTypingInput = (e) => {
     const currentVal = e.target.value;
     setText(currentVal);
-
-    const channel = supabase.channel('global_typing');
-
-    if (!currentVal.trim()) {
-      clearTimeout(typingTimeoutRef.current);
-      channel.send({
-        type: 'broadcast',
-        event: 'typing',
-        payload: { userId: myId, name: username, isTyping: false }
-      });
-      return;
-    }
-
-    channel.send({
-      type: 'broadcast',
-      event: 'typing',
-      payload: { userId: myId, name: username, isTyping: true }
-    });
-
-    clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      channel.send({
-        type: 'broadcast',
-        event: 'typing',
-        payload: { userId: myId, name: username, isTyping: false }
-      });
-    }, 800);
   };
 
   const handleFileSelect = async (e) => {
@@ -249,33 +172,16 @@ export function ChatCard({
     setUploadingImage(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-      const filePath = `chat-uploads/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('chat-images')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPendingImageUrl(reader.result);
-          setUploadingImage(false);
-        };
-        reader.readAsDataURL(file);
-        return;
-      }
-
-      const { data } = supabase.storage
-        .from('chat-images')
-        .getPublicUrl(filePath);
-
-      setPendingImageUrl(data.publicUrl);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPendingImageUrl(reader.result);
+        setUploadingImage(false);
+      };
+      reader.readAsDataURL(file);
     } catch (err) {
       console.error('Image upload failed:', err);
-    } finally {
       setUploadingImage(false);
+    } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -299,21 +205,9 @@ export function ChatCard({
   const handleSend = async () => {
     if (!text.trim() && !pendingImageUrl) return;
 
-    clearTimeout(typingTimeoutRef.current);
-    supabase.channel('global_typing').send({
-      type: 'broadcast',
-      event: 'typing',
-      payload: { userId: myId, name: username, isTyping: false }
-    });
-
     const currentAvatar = ownPfp || getStoredAvatar();
     const currentFrame = localStorage.getItem('capy-selected-frame') || null;
     const currentEffect = localStorage.getItem('capy-selected-effect') || null;
-
-    const currentFavs = userFavs.length > 0 ? userFavs : JSON.parse(localStorage.getItem('capy-favs') || '[]');
-    const currentTimes = Object.keys(userTimes).length > 0 ? userTimes : JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
-    const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
-    const currentAchievements = myAchievements.length > 0 ? myAchievements : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
 
     const messageText = text.trim();
     const attachedImage = pendingImageUrl || (isImageUrl(messageText) ? messageText : null);
@@ -337,28 +231,28 @@ export function ChatCard({
       frame_url: currentFrame,
       effect_url: currentEffect,
       created_at: new Date().toISOString(),
-      favs: currentFavs,
-      achievements: currentAchievements,
-      times: currentTimes,
       reply_to: currentReply
     };
     setMessages(prev => [...prev, tempMessage]);
 
-    await supabase
-      .from('messages')
-      .insert([{ 
-        username, 
-        content: messageText, 
-        image_url: attachedImage,
-        user_id: myId,
-        avatar_url: currentAvatar || null,
-        frame_url: currentFrame,
-        effect_url: currentEffect,
-        favs: currentFavs,
-        achievements: currentAchievements,
-        times: currentTimes,
-        reply_to: currentReply
-      }]);
+    try {
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          content: messageText,
+          image_url: attachedImage,
+          user_id: myId,
+          avatar_url: currentAvatar || null,
+          frame_url: currentFrame,
+          effect_url: currentEffect,
+          reply_to: currentReply
+        })
+      });
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
 
     fetchMessages();
   };
@@ -369,30 +263,11 @@ export function ChatCard({
     setMessages(prev => prev.map(m => m.id === id ? { ...m, content: editText.trim(), is_edited: true } : m));
     setEditingId(null);
     setEditText('');
-
-    await supabase
-      .from('messages')
-      .update({ content: editText.trim(), is_edited: true })
-      .eq('id', id);
   };
 
   const handleDeleteMessage = async (id) => {
     setMessages(prev => prev.filter(m => m.id !== id));
     if (editingId === id) setEditingId(null);
-
-    const { data, error } = await supabase
-      .from('messages')
-      .delete()
-      .eq('id', id)
-      .select();
-
-    if (error) {
-      console.error("Error deleting message from Supabase:", error.message);
-      fetchMessages();
-    } else if (!data || data.length === 0) {
-      console.warn("Delete request succeeded, but 0 rows were removed.");
-      fetchMessages();
-    }
   };
 
   const handleOpenProfile = (m) => {
