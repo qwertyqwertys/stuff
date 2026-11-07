@@ -219,8 +219,9 @@ export function ChatCard({
     setPendingImageUrl('');
     setReplyingTo(null);
 
+    const tempId = 'temp_' + Date.now();
     const tempMessage = {
-      id: 'temp_' + Date.now(),
+      id: tempId,
       username,
       content: messageText,
       image_url: attachedImage,
@@ -231,10 +232,12 @@ export function ChatCard({
       created_at: new Date().toISOString(),
       reply_to: currentReply
     };
+    
+    // Optimistic UI update
     setMessages(prev => [...prev, tempMessage]);
 
     try {
-      await fetch('/api/messages', {
+      const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -248,6 +251,13 @@ export function ChatCard({
           reply_to: currentReply
         })
       });
+
+      if (res.ok) {
+        const savedMessage = await res.json();
+        setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
+      } else {
+        console.error('Server returned error status:', res.status);
+      }
     } catch (err) {
       console.error('Failed to send message:', err);
     }
@@ -481,13 +491,13 @@ export function ChatCard({
                               if (e.key === 'Enter') handleSaveEdit(m.id);
                               if (e.key === 'Escape') setEditingId(null);
                             }}
-                            className={isLightMode ? 'bg-white border-black/20 text-black' : 'bg-white/10 border-white/20 text-white'}
+                            className={isLightMode ? 'bg-white border-black/20 text-black px-2 py-1 rounded text-xs outline-none' : 'bg-white/10 border-white/20 text-white px-2 py-1 rounded text-xs outline-none'}
                             autoFocus
                           />
-                          <button onClick={() => handleSaveEdit(m.id)}>
+                          <button onClick={() => handleSaveEdit(m.id)} className="p-1 hover:bg-white/10 rounded text-emerald-400">
                             <Check className="w-3.5 h-3.5"/>
                           </button>
-                          <button onClick={() => setEditingId(null)}>
+                          <button onClick={() => setEditingId(null)} className="p-1 hover:bg-white/10 rounded text-zinc-400">
                             <X className="w-3.5 h-3.5"/>
                           </button>
                         </div>
