@@ -235,7 +235,7 @@ export function ChatCard({
     setMessages(prev => [...prev, tempMessage]);
 
     try {
-      await fetch('http://localhost:5000/api/messages', {
+      await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -256,6 +256,41 @@ export function ChatCard({
     fetchMessages();
   };
 
+  const handleSaveEdit = async (id) => {
+    if (!editText.trim()) return;
+
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, content: editText.trim(), is_edited: true } : m));
+    setEditingId(null);
+    setEditText('');
+
+    try {
+      await fetch(`/api/messages/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editText.trim() })
+      });
+    } catch (err) {
+      console.error('Failed to update message:', err);
+    }
+
+    fetchMessages();
+  };
+
+  const handleDeleteMessage = async (id) => {
+    setMessages(prev => prev.filter(m => m.id !== id));
+    if (editingId === id) setEditingId(null);
+
+    try {
+      await fetch(`/api/messages/${id}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.error('Failed to delete message:', err);
+    }
+
+    fetchMessages();
+  };
+  
   const handleSaveEdit = async (id) => {
     if (!editText.trim()) return;
 
