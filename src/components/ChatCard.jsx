@@ -118,16 +118,16 @@ export function ChatCard({
   }, []);
 
   const fetchMessages = useCallback(async () => {
-    try {
-      const res = await fetch(API_BASE_URL);
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch messages:', err);
+  try {
+    const res = await fetch('http://localhost:5000/api/messages');
+    if (res.ok) {
+      const data = await res.json();
+      setMessages(data);
     }
-  }, []);
+  } catch (err) {
+    console.error('Failed to fetch messages:', err);
+  }
+}, []);
 
   const syncUserStatsToDatabase = useCallback(async (newName) => {
     const currentName = newName || username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
