@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight, Image as ImageIcon, Loader2 } from 'lucide-react'; 
-// Removed Supabase import - using local Express backend & CockroachDB
+import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
@@ -136,8 +136,16 @@ export function ChatCard({
   useEffect(() => {
     fetchMessages();
 
-    // Poll every 2 seconds to keep live messages fetched from CockroachDB
-    const interval = setInterval(fetchMessages, 2000);
+    // 1. Fast 1-second polling fallback for guaranteed sync across browsers
+    const interval = setInterval(fetchMessages, 1000);
+
+    // 2. Instant real-time listener via free Supabase channel trigger
+    const channel = supabase
+      .channel('realtime-messages')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+        fetchMessages();
+      })
+      .subscribe();
 
     const handlePfpUpdated = () => {
       fetchMessages();
@@ -147,6 +155,7 @@ export function ChatCard({
 
     return () => {
       clearInterval(interval);
+      supabase.removeChannel(channel);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
   }, [fetchMessages]);
