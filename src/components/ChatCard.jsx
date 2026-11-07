@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight, Image as ImageIcon, Loader2 } from 'lucide-react'; 
-import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
@@ -136,16 +135,8 @@ export function ChatCard({
   useEffect(() => {
     fetchMessages();
 
-    // 1-second interval to ensure background sync
+    // Pure local polling every 1 second — no external device prompts or web sockets
     const interval = setInterval(fetchMessages, 1000);
-
-    // Free instant sync across all open tabs/devices using Supabase Broadcast
-    const channel = supabase.channel('capy-live-chat');
-    channel
-      .on('broadcast', { event: 'new-message' }, () => {
-        fetchMessages();
-      })
-      .subscribe();
 
     const handlePfpUpdated = () => {
       fetchMessages();
@@ -155,7 +146,6 @@ export function ChatCard({
 
     return () => {
       clearInterval(interval);
-      supabase.removeChannel(channel);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
   }, [fetchMessages]);
@@ -258,13 +248,6 @@ export function ChatCard({
           effect_url: currentEffect,
           reply_to: currentReply
         })
-      });
-
-      // Broadcast instant live update signal to all connected users
-      supabase.channel('capy-live-chat').send({
-        type: 'broadcast',
-        event: 'new-message',
-        payload: {}
       });
     } catch (err) {
       console.error('Failed to send message:', err);
