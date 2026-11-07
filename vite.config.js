@@ -7,7 +7,6 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Custom plugin that forces the games folder directly into the build output directory
 const copyGamesFolderPlugin = () => ({
   name: 'copy-games-folder',
   closeBundle() {
