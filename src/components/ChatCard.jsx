@@ -87,14 +87,12 @@ export function ChatCard({
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
 
-  // States for Typing Indicator, Quote Replies, and Image Attachments
   const [replyingTo, setReplyingTo] = useState(null);
   const [typingUsers, setTypingUsers] = useState({});
   const [uploadingImage, setUploadingImage] = useState(false);
   const [pendingImageUrl, setPendingImageUrl] = useState('');
   const [lightboxImage, setLightboxImage] = useState(null);
 
-  const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
@@ -129,14 +127,8 @@ export function ChatCard({
     }
   }, []);
 
-  const syncUserStatsToDatabase = useCallback(async (newName) => {
-    const currentName = newName || username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
-    if (!currentName) return;
-  }, [username]);
-
   useEffect(() => {
     fetchMessages();
-
     const interval = setInterval(fetchMessages, 1000);
 
     const handlePfpUpdated = () => {
@@ -197,8 +189,6 @@ export function ChatCard({
     window.dispatchEvent(new Event('capy-username-updated'));
     setUsername(newName);
     setIsJoined(true);
-
-    await syncUserStatsToDatabase(newName);
     fetchMessages();
   };
 
@@ -235,7 +225,6 @@ export function ChatCard({
       reply_to: currentReply
     };
     
-    // Optimistic UI update
     setMessages(prev => [...prev, tempMessage]);
 
     try {
@@ -475,7 +464,6 @@ export function ChatCard({
                         </div>
                       </div>
 
-                      {/* Display Quoted Reply if present */}
                       {m.reply_to && (
                         <div className="bg-black/30 border-l-2 border-[var(--theme)] px-2 py-1 rounded-r-md my-1 text-[10px] text-zinc-400">
                           <span className="font-bold text-white">{m.reply_to.username}</span>
@@ -536,14 +524,12 @@ export function ChatCard({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Typing Indicator Banner */}
           {Object.keys(typingUsers).length > 0 && (
             <div className="text-[10px] text-[var(--theme)] italic px-1 animate-pulse">
               {Object.values(typingUsers).join(', ')} {Object.values(typingUsers).length === 1 ? 'is' : 'are'} typing...
             </div>
           )}
 
-          {/* Pending Image Attachment Banner */}
           {pendingImageUrl && (
             <div className="flex items-center justify-between bg-white/5 border border-white/10 p-2 rounded-xl text-xs">
               <div className="flex items-center gap-2 truncate text-zinc-300">
@@ -559,7 +545,6 @@ export function ChatCard({
             </div>
           )}
 
-          {/* Replying-To Banner Preview */}
           {replyingTo && (
             <div className="flex items-center justify-between bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl text-xs">
               <div className="flex items-center gap-2 truncate text-zinc-300">
@@ -577,7 +562,6 @@ export function ChatCard({
           )}
           
           <div className="relative flex items-center gap-1.5">
-            {/* Hidden File Input */}
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -586,7 +570,6 @@ export function ChatCard({
               className="hidden" 
             />
 
-            {/* Image Upload Button */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -623,7 +606,6 @@ export function ChatCard({
         </div>
       )}
 
-      {/* Full-Screen Image Lightbox Modal */}
       {lightboxImage && (
         <div 
           className="fixed inset-0 z-[700] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
