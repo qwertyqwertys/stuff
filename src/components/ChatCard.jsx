@@ -118,7 +118,7 @@ export function ChatCard({
 
   const fetchMessages = useCallback(async () => {
     try {
-      const res = await fetch('/api/messages');
+      const res = await fetch('http://localhost:5000/api/messages');
       if (res.ok) {
         const data = await res.json();
         setMessages(data);
@@ -136,8 +136,8 @@ export function ChatCard({
   useEffect(() => {
     fetchMessages();
 
-    // Backup polling interval
-    const interval = setInterval(fetchMessages, 2000);
+    // 1-second interval to ensure background sync
+    const interval = setInterval(fetchMessages, 1000);
 
     // Free instant sync across all open tabs/devices using Supabase Broadcast
     const channel = supabase.channel('capy-live-chat');
@@ -245,7 +245,7 @@ export function ChatCard({
     setMessages(prev => [...prev, tempMessage]);
 
     try {
-      await fetch('/api/messages', {
+      await fetch('http://localhost:5000/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
