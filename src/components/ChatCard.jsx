@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight, Image as ImageIcon, Loader2 } from 'lucide-react'; 
-import { supabase } from '../supabaseClient';
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
+
+const API_BASE_URL = 'http://localhost:5000/api/messages';
 
 function formatTimestamp(isoString) {
   if (!isoString) return '';
@@ -86,14 +87,12 @@ export function ChatCard({
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
 
-  // States for Typing Indicator, Quote Replies, and Image Attachments
   const [replyingTo, setReplyingTo] = useState(null);
   const [typingUsers, setTypingUsers] = useState({});
   const [uploadingImage, setUploadingImage] = useState(false);
   const [pendingImageUrl, setPendingImageUrl] = useState('');
   const [lightboxImage, setLightboxImage] = useState(null);
 
-  const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
@@ -117,76 +116,20 @@ export function ChatCard({
   }, []);
 
   const fetchMessages = useCallback(async () => {
-    const { data } = await supabase
-      .from('messages')
-      .select('id, username, content, created_at, user_id, avatar_url, frame_url, effect_url, is_edited, favs, achievements, times, reply_to, image_url')
-      .order('created_at', { ascending: true })
-      .limit(30);
-    if (data) setMessages(data);
+    try {
+      const res = await fetch(API_BASE_URL);
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch messages:', err);
+    }
   }, []);
-
-  const syncUserStatsToDatabase = useCallback(async (newName) => {
-    const currentName = newName || username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
-    if (!currentName) return;
-
-    const currentAvatar = ownPfp || getStoredAvatar();
-    const currentFrame = localStorage.getItem('capy-selected-frame') || null;
-    const currentEffect = localStorage.getItem('capy-selected-effect') || null;
-
-    const savedFavs = JSON.parse(localStorage.getItem('capy-favs') || '[]');
-    let currentFavs = (userFavs && userFavs.length > 0) ? userFavs : savedFavs;
-
-    const savedTimes = JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
-    let currentTimes = (userTimes && Object.keys(userTimes).length > 0) ? userTimes : savedTimes;
-
-    const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
-    const savedAchievements = trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
-    let currentAchievements = (myAchievements && myAchievements.length > 0) ? myAchievements : savedAchievements;
-
-    // Updates ALL existing messages matching user_id with the new name, avatar, and stats
-    await supabase
-      .from('messages')
-      .update({ 
-        username: currentName,
-        favs: currentFavs, 
-        achievements: currentAchievements, 
-        times: currentTimes,
-        avatar_url: currentAvatar || null,
-        frame_url: currentFrame,
-        effect_url: currentEffect
-      })
-      .eq('user_id', myId);
-  }, [myId, username, ownPfp, userFavs, userTimes, myAchievements]);
 
   useEffect(() => {
     fetchMessages();
-
-    const channel = supabase
-      .channel('realtime-messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, 
-        () => fetchMessages()
-      )
-      .subscribe();
-
-    const typingChannel = supabase.channel('global_typing', {
-      config: { broadcast: { ack: true } }
-    });
-
-    typingChannel
-      .on('broadcast', { event: 'typing' }, ({ payload }) => {
-        if (payload.userId === myId) return;
-
-        if (payload.isTyping) {
-          setTypingUsers(prev => ({ ...prev, [payload.userId]: payload.name }));
-        } else {
-          setTypingUsers(prev => {
-            const updated = { ...prev };
-            delete updated[payload.userId];
-            return updated;
-          });
-        }
-      })
-      .subscribe();
+    const interval = setInterval(fetchMessages, 1000);
 
     const handlePfpUpdated = () => {
       fetchMessages();
@@ -195,11 +138,10 @@ export function ChatCard({
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
 
     return () => {
-      supabase.removeChannel(channel);
-      supabase.removeChannel(typingChannel);
+      clearInterval(interval);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
-  }, [fetchMessages, myId]);
+  }, [fetchMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -208,33 +150,6 @@ export function ChatCard({
   const handleTypingInput = (e) => {
     const currentVal = e.target.value;
     setText(currentVal);
-
-    const channel = supabase.channel('global_typing');
-
-    if (!currentVal.trim()) {
-      clearTimeout(typingTimeoutRef.current);
-      channel.send({
-        type: 'broadcast',
-        event: 'typing',
-        payload: { userId: myId, name: username, isTyping: false }
-      });
-      return;
-    }
-
-    channel.send({
-      type: 'broadcast',
-      event: 'typing',
-      payload: { userId: myId, name: username, isTyping: true }
-    });
-
-    clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      channel.send({
-        type: 'broadcast',
-        event: 'typing',
-        payload: { userId: myId, name: username, isTyping: false }
-      });
-    }, 800);
   };
 
   const handleFileSelect = async (e) => {
@@ -249,33 +164,16 @@ export function ChatCard({
     setUploadingImage(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-      const filePath = `chat-uploads/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('chat-images')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPendingImageUrl(reader.result);
-          setUploadingImage(false);
-        };
-        reader.readAsDataURL(file);
-        return;
-      }
-
-      const { data } = supabase.storage
-        .from('chat-images')
-        .getPublicUrl(filePath);
-
-      setPendingImageUrl(data.publicUrl);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPendingImageUrl(reader.result);
+        setUploadingImage(false);
+      };
+      reader.readAsDataURL(file);
     } catch (err) {
       console.error('Image upload failed:', err);
-    } finally {
       setUploadingImage(false);
+    } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -291,33 +189,19 @@ export function ChatCard({
     window.dispatchEvent(new Event('capy-username-updated'));
     setUsername(newName);
     setIsJoined(true);
-
-    await syncUserStatsToDatabase(newName);
     fetchMessages();
   };
 
   const handleSend = async () => {
     if (!text.trim() && !pendingImageUrl) return;
 
-    clearTimeout(typingTimeoutRef.current);
-    supabase.channel('global_typing').send({
-      type: 'broadcast',
-      event: 'typing',
-      payload: { userId: myId, name: username, isTyping: false }
-    });
-
     const currentAvatar = ownPfp || getStoredAvatar();
     const currentFrame = localStorage.getItem('capy-selected-frame') || null;
     const currentEffect = localStorage.getItem('capy-selected-effect') || null;
 
-    const currentFavs = userFavs.length > 0 ? userFavs : JSON.parse(localStorage.getItem('capy-favs') || '[]');
-    const currentTimes = Object.keys(userTimes).length > 0 ? userTimes : JSON.parse(localStorage.getItem('capy-playtimes') || '{}');
-    const trophyIds = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
-    const currentAchievements = myAchievements.length > 0 ? myAchievements : trophyIds.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
-
     const messageText = text.trim();
     const attachedImage = pendingImageUrl || (isImageUrl(messageText) ? messageText : null);
-
+    
     const currentReply = replyingTo ? {
       username: replyingTo.username,
       content: replyingTo.content
@@ -327,8 +211,9 @@ export function ChatCard({
     setPendingImageUrl('');
     setReplyingTo(null);
 
+    const tempId = 'temp_' + Date.now();
     const tempMessage = {
-      id: 'temp_' + Date.now(),
+      id: tempId,
       username,
       content: messageText,
       image_url: attachedImage,
@@ -337,28 +222,36 @@ export function ChatCard({
       frame_url: currentFrame,
       effect_url: currentEffect,
       created_at: new Date().toISOString(),
-      favs: currentFavs,
-      achievements: currentAchievements,
-      times: currentTimes,
       reply_to: currentReply
     };
+    
     setMessages(prev => [...prev, tempMessage]);
 
-    await supabase
-      .from('messages')
-      .insert([{ 
-        username, 
-        content: messageText, 
-        image_url: attachedImage,
-        user_id: myId,
-        avatar_url: currentAvatar || null,
-        frame_url: currentFrame,
-        effect_url: currentEffect,
-        favs: currentFavs,
-        achievements: currentAchievements,
-        times: currentTimes,
-        reply_to: currentReply
-      }]);
+    try {
+      const res = await fetch(API_BASE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          content: messageText,
+          image_url: attachedImage,
+          user_id: myId,
+          avatar_url: currentAvatar || null,
+          frame_url: currentFrame,
+          effect_url: currentEffect,
+          reply_to: currentReply
+        })
+      });
+
+      if (res.ok) {
+        const savedMessage = await res.json();
+        setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
+      } else {
+        console.error('Server returned error status:', res.status);
+      }
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
 
     fetchMessages();
   };
@@ -370,29 +263,32 @@ export function ChatCard({
     setEditingId(null);
     setEditText('');
 
-    await supabase
-      .from('messages')
-      .update({ content: editText.trim(), is_edited: true })
-      .eq('id', id);
+    try {
+      await fetch(`${API_BASE_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editText.trim() })
+      });
+    } catch (err) {
+      console.error('Failed to update message:', err);
+    }
+
+    fetchMessages();
   };
 
   const handleDeleteMessage = async (id) => {
     setMessages(prev => prev.filter(m => m.id !== id));
     if (editingId === id) setEditingId(null);
 
-    const { data, error } = await supabase
-      .from('messages')
-      .delete()
-      .eq('id', id)
-      .select();
-
-    if (error) {
-      console.error("Error deleting message from Supabase:", error.message);
-      fetchMessages();
-    } else if (!data || data.length === 0) {
-      console.warn("Delete request succeeded, but 0 rows were removed.");
-      fetchMessages();
+    try {
+      await fetch(`${API_BASE_URL}/${id}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.error('Failed to delete message:', err);
     }
+
+    fetchMessages();
   };
 
   const handleOpenProfile = (m) => {
@@ -568,7 +464,6 @@ export function ChatCard({
                         </div>
                       </div>
 
-                      {/* Display Quoted Reply if present */}
                       {m.reply_to && (
                         <div className="bg-black/30 border-l-2 border-[var(--theme)] px-2 py-1 rounded-r-md my-1 text-[10px] text-zinc-400">
                           <span className="font-bold text-white">{m.reply_to.username}</span>
@@ -586,13 +481,13 @@ export function ChatCard({
                               if (e.key === 'Enter') handleSaveEdit(m.id);
                               if (e.key === 'Escape') setEditingId(null);
                             }}
-                            className={isLightMode ? 'bg-white border-black/20 text-black' : 'bg-white/10 border-white/20 text-white'}
+                            className={isLightMode ? 'bg-white border-black/20 text-black px-2 py-1 rounded text-xs outline-none' : 'bg-white/10 border-white/20 text-white px-2 py-1 rounded text-xs outline-none'}
                             autoFocus
                           />
-                          <button onClick={() => handleSaveEdit(m.id)}>
+                          <button onClick={() => handleSaveEdit(m.id)} className="p-1 hover:bg-white/10 rounded text-emerald-400">
                             <Check className="w-3.5 h-3.5"/>
                           </button>
-                          <button onClick={() => setEditingId(null)}>
+                          <button onClick={() => setEditingId(null)} className="p-1 hover:bg-white/10 rounded text-zinc-400">
                             <X className="w-3.5 h-3.5"/>
                           </button>
                         </div>
@@ -629,14 +524,12 @@ export function ChatCard({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Typing Indicator Banner */}
           {Object.keys(typingUsers).length > 0 && (
             <div className="text-[10px] text-[var(--theme)] italic px-1 animate-pulse">
               {Object.values(typingUsers).join(', ')} {Object.values(typingUsers).length === 1 ? 'is' : 'are'} typing...
             </div>
           )}
 
-          {/* Pending Image Attachment Banner */}
           {pendingImageUrl && (
             <div className="flex items-center justify-between bg-white/5 border border-white/10 p-2 rounded-xl text-xs">
               <div className="flex items-center gap-2 truncate text-zinc-300">
@@ -652,7 +545,6 @@ export function ChatCard({
             </div>
           )}
 
-          {/* Replying-To Banner Preview */}
           {replyingTo && (
             <div className="flex items-center justify-between bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl text-xs">
               <div className="flex items-center gap-2 truncate text-zinc-300">
@@ -670,7 +562,6 @@ export function ChatCard({
           )}
           
           <div className="relative flex items-center gap-1.5">
-            {/* Hidden File Input */}
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -679,7 +570,6 @@ export function ChatCard({
               className="hidden" 
             />
 
-            {/* Image Upload Button */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -716,7 +606,6 @@ export function ChatCard({
         </div>
       )}
 
-      {/* Full-Screen Image Lightbox Modal */}
       {lightboxImage && (
         <div 
           className="fixed inset-0 z-[700] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
