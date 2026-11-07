@@ -4,7 +4,7 @@ import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/messages`;
+const API_BASE_URL = 'https://capybara-backend-freu.onrender.com/api/messages';
 
 function formatTimestamp(isoString) {
   if (!isoString) return '';
