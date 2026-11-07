@@ -136,16 +136,7 @@ export function ChatCard({
   useEffect(() => {
     fetchMessages();
 
-    // 1. Fast 1-second polling fallback for guaranteed sync across browsers
-    const interval = setInterval(fetchMessages, 1000);
-
-    // 2. Instant real-time listener via free Supabase channel trigger
-    const channel = supabase
-      .channel('realtime-messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-        fetchMessages();
-      })
-      .subscribe();
+    const interval = setInterval(fetchMessages, 500);
 
     const handlePfpUpdated = () => {
       fetchMessages();
@@ -155,7 +146,6 @@ export function ChatCard({
 
     return () => {
       clearInterval(interval);
-      supabase.removeChannel(channel);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
   }, [fetchMessages]);
