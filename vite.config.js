@@ -40,11 +40,14 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      port: 3000,
       hmr: process.env.DISABLE_HMR !== 'true',
       proxy: {
         '/api': {
           target: 'http://localhost:5000',
           changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/api/, '/api'),
         },
       },
     },
