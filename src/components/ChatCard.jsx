@@ -118,16 +118,16 @@ export function ChatCard({
   }, []);
 
   const fetchMessages = useCallback(async () => {
-  try {
-    const res = await fetch('http://localhost:5000/api/messages');
-    if (res.ok) {
-      const data = await res.json();
-      setMessages(data);
+    try {
+      const res = await fetch(API_BASE_URL);
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch messages:', err);
     }
-  } catch (err) {
-    console.error('Failed to fetch messages:', err);
-  }
-}, []);
+  }, []);
 
   const syncUserStatsToDatabase = useCallback(async (newName) => {
     const currentName = newName || username || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username');
@@ -234,70 +234,6 @@ export function ChatCard({
       created_at: new Date().toISOString(),
       reply_to: currentReply
     };
-    
-    // Optimistic UI update
-    setMessages(prev => [...prev, tempMessage]);
-
-    try {
-      const res = await fetch('http://localhost:5000/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username,
-          content: messageText,
-          image_url: attachedImage,
-          user_id: myId,
-          avatar_url: currentAvatar || null,
-          frame_url: currentFrame,
-          effect_url: currentEffect,
-          reply_to: currentReply
-        })
-      });
-
-      if (res.ok) {
-        const savedMessage = await res.json();
-        setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
-      } else {
-        console.error('Server returned error status:', res.status);
-      }
-    } catch (err) {
-      console.error('Failed to send message:', err);
-    }
-
-    fetchMessages();
-  };
-    
-    // Optimistic UI update
-    setMessages(prev => [...prev, tempMessage]);
-
-    try {
-      const res = await fetch('http://localhost:5000/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username,
-          content: messageText,
-          image_url: attachedImage,
-          user_id: myId,
-          avatar_url: currentAvatar || null,
-          frame_url: currentFrame,
-          effect_url: currentEffect,
-          reply_to: currentReply
-        })
-      });
-
-      if (res.ok) {
-        const savedMessage = await res.json();
-        setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
-      } else {
-        console.error('Server returned error status:', res.status);
-      }
-    } catch (err) {
-      console.error('Failed to send message:', err);
-    }
-
-    fetchMessages();
-  };
     
     // Optimistic UI update
     setMessages(prev => [...prev, tempMessage]);
