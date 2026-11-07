@@ -136,7 +136,16 @@ export function ChatCard({
   useEffect(() => {
     fetchMessages();
 
-    const interval = setInterval(fetchMessages, 500);
+    // Backup polling interval
+    const interval = setInterval(fetchMessages, 2000);
+
+    // Free instant sync across all open tabs/devices using Supabase Broadcast
+    const channel = supabase.channel('capy-live-chat');
+    channel
+      .on('broadcast', { event: 'new-message' }, () => {
+        fetchMessages();
+      })
+      .subscribe();
 
     const handlePfpUpdated = () => {
       fetchMessages();
@@ -146,6 +155,7 @@ export function ChatCard({
 
     return () => {
       clearInterval(interval);
+      supabase.removeChannel(channel);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
   }, [fetchMessages]);
@@ -248,6 +258,13 @@ export function ChatCard({
           effect_url: currentEffect,
           reply_to: currentReply
         })
+      });
+
+      // Broadcast instant live update signal to all connected users
+      supabase.channel('capy-live-chat').send({
+        type: 'broadcast',
+        event: 'new-message',
+        payload: {}
       });
     } catch (err) {
       console.error('Failed to send message:', err);
