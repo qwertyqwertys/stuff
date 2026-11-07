@@ -211,7 +211,7 @@ export function ChatCard({
 
     const messageText = text.trim();
     const attachedImage = pendingImageUrl || (isImageUrl(messageText) ? messageText : null);
-
+    
     const currentReply = replyingTo ? {
       username: replyingTo.username,
       content: replyingTo.content
