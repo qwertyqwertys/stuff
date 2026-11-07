@@ -117,7 +117,7 @@ export function ChatCard({
 
   const fetchMessages = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/messages');
+      const res = await fetch('/api/messages');
       if (res.ok) {
         const data = await res.json();
         setMessages(data);
@@ -135,7 +135,6 @@ export function ChatCard({
   useEffect(() => {
     fetchMessages();
 
-    // Pure local polling every 1 second — no external device prompts or web sockets
     const interval = setInterval(fetchMessages, 1000);
 
     const handlePfpUpdated = () => {
@@ -286,43 +285,6 @@ export function ChatCard({
       });
     } catch (err) {
       console.error('Failed to delete message:', err);
-    }
-
-    fetchMessages();
-  };
-  
-  const handleSaveEdit = async (id) => {
-    if (!editText.trim()) return;
-
-    // Optimistic local state update
-    setMessages(prev => prev.map(m => m.id === id ? { ...m, content: editText.trim(), is_edited: true } : m));
-    setEditingId(null);
-    setEditText('');
-
-    try {
-      await fetch(`http://localhost:5000/api/messages/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: editText.trim() })
-      });
-    } catch (err) {
-      console.error('Failed to update message on backend:', err);
-    }
-
-    fetchMessages();
-  };
-
-  const handleDeleteMessage = async (id) => {
-    // Optimistic local state update
-    setMessages(prev => prev.filter(m => m.id !== id));
-    if (editingId === id) setEditingId(null);
-
-    try {
-      await fetch(`http://localhost:5000/api/messages/${id}`, {
-        method: 'DELETE'
-      });
-    } catch (err) {
-      console.error('Failed to delete message on backend:', err);
     }
 
     fetchMessages();
