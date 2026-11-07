@@ -239,6 +239,38 @@ export function ChatCard({
     setMessages(prev => [...prev, tempMessage]);
 
     try {
+      const res = await fetch(API_BASE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          content: messageText,
+          image_url: attachedImage,
+          user_id: myId,
+          avatar_url: currentAvatar || null,
+          frame_url: currentFrame,
+          effect_url: currentEffect,
+          reply_to: currentReply
+        })
+      });
+
+      if (res.ok) {
+        const savedMessage = await res.json();
+        setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
+      } else {
+        console.error('Server returned error status:', res.status);
+      }
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
+
+    fetchMessages();
+  };
+    
+    // Optimistic UI update
+    setMessages(prev => [...prev, tempMessage]);
+
+    try {
       const res = await fetch('http://localhost:5000/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
