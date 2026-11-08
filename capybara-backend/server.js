@@ -100,41 +100,40 @@ app.put('/api/messages/:id', async (req, res) => {
   }
 });
 
-// 4. PUT (Sync Global Profile across all messages by user_id or Username)[cite: 6]
+// 4. PUT (Sync Global Profile across all messages by user_id or Username)
 app.put('/api/profile', async (req, res) => {
   const { username, user_id, avatar_url, frame_url, effect_url } = req.body;
 
   if (!username && !user_id) {
-    console.log('[PROFILE SYNC ERROR] Missing username and user_id in request body.');
-    return res.status(400).json({ error: 'Username or user_id is required for profile sync' });
+    console.log('[PROFILE SYNC ERROR] Missing username and user_id.');
+    return res.status(400).json({ error: 'Username or user_id is required' });
   }
 
   try {
-    console.log(`[PROFILE SYNC] Syncing profile for user_id: "${user_id}", username: "${username}"`);
+    console.log(`[PROFILE SYNC] Syncing -> User: "${username}", ID: "${user_id}", Frame: "${frame_url}", Effect: "${effect_url}"`);
     
     const { rows } = await pool.query(
       `UPDATE messages 
-       SET username = COALESCE(NULLIF($1, ''), username),
-           avatar_url = $2, 
-           frame_url = $3, 
-           effect_url = $4 
-       WHERE user_id = $5 OR username ILIKE $6
+       SET avatar_url = COALESCE($1, avatar_url),
+           frame_url = $2, 
+           effect_url = $3 
+       WHERE (user_id IS NOT NULL AND user_id = $4) 
+          OR (username IS NOT NULL AND username ILIKE $5)
        RETURNING *`,
       [
-        username || null, 
         avatar_url || null, 
-        frame_url || null, 
-        effect_url || null, 
+        frame_url !== undefined ? frame_url : null, 
+        effect_url !== undefined ? effect_url : null, 
         user_id || '', 
         username ? username.trim() : ''
       ]
     );
     
-    console.log(`[PROFILE SYNC SUCCESS] Updated ${rows.length} message row(s).`);
+    console.log(`[PROFILE SYNC SUCCESS] Successfully updated ${rows.length} message(s) in database!`);
     res.json({ success: true, updatedCount: rows.length });
   } catch (err) {
     console.error('[PROFILE SYNC ERROR] Database error:', err);
-    res.status(500).json({ error: 'Failed to update profile' });
+    res.status(500).json({ error: err.message });
   }
 });
 
