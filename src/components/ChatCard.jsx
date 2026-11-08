@@ -121,31 +121,35 @@ export function ChatCard({
     name: username
   });
 
-  // Diagnostic poller to inspect localStorage live in your console
+  // Bulletproof poller that catches any local storage changes instantly
   useEffect(() => {
+    let lastKnownFrame = getStoredFrame();
+    let lastKnownEffect = getStoredEffect();
+    let lastKnownPfp = getStoredAvatar();
+    let lastKnownName = username;
+
     const interval = setInterval(async () => {
-      const rawFrame = localStorage.getItem('capy-selected-frame');
-      const rawEffect = localStorage.getItem('capy-selected-effect');
-      const rawPfp = localStorage.getItem('capy-pfp') || localStorage.getItem('capy-avatar') || localStorage.getItem('user-avatar');
-      const currentName = localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || localStorage.getItem('username') || username;
-
-      // Print live values to your browser console every 1.5s so we can see what's changing
-      console.log('[Diagnostics] Live localStorage -> Frame:', rawFrame, '| Effect:', rawEffect, '| Name:', currentName);
-
-      const currentPfp = getStoredAvatar();
+      const currentPfp = ownPfp || getStoredAvatar();
       const currentFrame = getStoredFrame();
       const currentEffect = getStoredEffect();
+      const currentName = localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || localStorage.getItem('username') || username;
 
-      const prev = lastSyncedRef.current;
       if (
-        prev.pfp !== currentPfp ||
-        prev.frame !== currentFrame ||
-        prev.effect !== currentEffect ||
-        prev.name !== currentName
+        lastKnownPfp !== currentPfp ||
+        lastKnownFrame !== currentFrame ||
+        lastKnownEffect !== currentEffect ||
+        lastKnownName !== currentName
       ) {
-        console.log('[ChatCard] Change detected! Syncing to backend...');
-        
-        lastSyncedRef.current = { pfp: currentPfp, frame: currentFrame, effect: currentEffect, name: currentName };
+        console.log('[ChatCard SYNC TRIGGERED] Local storage change found!', {
+          oldFrame: lastKnownFrame, newFrame: currentFrame,
+          oldEffect: lastKnownEffect, newEffect: currentEffect
+        });
+
+        lastKnownPfp = currentPfp;
+        lastKnownFrame = currentFrame;
+        lastKnownEffect = currentEffect;
+        lastKnownName = currentName;
+
         setProfileVersion(v => v + 1);
 
         try {
@@ -161,15 +165,15 @@ export function ChatCard({
             })
           });
           const data = await res.json();
-          console.log('[ChatCard] Backend sync successful:', data);
+          console.log('[ChatCard] DB Sync Response:', data);
         } catch (err) {
-          console.error('[ChatCard] Backend sync failed:', err);
+          console.error('[ChatCard] DB Sync Error:', err);
         }
       }
-    }, 1500);
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [myId, username]);
+  }, [myId, username, ownPfp]);
   
   useEffect(() => {
     if (displayName) {
