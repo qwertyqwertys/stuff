@@ -30,29 +30,24 @@ function isImageUrl(url) {
   );
 }
 
-const getPersistentId = () => {
-  let id = localStorage.getItem('capy-uid');
-  if (!id) {
-    id = 'user_' + Math.random().toString(36).substring(2, 11);
-    localStorage.setItem('capy-uid', id);
-  }
-  return id;
-};
-
 const getStoredAvatar = () => {
   return localStorage.getItem('capy-pfp') || 
          localStorage.getItem('capy-avatar') || 
-         localStorage.getItem('user-avatar') || 
-         '';
+         localStorage.getItem('user-avatar'] || 
+         localStorage.getItem('pfp') || '';
 };
 
 const getStoredFrame = () => {
-  const f = localStorage.getItem('capy-selected-frame');
+  const f = localStorage.getItem('capy-selected-frame') || 
+            localStorage.getItem('capy-frame') || 
+            localStorage.getItem('frame');
   return (!f || f === 'null' || f === 'undefined' || f === 'none' || f === '') ? '' : f;
 };
 
 const getStoredEffect = () => {
-  const e = localStorage.getItem('capy-selected-effect');
+  const e = localStorage.getItem('capy-selected-effect') || 
+            localStorage.getItem('capy-effect') || 
+            localStorage.getItem('effect');
   return (!e || e === 'null' || e === 'undefined' || e === 'none' || e === '') ? '' : e;
 };
 
@@ -86,7 +81,7 @@ export function ChatCard({
   displayName
 }) {
   const [username, setUsername] = useState(() => {
-    return displayName || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || 'CapyUser';
+    return displayName || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || localStorage.getItem('username') || 'CapyUser';
   });
 
   const [isJoined, setIsJoined] = useState(true);
@@ -106,7 +101,7 @@ export function ChatCard({
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
-  const myId = getPersistentId();
+  const myId = localStorage.getItem('capy-uid') || 'user_' + Math.random().toString(36).substring(2, 11);
 
   // Track profile changes to auto-sync globally via username
   const lastSyncedRef = useRef({
@@ -121,7 +116,7 @@ export function ChatCard({
       const currentPfp = getStoredAvatar();
       const currentFrame = getStoredFrame();
       const currentEffect = getStoredEffect();
-      const currentName = username;
+      const currentName = localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || localStorage.getItem('username') || username;
 
       const prev = lastSyncedRef.current;
       if (
@@ -133,8 +128,10 @@ export function ChatCard({
         lastSyncedRef.current = { pfp: currentPfp, frame: currentFrame, effect: currentEffect, name: currentName };
         setProfileVersion(v => v + 1);
 
+        console.log('[ChatCard] Profile change detected! Syncing to backend for username:', currentName);
+
         try {
-          await fetch(`${API_BASE_URL.replace('/messages', '')}/profile`, {
+          const res = await fetch(`${API_BASE_URL.replace('/messages', '')}/profile`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -144,8 +141,10 @@ export function ChatCard({
               effect_url: currentEffect || null
             })
           });
+          const data = await res.json();
+          console.log('[ChatCard] Sync response:', data);
         } catch (err) {
-          console.error('Username profile sync failed:', err);
+          console.error('[ChatCard] Username profile sync failed:', err);
         }
       }
     }, 1500);
