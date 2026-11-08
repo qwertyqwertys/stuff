@@ -1198,43 +1198,52 @@ function SettingsModalContent({
                               <button
                                 type="button"
                                 onClick={async () => {
-                                  if (item.type === 'frame' && typeof setSelectedFrame === 'function') {
-                                    setSelectedFrame(item.url);
-                                    try { localStorage.setItem('capy-selected-frame', item.url); } catch (e) {}
-                                  }
-                                  if (item.type === 'effect' && typeof setSelectedEffect === 'function') {
-                                    setSelectedEffect(item.url);
-                                    try { localStorage.setItem('capy-selected-effect', item.url); } catch (e) {}
-                                  }
-                                  
-                                  const currentName = displayName || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
-                                  if (currentName) {
-                                    const activeFrame = localStorage.getItem('capy-selected-frame') || null;
-                                    const activeEffect = localStorage.getItem('capy-selected-effect') || null;
-                                    await supabase
-                                      .from('messages')
-                                      .update({ 
-                                        frame_url: activeFrame, 
-                                        effect_url: activeEffect 
-                                      })
-                                      .ilike('username', currentName);
-                                  }
+                                const newFrame = item.type === 'frame' ? item.url : (selectedFrame || '');
+                                const newEffect = item.type === 'effect' ? item.url : (selectedEffect || '');
 
-                                  window.dispatchEvent(new Event('capy-pfp-updated'));
-                                }}
-                                className={`mt-2 w-full py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
-                                  isEquipped 
-                                    ? 'bg-green-500 text-black shadow-sm' 
-                                    : 'bg-[var(--theme)] text-black hover:opacity-80'
-                                }`}
-                              >
-                                {isEquipped ? 'Equipped' : 'Equip'}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                                if (item.type === 'frame' && typeof setSelectedFrame === 'function') {
+                                  setSelectedFrame(item.url);
+                                  try { localStorage.setItem('capy-selected-frame', item.url); } catch (e) {}
+                                }
+                                if (item.type === 'effect' && typeof setSelectedEffect === 'function') {
+                                  setSelectedEffect(item.url);
+                                  try { localStorage.setItem('capy-selected-effect', item.url); } catch (e) {}
+                                }
+                                
+                                const currentName = displayName || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name') || localStorage.getItem('username');
+                                const currentId = localStorage.getItem('capy-uid') || '';
+                                const currentPfp = localStorage.getItem('capy-pfp') || localStorage.getItem('capy-avatar') || '';
+
+                                if (currentName) {
+                                  try {
+                                    const res = await fetch('https://capybara-backend-freu.onrender.com/api/profile', {
+                                      method: 'PUT',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        user_id: currentId,
+                                        username: currentName,
+                                        avatar_url: currentPfp || null,
+                                        frame_url: item.type === 'frame' ? item.url : (localStorage.getItem('capy-selected-frame') || null),
+                                        effect_url: item.type === 'effect' ? item.url : (localStorage.getItem('capy-selected-effect') || null)
+                                      })
+                                    });
+                                    const data = await res.json();
+                                    console.log('[SettingsModal] Profile sync to backend response:', data);
+                                  } catch (err) {
+                                    console.error('[SettingsModal] Profile sync failed:', err);
+                                  }
+                                }
+
+                                window.dispatchEvent(new Event('capy-pfp-updated'));
+                              }}
+                              className={`mt-2 w-full py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
+                                isEquipped 
+                                  ? 'bg-green-500 text-black shadow-sm' 
+                                  : 'bg-[var(--theme)] text-black hover:opacity-80'
+                              }`}
+                            >
+                              {isEquipped ? 'Equipped' : 'Equip'}
+                            </button>
 
                     <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-black/20 border-white/5'} p-3 rounded-xl border space-y-3`}>
                       <div className="flex items-center justify-between">
