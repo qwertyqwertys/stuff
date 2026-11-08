@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 
-// Increase body parser limits to 10MB to handle large base64 image uploads and avatars[cite: 5]
+// Increase body parser limits to 10MB to handle large base64 image uploads and avatars
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
@@ -32,7 +32,7 @@ pool.connect()
 
 // --- API ROUTES ---
 
-// 1. GET all messages (so old messages show up)[cite: 5]
+// 1. GET all messages (so old messages show up)
 app.get('/api/messages', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM messages ORDER BY created_at ASC');
@@ -43,7 +43,7 @@ app.get('/api/messages', async (req, res) => {
   }
 });
 
-// 2. POST a new message (so new messages stick and save)[cite: 5]
+// 2. POST a new message (so new messages stick and save)
 app.post('/api/messages', async (req, res) => {
   const {
     username,
@@ -57,7 +57,7 @@ app.post('/api/messages', async (req, res) => {
   } = req.body;
 
   try {
-    // Generate a unique string ID to satisfy the primary key column requirement[cite: 5]
+    // Generate a unique string ID to satisfy the primary key column requirement
     const id = Date.now().toString();
 
     const { rows } = await pool.query(
@@ -84,7 +84,7 @@ app.post('/api/messages', async (req, res) => {
   }
 });
 
-// 3. PUT (Edit) a message[cite: 5]
+// 3. PUT (Edit) a message
 app.put('/api/messages/:id', async (req, res) => {
   const { id } = req.params;
   const { content } = req.body;
@@ -113,7 +113,7 @@ app.put('/api/messages/user/:user_id', async (req, res) => {
            avatar_url = $2, 
            frame_url = $3, 
            effect_url = $4 
-       WHERE user_id = $5 
+       WHERE user_id = $5 OR (username = $1 AND (user_id IS NULL OR user_id = ''))
        RETURNING *`,
       [username || null, avatar_url || null, frame_url || null, effect_url || null, user_id]
     );
@@ -124,7 +124,7 @@ app.put('/api/messages/user/:user_id', async (req, res) => {
   }
 });
 
-// 5. DELETE a message[cite: 5]
+// 5. DELETE a message
 app.delete('/api/messages/:id', async (req, res) => {
   const { id } = req.params;
 
