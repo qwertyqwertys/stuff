@@ -3,7 +3,6 @@ import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
-console.log('🚨 CHAT_CARD_FILE_IS_RUNNING 🚨');
 
 const API_BASE_URL = 'https://capybara-backend-freu.onrender.com/api/messages';
 
