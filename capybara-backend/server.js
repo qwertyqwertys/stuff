@@ -10,7 +10,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+
+// Increase body parser limits to 10MB to handle large base64 image uploads and avatars
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Request Logger middleware
 app.use((req, res, next) => {
