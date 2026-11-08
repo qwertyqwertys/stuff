@@ -46,6 +46,16 @@ const getStoredAvatar = () => {
          '';
 };
 
+const getStoredFrame = () => {
+  const f = localStorage.getItem('capy-selected-frame');
+  return (!f || f === 'null' || f === 'undefined' || f === 'none' || f === '') ? '' : f;
+};
+
+const getStoredEffect = () => {
+  const e = localStorage.getItem('capy-selected-effect');
+  return (!e || e === 'null' || e === 'undefined' || e === 'none' || e === '') ? '' : e;
+};
+
 function generateFriendCode(name, pfp, favs, times, achievements) {
   try {
     const payload = {
@@ -92,10 +102,29 @@ export function ChatCard({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [pendingImageUrl, setPendingImageUrl] = useState('');
   const [lightboxImage, setLightboxImage] = useState(null);
+  const [profileVersion, setProfileVersion] = useState(0);
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
+
+  // Listen to live settings changes so chat updates instantly without refreshing
+  useEffect(() => {
+    const triggerUpdate = () => setProfileVersion(v => v + 1);
+    window.addEventListener('capy-pfp-updated', triggerUpdate);
+    window.addEventListener('capy-frame-updated', triggerUpdate);
+    window.addEventListener('capy-effect-updated', triggerUpdate);
+    window.addEventListener('capy-username-updated', triggerUpdate);
+    window.addEventListener('storage', triggerUpdate);
+
+    return () => {
+      window.removeEventListener('capy-pfp-updated', triggerUpdate);
+      window.removeEventListener('capy-frame-updated', triggerUpdate);
+      window.removeEventListener('capy-effect-updated', triggerUpdate);
+      window.removeEventListener('capy-username-updated', triggerUpdate);
+      window.removeEventListener('storage', triggerUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     if (displayName) {
@@ -196,8 +225,8 @@ export function ChatCard({
     if (!text.trim() && !pendingImageUrl) return;
 
     const currentAvatar = ownPfp || getStoredAvatar();
-    const currentFrame = localStorage.getItem('capy-selected-frame') || null;
-    const currentEffect = localStorage.getItem('capy-selected-effect') || null;
+    const currentFrame = getStoredFrame();
+    const currentEffect = getStoredEffect();
 
     const messageText = text.trim();
     const attachedImage = pendingImageUrl || (isImageUrl(messageText) ? messageText : null);
@@ -219,8 +248,8 @@ export function ChatCard({
       image_url: attachedImage,
       user_id: myId,
       avatar_url: currentAvatar || null,
-      frame_url: currentFrame,
-      effect_url: currentEffect,
+      frame_url: currentFrame || null,
+      effect_url: currentEffect || null,
       created_at: new Date().toISOString(),
       reply_to: currentReply
     };
@@ -237,8 +266,8 @@ export function ChatCard({
           image_url: attachedImage,
           user_id: myId,
           avatar_url: currentAvatar || null,
-          frame_url: currentFrame,
-          effect_url: currentEffect,
+          frame_url: currentFrame || null,
+          effect_url: currentEffect || null,
           reply_to: currentReply
         })
       });
@@ -295,7 +324,6 @@ export function ChatCard({
   const handleOpenProfile = (m) => {
     const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
 
-    // Use live props for own profile so achievements, favorites, and times match correctly!
     const liveFavs = isSelf ? userFavs : (m.favs || []);
     const liveAchievements = isSelf ? myAchievements : (m.achievements || []);
     const liveTimes = isSelf ? userTimes : (m.times || {});
@@ -306,8 +334,8 @@ export function ChatCard({
       ? m.avatar_url 
       : (isSelf ? (ownPfp || getStoredAvatar()) : '');
 
-    const liveFrame = m.frame_url || (isSelf ? (localStorage.getItem('capy-selected-frame') || '') : '');
-    const liveEffect = m.effect_url || (isSelf ? (localStorage.getItem('capy-selected-effect') || '') : '');
+    const liveFrame = isSelf ? getStoredFrame() : (m.frame_url || '');
+    const liveEffect = isSelf ? getStoredEffect() : (m.effect_url || '');
 
     setSelectedUserProfile({
       isOwnProfile: isSelf,
@@ -399,12 +427,16 @@ export function ChatCard({
               <div className="text-zinc-400 italic text-[10px] font-mono text-center py-4">Waiting for Messages...</div>
             ) : (
               messages.map((m, i) => {
-                const isOwner = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
+                // eslint-disable-next-line no-unused-vars
+                const _v = profileVersion; // Forces re-render whenever profile settings change
+
+                const isOwner = (m.user_id && m.user_id === myId) || 
+                                (username && m.username && m.username.toLowerCase() === username.toLowerCase());
                 const isEditingThis = editingId === m.id;
 
                 const avatarUrlToUse = isOwner ? (ownPfp || getStoredAvatar() || m.avatar_url || '') : (m.avatar_url || '');
-                const frameUrlToUse = isOwner ? (localStorage.getItem('capy-selected-frame') || '') : (m.frame_url || '');
-                const effectUrlToUse = isOwner ? (localStorage.getItem('capy-selected-effect') || '') : (m.effect_url || '');
+                const frameUrlToUse = isOwner ? getStoredFrame() : (m.frame_url || '');
+                const effectUrlToUse = isOwner ? getStoredEffect() : (m.effect_url || '');
 
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
