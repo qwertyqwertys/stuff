@@ -113,15 +113,32 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Track profile changes to auto-sync globally
-  const lastSyncedRef = useRef({
-    pfp: getStoredAvatar(),
-    frame: getStoredFrame(),
-    effect: getStoredEffect(),
-    name: username
-  });
+  // Instant listener for local storage changes or window events
+  useEffect(() => {
+    const handleProfileStorageChange = () => {
+      setProfileVersion(v => v + 1);
+      setLiveProfiles(prev => ({
+        ...prev,
+        [myId]: {
+          avatar_url: ownPfp || getStoredAvatar(),
+          frame_url: getStoredFrame(),
+          effect_url: getStoredEffect()
+        }
+      }));
+    };
 
-  // Bulletproof poller that catches any local storage changes instantly
+    window.addEventListener('storage', handleProfileStorageChange);
+    window.addEventListener('capy-profile-updated', handleProfileStorageChange);
+    window.addEventListener('capy-pfp-updated', handleProfileStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleProfileStorageChange);
+      window.removeEventListener('capy-profile-updated', handleProfileStorageChange);
+      window.removeEventListener('capy-pfp-updated', handleProfileStorageChange);
+    };
+  }, [myId, ownPfp]);
+
+  // Bulletproof poller that syncs to backend seamlessly in the background
   useEffect(() => {
     let lastKnownFrame = getStoredFrame();
     let lastKnownEffect = getStoredEffect();
@@ -140,19 +157,12 @@ export function ChatCard({
         lastKnownEffect !== currentEffect ||
         lastKnownName !== currentName
       ) {
-        console.log('[ChatCard SYNC TRIGGERED] Local storage change found!', {
-          oldFrame: lastKnownFrame, newFrame: currentFrame,
-          oldEffect: lastKnownEffect, newEffect: currentEffect
-        });
-
         lastKnownPfp = currentPfp;
         lastKnownFrame = currentFrame;
         lastKnownEffect = currentEffect;
         lastKnownName = currentName;
 
         setProfileVersion(v => v + 1);
-
-        // Update local liveProfiles map immediately for self
         setLiveProfiles(prev => ({
           ...prev,
           [myId]: {
@@ -163,7 +173,7 @@ export function ChatCard({
         }));
 
         try {
-          const res = await fetch(`${API_BASE_URL.replace('/messages', '')}/profile`, {
+          await fetch(`${API_BASE_URL.replace('/messages', '')}/profile`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -174,8 +184,6 @@ export function ChatCard({
               effect_url: currentEffect
             })
           });
-          const data = await res.json();
-          console.log('[ChatCard] DB Sync Response:', data);
         } catch (err) {
           console.error('[ChatCard] DB Sync Error:', err);
         }
@@ -210,7 +218,6 @@ export function ChatCard({
         const data = await res.json();
         setMessages(data);
 
-        // Build a live profiles lookup map from incoming message rows
         const profilesMap = {};
         data.forEach(m => {
           if (m.user_id) {
