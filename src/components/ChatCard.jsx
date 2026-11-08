@@ -108,7 +108,7 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Reference to track previous profile state for automatic change detection
+  // Track profile changes to auto-sync globally via username
   const lastSyncedRef = useRef({
     pfp: getStoredAvatar(),
     frame: getStoredFrame(),
@@ -116,13 +116,12 @@ export function ChatCard({
     name: username
   });
 
-  // Automatically watch localStorage for changes and sync globally to the database
   useEffect(() => {
     const interval = setInterval(async () => {
       const currentPfp = getStoredAvatar();
       const currentFrame = getStoredFrame();
       const currentEffect = getStoredEffect();
-      const currentName = localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || username;
+      const currentName = username;
 
       const prev = lastSyncedRef.current;
       if (
@@ -134,9 +133,8 @@ export function ChatCard({
         lastSyncedRef.current = { pfp: currentPfp, frame: currentFrame, effect: currentEffect, name: currentName };
         setProfileVersion(v => v + 1);
 
-        // Push updates to backend so everyone else sees it instantly
         try {
-          await fetch(`${API_BASE_URL.replace('/messages', '')}/messages/user/${myId}`, {
+          await fetch(`${API_BASE_URL.replace('/messages', '')}/profile`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -147,13 +145,13 @@ export function ChatCard({
             })
           });
         } catch (err) {
-          console.error('Auto-sync profile failed:', err);
+          console.error('Username profile sync failed:', err);
         }
       }
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [myId, username]);
+  }, [username]);
 
   useEffect(() => {
     if (displayName) {
