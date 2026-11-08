@@ -402,9 +402,9 @@ export function ChatCard({
                 const isOwner = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
                 const isEditingThis = editingId === m.id;
 
-                const avatarUrlToUse = m.avatar_url || (isOwner ? (ownPfp || getStoredAvatar()) : '');
-                const frameUrlToUse = isOwner ? (localStorage.getItem('capy-selected-frame') || m.frame_url || '') : (m.frame_url || '');
-                const effectUrlToUse = isOwner ? (localStorage.getItem('capy-selected-effect') || m.effect_url || '') : (m.effect_url || '');
+                const avatarUrlToUse = isOwner ? (ownPfp || getStoredAvatar() || m.avatar_url || '') : (m.avatar_url || '');
+                const frameUrlToUse = isOwner ? (localStorage.getItem('capy-selected-frame') || '') : (m.frame_url || '');
+                const effectUrlToUse = isOwner ? (localStorage.getItem('capy-selected-effect') || '') : (m.effect_url || '');
 
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
