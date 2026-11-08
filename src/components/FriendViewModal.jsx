@@ -88,16 +88,16 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
   const displayName = isOwnProfile ? "You" : (friend?.decoded?.n || friend?.displayName || friend?.name || "User");
   
   const rawFavs = isOwnProfile 
-    ? (friend?.favs || friend?.f || []) 
+    ? (userFavs || friend?.favs || friend?.f || []) 
     : (friend?.decoded?.f || friend?.favs || friend?.f || []);
   const displayFavs = Array.isArray(rawFavs) ? rawFavs : [];
 
   const displayTimes = isOwnProfile 
-    ? (friend?.times || friend?.t || {}) 
+    ? (userTimes || friend?.times || friend?.t || {}) 
     : (friend?.decoded?.t || friend?.times || friend?.t || {});
   
   const displayAchievements = isOwnProfile 
-    ? (friend?.achievements || friend?.a || myAchievements || []) 
+    ? (myAchievements.length > 0 ? myAchievements : (friend?.achievements || friend?.a || [])) 
     : (friend?.decoded?.a || friend?.achievements || friend?.a || []);
 
   const friendCodeDisplay = isOwnProfile 
