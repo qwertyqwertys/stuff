@@ -54,12 +54,16 @@ app.post('/api/messages', async (req, res) => {
   } = req.body;
 
   try {
+    // Generate a unique string ID to satisfy the primary key column requirement
+    const id = Date.now().toString();
+
     const { rows } = await pool.query(
       `INSERT INTO messages 
-        (username, content, image_url, user_id, avatar_url, frame_url, effect_url, reply_to) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+        (id, username, content, image_url, user_id, avatar_url, frame_url, effect_url, reply_to) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
        RETURNING *`,
       [
+        id,
         username,
         content,
         image_url,
