@@ -247,10 +247,15 @@ export function ChatCard({
         const savedMessage = await res.json();
         setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
       } else {
-        console.error('Server returned error status:', res.status);
+        const errData = await res.json().catch(() => ({}));
+        alert(`Server Error (${res.status}): ${errData.error || 'Failed to save message'}`);
+        // Remove the temporary message so it doesn't stay on screen as a ghost message
+        setMessages(prev => prev.filter(m => m.id !== tempId));
       }
     } catch (err) {
-      console.error('Failed to send message:', err);
+      alert(`Network/Fetch Error: ${err.message}. (GoGuardian or school network may be blocking this request).`);
+      // Remove the temporary message on network failure
+      setMessages(prev => prev.filter(m => m.id !== tempId));
     }
 
     fetchMessages();
