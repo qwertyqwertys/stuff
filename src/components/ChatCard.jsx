@@ -108,49 +108,52 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Sync profile changes to backend so everyone else sees updates instantly
-  const syncProfileToBackend = useCallback(async () => {
-    try {
-      const currentAvatar = getStoredAvatar();
+  // Reference to track previous profile state for automatic change detection
+  const lastSyncedRef = useRef({
+    pfp: getStoredAvatar(),
+    frame: getStoredFrame(),
+    effect: getStoredEffect(),
+    name: username
+  });
+
+  // Automatically watch localStorage for changes and sync globally to the database
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const currentPfp = getStoredAvatar();
       const currentFrame = getStoredFrame();
       const currentEffect = getStoredEffect();
       const currentName = localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || username;
 
-      await fetch(`${API_BASE_URL.replace('/messages', '')}/messages/user/${myId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: currentName,
-          avatar_url: currentAvatar || null,
-          frame_url: currentFrame || null,
-          effect_url: currentEffect || null
-        })
-      });
-    } catch (err) {
-      console.error('Failed to sync profile to backend:', err);
-    }
+      const prev = lastSyncedRef.current;
+      if (
+        prev.pfp !== currentPfp ||
+        prev.frame !== currentFrame ||
+        prev.effect !== currentEffect ||
+        prev.name !== currentName
+      ) {
+        lastSyncedRef.current = { pfp: currentPfp, frame: currentFrame, effect: currentEffect, name: currentName };
+        setProfileVersion(v => v + 1);
+
+        // Push updates to backend so everyone else sees it instantly
+        try {
+          await fetch(`${API_BASE_URL.replace('/messages', '')}/messages/user/${myId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: currentName,
+              avatar_url: currentPfp || null,
+              frame_url: currentFrame || null,
+              effect_url: currentEffect || null
+            })
+          });
+        } catch (err) {
+          console.error('Auto-sync profile failed:', err);
+        }
+      }
+    }, 1500);
+
+    return () => clearInterval(interval);
   }, [myId, username]);
-
-  // Listen to live settings changes and sync globally
-  useEffect(() => {
-    const triggerUpdate = () => {
-      setProfileVersion(v => v + 1);
-      syncProfileToBackend();
-    };
-    window.addEventListener('capy-pfp-updated', triggerUpdate);
-    window.addEventListener('capy-frame-updated', triggerUpdate);
-    window.addEventListener('capy-effect-updated', triggerUpdate);
-    window.addEventListener('capy-username-updated', triggerUpdate);
-    window.addEventListener('storage', triggerUpdate);
-
-    return () => {
-      window.removeEventListener('capy-pfp-updated', triggerUpdate);
-      window.removeEventListener('capy-frame-updated', triggerUpdate);
-      window.removeEventListener('capy-effect-updated', triggerUpdate);
-      window.removeEventListener('capy-username-updated', triggerUpdate);
-      window.removeEventListener('storage', triggerUpdate);
-    };
-  }, [syncProfileToBackend]);
 
   useEffect(() => {
     if (displayName) {
