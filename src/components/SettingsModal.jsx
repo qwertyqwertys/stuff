@@ -72,7 +72,6 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
 
   return (
     <div className={`relative inline-flex items-center justify-center flex-shrink-0 ${size} ${className} overflow-visible`}>
-      {/* Inner Avatar Container */}
       <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative z-10 bg-[#111923]">
         {hasValidPfp ? (
           <img 
@@ -101,7 +100,6 @@ export function ProfileAvatar({ pfpUrl, frameUrl, effectUrl, size = "w-8 h-8", c
         )}
       </div>
 
-      {/* Perfectly Centered Auto-Adjusting Frame Layer */}
       {hasValidFrame && (
         <img 
           src={frameUrl} 
@@ -465,7 +463,6 @@ function SettingsModalContent({
     }
   };
 
-  // --- DATA SAVING FUNCTIONS ---
   const dumpIDB = (dbName) => {
     return new Promise((resolve) => {
       const req = indexedDB.open(dbName);
@@ -1144,12 +1141,25 @@ function SettingsModalContent({
                                   try { localStorage.removeItem('capy-selected-frame'); } catch (e) {}
                                   
                                   const currentName = displayName || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
+                                  const currentId = localStorage.getItem('capy-uid') || '';
+                                  const currentPfp = localStorage.getItem('capy-pfp') || localStorage.getItem('capy-avatar') || '';
                                   if (currentName) {
                                     const activeEffect = localStorage.getItem('capy-selected-effect') || null;
-                                    await supabase
-                                      .from('messages')
-                                      .update({ frame_url: null, effect_url: activeEffect })
-                                      .ilike('username', currentName);
+                                    try {
+                                      await fetch('https://capybara-backend-freu.onrender.com/api/profile', {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                          user_id: currentId,
+                                          username: currentName,
+                                          avatar_url: currentPfp || null,
+                                          frame_url: null,
+                                          effect_url: activeEffect
+                                        })
+                                      });
+                                    } catch (err) {
+                                      console.error('[SettingsModal] Unequip frame failed:', err);
+                                    }
                                   }
                                   window.dispatchEvent(new Event('capy-pfp-updated'));
                                 }
@@ -1168,12 +1178,25 @@ function SettingsModalContent({
                                   try { localStorage.removeItem('capy-selected-effect'); } catch (e) {}
                                   
                                   const currentName = displayName || localStorage.getItem('capy-username') || localStorage.getItem('capy-display-name');
+                                  const currentId = localStorage.getItem('capy-uid') || '';
+                                  const currentPfp = localStorage.getItem('capy-pfp') || localStorage.getItem('capy-avatar') || '';
                                   if (currentName) {
                                     const activeFrame = localStorage.getItem('capy-selected-frame') || null;
-                                    await supabase
-                                      .from('messages')
-                                      .update({ frame_url: activeFrame, effect_url: null })
-                                      .ilike('username', currentName);
+                                    try {
+                                      await fetch('https://capybara-backend-freu.onrender.com/api/profile', {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                          user_id: currentId,
+                                          username: currentName,
+                                          avatar_url: currentPfp || null,
+                                          frame_url: activeFrame,
+                                          effect_url: null
+                                        })
+                                      });
+                                    } catch (err) {
+                                      console.error('[SettingsModal] Unequip effect failed:', err);
+                                    }
                                   }
                                   window.dispatchEvent(new Event('capy-pfp-updated'));
                                 }
@@ -1198,9 +1221,6 @@ function SettingsModalContent({
                               <button
                                 type="button"
                                 onClick={async () => {
-                                  const newFrame = item.type === 'frame' ? item.url : (selectedFrame || '');
-                                  const newEffect = item.type === 'effect' ? item.url : (selectedEffect || '');
-
                                   if (item.type === 'frame' && typeof setSelectedFrame === 'function') {
                                     setSelectedFrame(item.url);
                                     try { localStorage.setItem('capy-selected-frame', item.url); } catch (e) {}
@@ -1248,7 +1268,8 @@ function SettingsModalContent({
                           );
                         })}
                       </div>
-                      
+                    </div>
+
                     <div className={`${isLightMode ? 'bg-zinc-100 border-zinc-200' : 'bg-black/20 border-white/5'} p-3 rounded-xl border space-y-3`}>
                       <div className="flex items-center justify-between">
                         <p className={`text-[8px] font-black uppercase leading-none ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>Your Friend Code</p>
@@ -1412,7 +1433,6 @@ function SettingsModalContent({
                     </button>
                   </div>
 
-                  {/* VOLUME & PLAY/PAUSE */}
                   {effectiveBgMusic && (
                     <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3 ${performanceMode ? 'opacity-50 pointer-events-none' : ''}`}>
                       <div className="flex items-center justify-between">
@@ -1451,7 +1471,6 @@ function SettingsModalContent({
                     </div>
                   )}
 
-                  {/* BG OPACITY SLIDER */}
                   {hasBackground && !performanceMode && (
                     <div className={`pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'} space-y-3`}>
                       <div className="flex items-center justify-between">
@@ -1690,7 +1709,6 @@ function SettingsModalContent({
                     ))}
                   </div>
 
-                  {/* CUSTOM COLOR PICKER */}
                   <div 
                     className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}
                     onBlur={(e) => {
@@ -1795,7 +1813,6 @@ function SettingsModalContent({
           </div>
         </div>
 
-        {/* UPLOAD SUB-MODAL */}
         {uploadModalOpen && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
             <div className={`${modalBg} border p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4`}>
