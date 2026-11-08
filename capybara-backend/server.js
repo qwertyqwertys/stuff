@@ -64,20 +64,20 @@ app.post('/api/messages', async (req, res) => {
        RETURNING *`,
       [
         id,
-        username,
+        username || 'Anonymous',
         content,
-        image_url,
-        user_id,
-        avatar_url,
-        frame_url,
-        effect_url,
+        image_url || null,
+        user_id || null,
+        avatar_url || null,
+        frame_url || null,
+        effect_url || null,
         reply_to ? JSON.stringify(reply_to) : null
       ]
     );
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error('Error creating message:', err);
-    res.status(500).json({ error: 'Failed to create message' });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -94,7 +94,7 @@ app.put('/api/messages/:id', async (req, res) => {
     res.json(rows[0]);
   } catch (err) {
     console.error('Error updating message:', err);
-    res.status(500).json({ error: 'Failed to update message' });
+    res.status(500).json({ error: err.message });
   }
 });
 
