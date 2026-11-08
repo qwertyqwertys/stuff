@@ -225,7 +225,6 @@ export function ChatCard({
       reply_to: currentReply
     };
     
-    // Optimistically add it to the screen
     setMessages(prev => [...prev, tempMessage]);
 
     try {
@@ -246,21 +245,18 @@ export function ChatCard({
 
       if (res.ok) {
         const savedMessage = await res.json();
-        // Replace temporary id with real database message
         setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(`Server Error (${res.status}): ${errData.error || 'Failed to save message'}`);
-        // Remove the temporary message on failure
         setMessages(prev => prev.filter(m => m.id !== tempId));
       }
     } catch (err) {
       alert(`Network/Fetch Error: ${err.message}.`);
-      // Remove the temporary message on network failure
       setMessages(prev => prev.filter(m => m.id !== tempId));
     }
   };
-  
+
   const handleSaveEdit = async (id) => {
     if (!editText.trim()) return;
 
@@ -299,9 +295,10 @@ export function ChatCard({
   const handleOpenProfile = (m) => {
     const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
 
-    const liveFavs = m.favs || [];
-    const liveAchievements = m.achievements || [];
-    const liveTimes = m.times || {};
+    // Use live props for own profile so achievements, favorites, and times match correctly!
+    const liveFavs = isSelf ? userFavs : (m.favs || []);
+    const liveAchievements = isSelf ? myAchievements : (m.achievements || []);
+    const liveTimes = isSelf ? userTimes : (m.times || {});
 
     const isValidImg = (url) => url && typeof url === 'string' && !url.includes('i.imgur.com/7gK1QvK.png') && url.trim() !== '';
 
