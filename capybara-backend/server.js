@@ -57,7 +57,6 @@ app.post('/api/messages', async (req, res) => {
   } = req.body;
 
   try {
-    // Generate a unique string ID to satisfy the primary key column requirement[cite: 5, 6]
     const id = Date.now().toString();
 
     const { rows } = await pool.query(
@@ -101,29 +100,37 @@ app.put('/api/messages/:id', async (req, res) => {
   }
 });
 
-// 4. PUT (Sync Global Profile across all messages by Username with Logs)
+// 4. PUT (Sync Global Profile across all messages by user_id or Username)[cite: 6]
 app.put('/api/profile', async (req, res) => {
-  const { username, avatar_url, frame_url, effect_url } = req.body;
+  const { username, user_id, avatar_url, frame_url, effect_url } = req.body;
 
-  if (!username) {
-    console.log('[PROFILE SYNC ERROR] Missing username in request body.');
-    return res.status(400).json({ error: 'Username is required for profile sync' });
+  if (!username && !user_id) {
+    console.log('[PROFILE SYNC ERROR] Missing username and user_id in request body.');
+    return res.status(400).json({ error: 'Username or user_id is required for profile sync' });
   }
 
   try {
-    console.log(`[PROFILE SYNC] Attempting to update messages for username: "${username.trim()}"`);
+    console.log(`[PROFILE SYNC] Syncing profile for user_id: "${user_id}", username: "${username}"`);
     
     const { rows } = await pool.query(
       `UPDATE messages 
-       SET avatar_url = $1, 
-           frame_url = $2, 
-           effect_url = $3 
-       WHERE username ILIKE $4
+       SET username = COALESCE(NULLIF($1, ''), username),
+           avatar_url = $2, 
+           frame_url = $3, 
+           effect_url = $4 
+       WHERE user_id = $5 OR username ILIKE $6
        RETURNING *`,
-      [avatar_url || null, frame_url || null, effect_url || null, username.trim()]
+      [
+        username || null, 
+        avatar_url || null, 
+        frame_url || null, 
+        effect_url || null, 
+        user_id || '', 
+        username ? username.trim() : ''
+      ]
     );
     
-    console.log(`[PROFILE SYNC SUCCESS] Updated ${rows.length} message row(s) for "${username}"`);
+    console.log(`[PROFILE SYNC SUCCESS] Updated ${rows.length} message row(s).`);
     res.json({ success: true, updatedCount: rows.length });
   } catch (err) {
     console.error('[PROFILE SYNC ERROR] Database error:', err);
