@@ -79,8 +79,35 @@ function generateFriendCode(name, pfp, favs, times, achievements) {
   }
 }
 
-export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwnProfile, myAchievements = [] }) {
+export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwnProfile, myAchievements = [], userFavs = [], userTimes = {} }) {
   if (!isOwnProfile && (!friend || (!friend.decoded && !friend.f && !friend.favs))) return null;
+
+  // Safe parsers in case data comes in as a JSON string from localStorage
+  const parseArray = (val) => {
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+      try {
+        const parsed = JSON.parse(val);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  };
+
+  const parseObject = (val) => {
+    if (val && typeof val === 'object' && !Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+      try {
+        const parsed = JSON.parse(val);
+        return (parsed && typeof parsed === 'object') ? parsed : {};
+      } catch (e) {
+        return {};
+      }
+    }
+    return {};
+  };
 
   const rawPfp = isOwnProfile ? (ownPfp || friend?.pfp || friend?.p) : (friend?.decoded?.p || friend?.pfp || friend?.p);
   const displayPfp = getValidAvatar(rawPfp);
@@ -88,17 +115,19 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
   const displayName = isOwnProfile ? "You" : (friend?.decoded?.n || friend?.displayName || friend?.name || "User");
   
   const rawFavs = isOwnProfile 
-    ? (userFavs || friend?.favs || friend?.f || []) 
+    ? (userFavs.length > 0 ? userFavs : (friend?.favs || friend?.f || [])) 
     : (friend?.decoded?.f || friend?.favs || friend?.f || []);
-  const displayFavs = Array.isArray(rawFavs) ? rawFavs : [];
+  const displayFavs = parseArray(rawFavs);
 
-  const displayTimes = isOwnProfile 
-    ? (userTimes || friend?.times || friend?.t || {}) 
+  const rawTimes = isOwnProfile 
+    ? (Object.keys(userTimes).length > 0 ? userTimes : (friend?.times || friend?.t || {})) 
     : (friend?.decoded?.t || friend?.times || friend?.t || {});
+  const displayTimes = parseObject(rawTimes);
   
-  const displayAchievements = isOwnProfile 
+  const rawAchievements = isOwnProfile 
     ? (myAchievements.length > 0 ? myAchievements : (friend?.achievements || friend?.a || [])) 
     : (friend?.decoded?.a || friend?.achievements || friend?.a || []);
+  const displayAchievements = parseArray(rawAchievements);
 
   const friendCodeDisplay = isOwnProfile 
     ? (localStorage.getItem('capy-friend-code') || 
