@@ -112,7 +112,7 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Track profile changes to auto-sync globally via user_id and username
+  // Track profile changes to auto-sync globally
   const lastSyncedRef = useRef({
     pfp: getStoredAvatar(),
     frame: getStoredFrame(),
@@ -134,30 +134,34 @@ export function ChatCard({
         prev.effect !== currentEffect ||
         prev.name !== currentName
       ) {
+        console.log('[ChatCard] Setting change detected! Old:', prev, 'New:', { pfp: currentPfp, frame: currentFrame, effect: currentEffect, name: currentName });
+        
         lastSyncedRef.current = { pfp: currentPfp, frame: currentFrame, effect: currentEffect, name: currentName };
         setProfileVersion(v => v + 1);
 
         try {
-          await fetch(`${API_BASE_URL.replace('/messages', '')}/profile`, {
+          const res = await fetch(`${API_BASE_URL.replace('/messages', '')}/profile`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               user_id: myId,
               username: currentName,
               avatar_url: currentPfp || null,
-              frame_url: currentFrame || null,
-              effect_url: currentEffect || null
+              frame_url: currentFrame,
+              effect_url: currentEffect
             })
           });
+          const data = await res.json();
+          console.log('[ChatCard] Backend sync response:', data);
         } catch (err) {
-          console.error('Profile sync failed:', err);
+          console.error('[ChatCard] Profile sync network failed:', err);
         }
       }
     }, 1500);
 
     return () => clearInterval(interval);
   }, [myId, username]);
-
+  
   useEffect(() => {
     if (displayName) {
       setUsername(displayName);
