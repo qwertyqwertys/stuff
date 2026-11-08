@@ -96,6 +96,7 @@ export function ChatCard({
 
   const [isJoined, setIsJoined] = useState(true);
   const [messages, setMessages] = useState([]);
+  const [liveProfiles, setLiveProfiles] = useState({});
   const [text, setText] = useState('');
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [selectedUserProfile, setSelectedUserProfile] = useState(null);
@@ -152,6 +153,16 @@ export function ChatCard({
 
         setProfileVersion(v => v + 1);
 
+        // Update local liveProfiles map immediately for self
+        setLiveProfiles(prev => ({
+          ...prev,
+          [myId]: {
+            avatar_url: currentPfp || null,
+            frame_url: currentFrame,
+            effect_url: currentEffect
+          }
+        }));
+
         try {
           const res = await fetch(`${API_BASE_URL.replace('/messages', '')}/profile`, {
             method: 'PUT',
@@ -199,6 +210,20 @@ export function ChatCard({
       if (res.ok) {
         const data = await res.json();
         setMessages(data);
+
+        // Build a live profiles lookup map from incoming message rows
+        const profilesMap = {};
+        data.forEach(m => {
+          if (m.user_id) {
+            profilesMap[m.user_id] = {
+              avatar_url: m.avatar_url,
+              frame_url: m.frame_url,
+              effect_url: m.effect_url,
+              username: m.username
+            };
+          }
+        });
+        setLiveProfiles(prev => ({ ...profilesMap, ...prev }));
       }
     } catch (err) {
       console.error('Failed to fetch messages:', err);
@@ -381,10 +406,10 @@ export function ChatCard({
 
     const livePfp = isValidImg(m.avatar_url) 
       ? m.avatar_url 
-      : (isSelf ? (ownPfp || getStoredAvatar()) : '');
+      : (isSelf ? (ownPfp || getStoredAvatar()) : (liveProfiles[m.user_id]?.avatar_url || ''));
 
-    const liveFrame = isSelf ? getStoredFrame() : (m.frame_url || '');
-    const liveEffect = isSelf ? getStoredEffect() : (m.effect_url || '');
+    const liveFrame = isSelf ? getStoredFrame() : (liveProfiles[m.user_id]?.frame_url || m.frame_url || '');
+    const liveEffect = isSelf ? getStoredEffect() : (liveProfiles[m.user_id]?.effect_url || m.effect_url || '');
 
     setSelectedUserProfile({
       isOwnProfile: isSelf,
@@ -483,9 +508,17 @@ export function ChatCard({
                                 (username && m.username && m.username.toLowerCase() === username.toLowerCase());
                 const isEditingThis = editingId === m.id;
 
-                const avatarUrlToUse = isOwner ? (ownPfp || getStoredAvatar() || m.avatar_url || '') : (m.avatar_url || '');
-                const frameUrlToUse = isOwner ? getStoredFrame() : (m.frame_url || '');
-                const effectUrlToUse = isOwner ? getStoredEffect() : (m.effect_url || '');
+                const avatarUrlToUse = isOwner 
+                  ? (ownPfp || getStoredAvatar() || m.avatar_url || '') 
+                  : (liveProfiles[m.user_id]?.avatar_url || m.avatar_url || '');
+
+                const frameUrlToUse = isOwner 
+                  ? getStoredFrame() 
+                  : (liveProfiles[m.user_id]?.frame_url || m.frame_url || '');
+
+                const effectUrlToUse = isOwner 
+                  ? getStoredEffect() 
+                  : (liveProfiles[m.user_id]?.effect_url || m.effect_url || '');
 
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
