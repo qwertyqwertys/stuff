@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 
-// Increase body parser limits to 10MB to handle large base64 image uploads and avatars[cite: 5]
+// Increase body parser limits to 10MB to handle large base64 image uploads and avatars[cite: 5, 6]
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
@@ -32,7 +32,7 @@ pool.connect()
 
 // --- API ROUTES ---
 
-// 1. GET all messages (so old messages show up)[cite: 5]
+// 1. GET all messages (so old messages show up)[cite: 5, 6]
 app.get('/api/messages', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM messages ORDER BY created_at ASC');
@@ -43,7 +43,7 @@ app.get('/api/messages', async (req, res) => {
   }
 });
 
-// 2. POST a new message (so new messages stick and save)[cite: 5]
+// 2. POST a new message (so new messages stick and save)[cite: 5, 6]
 app.post('/api/messages', async (req, res) => {
   const {
     username,
@@ -57,7 +57,7 @@ app.post('/api/messages', async (req, res) => {
   } = req.body;
 
   try {
-    // Generate a unique string ID to satisfy the primary key column requirement[cite: 5]
+    // Generate a unique string ID to satisfy the primary key column requirement[cite: 5, 6]
     const id = Date.now().toString();
 
     const { rows } = await pool.query(
@@ -84,7 +84,7 @@ app.post('/api/messages', async (req, res) => {
   }
 });
 
-// 3. PUT (Edit) a message[cite: 5]
+// 3. PUT (Edit) a message[cite: 5, 6]
 app.put('/api/messages/:id', async (req, res) => {
   const { id } = req.params;
   const { content } = req.body;
@@ -101,15 +101,18 @@ app.put('/api/messages/:id', async (req, res) => {
   }
 });
 
-// 4. PUT (Sync Global Profile across all messages by Username)
+// 4. PUT (Sync Global Profile across all messages by Username with Logs)
 app.put('/api/profile', async (req, res) => {
   const { username, avatar_url, frame_url, effect_url } = req.body;
 
   if (!username) {
+    console.log('[PROFILE SYNC ERROR] Missing username in request body.');
     return res.status(400).json({ error: 'Username is required for profile sync' });
   }
 
   try {
+    console.log(`[PROFILE SYNC] Attempting to update messages for username: "${username.trim()}"`);
+    
     const { rows } = await pool.query(
       `UPDATE messages 
        SET avatar_url = $1, 
@@ -119,14 +122,16 @@ app.put('/api/profile', async (req, res) => {
        RETURNING *`,
       [avatar_url || null, frame_url || null, effect_url || null, username.trim()]
     );
+    
+    console.log(`[PROFILE SYNC SUCCESS] Updated ${rows.length} message row(s) for "${username}"`);
     res.json({ success: true, updatedCount: rows.length });
   } catch (err) {
-    console.error('Error updating profile in messages:', err);
+    console.error('[PROFILE SYNC ERROR] Database error:', err);
     res.status(500).json({ error: 'Failed to update profile' });
   }
 });
 
-// 5. DELETE a message[cite: 5]
+// 5. DELETE a message[cite: 5, 6]
 app.delete('/api/messages/:id', async (req, res) => {
   const { id } = req.params;
 
