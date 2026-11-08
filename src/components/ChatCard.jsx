@@ -108,9 +108,35 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const myId = getPersistentId();
 
-  // Listen to live settings changes so chat updates instantly without refreshing
+  // Sync profile changes to backend so everyone else sees updates instantly
+  const syncProfileToBackend = useCallback(async () => {
+    try {
+      const currentAvatar = getStoredAvatar();
+      const currentFrame = getStoredFrame();
+      const currentEffect = getStoredEffect();
+      const currentName = localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || username;
+
+      await fetch(`${API_BASE_URL.replace('/messages', '')}/messages/user/${myId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: currentName,
+          avatar_url: currentAvatar || null,
+          frame_url: currentFrame || null,
+          effect_url: currentEffect || null
+        })
+      });
+    } catch (err) {
+      console.error('Failed to sync profile to backend:', err);
+    }
+  }, [myId, username]);
+
+  // Listen to live settings changes and sync globally
   useEffect(() => {
-    const triggerUpdate = () => setProfileVersion(v => v + 1);
+    const triggerUpdate = () => {
+      setProfileVersion(v => v + 1);
+      syncProfileToBackend();
+    };
     window.addEventListener('capy-pfp-updated', triggerUpdate);
     window.addEventListener('capy-frame-updated', triggerUpdate);
     window.addEventListener('capy-effect-updated', triggerUpdate);
@@ -124,7 +150,7 @@ export function ChatCard({
       window.removeEventListener('capy-username-updated', triggerUpdate);
       window.removeEventListener('storage', triggerUpdate);
     };
-  }, []);
+  }, [syncProfileToBackend]);
 
   useEffect(() => {
     if (displayName) {
@@ -428,7 +454,7 @@ export function ChatCard({
             ) : (
               messages.map((m, i) => {
                 // eslint-disable-next-line no-unused-vars
-                const _v = profileVersion; // Forces re-render whenever profile settings change
+                const _v = profileVersion; 
 
                 const isOwner = (m.user_id && m.user_id === myId) || 
                                 (username && m.username && m.username.toLowerCase() === username.toLowerCase());
