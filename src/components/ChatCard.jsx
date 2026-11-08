@@ -30,6 +30,15 @@ function isImageUrl(url) {
   );
 }
 
+const getPersistentId = () => {
+  let id = localStorage.getItem('capy-uid');
+  if (!id) {
+    id = 'user_' + Math.random().toString(36).substring(2, 11);
+    localStorage.setItem('capy-uid', id);
+  }
+  return id;
+};
+
 const getStoredAvatar = () => {
   return localStorage.getItem('capy-pfp') || 
          localStorage.getItem('capy-avatar') || 
@@ -101,9 +110,9 @@ export function ChatCard({
 
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
-  const myId = localStorage.getItem('capy-uid') || 'user_' + Math.random().toString(36).substring(2, 11);
+  const myId = getPersistentId();
 
-  // Track profile changes to auto-sync globally via username
+  // Track profile changes to auto-sync globally via user_id and username
   const lastSyncedRef = useRef({
     pfp: getStoredAvatar(),
     frame: getStoredFrame(),
@@ -128,29 +137,26 @@ export function ChatCard({
         lastSyncedRef.current = { pfp: currentPfp, frame: currentFrame, effect: currentEffect, name: currentName };
         setProfileVersion(v => v + 1);
 
-        console.log('[ChatCard] Profile change detected! Syncing to backend for username:', currentName);
-
         try {
-          const res = await fetch(`${API_BASE_URL.replace('/messages', '')}/profile`, {
+          await fetch(`${API_BASE_URL.replace('/messages', '')}/profile`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              user_id: myId,
               username: currentName,
               avatar_url: currentPfp || null,
               frame_url: currentFrame || null,
               effect_url: currentEffect || null
             })
           });
-          const data = await res.json();
-          console.log('[ChatCard] Sync response:', data);
         } catch (err) {
-          console.error('[ChatCard] Username profile sync failed:', err);
+          console.error('Profile sync failed:', err);
         }
       }
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [username]);
+  }, [myId, username]);
 
   useEffect(() => {
     if (displayName) {
