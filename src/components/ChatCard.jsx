@@ -33,7 +33,7 @@ function isImageUrl(url) {
 const getStoredAvatar = () => {
   return localStorage.getItem('capy-pfp') || 
          localStorage.getItem('capy-avatar') || 
-         localStorage.getItem('user-avatar'] || 
+         localStorage.getItem('user-avatar') || 
          localStorage.getItem('pfp') || '';
 };
 
