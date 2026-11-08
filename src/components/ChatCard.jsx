@@ -225,6 +225,7 @@ export function ChatCard({
       reply_to: currentReply
     };
     
+    // Optimistically add it to the screen
     setMessages(prev => [...prev, tempMessage]);
 
     try {
@@ -245,22 +246,21 @@ export function ChatCard({
 
       if (res.ok) {
         const savedMessage = await res.json();
+        // Replace temporary id with real database message
         setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(`Server Error (${res.status}): ${errData.error || 'Failed to save message'}`);
-        // Remove the temporary message so it doesn't stay on screen as a ghost message
+        // Remove the temporary message on failure
         setMessages(prev => prev.filter(m => m.id !== tempId));
       }
     } catch (err) {
-      alert(`Network/Fetch Error: ${err.message}. (GoGuardian or school network may be blocking this request).`);
+      alert(`Network/Fetch Error: ${err.message}.`);
       // Remove the temporary message on network failure
       setMessages(prev => prev.filter(m => m.id !== tempId));
     }
-
-    fetchMessages();
   };
-
+  
   const handleSaveEdit = async (id) => {
     if (!editText.trim()) return;
 
