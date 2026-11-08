@@ -403,8 +403,8 @@ export function ChatCard({
                 const isEditingThis = editingId === m.id;
 
                 const avatarUrlToUse = m.avatar_url || (isOwner ? (ownPfp || getStoredAvatar()) : '');
-                const frameUrlToUse = m.frame_url || (isOwner ? (localStorage.getItem('capy-selected-frame') || '') : '');
-                const effectUrlToUse = m.effect_url || (isOwner ? (localStorage.getItem('capy-selected-effect') || '') : '');
+                const frameUrlToUse = isOwner ? (localStorage.getItem('capy-selected-frame') || m.frame_url || '') : (m.frame_url || '');
+                const effectUrlToUse = isOwner ? (localStorage.getItem('capy-selected-effect') || m.effect_url || '') : (m.effect_url || '');
 
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
