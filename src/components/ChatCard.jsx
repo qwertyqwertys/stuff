@@ -120,12 +120,20 @@ export function ChatCard({
     name: username
   });
 
+  // Diagnostic poller to inspect localStorage live in your console
   useEffect(() => {
     const interval = setInterval(async () => {
+      const rawFrame = localStorage.getItem('capy-selected-frame');
+      const rawEffect = localStorage.getItem('capy-selected-effect');
+      const rawPfp = localStorage.getItem('capy-pfp') || localStorage.getItem('capy-avatar') || localStorage.getItem('user-avatar');
+      const currentName = localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || localStorage.getItem('username') || username;
+
+      // Print live values to your browser console every 1.5s so we can see what's changing
+      console.log('[Diagnostics] Live localStorage -> Frame:', rawFrame, '| Effect:', rawEffect, '| Name:', currentName);
+
       const currentPfp = getStoredAvatar();
       const currentFrame = getStoredFrame();
       const currentEffect = getStoredEffect();
-      const currentName = localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || localStorage.getItem('username') || username;
 
       const prev = lastSyncedRef.current;
       if (
@@ -134,7 +142,7 @@ export function ChatCard({
         prev.effect !== currentEffect ||
         prev.name !== currentName
       ) {
-        console.log('[ChatCard] Setting change detected! Old:', prev, 'New:', { pfp: currentPfp, frame: currentFrame, effect: currentEffect, name: currentName });
+        console.log('[ChatCard] Change detected! Syncing to backend...');
         
         lastSyncedRef.current = { pfp: currentPfp, frame: currentFrame, effect: currentEffect, name: currentName };
         setProfileVersion(v => v + 1);
@@ -152,9 +160,9 @@ export function ChatCard({
             })
           });
           const data = await res.json();
-          console.log('[ChatCard] Backend sync response:', data);
+          console.log('[ChatCard] Backend sync successful:', data);
         } catch (err) {
-          console.error('[ChatCard] Profile sync network failed:', err);
+          console.error('[ChatCard] Backend sync failed:', err);
         }
       }
     }, 1500);
