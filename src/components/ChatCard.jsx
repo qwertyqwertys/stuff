@@ -331,7 +331,7 @@ export function ChatCard({
       username: replyingTo.username,
       content: replyingTo.content || replyingTo.text || (replyingTo.image_url ? '[Image Attachment]' : ''),
       user_id: replyingTo.user_id,
-      avatar_url: replyingTo.avatar_url
+      avatar_url: replyingTo.avatar_url || (liveProfiles[replyingTo.user_id]?.avatar_url)
     } : null;
 
     setText(''); 
@@ -553,19 +553,21 @@ export function ChatCard({
 
                 return (
                   <div key={m.id || i} className="group/msg flex flex-col text-left relative py-1">
-                    {/* Discord-style Reply Indicator Line Header */}
+                    {/* Authentic Discord Reply Header with Curved Branch Line */}
                     {m.reply_to && (
-                      <div className="flex items-center gap-2 ml-4 mb-1 text-[11px] text-zinc-400 relative">
-                        {/* Curved reply connector line */}
-                        <div className="absolute -left-3 top-1/2 w-3 h-3 border-l-2 border-b-2 border-zinc-600 rounded-bl-sm"></div>
-                        
+                      <div className="flex items-center gap-1.5 ml-4 mb-1 text-[11px] text-zinc-400 relative">
+                        {/* Curved SVG branch line */}
+                        <svg className="absolute -left-4 top-0 w-4 h-4 text-zinc-500 overflow-visible" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 16">
+                          <path d="M 16 16 V 6 Q 16 0 8 0 H 0" />
+                        </svg>
+
                         {m.reply_to.avatar_url && (
-                          <img src={m.reply_to.avatar_url} alt="" className="w-4 h-4 rounded-full object-cover" />
+                          <img src={m.reply_to.avatar_url} alt="" className="w-4 h-4 rounded-full object-cover shrink-0" />
                         )}
-                        <span className="font-bold text-zinc-300 hover:underline cursor-pointer">
+                        <span className="font-bold text-zinc-200 hover:underline cursor-pointer shrink-0">
                           {m.reply_to.username}
                         </span>
-                        <span className="truncate opacity-75 max-w-[200px]">
+                        <span className="truncate opacity-75">
                           {m.reply_to.content}
                         </span>
                       </div>
@@ -708,7 +710,7 @@ export function ChatCard({
               <div className="flex items-center gap-2 truncate text-zinc-300">
                 <CornerDownRight className="w-3 h-3 text-[var(--theme)] shrink-0" />
                 <span className="font-bold text-[var(--theme)]">Replying to {replyingTo.username}:</span>
-                <span className="truncate opacity-75">{replyingTo.content || replyingTo.text || '[Attachment]'}</span>
+                <span className="truncate opacity-75">{replyingTo.content}</span>
               </div>
               <button 
                 onClick={() => setReplyingTo(null)}
