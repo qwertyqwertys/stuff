@@ -5,6 +5,7 @@ import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
 
 const API_BASE_URL = 'https://capybara-backend-freu.onrender.com/api/messages';
+const LOCAL_CACHE_KEY = 'capy-chat-messages-cache';
 
 function formatTimestamp(isoString) {
   if (!isoString) return '';
@@ -95,7 +96,17 @@ export function ChatCard({
   });
 
   const [isJoined, setIsJoined] = useState(true);
-  const [messages, setMessages] = useState([]);
+  
+  // Instant load from local cache on mount
+  const [messages, setMessages] = useState(() => {
+    try {
+      const cached = localStorage.getItem(LOCAL_CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [liveProfiles, setLiveProfiles] = useState({});
   const [text, setText] = useState('');
   const [showPrivacy, setShowPrivacy] = useState(false);
@@ -117,7 +128,6 @@ export function ChatCard({
   const chatContainerRef = useRef(null);
   const myId = getPersistentId();
 
-  // Track scroll position so we don't snap back down when user is reading history
   const handleScroll = () => {
     const container = chatContainerRef.current;
     if (!container) return;
@@ -126,7 +136,6 @@ export function ChatCard({
     setIsAtBottom(isBottom);
   };
 
-  // Instant listener for local storage changes or window events
   useEffect(() => {
     const handleProfileStorageChange = () => {
       setProfileVersion(v => v + 1);
@@ -151,7 +160,6 @@ export function ChatCard({
     };
   }, [myId, ownPfp]);
 
-  // Bulletproof poller that syncs to backend seamlessly in the background
   useEffect(() => {
     let lastKnownFrame = getStoredFrame();
     let lastKnownEffect = getStoredEffect();
@@ -201,7 +209,7 @@ export function ChatCard({
           console.error('[ChatCard] DB Sync Error:', err);
         }
       }
-    }, 1000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [myId, username, ownPfp]);
@@ -224,12 +232,21 @@ export function ChatCard({
     return () => window.removeEventListener('capy-username-updated', handleNameUpdate);
   }, []);
 
+  // Optimized Fetcher: Avoids re-triggering React state/DOM renders if network payload hasn't changed
   const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch(API_BASE_URL);
       if (res.ok) {
         const data = await res.json();
-        setMessages(data);
+        
+        setMessages(prev => {
+          const isSame = JSON.stringify(prev) === JSON.stringify(data);
+          if (isSame) return prev;
+          try {
+            localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data));
+          } catch (e) {}
+          return data;
+        });
 
         const profilesMap = {};
         data.forEach(m => {
@@ -251,7 +268,7 @@ export function ChatCard({
 
   useEffect(() => {
     fetchMessages();
-    const interval = setInterval(fetchMessages, 1000);
+    const interval = setInterval(fetchMessages, 2500);
 
     const handlePfpUpdated = () => {
       fetchMessages();
@@ -265,7 +282,6 @@ export function ChatCard({
     };
   }, [fetchMessages]);
 
-  // Only auto-scroll down if user is currently near the bottom
   useEffect(() => {
     if (isAtBottom) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -273,8 +289,7 @@ export function ChatCard({
   }, [messages, typingUsers, pendingImageUrl, isAtBottom]);
 
   const handleTypingInput = (e) => {
-    const currentVal = e.target.value;
-    setText(currentVal);
+    setText(e.target.value);
   };
 
   const handleFileSelect = async (e) => {
@@ -328,8 +343,8 @@ export function ChatCard({
     const attachedImage = pendingImageUrl || (isImageUrl(messageText) ? messageText : null);
     
     const currentReply = replyingTo ? {
-      username: replyingTo.username,
-      content: replyingTo.content || replyingTo.text || (replyingTo.image_url ? '[Image Attachment]' : ''),
+      username: replyingTo.username || replyingTo.name || 'User',
+      content: replyingTo.content || replyingTo.text || replyingTo.message || (replyingTo.image_url ? '[Image Attachment]' : ''),
       user_id: replyingTo.user_id,
       avatar_url: replyingTo.avatar_url || (liveProfiles[replyingTo.user_id]?.avatar_url)
     } : null;
@@ -352,7 +367,11 @@ export function ChatCard({
       reply_to: currentReply
     };
     
-    setMessages(prev => [...prev, tempMessage]);
+    setMessages(prev => {
+      const next = [...prev, tempMessage];
+      try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
     setIsAtBottom(true);
 
     try {
@@ -530,7 +549,6 @@ export function ChatCard({
               <div className="text-zinc-400 italic text-[10px] font-mono text-center py-4">Waiting for Messages...</div>
             ) : (
               messages.map((m, i) => {
-                // eslint-disable-next-line no-unused-vars
                 const _v = profileVersion; 
 
                 const isOwner = (m.user_id && m.user_id === myId) || 
@@ -553,10 +571,8 @@ export function ChatCard({
 
                 return (
                   <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-2 pb-1">
-                    {/* Exact Discord Stacked Reply Layout (OG message on top, reply on bottom connected by SVG branch) */}
                     {m.reply_to && (
                       <div className="flex items-center gap-1.5 ml-[18px] mb-1 text-[11px] text-zinc-400 relative">
-                        {/* Perfect Discord curved SVG branch linking up to the replied message row */}
                         <svg className="absolute -left-[18px] -top-3 w-5 h-5 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20">
                           <path d="M 18 20 V 6 C 18 2 14 0 9 0 H 0" />
                         </svg>
@@ -565,10 +581,10 @@ export function ChatCard({
                           <img src={m.reply_to.avatar_url} alt="" className="w-4 h-4 rounded-full object-cover shrink-0" />
                         )}
                         <span className="font-bold text-zinc-200 hover:underline cursor-pointer shrink-0">
-                          {m.reply_to.username}
+                          {m.reply_to.username || 'User'}
                         </span>
                         <span className="truncate opacity-75">
-                          {m.reply_to.content}
+                          {m.reply_to.content || m.reply_to.text || m.reply_to.message || ''}
                         </span>
                       </div>
                     )}
