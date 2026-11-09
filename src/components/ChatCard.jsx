@@ -21,12 +21,13 @@ function formatTimestamp(isoString) {
 
 function isImageUrl(url) {
   if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim();
   return (
-    url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) !== null ||
-    url.includes('supabase.co/storage/v1/object/public/') ||
-    url.includes('i.imgur.com/') ||
-    url.includes('media.discordapp.net/') ||
-    url.includes('cdn.discordapp.com/')
+    /\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i.test(trimmed) ||
+    trimmed.includes('supabase.co/storage/v1/object/public/') ||
+    trimmed.includes('i.imgur.com/') ||
+    trimmed.includes('media.discordapp.net/') ||
+    trimmed.includes('cdn.discordapp.com/')
   );
 }
 
@@ -328,7 +329,9 @@ export function ChatCard({
     
     const currentReply = replyingTo ? {
       username: replyingTo.username,
-      content: replyingTo.content
+      content: replyingTo.content || replyingTo.text || (replyingTo.image_url ? '[Image Attachment]' : ''),
+      user_id: replyingTo.user_id,
+      avatar_url: replyingTo.avatar_url
     } : null;
 
     setText(''); 
@@ -549,115 +552,128 @@ export function ChatCard({
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
                 return (
-                  <div key={m.id || i} className="group/msg flex items-start gap-2 text-left relative py-1">
-                    <button 
-                      onClick={() => handleOpenProfile(m)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none flex-shrink-0"
-                    >
-                      <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                        <ProfileAvatar effectUrl={effectUrlToUse} frameUrl={frameUrlToUse} pfpUrl={avatarUrlToUse} size="w-8 h-8"/>
+                  <div key={m.id || i} className="group/msg flex flex-col text-left relative py-1">
+                    {/* Discord-style Reply Indicator Line Header */}
+                    {m.reply_to && (
+                      <div className="flex items-center gap-2 ml-4 mb-1 text-[11px] text-zinc-400 relative">
+                        {/* Curved reply connector line */}
+                        <div className="absolute -left-3 top-1/2 w-3 h-3 border-l-2 border-b-2 border-zinc-600 rounded-bl-sm"></div>
+                        
+                        {m.reply_to.avatar_url && (
+                          <img src={m.reply_to.avatar_url} alt="" className="w-4 h-4 rounded-full object-cover" />
+                        )}
+                        <span className="font-bold text-zinc-300 hover:underline cursor-pointer">
+                          {m.reply_to.username}
+                        </span>
+                        <span className="truncate opacity-75 max-w-[200px]">
+                          {m.reply_to.content}
+                        </span>
                       </div>
-                    </button>
+                    )}
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => handleOpenProfile(m)}
-                            className="text-[var(--theme)] font-bold text-xs hover:underline cursor-pointer focus:outline-none"
-                          >
-                            {m.username}
-                          </button>
-                          <span className="text-[9px] text-zinc-400 font-sans">
-                            {formatTimestamp(m.created_at)}
-                          </span>
+                    <div className="flex items-start gap-2">
+                      <button 
+                        onClick={() => handleOpenProfile(m)}
+                        className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none flex-shrink-0"
+                      >
+                        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                          <ProfileAvatar effectUrl={effectUrlToUse} frameUrl={frameUrlToUse} pfpUrl={avatarUrlToUse} size="w-8 h-8"/>
+                        </div>
+                      </button>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              onClick={() => handleOpenProfile(m)}
+                              className="text-[var(--theme)] font-bold text-xs hover:underline cursor-pointer focus:outline-none"
+                            >
+                              {m.username}
+                            </button>
+                            <span className="text-[9px] text-zinc-400 font-sans">
+                              {formatTimestamp(m.created_at)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setReplyingTo(m)}
+                              className="opacity-0 group-hover/msg:opacity-100 p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-[var(--theme)] transition-all"
+                              title="Reply to message"
+                            >
+                              <CornerDownRight className="w-3 h-3"/>
+                            </button>
+
+                            {isOwner && !isEditingThis && (
+                              <div className="flex items-center gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => {
+                                    setEditingId(m.id);
+                                    setEditText(m.content);
+                                  }}
+                                  className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white transition-all"
+                                  title="Edit message"
+                                >
+                                  <Pencil className="w-3 h-3"/>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteMessage(m.id)}
+                                  className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-red-400 transition-all"
+                                  title="Delete message"
+                                >
+                                  <Trash2 className="w-3 h-3"/>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => setReplyingTo(m)}
-                            className="opacity-0 group-hover/msg:opacity-100 p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-[var(--theme)] transition-all"
-                            title="Reply to message"
-                          >
-                            <CornerDownRight className="w-3 h-3"/>
-                          </button>
+                        {isEditingThis ? (
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveEdit(m.id);
+                                if (e.key === 'Escape') setEditingId(null);
+                              }}
+                              className={isLightMode ? 'bg-white border-black/20 text-black px-2 py-1 rounded text-xs outline-none' : 'bg-white/10 border-white/20 text-white px-2 py-1 rounded text-xs outline-none'}
+                              autoFocus
+                            />
+                            <button onClick={() => handleSaveEdit(m.id)} className="p-1 hover:bg-white/10 rounded text-emerald-400">
+                              <Check className="w-3.5 h-3.5"/>
+                            </button>
+                            <button onClick={() => setEditingId(null)} className="p-1 hover:bg-white/10 rounded text-zinc-400">
+                              <X className="w-3.5 h-3.5"/>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {m.content && !isImageUrl(m.content) && (
+                              <p className={`mt-0.5 text-xs break-words leading-relaxed ${isLightMode ? 'text-black' : 'text-zinc-100'}`}>
+                                {m.content}
+                                {m.is_edited && (
+                                  <span className="text-[10px] text-zinc-500 font-normal ml-1 select-none">
+                                    (edited)
+                                  </span>
+                                )}
+                              </p>
+                            )}
 
-                          {isOwner && !isEditingThis && (
-                            <div className="flex items-center gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => {
-                                  setEditingId(m.id);
-                                  setEditText(m.content);
-                                }}
-                                className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white transition-all"
-                                title="Edit message"
-                              >
-                                <Pencil className="w-3 h-3"/>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteMessage(m.id)}
-                                className="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-red-400 transition-all"
-                                title="Delete message"
-                              >
-                                <Trash2 className="w-3 h-3"/>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                            {hasInlineImage && (
+                              <div className="mt-1.5 max-w-[220px] rounded-xl overflow-hidden border border-white/10 bg-black/40 group/img relative">
+                                <img 
+                                  src={hasInlineImage} 
+                                  alt="Chat attachment" 
+                                  className="w-full h-auto object-cover max-h-48 rounded-xl hover:scale-105 transition-transform cursor-pointer"
+                                  onClick={() => setLightboxImage(hasInlineImage)}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-
-                      {m.reply_to && (
-                        <div className="bg-black/30 border-l-2 border-[var(--theme)] px-2 py-1 rounded-r-md my-1 text-[10px] text-zinc-400">
-                          <span className="font-bold text-white">{m.reply_to.username}</span>
-                          <p className="truncate opacity-80">{m.reply_to.content}</p>
-                        </div>
-                      )}
-
-                      {isEditingThis ? (
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSaveEdit(m.id);
-                              if (e.key === 'Escape') setEditingId(null);
-                            }}
-                            className={isLightMode ? 'bg-white border-black/20 text-black px-2 py-1 rounded text-xs outline-none' : 'bg-white/10 border-white/20 text-white px-2 py-1 rounded text-xs outline-none'}
-                            autoFocus
-                          />
-                          <button onClick={() => handleSaveEdit(m.id)} className="p-1 hover:bg-white/10 rounded text-emerald-400">
-                            <Check className="w-3.5 h-3.5"/>
-                          </button>
-                          <button onClick={() => setEditingId(null)} className="p-1 hover:bg-white/10 rounded text-zinc-400">
-                            <X className="w-3.5 h-3.5"/>
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {m.content && !isImageUrl(m.content) && (
-                            <p className={`mt-0.5 text-xs break-words leading-relaxed ${isLightMode ? 'text-black' : 'text-zinc-100'}`}>
-                              {m.content}
-                              {m.is_edited && (
-                                <span className="text-[10px] text-zinc-500 font-normal ml-1 select-none">
-                                  (edited)
-                                </span>
-                              )}
-                            </p>
-                          )}
-
-                          {hasInlineImage && (
-                            <div className="mt-1.5 max-w-[220px] rounded-xl overflow-hidden border border-white/10 bg-black/40 group/img relative">
-                              <img 
-                                src={hasInlineImage} 
-                                alt="Chat attachment" 
-                                className="w-full h-auto object-cover max-h-48 rounded-xl hover:scale-105 transition-transform cursor-pointer"
-                                onClick={() => setLightboxImage(hasInlineImage)}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 );
@@ -692,7 +708,7 @@ export function ChatCard({
               <div className="flex items-center gap-2 truncate text-zinc-300">
                 <CornerDownRight className="w-3 h-3 text-[var(--theme)] shrink-0" />
                 <span className="font-bold text-[var(--theme)]">Replying to {replyingTo.username}:</span>
-                <span className="truncate opacity-75">{replyingTo.content}</span>
+                <span className="truncate opacity-75">{replyingTo.content || replyingTo.text || '[Attachment]'}</span>
               </div>
               <button 
                 onClick={() => setReplyingTo(null)}
