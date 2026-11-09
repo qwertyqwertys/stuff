@@ -345,7 +345,7 @@ export function ChatCard({
       username: replyingTo.username || replyingTo.name || 'User',
       content: replyingTo.content || replyingTo.text || replyingTo.message || (replyingTo.image_url ? '[Image Attachment]' : ''),
       user_id: replyingTo.user_id,
-      avatar_url: replyingTo.avatar_url || (liveProfiles[replyingTo.user_id]?.avatar_url)
+      avatar_url: replyingTo.avatar_url || (liveProfiles[replyingTo.user_id]?.avatar_url) || ''
     } : null;
 
     setText(''); 
