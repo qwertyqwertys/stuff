@@ -569,11 +569,11 @@ export function ChatCard({
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
                 return (
-                  <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-2 pb-1">
-                    <div className="flex items-start gap-2 relative">
+                  <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-3 pb-1">
+                    <div className="flex items-start gap-2 relative ml-3">
                       {/* Exact Discord Reply Branch SVG hooking into the avatar */}
                       {m.reply_to && (
-                        <svg className="absolute -left-3 -top-3 w-4 h-4 text-zinc-500 overflow-visible pointer-events-none z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 12 12">
+                        <svg className="absolute -left-3 -top-3.5 w-4 h-4 text-zinc-500 overflow-visible pointer-events-none z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 12 12">
                           <path d="M 12 12 V 4 C 12 1.5 10 0 6 0 H 0" />
                         </svg>
                       )}
@@ -588,7 +588,7 @@ export function ChatCard({
                       </button>
 
                       <div className="flex-1 min-w-0">
-                        {/* Compact Reply Preview Header matching second image */}
+                        {/* Compact Reply Preview Header */}
                         {m.reply_to && (
                           <div className="flex items-center gap-1.5 mb-1 text-[11px] text-zinc-400">
                             {m.reply_to.avatar_url && (
