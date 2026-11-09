@@ -552,13 +552,13 @@ export function ChatCard({
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
                 return (
-                  <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-3 pb-1">
-                    {/* Exact Discord Reply Header with Curved Branch Line Hooking into Avatar */}
+                  <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-2 pb-1">
+                    {/* Exact Discord Stacked Reply Layout (OG message on top, reply on bottom connected by SVG branch) */}
                     {m.reply_to && (
                       <div className="flex items-center gap-1.5 ml-[18px] mb-1 text-[11px] text-zinc-400 relative">
-                        {/* Perfect Discord curved SVG path linking to avatar */}
-                        <svg className="absolute -left-[18px] -top-3 w-6 h-5 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 20">
-                          <path d="M 18 20 V 6 C 18 2 15 0 11 0 H 0" />
+                        {/* Perfect Discord curved SVG branch linking up to the replied message row */}
+                        <svg className="absolute -left-[18px] -top-3 w-5 h-5 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20">
+                          <path d="M 18 20 V 6 C 18 2 14 0 9 0 H 0" />
                         </svg>
 
                         {m.reply_to.avatar_url && (
