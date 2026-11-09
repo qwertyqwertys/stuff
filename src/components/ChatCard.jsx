@@ -232,7 +232,6 @@ export function ChatCard({
     return () => window.removeEventListener('capy-username-updated', handleNameUpdate);
   }, []);
 
-  // Optimized Fetcher: Avoids re-triggering React state/DOM renders if network payload hasn't changed
   const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch(API_BASE_URL);
@@ -569,24 +568,26 @@ export function ChatCard({
 
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
-                {m.reply_to && (
-  <div className="flex items-center gap-1.5 ml-3 mb-0.5 text-[11px] text-zinc-400 relative">
-    {/* Exact Discord curved branch line pointing right into the top-left of the avatar */}
-    <svg className="absolute -left-3 -top-2.5 w-4 h-4 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 12 12">
-      <path d="M 12 12 V 4 C 12 1.5 10 0 6 0 H 0" />
-    </svg>
+                return (
+                  <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-1 pb-1">
+                    {m.reply_to && (
+                      <div className="flex items-center gap-1.5 ml-3 mb-0.5 text-[11px] text-zinc-400 relative">
+                        {/* Exact Discord curved branch line pointing right into the top-left of the avatar */}
+                        <svg className="absolute -left-3 -top-2.5 w-4 h-4 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 12 12">
+                          <path d="M 12 12 V 4 C 12 1.5 10 0 6 0 H 0" />
+                        </svg>
 
-    {m.reply_to.avatar_url && (
-      <img src={m.reply_to.avatar_url} alt="" className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
-    )}
-    <span className="font-bold text-zinc-300 hover:underline cursor-pointer shrink-0">
-      {m.reply_to.username}
-    </span>
-    <span className="truncate opacity-80 font-normal">
-      {m.reply_to.content || m.reply_to.text}
-    </span>
-  </div>
-)}
+                        {m.reply_to.avatar_url && (
+                          <img src={m.reply_to.avatar_url} alt="" className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
+                        )}
+                        <span className="font-bold text-zinc-300 hover:underline cursor-pointer shrink-0">
+                          {m.reply_to.username}
+                        </span>
+                        <span className="truncate opacity-80 font-normal">
+                          {m.reply_to.content || m.reply_to.text}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex items-start gap-2">
                       <button 
