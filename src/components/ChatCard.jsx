@@ -569,25 +569,24 @@ export function ChatCard({
 
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
-                return (
-                  <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-2 pb-1">
-                    {m.reply_to && (
-                      <div className="flex items-center gap-1.5 ml-[18px] mb-1 text-[11px] text-zinc-400 relative">
-                        <svg className="absolute -left-[18px] -top-3 w-5 h-5 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20">
-                          <path d="M 18 20 V 6 C 18 2 14 0 9 0 H 0" />
-                        </svg>
+                {m.reply_to && (
+  <div className="flex items-center gap-1.5 ml-3 mb-0.5 text-[11px] text-zinc-400 relative">
+    {/* Exact Discord curved branch line pointing right into the top-left of the avatar */}
+    <svg className="absolute -left-3 -top-2.5 w-4 h-4 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 12 12">
+      <path d="M 12 12 V 4 C 12 1.5 10 0 6 0 H 0" />
+    </svg>
 
-                        {m.reply_to.avatar_url && (
-                          <img src={m.reply_to.avatar_url} alt="" className="w-4 h-4 rounded-full object-cover shrink-0" />
-                        )}
-                        <span className="font-bold text-zinc-200 hover:underline cursor-pointer shrink-0">
-                          {m.reply_to.username || 'User'}
-                        </span>
-                        <span className="truncate opacity-75">
-                          {m.reply_to.content || m.reply_to.text || m.reply_to.message || ''}
-                        </span>
-                      </div>
-                    )}
+    {m.reply_to.avatar_url && (
+      <img src={m.reply_to.avatar_url} alt="" className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
+    )}
+    <span className="font-bold text-zinc-300 hover:underline cursor-pointer shrink-0">
+      {m.reply_to.username}
+    </span>
+    <span className="truncate opacity-80 font-normal">
+      {m.reply_to.content || m.reply_to.text}
+    </span>
+  </div>
+)}
 
                     <div className="flex items-start gap-2">
                       <button 
