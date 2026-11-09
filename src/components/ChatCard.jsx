@@ -109,9 +109,21 @@ export function ChatCard({
   const [lightboxImage, setLightboxImage] = useState(null);
   const [profileVersion, setProfileVersion] = useState(0);
 
+  const [isAtBottom, setIsAtBottom] = useState(true);
+
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
   const myId = getPersistentId();
+
+  // Track scroll position so we don't snap back down when user is reading history
+  const handleScroll = () => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+    const threshold = 80;
+    const isBottom = container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+    setIsAtBottom(isBottom);
+  };
 
   // Instant listener for local storage changes or window events
   useEffect(() => {
@@ -252,9 +264,12 @@ export function ChatCard({
     };
   }, [fetchMessages]);
 
+  // Only auto-scroll down if user is currently near the bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, typingUsers, pendingImageUrl]);
+    if (isAtBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, typingUsers, pendingImageUrl, isAtBottom]);
 
   const handleTypingInput = (e) => {
     const currentVal = e.target.value;
@@ -335,6 +350,7 @@ export function ChatCard({
     };
     
     setMessages(prev => [...prev, tempMessage]);
+    setIsAtBottom(true);
 
     try {
       const res = await fetch(API_BASE_URL, {
@@ -502,7 +518,11 @@ export function ChatCard({
         </form>
       ) : (
         <div className="flex flex-col h-full gap-3 overflow-hidden">
-          <div className={`flex-1 overflow-y-auto rounded-xl p-3 text-[11px] font-sans space-y-3 ${isLightMode ? 'bg-black/5' : 'bg-black/45'}`}>
+          <div 
+            ref={chatContainerRef}
+            onScroll={handleScroll}
+            className={`flex-1 overflow-y-auto rounded-xl p-3 text-[11px] font-sans space-y-3 ${isLightMode ? 'bg-black/5' : 'bg-black/45'}`}
+          >
             {messages.length === 0 ? (
               <div className="text-zinc-400 italic text-[10px] font-mono text-center py-4">Waiting for Messages...</div>
             ) : (
