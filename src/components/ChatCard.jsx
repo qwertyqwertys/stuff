@@ -567,9 +567,35 @@ export function ChatCard({
 
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
+                // Fallback reply data if reply_to is missing or flattened
+                const replyObj = m.reply_to || (m.reply_to_username ? {
+                  username: m.reply_to_username,
+                  content: m.reply_to_content || '',
+                  avatar_url: m.reply_to_avatar || ''
+                } : null);
+
                 return (
-                  <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-2 pb-1">
-                    <div className="flex items-start gap-2 relative">
+                  <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-1 pb-1">
+                    {/* Compact Reply Preview Header with exact SVG branch connecting to top-left of avatar */}
+                    {replyObj && (
+                      <div className="flex items-center gap-1.5 ml-8 mb-1 text-[11px] text-zinc-400 relative">
+                        <svg className="absolute -left-5 top-1.5 w-4 h-3 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 12">
+                          <path d="M 16 0 H 8 C 3 0 0 3 0 8 V 12" />
+                        </svg>
+
+                        {replyObj.avatar_url && (
+                          <img src={replyObj.avatar_url} alt="" className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
+                        )}
+                        <span className="font-bold text-zinc-300 hover:underline cursor-pointer shrink-0">
+                          {replyObj.username}
+                        </span>
+                        <span className="truncate opacity-75 font-normal">
+                          {replyObj.content || replyObj.text}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex items-start gap-2">
                       <button 
                         onClick={() => handleOpenProfile(m)}
                         className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none flex-shrink-0"
@@ -580,25 +606,6 @@ export function ChatCard({
                       </button>
 
                       <div className="flex-1 min-w-0">
-                        {/* Compact Reply Preview Header inside message block */}
-                        {m.reply_to && (
-                          <div className="flex items-center gap-1.5 mb-1 text-[11px] text-zinc-400 relative">
-                            <svg className="absolute -left-6 -top-2 w-5 h-4 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 12">
-                              <path d="M 16 12 V 4 C 16 1.5 13 0 8 0 H 0" />
-                            </svg>
-
-                            {m.reply_to.avatar_url && (
-                              <img src={m.reply_to.avatar_url} alt="" className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
-                            )}
-                            <span className="font-bold text-zinc-300 hover:underline cursor-pointer shrink-0">
-                              {m.reply_to.username}
-                            </span>
-                            <span className="truncate opacity-80 font-normal">
-                              {m.reply_to.content || m.reply_to.text}
-                            </span>
-                          </div>
-                        )}
-
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 flex-wrap">
                             <button
