@@ -567,7 +567,6 @@ export function ChatCard({
 
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
-                // Fallback reply data if reply_to is missing or flattened
                 const replyObj = m.reply_to || (m.reply_to_username ? {
                   username: m.reply_to_username,
                   content: m.reply_to_content || '',
@@ -575,12 +574,12 @@ export function ChatCard({
                 } : null);
 
                 return (
-                  <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-1 pb-1">
-                    {/* Compact Reply Preview Header with exact SVG branch connecting to top-left of avatar */}
+                  <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-2 pb-1">
+                    {/* Exact Discord Reply Header matching reference image layout */}
                     {replyObj && (
                       <div className="flex items-center gap-1.5 ml-8 mb-1 text-[11px] text-zinc-400 relative">
-                        <svg className="absolute -left-5 top-1.5 w-4 h-3 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 12">
-                          <path d="M 16 0 H 8 C 3 0 0 3 0 8 V 12" />
+                        <svg className="absolute -left-5 -top-1.5 w-4 h-4 text-zinc-500 overflow-visible pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 14">
+                          <path d="M 16 14 V 4 C 16 1.5 13 0 8 0 H 0" />
                         </svg>
 
                         {replyObj.avatar_url && (
@@ -589,7 +588,7 @@ export function ChatCard({
                         <span className="font-bold text-zinc-300 hover:underline cursor-pointer shrink-0">
                           {replyObj.username}
                         </span>
-                        <span className="truncate opacity-75 font-normal">
+                        <span className="truncate opacity-80 font-normal">
                           {replyObj.content || replyObj.text}
                         </span>
                       </div>
