@@ -567,7 +567,6 @@ export function ChatCard({
 
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
-                // Robust Fallback: check m.reply_to, or lookup by reply ID, or fallback properties
                 const replyObj = m.reply_to || (m.reply_to_username ? {
                   username: m.reply_to_username,
                   content: m.reply_to_content || '',
@@ -579,8 +578,8 @@ export function ChatCard({
                     <div className="flex items-start gap-2 relative">
                       {/* Exact Discord Reply Branch SVG hooking from top-left of the avatar up to the reply header */}
                       {replyObj && (
-                        <svg className="absolute -left-3 -top-3.5 w-4 h-4 text-zinc-500 overflow-visible pointer-events-none z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 12 12">
-                          <path d="M 12 12 V 4 C 12 1.5 10 0 6 0 H 0" />
+                        <svg className="absolute -left-5 -top-3 w-4 h-5 text-zinc-500 overflow-visible pointer-events-none z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 16">
+                          <path d="M 16 16 V 6 C 16 2.5 13.5 0 10 0 H 0" />
                         </svg>
                       )}
 
