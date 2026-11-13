@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: capybara-backend
+    env: node
+    region: ohio
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    autoDeploy: true
