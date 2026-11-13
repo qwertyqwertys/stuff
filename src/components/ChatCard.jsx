@@ -166,6 +166,9 @@ export function ChatCard({
     let lastKnownName = username;
 
     const interval = setInterval(async () => {
+      // Skip profile syncing updates if tab is hidden to save further bandwidth
+      if (document.visibilityState !== 'visible') return;
+
       const currentPfp = ownPfp || getStoredAvatar();
       const currentFrame = getStoredFrame();
       const currentEffect = getStoredEffect();
@@ -208,7 +211,7 @@ export function ChatCard({
           console.error('[ChatCard] DB Sync Error:', err);
         }
       }
-    }, 2000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [myId, username, ownPfp]);
@@ -264,18 +267,32 @@ export function ChatCard({
     }
   }, []);
 
+  // Optimized Polling with Visibility API & 12s interval
   useEffect(() => {
     fetchMessages();
-    const interval = setInterval(fetchMessages, 2500);
+
+    const pollInterval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchMessages();
+      }
+    }, 12000); // Poll every 12 seconds instead of 2.5 seconds
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchMessages(); // Instantly fetch when user tabs back in
+      }
+    };
 
     const handlePfpUpdated = () => {
       fetchMessages();
     };
 
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
 
     return () => {
-      clearInterval(interval);
+      clearInterval(pollInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
     };
   }, [fetchMessages]);
@@ -576,7 +593,6 @@ export function ChatCard({
                 return (
                   <div key={m.id || i} className="group/msg flex flex-col text-left relative pt-3 pb-1">
                     <div className="flex items-start gap-2 relative">
-                      {/* Exact Discord Reply Branch SVG hooking from top-left of the avatar up to the reply header */}
                       {replyObj && (
                         <svg className="absolute -left-5 -top-3 w-4 h-5 text-zinc-500 overflow-visible pointer-events-none z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 16">
                           <path d="M 16 16 V 6 C 16 2.5 13.5 0 10 0 H 0" />
@@ -593,7 +609,6 @@ export function ChatCard({
                       </button>
 
                       <div className="flex-1 min-w-0">
-                        {/* Compact Reply Header matching reference image */}
                         {replyObj && (
                           <div className="flex items-center gap-1.5 mb-1 text-[11px] text-zinc-400">
                             {replyObj.avatar_url && (
