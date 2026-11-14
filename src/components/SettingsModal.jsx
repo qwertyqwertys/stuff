@@ -418,6 +418,7 @@ function SettingsModalContent({
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const [gta3DisclaimerHidden, setGta3DisclaimerHidden] = useState(false);
+  const [fnaeDisclaimerHidden, setFnaeDisclaimerHidden] = useState(false);
   const [skipIntroHidden, setSkipIntroHidden] = useState(false);
 
   const [gamesList, setGamesList] = useState([]);
@@ -426,6 +427,7 @@ function SettingsModalContent({
   useEffect(() => {
     if (show) {
       setGta3DisclaimerHidden(localStorage.getItem('gta3_disclaimer_accepted') === 'true');
+      setFnaeDisclaimerHidden(localStorage.getItem('fnae_disclaimer_accepted') === 'true');
       setSkipIntroHidden(localStorage.getItem('skipIntro') === 'true');
       
       const gameArray = Array.isArray(gamesData) ? gamesData : (gamesData.games || []);
@@ -450,6 +452,16 @@ function SettingsModalContent({
     } else {
       localStorage.setItem('gta3_disclaimer_accepted', 'true');
       setGta3DisclaimerHidden(true);
+    }
+  };
+
+  const handleToggleFnaeDisclaimer = () => {
+    if (fnaeDisclaimerHidden) {
+      localStorage.removeItem('fnae_disclaimer_accepted');
+      setFnaeDisclaimerHidden(false);
+    } else {
+      localStorage.setItem('fnae_disclaimer_accepted', 'true');
+      setFnaeDisclaimerHidden(true);
     }
   };
 
@@ -1637,33 +1649,58 @@ function SettingsModalContent({
               )}
 
               {/* GAME DISCLAIMERS */}
-              {matchesSearch(['disclaimer', 'gta', 'gta3', 'warning', 'school', 'game']) && (
+              {matchesSearch(['disclaimer', 'gta', 'gta3', 'epstein', 'fnae', 'warning', 'school', 'game']) && (
                 <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                        <Gamepad2 className="w-3.5 h-3.5 text-[var(--theme)]" /> GTA III Launch Disclaimer
-                      </label>
-                      <p className={`text-[8px] uppercase font-bold tracking-tight mt-1 ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                        {gta3DisclaimerHidden 
-                          ? "Currently hidden. Click 'Reset' to show the warning again upon launch." 
-                          : "Currently active. Pops up before launching GTA III."}
-                      </p>
+                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                    <Gamepad2 className="w-3.5 h-3.5 text-[var(--theme)]" /> Game Launch Disclaimers
+                  </label>
+
+                  <div className="space-y-3">
+                    {/* GTA III Disclaimer */}
+                    <div className="flex items-center justify-between pt-1">
+                      <div>
+                        <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA III Disclaimer</span>
+                        <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                          {gta3DisclaimerHidden ? "Hidden (Accepted)" : "Active"}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleToggleGta3Disclaimer}
+                        className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+                          gta3DisclaimerHidden
+                            ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+                            : isLightMode 
+                              ? "bg-zinc-200 text-zinc-700" 
+                              : "bg-white/10 text-zinc-300"
+                        }`}
+                      >
+                        {gta3DisclaimerHidden ? "Reset Warning" : "Active"}
+                      </button>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleToggleGta3Disclaimer}
-                      className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
-                        gta3DisclaimerHidden
-                          ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
-                          : isLightMode 
-                            ? "bg-zinc-200 text-zinc-700" 
-                            : "bg-white/10 text-zinc-300"
-                      }`}
-                    >
-                      {gta3DisclaimerHidden ? "Reset Disclaimer" : "Active"}
-                    </button>
+                    {/* Five Nights at Epstein's Disclaimer */}
+                    <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
+                      <div>
+                        <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>Five Nights at Epstein's Disclaimer</span>
+                        <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                          {fnaeDisclaimerHidden ? "Hidden (Accepted)" : "Active"}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleToggleFnaeDisclaimer}
+                        className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+                          fnaeDisclaimerHidden
+                            ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+                            : isLightMode 
+                              ? "bg-zinc-200 text-zinc-700" 
+                              : "bg-white/10 text-zinc-300"
+                        }`}
+                      >
+                        {fnaeDisclaimerHidden ? "Reset Warning" : "Active"}
+                      </button>
+                    </div>
                   </div>
                 </section>
               )}
