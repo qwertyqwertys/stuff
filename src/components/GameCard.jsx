@@ -3,6 +3,7 @@ import { Heart, Play } from 'lucide-react';
 
 export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorite, performanceMode }) {
   const [showGTA3Modal, setShowGTA3Modal] = useState(false);
+  const [showFNAEModal, setShowFNAEModal] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
   const isUtility = ['request', 'report'].includes(game.id);
@@ -18,6 +19,13 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
       normalizedTitle.includes('gtaiii') ||
       (normalizedTitle.includes('grandtheftauto') && (normalizedTitle.includes('3') || normalizedTitle.includes('iii')));
 
+    const isFNAE = 
+      normalizedId.includes('fnae') ||
+      normalizedId.includes('epstein') ||
+      normalizedTitle.includes('fnae') ||
+      normalizedTitle.includes('epstein') ||
+      normalizedTitle.includes('fivenightsatepsteins');
+
     if (isGTA3) {
       const hasAccepted = localStorage.getItem('gta3_disclaimer_accepted');
       if (hasAccepted === 'true') {
@@ -25,6 +33,14 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
       } else {
         setDontShowAgain(false);
         setShowGTA3Modal(true);
+      }
+    } else if (isFNAE) {
+      const hasAccepted = localStorage.getItem('fnae_disclaimer_accepted');
+      if (hasAccepted === 'true') {
+        onLaunch(game);
+      } else {
+        setDontShowAgain(false);
+        setShowFNAEModal(true);
       }
     } else {
       onLaunch(game);
@@ -44,6 +60,22 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
   const handleCancelDisclaimer = (e) => {
     e.stopPropagation();
     setShowGTA3Modal(false);
+    setDontShowAgain(false);
+  };
+
+  const handleAcceptFNAE = (e) => {
+    e.stopPropagation();
+    if (dontShowAgain) {
+      localStorage.setItem('fnae_disclaimer_accepted', 'true');
+    }
+    setShowFNAEModal(false);
+    setDontShowAgain(false);
+    onLaunch(game);
+  };
+
+  const handleCancelFNAE = (e) => {
+    e.stopPropagation();
+    setShowFNAEModal(false);
     setDontShowAgain(false);
   };
 
@@ -138,6 +170,52 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
                 className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white border-0 rounded-lg font-bold cursor-pointer text-sm transition-colors"
               >
                 I Understand & Launch GTA III
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Five Nights at Epstein's Disclaimer Modal */}
+      {showFNAEModal && (
+        <div 
+          onClick={handleCancelFNAE} 
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 p-4 font-sans"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 shadow-2xl text-white"
+          >
+            <h2 className="text-xl font-bold text-red-500 flex items-center gap-2 m-0">
+              ⚠️ Disclaimer & Warning
+            </h2>
+            
+            <p className="text-zinc-300 text-sm leading-relaxed my-4">
+              Capybara Science is not responsible for you getting in trouble for playing Five Nights at Epstein's in or outside of school.
+            </p>
+            
+            <label className="flex items-center gap-2 my-5 cursor-pointer text-sm text-zinc-400 select-none">
+              <input 
+                type="checkbox" 
+                checked={dontShowAgain} 
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+                className="w-4 h-4 rounded cursor-pointer accent-red-500" 
+              />
+              Don't show this again
+            </label>
+
+            <div className="flex gap-3 justify-end">
+              <button 
+                onClick={handleCancelFNAE} 
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white border-0 rounded-lg cursor-pointer text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleAcceptFNAE} 
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white border-0 rounded-lg font-bold cursor-pointer text-sm transition-colors"
+              >
+                I Understand & Launch Five Nights at Epstein's
               </button>
             </div>
           </div>
