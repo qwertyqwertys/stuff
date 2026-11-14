@@ -5,4 +5,4 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "capybara-db"
-database_id = "b48f54b6-1fb3-497d-9720-71508e652f0e"
+database_id = "b48f54b6-1fb3-497d-9720-71508e652f0e" 
