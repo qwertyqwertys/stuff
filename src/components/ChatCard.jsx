@@ -5,9 +5,9 @@ import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
 
 // Toggle this to false when chat is ready to go back online!
-const IS_CHAT_MAINTENANCE = true;
+const IS_CHAT_MAINTENANCE = false;
 
-const API_BASE_URL = 'https://capybara-backend-freu.onrender.com/api/messages';
+const API_BASE_URL = 'https://cap-backend.ljkl.workers.dev/';
 const LOCAL_CACHE_KEY = 'capy-chat-messages-cache';
 
 function formatTimestamp(isoString) {
