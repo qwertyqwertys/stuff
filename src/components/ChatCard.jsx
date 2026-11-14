@@ -7,7 +7,7 @@ import { ProfileAvatar } from './SettingsModal';
 // Chat is live and online!
 const IS_CHAT_MAINTENANCE = false;
 
-const API_BASE_URL = 'https://capybara-backend.yourname.workers.dev/api/messages'; // Replace with your actual Cloudflare Worker URL
+const API_BASE_URL = 'https://cap-backend.ljkl.workers.dev/api/messages';
 const LOCAL_CACHE_KEY = 'capy-chat-messages-cache';
 
 function formatTimestamp(isoString) {
