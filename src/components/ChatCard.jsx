@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight, Image as ImageIcon, Loader2, Wrench } from 'lucide-react'; 
+import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight, Image as ImageIcon, Loader2 } from 'lucide-react'; 
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
 
-// Toggle this to false when chat is ready to go back online!
+// Chat is live and online!
 const IS_CHAT_MAINTENANCE = false;
 
-const API_BASE_URL = 'https://cap-backend.ljkl.workers.dev/';
+const API_BASE_URL = 'https://capybara-backend.yourname.workers.dev/api/messages'; // Replace with your actual Cloudflare Worker URL
 const LOCAL_CACHE_KEY = 'capy-chat-messages-cache';
 
 function formatTimestamp(isoString) {
@@ -139,8 +139,6 @@ export function ChatCard({
   };
 
   useEffect(() => {
-    if (IS_CHAT_MAINTENANCE) return;
-
     const handleProfileStorageChange = () => {
       setProfileVersion(v => v + 1);
       setLiveProfiles(prev => ({
@@ -165,8 +163,6 @@ export function ChatCard({
   }, [myId, ownPfp]);
 
   useEffect(() => {
-    if (IS_CHAT_MAINTENANCE) return;
-
     let lastKnownFrame = getStoredFrame();
     let lastKnownEffect = getStoredEffect();
     let lastKnownPfp = getStoredAvatar();
@@ -241,8 +237,6 @@ export function ChatCard({
   }, []);
 
   const fetchMessages = useCallback(async () => {
-    if (IS_CHAT_MAINTENANCE) return;
-
     try {
       const res = await fetch(API_BASE_URL);
       if (res.ok) {
@@ -276,8 +270,6 @@ export function ChatCard({
   }, []);
 
   useEffect(() => {
-    if (IS_CHAT_MAINTENANCE) return;
-
     fetchMessages();
 
     const pollInterval = setInterval(() => {
@@ -357,7 +349,6 @@ export function ChatCard({
   };
 
   const handleSend = async () => {
-    if (IS_CHAT_MAINTENANCE) return;
     if (!text.trim() && !pendingImageUrl) return;
 
     const currentAvatar = ownPfp || getStoredAvatar();
@@ -430,7 +421,7 @@ export function ChatCard({
   };
 
   const handleSaveEdit = async (id) => {
-    if (IS_CHAT_MAINTENANCE || !editText.trim()) return;
+    if (!editText.trim()) return;
 
     setMessages(prev => prev.map(m => m.id === id ? { ...m, content: editText.trim(), is_edited: true } : m));
     setEditingId(null);
@@ -450,8 +441,6 @@ export function ChatCard({
   };
 
   const handleDeleteMessage = async (id) => {
-    if (IS_CHAT_MAINTENANCE) return;
-
     setMessages(prev => prev.filter(m => m.id !== id));
     if (editingId === id) setEditingId(null);
 
@@ -518,15 +507,13 @@ export function ChatCard({
           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--theme)]">
             Chat
           </h3>
-          {IS_CHAT_MAINTENANCE && (
-            <span className="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-bold uppercase tracking-wider">
-              Offline
-            </span>
-          )}
+          <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold uppercase tracking-wider">
+            Online
+          </span>
         </div>
         
         <div className="flex items-center gap-2">
-          {!IS_CHAT_MAINTENANCE && isJoined && onToggleVoice && (
+          {isJoined && onToggleVoice && (
             <button
               type="button"
               onClick={onToggleVoice}
@@ -542,7 +529,7 @@ export function ChatCard({
             </button>
           )}
 
-          {!IS_CHAT_MAINTENANCE && isJoined && (
+          {isJoined && (
             <button 
               onClick={() => setIsJoined(false)} 
               className="text-zinc-200 hover:text-[var(--theme)] p-1 hover:bg-white/5 rounded-md transition-all outline-none"
@@ -554,23 +541,7 @@ export function ChatCard({
         </div>
       </div>
 
-      {IS_CHAT_MAINTENANCE ? (
-        <div className={`flex-1 rounded-xl p-6 flex flex-col items-center justify-center text-center gap-3 border ${
-          isLightMode ? 'bg-black/5 border-black/10' : 'bg-black/45 border-white/5'
-        }`}>
-          <div className="w-11 h-11 rounded-2xl bg-[var(--theme)]/15 border border-[var(--theme)]/30 flex items-center justify-center text-[var(--theme)]">
-            <Wrench className="w-5 h-5" />
-          </div>
-          <div className="space-y-1 max-w-[230px]">
-            <h4 className={`text-xs font-bold ${isLightMode ? 'text-black' : 'text-zinc-100'}`}>
-              Chat is Broken Right Now
-            </h4>
-            <p className={`text-[11px] leading-relaxed ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-  Chat will be up and hopefully running soon!
-</p>
-          </div>
-        </div>
-      ) : !isJoined ? (
+      {!isJoined ? (
         <form onSubmit={handleJoinOrUpdate} className="flex flex-col gap-3 my-auto">
           <div className="space-y-1">
             <p className="text-[11px] font-medium text-zinc-200">Change Name</p>
