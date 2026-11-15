@@ -138,7 +138,6 @@ export function ChatCard({
     setIsAtBottom(isBottom);
   };
 
-  // Instant local profile state updater across events
   useEffect(() => {
     const handleProfileStorageChange = () => {
       setProfileVersion(v => v + 1);
@@ -166,7 +165,6 @@ export function ChatCard({
     };
   }, [myId, ownPfp, username]);
 
-  // Background active profile sync ticker
   useEffect(() => {
     let lastKnownFrame = getStoredFrame();
     let lastKnownEffect = getStoredEffect();
@@ -248,12 +246,14 @@ export function ChatCard({
       if (res.ok) {
         const data = await res.json();
         
-        setMessages(data); // Directly set messages to prevent stale closure comparison locks
+        setMessages(data);
         try {
           localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data));
         } catch (e) {}
 
         const profilesMap = {};
+        const activeTyping = {};
+        
         data.forEach(m => {
           if (m.user_id) {
             profilesMap[m.user_id] = {
@@ -263,15 +263,21 @@ export function ChatCard({
               username: m.username
             };
           }
+          // Collect global typing status if sent by other users
+          if (m.is_typing && m.user_id !== myId) {
+            activeTyping[m.user_id] = m.username;
+          }
         });
+
         setLiveProfiles(prev => ({ ...profilesMap, ...prev }));
+        setTypingUsers(prev => ({ ...prev, ...activeTyping }));
       }
     } catch (err) {
       console.error('Failed to fetch messages:', err);
     }
-  }, []);
+  }, [myId]);
 
-  // Supercharge polling to every 1 second for ultra-fast real-time updates
+  // Poll every 1 second to fetch messages and global typing status
   useEffect(() => {
     fetchMessages();
 
@@ -279,7 +285,7 @@ export function ChatCard({
       if (document.visibilityState === 'visible') {
         fetchMessages();
       }
-    }, 1000); // 1-second interval for instant message loading across devices
+    }, 1000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -293,7 +299,7 @@ export function ChatCard({
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
-    window.addEventListener('focus', fetchMessages); // Instant fetch when switching tabs/devices
+    window.addEventListener('focus', fetchMessages);
 
     return () => {
       clearInterval(pollInterval);
@@ -309,8 +315,35 @@ export function ChatCard({
     }
   }, [messages, typingUsers, pendingImageUrl, isAtBottom]);
 
-  const handleTypingInput = (e) => {
-    setText(e.target.value);
+  // Broadcast typing status to backend so other devices see it
+  const handleTypingInput = async (e) => {
+    const val = e.target.value;
+    setText(val);
+
+    const isTypingNow = val.trim().length > 0;
+    if (isTypingNow) {
+      setTypingUsers(prev => ({ ...prev, [myId]: username }));
+    } else {
+      setTypingUsers(prev => {
+        const next = { ...prev };
+        delete next[myId];
+        return next;
+      });
+    }
+
+    try {
+      await fetch(`${API_BASE_URL}/typing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: myId,
+          username: username,
+          is_typing: isTypingNow
+        })
+      });
+    } catch (err) {
+      // Fallback silently if typing endpoint is optional
+    }
   };
 
   const handleFileSelect = async (e) => {
@@ -374,6 +407,19 @@ export function ChatCard({
     setText(''); 
     setPendingImageUrl('');
     setReplyingTo(null);
+    setTypingUsers(prev => {
+      const next = { ...prev };
+      delete next[myId];
+      return next;
+    });
+
+    try {
+      await fetch(`${API_BASE_URL}/typing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: myId, username: username, is_typing: false })
+      });
+    } catch (e) {}
 
     const tempId = 'temp_' + Date.now();
     const tempMessage = {
@@ -415,7 +461,7 @@ export function ChatCard({
       if (res.ok) {
         const savedMessage = await res.json();
         setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
-        fetchMessages(); // Instant sync trigger
+        fetchMessages();
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(`Server Error (${res.status}): ${errData.error || 'Failed to save message'}`);
@@ -430,16 +476,20 @@ export function ChatCard({
   const handleSaveEdit = async (id) => {
     if (!editText.trim()) return;
 
-    setMessages(prev => prev.map(m => m.id === id ? { ...m, content: editText.trim(), is_edited: true } : m));
+    const updatedText = editText.trim();
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, content: updatedText, is_edited: true } : m));
     setEditingId(null);
     setEditText('');
 
     try {
-      await fetch(`${API_BASE_URL}/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: editText.trim() })
+        body: JSON.stringify({ content: updatedText })
       });
+      if (!res.ok) {
+        console.error('Failed to update message on server, status:', res.status);
+      }
     } catch (err) {
       console.error('Failed to update message:', err);
     }
