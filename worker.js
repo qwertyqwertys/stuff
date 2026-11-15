@@ -1,5 +1,5 @@
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
@@ -10,11 +10,9 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Explicitly check if the D1 database binding exists
+    // Safety check for DB binding
     if (!env || !env.DB) {
-      return new Response(JSON.stringify({ 
-        error: "Database binding 'DB' is missing. Check wrangler.toml and wrangler deploy." 
-      }), {
+      return new Response(JSON.stringify({ error: "Database binding DB is missing." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -23,7 +21,7 @@ export default {
     try {
       const url = new URL(request.url);
 
-      // 1. GET all messages
+      // GET all messages
       if (url.pathname === "/api/messages" && request.method === "GET") {
         const { results } = await env.DB.prepare(
           "SELECT * FROM messages ORDER BY datetime(created_at) ASC"
@@ -34,7 +32,7 @@ export default {
         });
       }
 
-      // 2. POST a new message
+      // POST a new message
       if (url.pathname === "/api/messages" && request.method === "POST") {
         const body = await request.json();
         const id = Date.now().toString();
@@ -71,16 +69,16 @@ export default {
         });
       }
 
-      // 3. DELETE a message
+      // DELETE a message
       if (url.pathname.startsWith("/api/messages/") && request.method === "DELETE") {
         const id = url.pathname.split("/").pop();
         await env.DB.prepare("DELETE FROM messages WHERE id = ?").bind(id).run();
-        return new Response(JSON.stringify({ message: "Message deleted successfully" }), {
+        return new Response(JSON.stringify({ message: "Deleted successfully" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      return new Response("Capybara Science Cloudflare Backend is running!", {
+      return new Response("Capybara Worker is online!", {
         headers: { ...corsHeaders, "Content-Type": "text/plain" },
       });
 
