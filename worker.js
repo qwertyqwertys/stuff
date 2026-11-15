@@ -20,15 +20,14 @@ export default {
     try {
       const url = new URL(request.url);
 
-      // GET all messages with their latest profile overrides & typing status
+      // GET all messages with their latest profile overrides
       if (url.pathname === "/api/messages" && request.method === "GET") {
         const { results } = await env.DB.prepare(
           `SELECT m.*, 
                   COALESCE(p.username, m.username) as username,
                   COALESCE(p.avatar_url, m.avatar_url) as avatar_url,
                   COALESCE(p.frame_url, m.frame_url) as frame_url,
-                  COALESCE(p.effect_url, m.effect_url) as effect_url,
-                  COALESCE(p.is_typing, 0) as is_typing
+                  COALESCE(p.effect_url, m.effect_url) as effect_url
            FROM messages m
            LEFT JOIN profiles p ON m.user_id = p.user_id
            ORDER BY datetime(m.created_at) ASC`
@@ -39,7 +38,7 @@ export default {
         });
       }
 
-      // POST a new message (snapshots profile at time of sending)
+      // POST a new message
       if (url.pathname === "/api/messages" && request.method === "POST") {
         const body = await request.json();
         const id = Date.now().toString();
@@ -69,7 +68,6 @@ export default {
           reply_to ? JSON.stringify(reply_to) : null
         ).run();
 
-        // Clear typing status upon sending message
         if (user_id) {
           await env.DB.prepare(`UPDATE profiles SET is_typing = 0 WHERE user_id = ?`).bind(user_id).run();
         }
@@ -81,7 +79,7 @@ export default {
         });
       }
 
-      // UPDATE user profile in the dedicated profiles table
+      // UPDATE user profile
       if (url.pathname === "/api/profile" && request.method === "PUT") {
         const body = await request.json();
         const { user_id, username, avatar_url, frame_url, effect_url } = body;
@@ -115,7 +113,7 @@ export default {
         });
       }
 
-      // UPDATE live typing status
+      // POST typing status
       if (url.pathname === "/api/typing" && request.method === "POST") {
         const body = await request.json();
         const { user_id, username, is_typing } = body;
@@ -131,6 +129,17 @@ export default {
         }
 
         return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // GET active typing users
+      if (url.pathname === "/api/typing" && request.method === "GET") {
+        const { results } = await env.DB.prepare(
+          `SELECT user_id, username FROM profiles WHERE is_typing = 1`
+        ).all();
+
+        return new Response(JSON.stringify(results || []), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
