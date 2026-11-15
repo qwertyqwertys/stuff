@@ -1159,7 +1159,7 @@ function SettingsModalContent({
                                   if (currentName) {
                                     const activeEffect = localStorage.getItem('capy-selected-effect') || null;
                                     try {
-                                      await fetch('https://capybara-backend-freu.onrender.com/api/profile', {
+                                      await fetch('https://capybara-science-backend.ljkl.workers.dev/api/profile', {
                                         method: 'PUT',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({
@@ -1196,7 +1196,7 @@ function SettingsModalContent({
                                   if (currentName) {
                                     const activeFrame = localStorage.getItem('capy-selected-frame') || null;
                                     try {
-                                      await fetch('https://capybara-backend-freu.onrender.com/api/profile', {
+                                      await fetch('https://capybara-science-backend.ljkl.workers.dev/api/profile', {
                                         method: 'PUT',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({
@@ -1249,7 +1249,7 @@ function SettingsModalContent({
 
                                   if (currentName) {
                                     try {
-                                      const res = await fetch('https://capybara-backend-freu.onrender.com/api/profile', {
+                                      const res = await fetch('https://capybara-science-backend.ljkl.workers.dev/api/profile', {
                                         method: 'PUT',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({
