@@ -138,6 +138,7 @@ export function ChatCard({
     setIsAtBottom(isBottom);
   };
 
+  // Instant local profile state updater across events
   useEffect(() => {
     const handleProfileStorageChange = () => {
       setProfileVersion(v => v + 1);
@@ -146,7 +147,8 @@ export function ChatCard({
         [myId]: {
           avatar_url: ownPfp || getStoredAvatar(),
           frame_url: getStoredFrame(),
-          effect_url: getStoredEffect()
+          effect_url: getStoredEffect(),
+          username: localStorage.getItem('capy-username') || username
         }
       }));
     };
@@ -154,14 +156,17 @@ export function ChatCard({
     window.addEventListener('storage', handleProfileStorageChange);
     window.addEventListener('capy-profile-updated', handleProfileStorageChange);
     window.addEventListener('capy-pfp-updated', handleProfileStorageChange);
+    window.addEventListener('capy-username-updated', handleProfileStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleProfileStorageChange);
       window.removeEventListener('capy-profile-updated', handleProfileStorageChange);
       window.removeEventListener('capy-pfp-updated', handleProfileStorageChange);
+      window.removeEventListener('capy-username-updated', handleProfileStorageChange);
     };
-  }, [myId, ownPfp]);
+  }, [myId, ownPfp, username]);
 
+  // Background active profile sync ticker
   useEffect(() => {
     let lastKnownFrame = getStoredFrame();
     let lastKnownEffect = getStoredEffect();
@@ -193,7 +198,8 @@ export function ChatCard({
           [myId]: {
             avatar_url: currentPfp || null,
             frame_url: currentFrame,
-            effect_url: currentEffect
+            effect_url: currentEffect,
+            username: currentName
           }
         }));
 
@@ -213,7 +219,7 @@ export function ChatCard({
           console.error('[ChatCard] DB Sync Error:', err);
         }
       }
-    }, 5000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [myId, username, ownPfp]);
@@ -242,14 +248,10 @@ export function ChatCard({
       if (res.ok) {
         const data = await res.json();
         
-        setMessages(prev => {
-          const isSame = JSON.stringify(prev) === JSON.stringify(data);
-          if (isSame) return prev;
-          try {
-            localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data));
-          } catch (e) {}
-          return data;
-        });
+        setMessages(data); // Directly set messages to prevent stale closure comparison locks
+        try {
+          localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data));
+        } catch (e) {}
 
         const profilesMap = {};
         data.forEach(m => {
@@ -269,6 +271,7 @@ export function ChatCard({
     }
   }, []);
 
+  // Supercharge polling to every 1 second for ultra-fast real-time updates
   useEffect(() => {
     fetchMessages();
 
@@ -276,7 +279,7 @@ export function ChatCard({
       if (document.visibilityState === 'visible') {
         fetchMessages();
       }
-    }, 3000);
+    }, 1000); // 1-second interval for instant message loading across devices
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -290,11 +293,13 @@ export function ChatCard({
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
+    window.addEventListener('focus', fetchMessages); // Instant fetch when switching tabs/devices
 
     return () => {
       clearInterval(pollInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
+      window.removeEventListener('focus', fetchMessages);
     };
   }, [fetchMessages]);
 
@@ -343,6 +348,7 @@ export function ChatCard({
     localStorage.setItem('capy-display-name', newName);
     localStorage.setItem('username', newName);
     window.dispatchEvent(new Event('capy-username-updated'));
+    window.dispatchEvent(new Event('capy-profile-updated'));
     setUsername(newName);
     setIsJoined(true);
     fetchMessages();
@@ -409,7 +415,7 @@ export function ChatCard({
       if (res.ok) {
         const savedMessage = await res.json();
         setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
-        fetchMessages(); // <-- Instantly syncs and pulls the latest messages across devices
+        fetchMessages(); // Instant sync trigger
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(`Server Error (${res.status}): ${errData.error || 'Failed to save message'}`);
@@ -577,17 +583,22 @@ export function ChatCard({
                                 (username && m.username && m.username.toLowerCase() === username.toLowerCase());
                 const isEditingThis = editingId === m.id;
 
+                const resolvedProfile = liveProfiles[m.user_id] || {};
                 const avatarUrlToUse = isOwner 
                   ? (ownPfp || getStoredAvatar() || m.avatar_url || '') 
-                  : (liveProfiles[m.user_id]?.avatar_url || m.avatar_url || '');
+                  : (resolvedProfile.avatar_url || m.avatar_url || '');
 
                 const frameUrlToUse = isOwner 
                   ? getStoredFrame() 
-                  : (liveProfiles[m.user_id]?.frame_url || m.frame_url || '');
+                  : (resolvedProfile.frame_url || m.frame_url || '');
 
                 const effectUrlToUse = isOwner 
                   ? getStoredEffect() 
-                  : (liveProfiles[m.user_id]?.effect_url || m.effect_url || '');
+                  : (resolvedProfile.effect_url || m.effect_url || '');
+
+                const displayNameToUse = isOwner
+                  ? username
+                  : (resolvedProfile.username || m.username);
 
                 const hasInlineImage = m.image_url || (isImageUrl(m.content) ? m.content : null);
 
@@ -636,7 +647,7 @@ export function ChatCard({
                               onClick={() => handleOpenProfile(m)}
                               className="text-[var(--theme)] font-bold text-xs hover:underline cursor-pointer focus:outline-none"
                             >
-                              {m.username}
+                              {displayNameToUse}
                             </button>
                             <span className="text-[9px] text-zinc-400 font-sans">
                               {formatTimestamp(m.created_at)}
