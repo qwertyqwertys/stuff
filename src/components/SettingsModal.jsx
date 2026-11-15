@@ -285,6 +285,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
       }
 
       if (typeof onSave === 'function') onSave(croppedUrl);
+      window.dispatchEvent(new Event('capy-profile-updated')); // <-- Added instant sync event
     } catch (err) {
       console.error("Avatar Crop Error Details:", err);
       if (err.name === 'SecurityError') {
@@ -1266,7 +1267,7 @@ function SettingsModalContent({
                                     }
                                   }
 
-                                  window.dispatchEvent(new Event('capy-pfp-updated'));
+                                  window.dispatchEvent(new Event('capy-profile-updated')); // <-- Added instant sync event
                                 }}
                                 className={`mt-2 w-full py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
                                   isEquipped 
