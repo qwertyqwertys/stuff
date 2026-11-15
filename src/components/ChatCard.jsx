@@ -7,7 +7,7 @@ import { ProfileAvatar } from './SettingsModal';
 // Chat is live and online!
 const IS_CHAT_MAINTENANCE = false; 
 
-const API_BASE_URL = 'https://cap-backend.ljkl.workers.dev/api/messages';
+const API_BASE_URL = 'https://capybara-science-backend.ljkl.workers.dev/api/messages';
 const LOCAL_CACHE_KEY = 'capy-chat-messages-cache';
 
 function formatTimestamp(isoString) {
