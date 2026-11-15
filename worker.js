@@ -2,7 +2,7 @@ export default {
   async fetch(request, env, ctx) {
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     };
 
@@ -10,14 +10,17 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    try {
-      if (!env || !env.DB) {
-        return new Response(JSON.stringify({ error: "DB binding is missing from env." }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    // Explicitly check if the D1 database binding exists
+    if (!env || !env.DB) {
+      return new Response(JSON.stringify({ 
+        error: "Database binding 'DB' is missing. Check wrangler.toml and wrangler deploy." 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
+    try {
       const url = new URL(request.url);
 
       // 1. GET all messages
