@@ -128,6 +128,7 @@ export function ChatCard({
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
   const myId = getPersistentId();
 
   const handleScroll = () => {
@@ -242,7 +243,6 @@ export function ChatCard({
 
   const fetchMessagesAndTyping = useCallback(async () => {
     try {
-      // Fetch messages
       const res = await fetch(API_BASE_URL);
       if (res.ok) {
         const data = await res.json();
@@ -265,7 +265,6 @@ export function ChatCard({
         setLiveProfiles(prev => ({ ...profilesMap, ...prev }));
       }
 
-      // Fetch active typing status from all users
       const typingRes = await fetch(API_TYPING_URL);
       if (typingRes.ok) {
         const typingList = await typingRes.json();
@@ -282,7 +281,6 @@ export function ChatCard({
     }
   }, [myId]);
 
-  // Poll every 1 second for instant message & global typing sync
   useEffect(() => {
     fetchMessagesAndTyping();
 
@@ -320,25 +318,30 @@ export function ChatCard({
     }
   }, [messages, typingUsers, pendingImageUrl, isAtBottom]);
 
-  const handleTypingInput = async (e) => {
+  // Robust typing handler with automatic 2-second debounce timeout
+  const handleTypingInput = (e) => {
     const val = e.target.value;
     setText(val);
-
     const isTypingNow = val.trim().length > 0;
 
-    try {
-      await fetch(API_TYPING_URL, {
+    // Send typing status = true
+    fetch(API_TYPING_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: myId, username: username, is_typing: isTypingNow })
+    }).catch(() => {});
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    // Automatically send is_typing = false after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      fetch(API_TYPING_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: myId,
-          username: username,
-          is_typing: isTypingNow
-        })
-      });
-    } catch (err) {
-      console.error('Failed to update typing state:', err);
-    }
+        body: JSON.stringify({ user_id: myId, username: username, is_typing: false })
+      }).catch(() => {});
+    }, 2000);
   };
 
   const handleFileSelect = async (e) => {
@@ -403,7 +406,7 @@ export function ChatCard({
     setPendingImageUrl('');
     setReplyingTo(null);
 
-    // Clear typing state on send
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     try {
       await fetch(API_TYPING_URL, {
         method: 'POST',
