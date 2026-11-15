@@ -20,14 +20,15 @@ export default {
     try {
       const url = new URL(request.url);
 
-      // GET all messages with their latest profile overrides
+      // GET all messages with their latest profile overrides & typing status
       if (url.pathname === "/api/messages" && request.method === "GET") {
         const { results } = await env.DB.prepare(
           `SELECT m.*, 
                   COALESCE(p.username, m.username) as username,
                   COALESCE(p.avatar_url, m.avatar_url) as avatar_url,
                   COALESCE(p.frame_url, m.frame_url) as frame_url,
-                  COALESCE(p.effect_url, m.effect_url) as effect_url
+                  COALESCE(p.effect_url, m.effect_url) as effect_url,
+                  COALESCE(p.is_typing, 0) as is_typing
            FROM messages m
            LEFT JOIN profiles p ON m.user_id = p.user_id
            ORDER BY datetime(m.created_at) ASC`
@@ -68,6 +69,11 @@ export default {
           reply_to ? JSON.stringify(reply_to) : null
         ).run();
 
+        // Clear typing status upon sending message
+        if (user_id) {
+          await env.DB.prepare(`UPDATE profiles SET is_typing = 0 WHERE user_id = ?`).bind(user_id).run();
+        }
+
         const { results } = await env.DB.prepare("SELECT * FROM messages WHERE id = ?").bind(id).all();
         return new Response(JSON.stringify(results[0] || { success: true }), {
           status: 201,
@@ -75,7 +81,7 @@ export default {
         });
       }
 
-      // UPDATE user profile in the dedicated profiles table (No message overwriting!)
+      // UPDATE user profile in the dedicated profiles table
       if (url.pathname === "/api/profile" && request.method === "PUT") {
         const body = await request.json();
         const { user_id, username, avatar_url, frame_url, effect_url } = body;
@@ -105,6 +111,26 @@ export default {
         ).run();
 
         return new Response(JSON.stringify({ success: true, message: "Profile updated successfully" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // UPDATE live typing status
+      if (url.pathname === "/api/typing" && request.method === "POST") {
+        const body = await request.json();
+        const { user_id, username, is_typing } = body;
+
+        if (user_id) {
+          await env.DB.prepare(
+            `INSERT INTO profiles (user_id, username, is_typing, updated_at) 
+             VALUES (?, ?, ?, datetime('now'))
+             ON CONFLICT(user_id) DO UPDATE SET 
+               is_typing = excluded.is_typing,
+               updated_at = datetime('now')`
+          ).bind(user_id, username || "Anonymous", is_typing ? 1 : 0).run();
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
