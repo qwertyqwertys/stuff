@@ -409,6 +409,7 @@ export function ChatCard({
       if (res.ok) {
         const savedMessage = await res.json();
         setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
+        fetchMessages(); // <-- Instantly syncs and pulls the latest messages across devices
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(`Server Error (${res.status}): ${errData.error || 'Failed to save message'}`);
