@@ -276,7 +276,7 @@ export function ChatCard({
       if (document.visibilityState === 'visible') {
         fetchMessages();
       }
-    }, 12000);
+    }, 3000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
