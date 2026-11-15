@@ -4,10 +4,10 @@ import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
 
-// Chat is live and online!
 const IS_CHAT_MAINTENANCE = false; 
 
 const API_BASE_URL = 'https://capybara-science-backend.ljkl.workers.dev/api/messages';
+const API_TYPING_URL = 'https://capybara-science-backend.ljkl.workers.dev/api/typing';
 const LOCAL_CACHE_KEY = 'capy-chat-messages-cache';
 
 function formatTimestamp(isoString) {
@@ -240,20 +240,18 @@ export function ChatCard({
     return () => window.removeEventListener('capy-username-updated', handleNameUpdate);
   }, []);
 
-  const fetchMessages = useCallback(async () => {
+  const fetchMessagesAndTyping = useCallback(async () => {
     try {
+      // Fetch messages
       const res = await fetch(API_BASE_URL);
       if (res.ok) {
         const data = await res.json();
-        
         setMessages(data);
         try {
           localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data));
         } catch (e) {}
 
         const profilesMap = {};
-        const activeTyping = {};
-        
         data.forEach(m => {
           if (m.user_id) {
             profilesMap[m.user_id] = {
@@ -263,51 +261,58 @@ export function ChatCard({
               username: m.username
             };
           }
-          // Collect global typing status if sent by other users
-          if (m.is_typing && m.user_id !== myId) {
-            activeTyping[m.user_id] = m.username;
+        });
+        setLiveProfiles(prev => ({ ...profilesMap, ...prev }));
+      }
+
+      // Fetch active typing status from all users
+      const typingRes = await fetch(API_TYPING_URL);
+      if (typingRes.ok) {
+        const typingList = await typingRes.json();
+        const activeTyping = {};
+        typingList.forEach(t => {
+          if (t.user_id && t.user_id !== myId) {
+            activeTyping[t.user_id] = t.username || 'Someone';
           }
         });
-
-        setLiveProfiles(prev => ({ ...profilesMap, ...prev }));
-        setTypingUsers(prev => ({ ...prev, ...activeTyping }));
+        setTypingUsers(activeTyping);
       }
     } catch (err) {
-      console.error('Failed to fetch messages:', err);
+      console.error('Failed to sync chat or typing:', err);
     }
   }, [myId]);
 
-  // Poll every 1 second to fetch messages and global typing status
+  // Poll every 1 second for instant message & global typing sync
   useEffect(() => {
-    fetchMessages();
+    fetchMessagesAndTyping();
 
     const pollInterval = setInterval(() => {
       if (document.visibilityState === 'visible') {
-        fetchMessages();
+        fetchMessagesAndTyping();
       }
     }, 1000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        fetchMessages();
+        fetchMessagesAndTyping();
       }
     };
 
     const handlePfpUpdated = () => {
-      fetchMessages();
+      fetchMessagesAndTyping();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('capy-pfp-updated', handlePfpUpdated);
-    window.addEventListener('focus', fetchMessages);
+    window.addEventListener('focus', fetchMessagesAndTyping);
 
     return () => {
       clearInterval(pollInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('capy-pfp-updated', handlePfpUpdated);
-      window.removeEventListener('focus', fetchMessages);
+      window.removeEventListener('focus', fetchMessagesAndTyping);
     };
-  }, [fetchMessages]);
+  }, [fetchMessagesAndTyping]);
 
   useEffect(() => {
     if (isAtBottom) {
@@ -315,24 +320,14 @@ export function ChatCard({
     }
   }, [messages, typingUsers, pendingImageUrl, isAtBottom]);
 
-  // Broadcast typing status to backend so other devices see it
   const handleTypingInput = async (e) => {
     const val = e.target.value;
     setText(val);
 
     const isTypingNow = val.trim().length > 0;
-    if (isTypingNow) {
-      setTypingUsers(prev => ({ ...prev, [myId]: username }));
-    } else {
-      setTypingUsers(prev => {
-        const next = { ...prev };
-        delete next[myId];
-        return next;
-      });
-    }
 
     try {
-      await fetch(`${API_BASE_URL}/typing`, {
+      await fetch(API_TYPING_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -342,7 +337,7 @@ export function ChatCard({
         })
       });
     } catch (err) {
-      // Fallback silently if typing endpoint is optional
+      console.error('Failed to update typing state:', err);
     }
   };
 
@@ -384,7 +379,7 @@ export function ChatCard({
     window.dispatchEvent(new Event('capy-profile-updated'));
     setUsername(newName);
     setIsJoined(true);
-    fetchMessages();
+    fetchMessagesAndTyping();
   };
 
   const handleSend = async () => {
@@ -407,14 +402,10 @@ export function ChatCard({
     setText(''); 
     setPendingImageUrl('');
     setReplyingTo(null);
-    setTypingUsers(prev => {
-      const next = { ...prev };
-      delete next[myId];
-      return next;
-    });
 
+    // Clear typing state on send
     try {
-      await fetch(`${API_BASE_URL}/typing`, {
+      await fetch(API_TYPING_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: myId, username: username, is_typing: false })
@@ -461,7 +452,7 @@ export function ChatCard({
       if (res.ok) {
         const savedMessage = await res.json();
         setMessages(prev => prev.map(m => m.id === tempId ? savedMessage : m));
-        fetchMessages();
+        fetchMessagesAndTyping();
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(`Server Error (${res.status}): ${errData.error || 'Failed to save message'}`);
@@ -482,19 +473,16 @@ export function ChatCard({
     setEditText('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/${id}`, {
+      await fetch(`${API_BASE_URL}/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: updatedText })
       });
-      if (!res.ok) {
-        console.error('Failed to update message on server, status:', res.status);
-      }
     } catch (err) {
       console.error('Failed to update message:', err);
     }
 
-    fetchMessages();
+    fetchMessagesAndTyping();
   };
 
   const handleDeleteMessage = async (id) => {
@@ -509,7 +497,7 @@ export function ChatCard({
       console.error('Failed to delete message:', err);
     }
 
-    fetchMessages();
+    fetchMessagesAndTyping();
   };
 
   const handleOpenProfile = (m) => {
