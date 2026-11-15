@@ -10,7 +10,6 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Safety check for DB binding
     if (!env || !env.DB) {
       return new Response(JSON.stringify({ error: "Database binding DB is missing." }), {
         status: 500,
@@ -21,10 +20,17 @@ export default {
     try {
       const url = new URL(request.url);
 
-      // GET all messages
+      // GET all messages with their latest profile overrides
       if (url.pathname === "/api/messages" && request.method === "GET") {
         const { results } = await env.DB.prepare(
-          "SELECT * FROM messages ORDER BY datetime(created_at) ASC"
+          `SELECT m.*, 
+                  COALESCE(p.username, m.username) as username,
+                  COALESCE(p.avatar_url, m.avatar_url) as avatar_url,
+                  COALESCE(p.frame_url, m.frame_url) as frame_url,
+                  COALESCE(p.effect_url, m.effect_url) as effect_url
+           FROM messages m
+           LEFT JOIN profiles p ON m.user_id = p.user_id
+           ORDER BY datetime(m.created_at) ASC`
         ).all();
 
         return new Response(JSON.stringify(results || []), {
@@ -32,7 +38,7 @@ export default {
         });
       }
 
-      // POST a new message
+      // POST a new message (snapshots profile at time of sending)
       if (url.pathname === "/api/messages" && request.method === "POST") {
         const body = await request.json();
         const id = Date.now().toString();
@@ -69,7 +75,7 @@ export default {
         });
       }
 
-      // UPDATE user profile metadata across all their messages
+      // UPDATE user profile in the dedicated profiles table (No message overwriting!)
       if (url.pathname === "/api/profile" && request.method === "PUT") {
         const body = await request.json();
         const { user_id, username, avatar_url, frame_url, effect_url } = body;
@@ -82,18 +88,23 @@ export default {
         }
 
         await env.DB.prepare(
-          `UPDATE messages 
-           SET username = ?, avatar_url = ?, frame_url = ?, effect_url = ? 
-           WHERE user_id = ?`
+          `INSERT INTO profiles (user_id, username, avatar_url, frame_url, effect_url, updated_at) 
+           VALUES (?, ?, ?, ?, ?, datetime('now'))
+           ON CONFLICT(user_id) DO UPDATE SET 
+             username = excluded.username,
+             avatar_url = excluded.avatar_url,
+             frame_url = excluded.frame_url,
+             effect_url = excluded.effect_url,
+             updated_at = datetime('now')`
         ).bind(
+          user_id,
           username || "Anonymous",
           avatar_url || null,
           frame_url || null,
-          effect_url || null,
-          user_id
+          effect_url || null
         ).run();
 
-        return new Response(JSON.stringify({ success: true, message: "Profile updated across messages" }), {
+        return new Response(JSON.stringify({ success: true, message: "Profile updated successfully" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
