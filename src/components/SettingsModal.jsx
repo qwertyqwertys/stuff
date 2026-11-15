@@ -285,7 +285,7 @@ function AvatarCropperModal({ show, imageSrc, onClose, onSave, isLightMode }) {
       }
 
       if (typeof onSave === 'function') onSave(croppedUrl);
-      window.dispatchEvent(new Event('capy-profile-updated')); // <-- Added instant sync event
+      window.dispatchEvent(new Event('capy-profile-updated'));
     } catch (err) {
       console.error("Avatar Crop Error Details:", err);
       if (err.name === 'SecurityError') {
@@ -634,11 +634,39 @@ function SettingsModalContent({
     setLocalDisplayName(displayName);
   }, [displayName]);
 
-  const handleNameInputChange = (e) => {
+  // Fixed handleNameInputChange with instant profile backend sync
+  const handleNameInputChange = async (e) => {
     const text = e.target.value.slice(0, 25);
     setLocalDisplayName(text);
     if (typeof setDisplayName === 'function') {
       setDisplayName(text);
+    }
+
+    localStorage.setItem('capy-username', text);
+    localStorage.setItem('capy-display-name', text);
+    localStorage.setItem('username', text);
+    window.dispatchEvent(new Event('capy-username-updated'));
+
+    const currentId = localStorage.getItem('capy-uid') || '';
+    const currentPfp = localStorage.getItem('capy-pfp') || localStorage.getItem('capy-avatar') || '';
+    const currentFrame = localStorage.getItem('capy-selected-frame') || '';
+    const currentEffect = localStorage.getItem('capy-selected-effect') || '';
+
+    try {
+      await fetch('https://capybara-science-backend.ljkl.workers.dev/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: currentId,
+          username: text,
+          avatar_url: currentPfp || null,
+          frame_url: currentFrame || null,
+          effect_url: currentEffect || null
+        })
+      });
+      window.dispatchEvent(new Event('capy-profile-updated'));
+    } catch (err) {
+      console.error('[SettingsModal] Name sync failed:', err);
     }
   };
 
@@ -1267,7 +1295,7 @@ function SettingsModalContent({
                                     }
                                   }
 
-                                  window.dispatchEvent(new Event('capy-profile-updated')); // <-- Added instant sync event
+                                  window.dispatchEvent(new Event('capy-profile-updated'));
                                 }}
                                 className={`mt-2 w-full py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
                                   isEquipped 
