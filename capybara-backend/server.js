@@ -1,155 +1,91 @@
-import express from 'express';
-import cors from 'cors';
-import pg from 'pg';
-import dotenv from 'dotenv';
+export default {
+  async fetch(request, env, ctx) {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
 
-dotenv.config();
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
 
-const { Pool } = pg;
-const app = express();
-const PORT = process.env.PORT || 5000;
+    try {
+      if (!env || !env.DB) {
+        return new Response(JSON.stringify({ error: "DB binding is missing from env." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-app.use(cors());
+      const url = new URL(request.url);
 
-// Increase body parser limits to 10MB to handle large base64 image uploads and avatars[cite: 5, 6]
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+      // 1. GET all messages
+      if (url.pathname === "/api/messages" && request.method === "GET") {
+        const { results } = await env.DB.prepare(
+          "SELECT * FROM messages ORDER BY datetime(created_at) ASC"
+        ).all();
 
-// Request Logger middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} request to ${req.url}`);
-  next();
-});
+        return new Response(JSON.stringify(results || []), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+      // 2. POST a new message
+      if (url.pathname === "/api/messages" && request.method === "POST") {
+        const body = await request.json();
+        const id = Date.now().toString();
+        const {
+          username,
+          content,
+          image_url,
+          user_id,
+          avatar_url,
+          frame_url,
+          effect_url,
+          reply_to
+        } = body;
 
-pool.connect()
-  .then(() => console.log('Connected to CockroachDB successfully!'))
-  .catch(err => console.error('CockroachDB connection error:', err));
+        await env.DB.prepare(
+          `INSERT INTO messages (id, username, content, image_url, user_id, avatar_url, frame_url, effect_url, reply_to) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(
+          id,
+          username || "Anonymous",
+          content || "",
+          image_url || null,
+          user_id || null,
+          avatar_url || null,
+          frame_url || null,
+          effect_url || null,
+          reply_to ? JSON.stringify(reply_to) : null
+        ).run();
 
-// --- API ROUTES ---
+        const { results } = await env.DB.prepare("SELECT * FROM messages WHERE id = ?").bind(id).all();
+        return new Response(JSON.stringify(results[0] || { success: true }), {
+          status: 201,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-// 1. GET all messages (so old messages show up)[cite: 5, 6]
-app.get('/api/messages', async (req, res) => {
-  try {
-    const { rows } = await pool.query('SELECT * FROM messages ORDER BY created_at ASC');
-    res.json(rows);
-  } catch (err) {
-    console.error('Error fetching messages:', err);
-    res.status(500).json({ error: 'Failed to fetch messages' });
-  }
-});
+      // 3. DELETE a message
+      if (url.pathname.startsWith("/api/messages/") && request.method === "DELETE") {
+        const id = url.pathname.split("/").pop();
+        await env.DB.prepare("DELETE FROM messages WHERE id = ?").bind(id).run();
+        return new Response(JSON.stringify({ message: "Message deleted successfully" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-// 2. POST a new message (so new messages stick and save)[cite: 5, 6]
-app.post('/api/messages', async (req, res) => {
-  const {
-    username,
-    content,
-    image_url,
-    user_id,
-    avatar_url,
-    frame_url,
-    effect_url,
-    reply_to
-  } = req.body;
+      return new Response("Capybara Science Cloudflare Backend is running!", {
+        headers: { ...corsHeaders, "Content-Type": "text/plain" },
+      });
 
-  try {
-    const id = Date.now().toString();
-
-    const { rows } = await pool.query(
-      `INSERT INTO messages 
-        (id, username, content, image_url, user_id, avatar_url, frame_url, effect_url, reply_to) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-       RETURNING *`,
-      [
-        id,
-        username || 'Anonymous',
-        content,
-        image_url || null,
-        user_id || null,
-        avatar_url || null,
-        frame_url || null,
-        effect_url || null,
-        reply_to ? JSON.stringify(reply_to) : null
-      ]
-    );
-    res.status(201).json(rows[0]);
-  } catch (err) {
-    console.error('Error creating message:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 3. PUT (Edit) a message[cite: 5, 6]
-app.put('/api/messages/:id', async (req, res) => {
-  const { id } = req.params;
-  const { content } = req.body;
-
-  try {
-    const { rows } = await pool.query(
-      'UPDATE messages SET content = $1 WHERE id = $2 RETURNING *',
-      [content, id]
-    );
-    res.json(rows[0]);
-  } catch (err) {
-    console.error('Error updating message:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 4. PUT (Sync Global Profile across all messages by user_id or Username)
-app.put('/api/profile', async (req, res) => {
-  const { username, user_id, avatar_url, frame_url, effect_url } = req.body;
-
-  if (!username && !user_id) {
-    console.log('[PROFILE SYNC ERROR] Missing username and user_id.');
-    return res.status(400).json({ error: 'Username or user_id is required' });
-  }
-
-  try {
-    console.log(`[PROFILE SYNC] Syncing -> User: "${username}", ID: "${user_id}", Frame: "${frame_url}", Effect: "${effect_url}"`);
-    
-    const { rows } = await pool.query(
-      `UPDATE messages 
-       SET avatar_url = COALESCE($1, avatar_url),
-           frame_url = $2, 
-           effect_url = $3 
-       WHERE (user_id IS NOT NULL AND user_id = $4) 
-          OR (username IS NOT NULL AND username ILIKE $5)
-       RETURNING *`,
-      [
-        avatar_url || null, 
-        frame_url !== undefined ? frame_url : null, 
-        effect_url !== undefined ? effect_url : null, 
-        user_id || '', 
-        username ? username.trim() : ''
-      ]
-    );
-    
-    console.log(`[PROFILE SYNC SUCCESS] Successfully updated ${rows.length} message(s) in database!`);
-    res.json({ success: true, updatedCount: rows.length });
-  } catch (err) {
-    console.error('[PROFILE SYNC ERROR] Database error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 5. DELETE a message[cite: 5, 6]
-app.delete('/api/messages/:id', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    await pool.query('DELETE FROM messages WHERE id = $1', [id]);
-    res.json({ message: 'Message deleted successfully' });
-  } catch (err) {
-    console.error('Error deleting message:', err);
-    res.status(500).json({ error: 'Failed to delete message' });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+    } catch (err) {
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  },
+};
