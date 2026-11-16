@@ -129,7 +129,7 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  const lastTypingPingRef = useRef(0);
+  const isTypingActiveRef = useRef(false);
   const isPollingRef = useRef(false);
   const myId = getPersistentId();
 
@@ -270,9 +270,7 @@ export function ChatCard({
         });
         setLiveProfiles(prev => ({ ...profilesMap, ...prev }));
       }
-    } catch (err) {
-      // Ignore transient network errors
-    }
+    } catch (err) {}
   }, []);
 
   const fetchTypingStatus = useCallback(async () => {
@@ -294,12 +292,9 @@ export function ChatCard({
           return activeTyping;
         });
       }
-    } catch (err) {
-      // Ignore transient network errors
-    }
+    } catch (err) {}
   }, [myId]);
 
-  // Parallel, non-overlapping 300ms poll loop
   const pollData = useCallback(async () => {
     if (isPollingRef.current) return;
     isPollingRef.current = true;
@@ -347,15 +342,14 @@ export function ChatCard({
     }
   }, [messages, typingUsers, pendingImageUrl, isAtBottom]);
 
-  // Instant first-keystroke ping + 800ms throttle so requests never queue up
+  // Flicker-free typing handler with extended 2.5s continuous grace period
   const handleTypingInput = (e) => {
     const val = e.target.value;
     setText(val);
     const isTypingNow = val.trim().length > 0;
-    const now = Date.now();
 
     if (!isTypingNow) {
-      lastTypingPingRef.current = 0;
+      isTypingActiveRef.current = false;
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       fetch(API_TYPING_URL, {
         method: 'POST',
@@ -365,8 +359,9 @@ export function ChatCard({
       return;
     }
 
-    if (now - lastTypingPingRef.current > 800) {
-      lastTypingPingRef.current = now;
+    // Send typing = true immediately on first keystroke
+    if (!isTypingActiveRef.current) {
+      isTypingActiveRef.current = true;
       fetch(API_TYPING_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -374,16 +369,17 @@ export function ChatCard({
       }).catch(() => {});
     }
 
+    // Reset the stop-typing countdown every time a key is pressed (2.5 seconds)
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     typingTimeoutRef.current = setTimeout(() => {
-      lastTypingPingRef.current = 0;
+      isTypingActiveRef.current = false;
       fetch(API_TYPING_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: myId, username: username, is_typing: false })
       }).catch(() => {});
-    }, 1800);
+    }, 2500);
   };
 
   const handleFileSelect = async (e) => {
@@ -447,7 +443,7 @@ export function ChatCard({
     setText(''); 
     setPendingImageUrl('');
     setReplyingTo(null);
-    lastTypingPingRef.current = 0;
+    isTypingActiveRef.current = false;
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     fetch(API_TYPING_URL, {
