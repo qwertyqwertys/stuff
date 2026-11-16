@@ -129,6 +129,8 @@ export function ChatCard({
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const lastTypingPingRef = useRef(0);
+  const isPollingRef = useRef(false);
   const myId = getPersistentId();
 
   const handleScroll = () => {
@@ -218,7 +220,7 @@ export function ChatCard({
           console.error('[ChatCard] DB Sync Error:', err);
         }
       }
-    }, 2000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [myId, username, ownPfp]);
@@ -241,17 +243,19 @@ export function ChatCard({
     return () => window.removeEventListener('capy-username-updated', handleNameUpdate);
   }, []);
 
-  // Safe message fetcher
   const fetchMessages = useCallback(async () => {
     try {
-      const res = await fetch(API_BASE_URL);
+      const res = await fetch(API_BASE_URL, { cache: 'no-store' });
       const contentType = res.headers.get("content-type");
       if (res.ok && contentType && contentType.includes("application/json")) {
         const data = await res.json();
-        setMessages(data);
-        try {
-          localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data));
-        } catch (e) {}
+        setMessages(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+          try {
+            localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data));
+          } catch (e) {}
+          return data;
+        });
 
         const profilesMap = {};
         data.forEach(m => {
@@ -267,14 +271,13 @@ export function ChatCard({
         setLiveProfiles(prev => ({ ...profilesMap, ...prev }));
       }
     } catch (err) {
-      console.error('Failed to fetch messages:', err);
+      // Ignore transient network errors
     }
   }, []);
 
-  // Safe typing fetcher with content-type protection
   const fetchTypingStatus = useCallback(async () => {
     try {
-      const typingRes = await fetch(API_TYPING_URL);
+      const typingRes = await fetch(API_TYPING_URL, { cache: 'no-store' });
       const contentType = typingRes.headers.get("content-type");
       if (typingRes.ok && contentType && contentType.includes("application/json")) {
         const typingList = await typingRes.json();
@@ -286,16 +289,25 @@ export function ChatCard({
             }
           });
         }
-        setTypingUsers(activeTyping);
+        setTypingUsers(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(activeTyping)) return prev;
+          return activeTyping;
+        });
       }
     } catch (err) {
-      // Silently ignore if worker endpoint is still propagating
+      // Ignore transient network errors
     }
   }, [myId]);
 
-  const pollData = useCallback(() => {
-    fetchMessages();
-    fetchTypingStatus();
+  // Parallel, non-overlapping 300ms poll loop
+  const pollData = useCallback(async () => {
+    if (isPollingRef.current) return;
+    isPollingRef.current = true;
+    try {
+      await Promise.all([fetchMessages(), fetchTypingStatus()]);
+    } finally {
+      isPollingRef.current = false;
+    }
   }, [fetchMessages, fetchTypingStatus]);
 
   useEffect(() => {
@@ -305,7 +317,7 @@ export function ChatCard({
       if (document.visibilityState === 'visible') {
         pollData();
       }
-    }, 1000);
+    }, 300);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -335,26 +347,43 @@ export function ChatCard({
     }
   }, [messages, typingUsers, pendingImageUrl, isAtBottom]);
 
+  // Instant first-keystroke ping + 800ms throttle so requests never queue up
   const handleTypingInput = (e) => {
     const val = e.target.value;
     setText(val);
     const isTypingNow = val.trim().length > 0;
+    const now = Date.now();
 
-    fetch(API_TYPING_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: myId, username: username, is_typing: isTypingNow })
-    }).catch(() => {});
-
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
-    typingTimeoutRef.current = setTimeout(() => {
+    if (!isTypingNow) {
+      lastTypingPingRef.current = 0;
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       fetch(API_TYPING_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: myId, username: username, is_typing: false })
       }).catch(() => {});
-    }, 2000);
+      return;
+    }
+
+    if (now - lastTypingPingRef.current > 800) {
+      lastTypingPingRef.current = now;
+      fetch(API_TYPING_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: myId, username: username, is_typing: true })
+      }).catch(() => {});
+    }
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      lastTypingPingRef.current = 0;
+      fetch(API_TYPING_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: myId, username: username, is_typing: false })
+      }).catch(() => {});
+    }, 1800);
   };
 
   const handleFileSelect = async (e) => {
@@ -418,15 +447,14 @@ export function ChatCard({
     setText(''); 
     setPendingImageUrl('');
     setReplyingTo(null);
+    lastTypingPingRef.current = 0;
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    try {
-      await fetch(API_TYPING_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: myId, username: username, is_typing: false })
-      });
-    } catch (e) {}
+    fetch(API_TYPING_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: myId, username: username, is_typing: false })
+    }).catch(() => {});
 
     const tempId = 'temp_' + Date.now();
     const tempMessage = {
