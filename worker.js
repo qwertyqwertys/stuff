@@ -91,41 +91,38 @@ export default {
           });
         }
 
-        await env.DB.prepare(
-          `INSERT INTO profiles (user_id, username, avatar_url, frame_url, effect_url, updated_at) 
-           VALUES (?, ?, ?, ?, ?, datetime('now'))
-           ON CONFLICT(user_id) DO UPDATE SET 
-             username = excluded.username,
-             avatar_url = excluded.avatar_url,
-             frame_url = excluded.frame_url,
-             effect_url = excluded.effect_url,
-             updated_at = datetime('now')`
-        ).bind(
-          user_id,
-          username || "Anonymous",
-          avatar_url || null,
-          frame_url || null,
-          effect_url || null
-        ).run();
+        const existing = await env.DB.prepare("SELECT user_id FROM profiles WHERE user_id = ?").bind(user_id).first();
+        if (existing) {
+          await env.DB.prepare(
+            `UPDATE profiles SET username = ?, avatar_url = ?, frame_url = ?, effect_url = ?, updated_at = datetime('now') WHERE user_id = ?`
+          ).bind(username || "Anonymous", avatar_url || null, frame_url || null, effect_url || null, user_id).run();
+        } else {
+          await env.DB.prepare(
+            `INSERT INTO profiles (user_id, username, avatar_url, frame_url, effect_url, is_typing, updated_at) VALUES (?, ?, ?, ?, ?, 0, datetime('now'))`
+          ).bind(user_id, username || "Anonymous", avatar_url || null, frame_url || null, effect_url || null).run();
+        }
 
         return new Response(JSON.stringify({ success: true, message: "Profile updated successfully" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // POST typing status
+      // POST typing status (Foolproof update or insert)
       if (url.pathname === "/api/typing" && request.method === "POST") {
         const body = await request.json();
         const { user_id, username, is_typing } = body;
 
         if (user_id) {
-          await env.DB.prepare(
-            `INSERT INTO profiles (user_id, username, is_typing, updated_at) 
-             VALUES (?, ?, ?, datetime('now'))
-             ON CONFLICT(user_id) DO UPDATE SET 
-               is_typing = excluded.is_typing,
-               updated_at = datetime('now')`
-          ).bind(user_id, username || "Anonymous", is_typing ? 1 : 0).run();
+          const existing = await env.DB.prepare("SELECT user_id FROM profiles WHERE user_id = ?").bind(user_id).first();
+          if (existing) {
+            await env.DB.prepare(
+              `UPDATE profiles SET is_typing = ?, username = ?, updated_at = datetime('now') WHERE user_id = ?`
+            ).bind(is_typing ? 1 : 0, username || "Anonymous", user_id).run();
+          } else {
+            await env.DB.prepare(
+              `INSERT INTO profiles (user_id, username, is_typing, updated_at) VALUES (?, ?, ?, datetime('now'))`
+            ).bind(user_id, username || "Anonymous", is_typing ? 1 : 0).run();
+          }
         }
 
         return new Response(JSON.stringify({ success: true }), {
