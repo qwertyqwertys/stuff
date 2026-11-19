@@ -420,6 +420,7 @@ function SettingsModalContent({
 
   const [gta3DisclaimerHidden, setGta3DisclaimerHidden] = useState(false);
   const [fnaeDisclaimerHidden, setFnaeDisclaimerHidden] = useState(false);
+  const [connieDisclaimerHidden, setConnieDisclaimerHidden] = useState(false);
   const [skipIntroHidden, setSkipIntroHidden] = useState(false);
 
   const [gamesList, setGamesList] = useState([]);
@@ -429,6 +430,7 @@ function SettingsModalContent({
     if (show) {
       setGta3DisclaimerHidden(localStorage.getItem('gta3_disclaimer_accepted') === 'true');
       setFnaeDisclaimerHidden(localStorage.getItem('fnae_disclaimer_accepted') === 'true');
+      setConnieDisclaimerHidden(localStorage.getItem('hide_connie_disclaimer') === 'true');
       setSkipIntroHidden(localStorage.getItem('skipIntro') === 'true');
       
       const gameArray = Array.isArray(gamesData) ? gamesData : (gamesData.games || []);
@@ -463,6 +465,16 @@ function SettingsModalContent({
     } else {
       localStorage.setItem('fnae_disclaimer_accepted', 'true');
       setFnaeDisclaimerHidden(true);
+    }
+  };
+
+  const handleToggleConnieDisclaimer = () => {
+    if (connieDisclaimerHidden) {
+      localStorage.removeItem('hide_connie_disclaimer');
+      setConnieDisclaimerHidden(false);
+    } else {
+      localStorage.setItem('hide_connie_disclaimer', 'true');
+      setConnieDisclaimerHidden(true);
     }
   };
 
@@ -1677,11 +1689,11 @@ function SettingsModalContent({
                 </section>
               )}
 
-              {/* GAME DISCLAIMERS */}
-              {matchesSearch(['disclaimer', 'gta', 'gta3', 'epstein', 'fnae', 'warning', 'school', 'game']) && (
+              {/* GAME & SOUNDBOARD DISCLAIMERS */}
+              {matchesSearch(['disclaimer', 'gta', 'gta3', 'epstein', 'fnae', 'connie', 'sound', 'soundboard', 'language', 'warning', 'school', 'game']) && (
                 <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
                   <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    <Gamepad2 className="w-3.5 h-3.5 text-[var(--theme)]" /> Game Launch Disclaimers
+                    <Gamepad2 className="w-3.5 h-3.5 text-[var(--theme)]" /> Disclaimers
                   </label>
 
                   <div className="space-y-3">
@@ -1728,6 +1740,29 @@ function SettingsModalContent({
                         }`}
                       >
                         {fnaeDisclaimerHidden ? "Reset Warning" : "Active"}
+                      </button>
+                    </div>
+
+                    {/* Connie Sound Language Disclaimer */}
+                    <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
+                      <div>
+                        <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>"Connie You Evil Bitch" Sound Disclaimer</span>
+                        <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                          {connieDisclaimerHidden ? "Hidden (Skipped on Play)" : "Active (Shows Before Play)"}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleToggleConnieDisclaimer}
+                        className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+                          !connieDisclaimerHidden
+                            ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+                            : isLightMode 
+                              ? "bg-zinc-200 text-zinc-700" 
+                              : "bg-white/10 text-zinc-300"
+                        }`}
+                      >
+                        {connieDisclaimerHidden ? "Turn Back On" : "Active"}
                       </button>
                     </div>
                   </div>
