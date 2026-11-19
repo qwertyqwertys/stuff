@@ -3,12 +3,13 @@ import {
   X, ShieldAlert, AlertTriangle, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
   Image as ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check, 
-  Sun, Moon, Play, Pause, Search, Loader2, Crop, Sparkles, Gamepad2, Database
+  Sun, Moon, Play, Pause, Search, Loader2, Crop, Sparkles, Gamepad2, Database, Trophy
 } from 'lucide-react';
 
 import * as db from '../utils/db';
 import { supabase } from '../supabaseClient';
 import gamesData from '../games.json';
+import { getUnemployedBiggieProgress } from '../utils/unemployedBiggieAchievement';
 
 const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
@@ -425,9 +426,15 @@ function SettingsModalContent({
 
   const [gamesList, setGamesList] = useState([]);
   const [selectedGameForData, setSelectedGameForData] = useState('ALL');
+  const [biggieProgress, setBiggieProgress] = useState(() => getUnemployedBiggieProgress());
 
   useEffect(() => {
+    const refreshAchievementProgress = () => {
+      setBiggieProgress(getUnemployedBiggieProgress());
+    };
+
     if (show) {
+      refreshAchievementProgress();
       setGta3DisclaimerHidden(localStorage.getItem('gta3_disclaimer_accepted') === 'true');
       setFnaeDisclaimerHidden(localStorage.getItem('fnae_disclaimer_accepted') === 'true');
       setConnieDisclaimerHidden(localStorage.getItem('hide_connie_disclaimer') === 'true');
@@ -446,6 +453,11 @@ function SettingsModalContent({
       });
       setGamesList(validGames);
     }
+
+    window.addEventListener('capy-achievement-updated', refreshAchievementProgress);
+    return () => {
+      window.removeEventListener('capy-achievement-updated', refreshAchievementProgress);
+    };
   }, [show]);
 
   const handleToggleGta3Disclaimer = () => {
@@ -1070,6 +1082,41 @@ function SettingsModalContent({
             </div>
 
             <div className="space-y-6">
+
+              {/* ACHIEVEMENTS — UNEMPLOYED BIGGIE */}
+              {matchesSearch(['achievement', 'achievements', 'unemployed', 'biggie', 'food', 'games', 'trophy']) && (
+                <section className={`space-y-3 ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-[var(--theme)]/5 border-[var(--theme)]/10'} p-4 rounded-2xl border transition-all`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-[var(--theme)]'}`}>
+                      <Trophy className="w-3.5 h-3.5" /> {biggieProgress.title}
+                    </label>
+                    <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                      biggieProgress.unlocked
+                        ? 'bg-emerald-500 text-black'
+                        : isLightMode
+                          ? 'bg-zinc-200 text-zinc-800'
+                          : 'bg-white/10 text-zinc-200'
+                    }`}>
+                      {biggieProgress.unlocked
+                        ? 'Unlocked'
+                        : `${biggieProgress.completedCount} / ${biggieProgress.totalCount}`}
+                    </span>
+                  </div>
+
+                  <p className={`text-[9px] leading-relaxed ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                    {biggieProgress.description}
+                  </p>
+
+                  <div className={`w-full h-1.5 rounded-full overflow-hidden ${isLightMode ? 'bg-zinc-200' : 'bg-white/10'}`}>
+                    <div
+                      className="h-full bg-[var(--theme)] transition-all duration-300"
+                      style={{
+                        width: `${Math.min(100, Math.round((biggieProgress.completedCount / Math.max(1, biggieProgress.totalCount)) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                </section>
+              )}
               
               {/* DATA SAVING CARD */}
               {matchesSearch(['data', 'saving', 'export', 'import', 'clear', 'backup', 'games']) && (
