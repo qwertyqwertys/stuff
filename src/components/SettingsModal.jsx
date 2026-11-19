@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useDeferredValue, useRef, Component } from 'react';
 import { 
-  X, ShieldAlert, Cpu, Palette, Ghost, Zap, Video, Music, 
+  X, ShieldAlert, AlertTriangle, Cpu, Palette, Ghost, Zap, Video, Music, 
   Volume2, Power, Trash2, Link as LinkIcon, Upload, 
   Image as ImageIcon, RotateCcw, Type, Users, UserPlus, Eye, Copy, Check, 
   Sun, Moon, Play, Pause, Search, Loader2, Crop, Sparkles, Gamepad2, Database
@@ -1693,7 +1693,7 @@ function SettingsModalContent({
               {matchesSearch(['disclaimer', 'gta', 'gta3', 'epstein', 'fnae', 'connie', 'sound', 'soundboard', 'language', 'warning', 'school', 'game']) && (
                 <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
                   <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    <Gamepad2 className="w-3.5 h-3.5 text-[var(--theme)]" /> Disclaimers
+                    <AlertTriangle className="w-3.5 h-3.5 text-[var(--theme)]" /> Disclaimers
                   </label>
 
                   <div className="space-y-3">
