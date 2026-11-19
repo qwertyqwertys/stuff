@@ -7,6 +7,8 @@ const supabaseUrl = 'https://nilgxfmcwljqhawdrsot.supabase.co';
 const supabaseKey = 'sb_publishable_K4ZLk0KkXTe8upyl7KoTcg_wD31DQ4U';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+const DISCLAIMER_STORAGE_KEY = 'hide_connie_disclaimer';
+
 export function SoundboardCard({ isLightMode, onClose }) {
   const [sounds, setSounds] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -24,6 +26,8 @@ export function SoundboardCard({ isLightMode, onClose }) {
 
   // Disclaimer confirmation state for flagged sound
   const [pendingAction, setPendingAction] = useState(null); // { type: 'toggle' | '100x', sound }
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [skipDisclaimer, setSkipDisclaimer] = useState(false);
 
   // Editing state
   const [editingId, setEditingId] = useState(null);
@@ -33,6 +37,11 @@ export function SoundboardCard({ isLightMode, onClose }) {
     // Load local device uploads from localStorage
     const savedUploads = JSON.parse(localStorage.getItem('my_soundboard_uploads') || '[]');
     setMyUploads(savedUploads);
+
+    // Load saved disclaimer preference
+    const savedSkipPref = localStorage.getItem(DISCLAIMER_STORAGE_KEY) === 'true';
+    setSkipDisclaimer(savedSkipPref);
+
     fetchSounds();
 
     // Clean up audio on unmount
@@ -150,7 +159,12 @@ export function SoundboardCard({ isLightMode, onClose }) {
   };
 
   const needsDisclaimer = (sound) =>
-    sound?.name?.trim().toLowerCase() === 'connie you evil bitch';
+    !skipDisclaimer && sound?.name?.trim().toLowerCase() === 'connie you evil bitch';
+
+  const closeDisclaimerModal = () => {
+    setPendingAction(null);
+    setDontShowAgain(false);
+  };
 
   // Play, Pause, and Resume Toggle Logic
   const executeSoundToggle = (sound) => {
@@ -202,6 +216,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
 
   const handleSoundToggle = (sound) => {
     if (needsDisclaimer(sound)) {
+      setDontShowAgain(false);
       setPendingAction({ type: 'toggle', sound });
       return;
     }
@@ -210,6 +225,7 @@ export function SoundboardCard({ isLightMode, onClose }) {
 
   const handlePlay100x = (sound) => {
     if (needsDisclaimer(sound)) {
+      setDontShowAgain(false);
       setPendingAction({ type: '100x', sound });
       return;
     }
@@ -496,9 +512,18 @@ export function SoundboardCard({ isLightMode, onClose }) {
             <p className="text-xs leading-relaxed opacity-90">
               Disclaimer: <strong>"{pendingAction.sound.name}"</strong> contains strong language (the B-word).
             </p>
+            <label className="flex items-center gap-2 text-xs font-bold cursor-pointer select-none opacity-90">
+              <input
+                type="checkbox"
+                checked={dontShowAgain}
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+                className="rounded border-zinc-400 accent-[var(--theme)] cursor-pointer"
+              />
+              <span>Don't show again</span>
+            </label>
             <div className="flex gap-2 justify-end">
               <button
-                onClick={() => setPendingAction(null)}
+                onClick={closeDisclaimerModal}
                 className={`px-3 py-2 rounded-xl text-xs font-black uppercase ${
                   isLightMode
                     ? 'bg-zinc-200 text-zinc-800'
@@ -510,7 +535,11 @@ export function SoundboardCard({ isLightMode, onClose }) {
               <button
                 onClick={() => {
                   const actionToRun = pendingAction;
-                  setPendingAction(null);
+                  if (dontShowAgain) {
+                    localStorage.setItem(DISCLAIMER_STORAGE_KEY, 'true');
+                    setSkipDisclaimer(true);
+                  }
+                  closeDisclaimerModal();
                   if (actionToRun.type === '100x') {
                     executePlay100x(actionToRun.sound);
                   } else {
