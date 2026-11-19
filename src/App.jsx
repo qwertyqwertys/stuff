@@ -33,8 +33,59 @@ const TROPHIES = [
   { id: 'marathon', name: 'F Student', desc: 'Play for over 1 hour total', icon: '🫡' },
   { id: 'collector', name: 'The Collector', desc: 'Favorite 10 different games', icon: '⭐' },
   { id: 'loyal', name: 'D Student', desc: 'Play one game for 30 mins', icon: '🎮' },
-  { id: 'styler', name: 'The Artist', desc: 'Change your theme 5 times', icon: '🎨' }
+  { id: 'styler', name: 'The Artist', desc: 'Change your theme 5 times', icon: '🎨' },
+  { id: 'unemployed_biggie', name: 'Unemployed Biggie', desc: 'Play all 20 food games', icon: '🍔' }
 ];
+
+const UNEMPLOYED_BIGGIE_GAMES = [
+  'cookie clicker',
+  'eggy car',
+  'tiny fishing',
+  'bacon may die',
+  'crossy road',
+  'google baseball',
+  'growden.io',
+  'grow a garden (fake)',
+  'candy crush (fake)',
+  'jelly drift',
+  'jelly mario',
+  'jelly restraunt',
+  'crazy cattle 3d',
+  'crazy chicken 3d',
+  'melon playground',
+  'bad ice cream',
+  'bad ice cream 2',
+  'bad ice cream 3',
+  'hungry llama',
+  'hungry llama 2'
+];
+
+const UNEMPLOYED_BIGGIE_ALIASES = {
+  'jelly restaurant': 'jelly restraunt',
+  'growden io': 'growden.io',
+  'grow a garden': 'grow a garden (fake)',
+  'candy crush': 'candy crush (fake)'
+};
+
+const normalizeGameKey = (val = '') =>
+  String(val)
+    .toLowerCase()
+    .replace(/['’]/g, '')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const matchFoodGame = (item) => {
+  const candidates = [item?.id, item?.title, item?.name]
+    .map(normalizeGameKey)
+    .filter(Boolean);
+
+  for (const key of candidates) {
+    if (UNEMPLOYED_BIGGIE_GAMES.includes(key)) return key;
+    if (UNEMPLOYED_BIGGIE_ALIASES[key]) return UNEMPLOYED_BIGGIE_ALIASES[key];
+  }
+  return null;
+};
 
 const THEMES = {
   cyber: { name: 'Cyberpunk', color: '#ff6699', glow: 60 },
@@ -76,6 +127,14 @@ function MainDashboard() {
   const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('capy-favs') || '[]'));
   const [removedGames, setRemovedGames] = useState(() => JSON.parse(localStorage.getItem('capy-removed-games') || '[]'));
   const [themeChangeCount, setThemeChangeCount] = useState(() => parseInt(localStorage.getItem('capy-theme-changes') || '0'));
+  const [foodGamesPlayed, setFoodGamesPlayed] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('capy-unemployed-biggie-games') || '[]');
+      return Array.isArray(saved) ? saved : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isInVoice, setIsInVoice] = useState(false);
   const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
@@ -275,6 +334,15 @@ function MainDashboard() {
   };
 
   const launchContent = (item) => {
+    const matchedFood = matchFoodGame(item);
+    if (matchedFood) {
+      setFoodGamesPlayed(prev => {
+        const updated = Array.from(new Set([...prev, matchedFood]));
+        localStorage.setItem('capy-unemployed-biggie-games', JSON.stringify(updated));
+        return updated;
+      });
+    }
+
     const finalUrl = getLaunchUrl(item); 
     if (!finalUrl) return;
 
@@ -557,7 +625,7 @@ function MainDashboard() {
   }, [confirmClearSettings]);
 
   useEffect(() => {
-    const ids = ['first_game', 'marathon', 'collector', 'loyal', 'styler'];
+    const ids = ['first_game', 'marathon', 'collector', 'loyal', 'styler', 'unemployed_biggie'];
     const alreadyEarned = ids.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     if (alreadyEarned.length > 0) {
       setAchievements(alreadyEarned);
@@ -609,10 +677,18 @@ function MainDashboard() {
       setNotification("🎮 Achievement Unlocked: D Student");
     }
 
+    const playedSet = new Set(foodGamesPlayed);
+    const hasPlayedAllFoodGames = UNEMPLOYED_BIGGIE_GAMES.every(game => playedSet.has(game));
+    if (hasPlayedAllFoodGames && !localStorage.getItem('achievement_unemployed_biggie')) {
+      localStorage.setItem('achievement_unemployed_biggie', 'true');
+      checkAndAdd('unemployed_biggie');
+      setNotification("🍔 Achievement Unlocked: Unemployed Biggie");
+    }
+
     if (earnedNew || newAchievements.length !== (achievements?.length || 0)) {
       setAchievements(newAchievements);
     }
-  }, [playtimes, favorites, themeChangeCount, achievements]);
+  }, [playtimes, favorites, themeChangeCount, foodGamesPlayed, achievements]);
 
   const handleBackgroundUpload = (e) => {
     const file = e.target.files[0];
@@ -790,7 +866,7 @@ function MainDashboard() {
         'capy-bg-video', 'capy-bg-opacity', 'capy-bg-music', 
         'capy-volume', 'capy-panic-url', 'capy-panic-key', 'capy-perf-mode',
         'capy-bg-enabled', 'capy-recent', 'capy-pfp', 'capy-light-mode', 'capy-achievements', 'capy-theme-changes', 'capy-removed-games',
-        'capy-selected-frame', 'capy-selected-effect'
+        'capy-selected-frame', 'capy-selected-effect', 'capy-unemployed-biggie-games'
       ];
       settingsKeys.forEach(key => localStorage.removeItem(key));
       window.location.reload();
@@ -1093,7 +1169,7 @@ function MainDashboard() {
           name: displayName,
           favs: favorites,
           times: playtimes,
-          achievements: ['first_game', 'marathon', 'collector', 'loyal', 'styler'].filter(id => localStorage.getItem(`achievement_${id}`) === 'true')
+          achievements: ['first_game', 'marathon', 'collector', 'loyal', 'styler', 'unemployed_biggie'].filter(id => localStorage.getItem(`achievement_${id}`) === 'true')
         } : currentFriend}
         gamesData={gamesData}
         ownPfp={profilePic}
