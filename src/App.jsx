@@ -34,7 +34,7 @@ const TROPHIES = [
   { id: 'collector', name: 'The Collector', desc: 'Favorite 10 different games', icon: '⭐' },
   { id: 'loyal', name: 'D Student', desc: 'Play one game for 30 mins', icon: '🎮' },
   { id: 'styler', name: 'The Artist', desc: 'Change your theme 5 times', icon: '🎨' },
-  { id: 'unemployed_biggie', name: 'Unemployed Biggie', desc: 'Play all 20 food games', icon: '🍔' }
+  { id: 'unemployed_biggie', name: 'Unemployed Biggie', desc: 'Play 20 games about food you unemployed fattie', icon: '🍔' }
 ];
 
 const UNEMPLOYED_BIGGIE_GAMES = [
