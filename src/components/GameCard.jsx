@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, Play } from 'lucide-react'; 
+import { recordGamePlayedForUnemployedBiggie } from '../utils/unemployedBiggieAchievement';
 
 export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorite, performanceMode }) {
   const [showGTA3Modal, setShowGTA3Modal] = useState(false);
@@ -7,6 +8,18 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
   const isUtility = ['request', 'report'].includes(game.id);
+
+  const launchTrackedGame = (targetGame) => {
+    const result = recordGamePlayedForUnemployedBiggie(
+      targetGame?.id || targetGame?.title || targetGame?.name
+    );
+
+    if (result.newlyUnlocked) {
+      alert('Achievement Unlocked: Unemployed Biggie!');
+    }
+
+    onLaunch(targetGame);
+  };
   
   const handleCardClick = (e) => {
     const normalizedId = String(game.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -29,7 +42,7 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
     if (isGTA3) {
       const hasAccepted = localStorage.getItem('gta3_disclaimer_accepted');
       if (hasAccepted === 'true') {
-        onLaunch(game);
+        launchTrackedGame(game);
       } else {
         setDontShowAgain(false);
         setShowGTA3Modal(true);
@@ -37,13 +50,13 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
     } else if (isFNAE) {
       const hasAccepted = localStorage.getItem('fnae_disclaimer_accepted');
       if (hasAccepted === 'true') {
-        onLaunch(game);
+        launchTrackedGame(game);
       } else {
         setDontShowAgain(false);
         setShowFNAEModal(true);
       }
     } else {
-      onLaunch(game);
+      launchTrackedGame(game);
     }
   };
 
@@ -54,7 +67,7 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
     }
     setShowGTA3Modal(false);
     setDontShowAgain(false);
-    onLaunch(game);
+    launchTrackedGame(game);
   };
 
   const handleCancelDisclaimer = (e) => {
@@ -70,7 +83,7 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
     }
     setShowFNAEModal(false);
     setDontShowAgain(false);
-    onLaunch(game);
+    launchTrackedGame(game);
   };
 
   const handleCancelFNAE = (e) => {
