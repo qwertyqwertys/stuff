@@ -22,6 +22,9 @@ export function SoundboardCard({ isLightMode, onClose }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
 
+  // Disclaimer confirmation state for flagged sound
+  const [pendingAction, setPendingAction] = useState(null); // { type: 'toggle' | '100x', sound }
+
   // Editing state
   const [editingId, setEditingId] = useState(null);
   const [editedName, setEditedName] = useState('');
@@ -146,8 +149,11 @@ export function SoundboardCard({ isLightMode, onClose }) {
     }
   };
 
+  const needsDisclaimer = (sound) =>
+    sound?.name?.trim().toLowerCase() === 'connie you evil bitch';
+
   // Play, Pause, and Resume Toggle Logic
-  const handleSoundToggle = (sound) => {
+  const executeSoundToggle = (sound) => {
     // If user clicked the currently loaded sound
     if (currentSoundId === sound.id && audioRef.current) {
       if (isPlaying) {
@@ -185,13 +191,29 @@ export function SoundboardCard({ isLightMode, onClose }) {
   };
 
   // Play sound 100x times in rapid staggered burst
-  const handlePlay100x = (sound) => {
+  const executePlay100x = (sound) => {
     for (let i = 0; i < 100; i++) {
       setTimeout(() => {
         const rapidAudio = new Audio(sound.file_url);
         rapidAudio.play().catch(() => {});
       }, i * 15);
     }
+  };
+
+  const handleSoundToggle = (sound) => {
+    if (needsDisclaimer(sound)) {
+      setPendingAction({ type: 'toggle', sound });
+      return;
+    }
+    executeSoundToggle(sound);
+  };
+
+  const handlePlay100x = (sound) => {
+    if (needsDisclaimer(sound)) {
+      setPendingAction({ type: '100x', sound });
+      return;
+    }
+    executePlay100x(sound);
   };
 
   const handleDelete = async (sound) => {
@@ -457,6 +479,52 @@ export function SoundboardCard({ isLightMode, onClose }) {
           </div>
         )}
       </div>
+
+      {/* Language Disclaimer Modal */}
+      {pendingAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div
+            className={`w-full max-w-sm p-5 rounded-2xl border shadow-2xl space-y-4 ${
+              isLightMode
+                ? 'bg-white border-zinc-200 text-zinc-900'
+                : 'bg-zinc-900 border-white/15 text-zinc-100'
+            }`}
+          >
+            <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">
+              Language Disclaimer
+            </h3>
+            <p className="text-xs leading-relaxed opacity-90">
+              Disclaimer: <strong>"{pendingAction.sound.name}"</strong> contains strong language (the B-word).
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setPendingAction(null)}
+                className={`px-3 py-2 rounded-xl text-xs font-black uppercase ${
+                  isLightMode
+                    ? 'bg-zinc-200 text-zinc-800'
+                    : 'bg-white/10 text-zinc-200 hover:bg-white/15'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const actionToRun = pendingAction;
+                  setPendingAction(null);
+                  if (actionToRun.type === '100x') {
+                    executePlay100x(actionToRun.sound);
+                  } else {
+                    executeSoundToggle(actionToRun.sound);
+                  }
+                }}
+                className="px-3 py-2 rounded-xl text-xs font-black uppercase bg-[var(--theme)] text-black"
+              >
+                Play Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
