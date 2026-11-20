@@ -10,9 +10,23 @@ const API_BASE_URL = 'https://capybara-science-backend.ljkl.workers.dev/api/mess
 const API_TYPING_URL = 'https://capybara-science-backend.ljkl.workers.dev/api/typing';
 const LOCAL_CACHE_KEY = 'capy-chat-messages-cache';
 
-function formatTimestamp(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
+function formatTimestamp(value) {
+  if (!value) return '';
+
+  let normalized = value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    // Convert SQLite "YYYY-MM-DD HH:MM:SS" (no timezone) into UTC ISO string
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d+)?$/.test(trimmed)) {
+      normalized = trimmed.replace(' ', 'T') + 'Z';
+    } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(trimmed)) {
+      normalized = trimmed + 'Z';
+    }
+  }
+
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return '';
+
   return date.toLocaleString('en-US', {
     month: 'numeric',
     day: 'numeric',
