@@ -16,7 +16,6 @@ function formatTimestamp(value) {
   let normalized = value;
   if (typeof value === 'string') {
     const trimmed = value.trim();
-    // Convert SQLite "YYYY-MM-DD HH:MM:SS" (no timezone) into UTC ISO string
     if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d+)?$/.test(trimmed)) {
       normalized = trimmed.replace(' ', 'T') + 'Z';
     } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(trimmed)) {
