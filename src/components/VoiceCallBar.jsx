@@ -30,11 +30,36 @@ export default function VoiceCallBar({
   const localStreamRef = useRef(null);
   
   const peerConnectionsRef = useRef({});
+  const pendingCandidatesRef = useRef({});
   const remoteStreamsRef = useRef({});
   const remoteCameraStatusesRef = useRef({});
   const isSetupDoneRef = useRef(false);
 
+  const isVideoOnRef = useRef(isVideoOn);
+  const isMutedRef = useRef(isMuted);
+
+  useEffect(() => {
+    isVideoOnRef.current = isVideoOn;
+  }, [isVideoOn]);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+
   const handleDisconnect = onLeave || onEndCall;
+
+  const flushPendingCandidates = async (peerId, pc) => {
+    const queue = pendingCandidatesRef.current[peerId];
+    if (!queue || !queue.length || !pc.remoteDescription?.type) return;
+    pendingCandidatesRef.current[peerId] = [];
+    for (const cand of queue) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(cand));
+      } catch (err) {
+        console.warn('Queued ICE candidate error:', err);
+      }
+    }
+  };
 
   const initLocalStream = async () => {
     if (localStreamRef.current) return localStreamRef.current;
@@ -46,7 +71,7 @@ export default function VoiceCallBar({
       });
 
       localStreamRef.current = stream;
-      if (onStreamUpdate) onStreamUpdate(stream);
+      if (onStreamUpdate) onStreamUpdate(new MediaStream(stream.getTracks()));
       return stream;
     } catch (err) {
       console.warn('Microphone permission error:', err);
@@ -61,31 +86,33 @@ export default function VoiceCallBar({
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
     peerConnectionsRef.current[targetUserId] = pc;
+    pendingCandidatesRef.current[targetUserId] = pendingCandidatesRef.current[targetUserId] || [];
 
     if (localStreamRef.current) {
+      const existingSenders = pc.getSenders().map((s) => s.track?.id).filter(Boolean);
       localStreamRef.current.getTracks().forEach((track) => {
-        pc.addTrack(track, localStreamRef.current);
+        if (!existingSenders.includes(track.id)) {
+          pc.addTrack(track, localStreamRef.current);
+        }
       });
     }
 
     pc.ontrack = (event) => {
-      let stream = remoteStreamsRef.current[targetUserId];
-      
-      if (!stream) {
-        stream = new MediaStream();
-        remoteStreamsRef.current[targetUserId] = stream;
-      }
+      const currentStream = remoteStreamsRef.current[targetUserId];
+      const tracks = currentStream ? [...currentStream.getTracks()] : [];
 
-      const existingTrack = event.track.kind === 'video' 
-        ? stream.getVideoTracks()[0] 
-        : stream.getAudioTracks()[0];
+      const filtered = tracks.filter((t) => t.kind !== event.track.kind);
+      filtered.push(event.track);
 
-      if (!existingTrack) {
-        stream.addTrack(event.track);
-      } else if (existingTrack.id !== event.track.id) {
-        stream.removeTrack(existingTrack);
-        stream.addTrack(event.track);
-      }
+      const freshStream = new MediaStream(filtered);
+      remoteStreamsRef.current[targetUserId] = freshStream;
+
+      event.track.onunmute = () => {
+        remoteStreamsRef.current[targetUserId] = new MediaStream(
+          remoteStreamsRef.current[targetUserId].getTracks()
+        );
+        if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
+      };
 
       if (onRemoteStreamsUpdate) onRemoteStreamsUpdate({ ...remoteStreamsRef.current });
     };
@@ -145,16 +172,26 @@ export default function VoiceCallBar({
               
               if (remoteName) remoteCameraStatusesRef.current[`name_${senderId}`] = remoteName;
               if (remoteAvatar) remoteCameraStatusesRef.current[`avatar_${senderId}`] = remoteAvatar;
+              if (onRemoteCameraStatusUpdate) {
+                onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
+              }
 
               await createAndSendOffer(senderId);
               
               channel.send({
                 type: 'broadcast',
                 event: 'signal',
-                payload: { senderId: myUserId, type: 'camera-status', isVideoOn, name: myUsername, avatar: userAvatar },
+                payload: {
+                  senderId: myUserId,
+                  type: 'camera-status',
+                  isVideoOn: isVideoOnRef.current,
+                  isMuted: isMutedRef.current,
+                  name: myUsername,
+                  avatar: userAvatar
+                },
               });
             } else if (type === 'camera-status') {
-              remoteCameraStatusesRef.current[senderId] = remoteVideoState;
+              remoteCameraStatusesRef.current[senderId] = Boolean(remoteVideoState);
               if (remoteName) remoteCameraStatusesRef.current[`name_${senderId}`] = remoteName;
               if (remoteAvatar) remoteCameraStatusesRef.current[`avatar_${senderId}`] = remoteAvatar;
 
@@ -162,7 +199,7 @@ export default function VoiceCallBar({
                 onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
               }
             } else if (type === 'mute-status') {
-              remoteCameraStatusesRef.current[`mute_${senderId}`] = remoteMuteState;
+              remoteCameraStatusesRef.current[`mute_${senderId}`] = Boolean(remoteMuteState);
               if (onRemoteCameraStatusUpdate) {
                 onRemoteCameraStatusUpdate({ ...remoteCameraStatusesRef.current });
               }
@@ -173,6 +210,7 @@ export default function VoiceCallBar({
                 else return;
               }
               await pc.setRemoteDescription(new RTCSessionDescription(offer));
+              await flushPendingCandidates(senderId, pc);
 
               const createdAnswer = await pc.createAnswer();
               await pc.setLocalDescription(createdAnswer);
@@ -186,16 +224,21 @@ export default function VoiceCallBar({
               const pc = peerConnectionsRef.current[senderId];
               if (pc && pc.signalingState === 'have-local-offer') {
                 await pc.setRemoteDescription(new RTCSessionDescription(answer));
+                await flushPendingCandidates(senderId, pc);
               }
             } else if (type === 'ice-candidate' && candidate) {
               const pc = peerConnectionsRef.current[senderId];
               if (pc && pc.remoteDescription && pc.remoteDescription.type) {
                 await pc.addIceCandidate(new RTCIceCandidate(candidate));
+              } else {
+                pendingCandidatesRef.current[senderId] = pendingCandidatesRef.current[senderId] || [];
+                pendingCandidatesRef.current[senderId].push(candidate);
               }
             } else if (type === 'leave-voice') {
               setConnectedUsers((prev) => prev.filter((u) => u !== senderId));
               peerConnectionsRef.current[senderId]?.close();
               delete peerConnectionsRef.current[senderId];
+              delete pendingCandidatesRef.current[senderId];
               delete remoteStreamsRef.current[senderId];
               delete remoteCameraStatusesRef.current[senderId];
               delete remoteCameraStatusesRef.current[`name_${senderId}`];
@@ -240,6 +283,7 @@ export default function VoiceCallBar({
       }
       Object.values(peerConnectionsRef.current).forEach((pc) => pc.close());
       peerConnectionsRef.current = {};
+      pendingCandidatesRef.current = {};
       remoteStreamsRef.current = {};
       remoteCameraStatusesRef.current = {};
     };
@@ -253,7 +297,6 @@ export default function VoiceCallBar({
         audioTracks[0].enabled = !nextMuteState;
         setIsMuted(nextMuteState);
 
-        // Broadcast mute status immediately to remote participants
         channelRef.current?.send({
           type: 'broadcast',
           event: 'signal',
@@ -264,7 +307,7 @@ export default function VoiceCallBar({
           },
         });
 
-        if (onStreamUpdate) onStreamUpdate(localStreamRef.current);
+        if (onStreamUpdate) onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
       }
     }
   };
@@ -284,7 +327,10 @@ export default function VoiceCallBar({
         }
 
         for (const [targetUserId, pc] of Object.entries(peerConnectionsRef.current)) {
-          pc.addTrack(videoTrack, localStreamRef.current);
+          const alreadySending = pc.getSenders().some((s) => s.track?.id === videoTrack.id);
+          if (!alreadySending) {
+            pc.addTrack(videoTrack, localStreamRef.current);
+          }
           await createAndSendOffer(targetUserId);
         }
         
@@ -305,7 +351,7 @@ export default function VoiceCallBar({
       });
 
       if (onStreamUpdate && localStreamRef.current) {
-        onStreamUpdate(localStreamRef.current);
+        onStreamUpdate(new MediaStream(localStreamRef.current.getTracks()));
       }
     } catch (err) {
       console.error('Toggle video error:', err);
