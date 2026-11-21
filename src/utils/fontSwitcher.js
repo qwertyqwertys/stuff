@@ -9,7 +9,7 @@ export const LOCAL_FONTS = [
   },
   {
     id: "local-baloo-2",
-    label: "Baloo 2 (Local)",
+    label: "Baloo 2",
     value: "'Baloo 2', cursive, sans-serif",
     type: "local",
     faces: [
@@ -20,7 +20,7 @@ export const LOCAL_FONTS = [
   },
   {
     id: "local-inter",
-    label: "Inter (Local)",
+    label: "Inter",
     value: "'Inter', sans-serif",
     type: "local",
     faces: [
@@ -32,7 +32,7 @@ export const LOCAL_FONTS = [
   },
   {
     id: "local-jetbrains-mono",
-    label: "JetBrains Mono (Local)",
+    label: "JetBrains Mono",
     value: "'JetBrains Mono', monospace",
     type: "local",
     faces: [
