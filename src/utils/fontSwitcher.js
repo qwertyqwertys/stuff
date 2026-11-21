@@ -4,7 +4,7 @@ export const LOCAL_FONTS = [
   {
     id: "local-default",
     label: "System Default",
-    value: "system-ui, -apple-system, sans-serif",
+    value: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
     type: "system",
   },
   {
@@ -52,14 +52,16 @@ export const LOCAL_FONTS = [
 ];
 
 export const GOOGLE_FONTS = [
-  { id: "gf-poppins", label: "Poppins", family: "Poppins", value: "'Poppins', sans-serif", type: "google" },
-  { id: "gf-press-start", label: "Press Start 2P", family: "Press Start 2P", value: "'Press Start 2P', monospace", type: "google" },
-  { id: "gf-rubik", label: "Rubik", family: "Rubik", value: "'Rubik', sans-serif", type: "google" },
-  { id: "gf-space-grotesk", label: "Space Grotesk", family: "Space Grotesk", value: "'Space Grotesk', sans-serif", type: "google" },
-  { id: "gf-vt323", label: "VT323", family: "VT323", value: "'VT323', monospace", type: "google" },
+  { id: "gf-poppins", label: "Poppins", family: "Poppins", weights: "400;500;600;700", value: "'Poppins', sans-serif", type: "google" },
+  { id: "gf-press-start", label: "Press Start 2P", family: "Press Start 2P", weights: "", value: "'Press Start 2P', monospace", type: "google" },
+  { id: "gf-rubik", label: "Rubik", family: "Rubik", weights: "400;500;600;700", value: "'Rubik', sans-serif", type: "google" },
+  { id: "gf-space-grotesk", label: "Space Grotesk", family: "Space Grotesk", weights: "400;500;600;700", value: "'Space Grotesk', sans-serif", type: "google" },
+  { id: "gf-vt323", label: "VT323", family: "VT323", weights: "", value: "'VT323', monospace", type: "google" },
 ];
 
 export const ALL_FONTS = [...LOCAL_FONTS, ...GOOGLE_FONTS];
+
+const SINGLE_WEIGHT_FAMILIES = new Set(["Press Start 2P", "VT323"]);
 
 function ensureLocalFontFace(font) {
   if (font.type !== "local" || !Array.isArray(font.faces)) return;
@@ -86,10 +88,13 @@ function ensureGoogleFontLink(font) {
   if (document.getElementById(linkId)) return;
 
   const encodedFamily = encodeURIComponent(font.family).replace(/%20/g, "+");
+  const isSingleWeight = SINGLE_WEIGHT_FAMILIES.has(font.family) || !font.weights;
+  const familyQuery = isSingleWeight ? encodedFamily : `${encodedFamily}:wght@${font.weights}`;
+
   const link = document.createElement("link");
   link.id = linkId;
   link.rel = "stylesheet";
-  link.href = `https://fonts.googleapis.com/css2?family=${encodedFamily}:wght@400;500;600;700&display=swap`;
+  link.href = `https://fonts.googleapis.com/css2?family=${familyQuery}&display=swap`;
   document.head.appendChild(link);
 }
 
