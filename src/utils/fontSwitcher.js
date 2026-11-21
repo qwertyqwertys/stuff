@@ -4,7 +4,7 @@ export const LOCAL_FONTS = [
   {
     id: "local-default",
     label: "System Default",
-    value: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+    value: '"Inter", ui-sans-serif, system-ui, sans-serif',
     type: "system",
   },
   {
