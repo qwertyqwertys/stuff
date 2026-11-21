@@ -19,15 +19,6 @@ export const LOCAL_FONTS = [
     ],
   },
   {
-    id: "local-fredoka",
-    label: "Fredoka (Local)",
-    value: "'Fredoka', sans-serif",
-    type: "local",
-    faces: [
-      { url: "./fonts/fredoka-v17-latin-600.woff2", weight: "600" },
-    ],
-  },
-  {
     id: "local-inter",
     label: "Inter (Local)",
     value: "'Inter', sans-serif",
