@@ -18,6 +18,7 @@ import { SoundboardCard } from './components/SoundboardCard';
 import VoiceRoom from './components/VoiceRoom';
 import { applyCloak } from './utils';
 import { applyFontById, getSavedFontId } from './utils/fontSwitcher';
+import { resolveDisplayName } from "./utils/chatIdentity";
 
 // --- CONSTANTS & CONFIGS ---
 
