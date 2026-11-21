@@ -34,7 +34,9 @@ export const REQUIRED_FOOD_GAMES = [
 const normalizeGameName = (value = '') =>
   String(value)
     .toLowerCase()
+    .replace(/\(fake\)/g, '')
     .replace(/['’]/g, '')
+    .replace(/[-_.]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -42,12 +44,13 @@ const CANONICAL_LOOKUP = new Map(
   REQUIRED_FOOD_GAMES.map((game) => [normalizeGameName(game), game])
 );
 
-// Extra aliases in case a game's title has minor spelling/punctuation variations
+// Extra aliases mapped directly to canonical entries in REQUIRED_FOOD_GAMES
 const ALIAS_LOOKUP = new Map([
-  ['jelly restaurant', 'jelly restraunt'],
+  ['jelly restaurant', 'jelly-restraunt'],
+  ['jelly restraunt', 'jelly-restraunt'],
   ['growden io', 'growden.io'],
-  ['grow a garden', 'grow a garden (fake)'],
-  ['candy crush', 'candy crush (fake)'],
+  ['grow a garden', 'grow-a-garden'],
+  ['candy crush', 'candy-crush'],
 ]);
 
 export function matchRequiredFoodGame(gameTitleOrId) {
