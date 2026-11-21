@@ -1798,7 +1798,7 @@ function SettingsModalContent({
                     onChange={(e) => typeof setSelectedFont === 'function' && setSelectedFont(e.target.value)}
                     className={`w-full ${inputBg} border rounded-xl p-2.5 text-xs outline-none font-bold cursor-pointer transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
                   >
-                    <optgroup label="Your Fonts Folder">
+                    <optgroup label="Capybara Sciences Fonts">
                       {LOCAL_FONTS.map((font) => (
                         <option key={font.id} value={font.id}>
                           {font.label}
