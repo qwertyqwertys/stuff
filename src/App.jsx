@@ -165,15 +165,15 @@ function MainDashboard() {
   }, [selectedFont]);
 
   // --- TOP-LEVEL DISPLAY NAME STATE WITH INSTANT EVENT SYNC ---
-const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
+  const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
 
   const setDisplayName = useCallback((val) => {
-  const cleaned = (val || '').trim().slice(0, 25) || resolveDisplayName();
-  setDisplayNameState(cleaned);
-  localStorage.setItem('capy-display-name', cleaned);
-  localStorage.setItem('username', cleaned);
-  window.dispatchEvent(new Event('capy-username-updated'));
-}, []);
+    const cleaned = (val || '').trim().slice(0, 25) || resolveDisplayName();
+    setDisplayNameState(cleaned);
+    localStorage.setItem('capy-display-name', cleaned);
+    localStorage.setItem('username', cleaned);
+    window.dispatchEvent(new Event('capy-username-updated'));
+  }, []);
 
   useEffect(() => {
     if (selectedFrame) {
@@ -245,6 +245,52 @@ const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
 
   const [time, setTime] = useState(new Date());
   const [battery, setBattery] = useState({ level: null, charging: false });
+
+  const unlockAchievement = useCallback((achievementId, metaOrMessage) => {
+    if (!achievementId) return;
+
+    const alreadyStored = localStorage.getItem(`achievement_${achievementId}`) === 'true';
+    localStorage.setItem(`achievement_${achievementId}`, 'true');
+
+    setAchievements(prev => {
+      const safePrev = Array.isArray(prev) ? prev : [];
+      if (safePrev.includes(achievementId)) return safePrev;
+      return [...safePrev, achievementId];
+    });
+
+    if (!alreadyStored) {
+      if (typeof metaOrMessage === 'string') {
+        setNotification(metaOrMessage);
+      } else if (metaOrMessage && typeof metaOrMessage === 'object') {
+        const icon = metaOrMessage.icon || (achievementId === 'unemployed_biggie' ? '🍔' : '🏆');
+        const title = metaOrMessage.title || (achievementId === 'unemployed_biggie' ? 'Unemployed Biggie' : achievementId);
+        setNotification(`${icon} Achievement Unlocked: ${title}`);
+      } else if (achievementId === 'unemployed_biggie') {
+        setNotification("🍔 Achievement Unlocked: Unemployed Biggie");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem('capy_unemployed_biggie_unlocked_v1') === 'true') {
+      localStorage.setItem('achievement_unemployed_biggie', 'true');
+      setAchievements(prev => (prev.includes('unemployed_biggie') ? prev : [...prev, 'unemployed_biggie']));
+    }
+
+    const handleAchievementUpdated = (event) => {
+      const { achievementId, newlyUnlocked } = event.detail || {};
+      if (achievementId === 'unemployed_biggie') {
+        localStorage.setItem('achievement_unemployed_biggie', 'true');
+        setAchievements(prev => (prev.includes('unemployed_biggie') ? prev : [...prev, 'unemployed_biggie']));
+        if (newlyUnlocked) {
+          setNotification("🍔 Achievement Unlocked: Unemployed Biggie");
+        }
+      }
+    };
+
+    window.addEventListener('capy-achievement-updated', handleAchievementUpdated);
+    return () => window.removeEventListener('capy-achievement-updated', handleAchievementUpdated);
+  }, []);
 
   const handleTogglePlay = () => {
     if (!audioRef.current) return;
@@ -630,6 +676,9 @@ const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
   }, [confirmClearSettings]);
 
   useEffect(() => {
+    if (localStorage.getItem('capy_unemployed_biggie_unlocked_v1') === 'true') {
+      localStorage.setItem('achievement_unemployed_biggie', 'true');
+    }
     const ids = ['first_game', 'marathon', 'collector', 'loyal', 'styler', 'unemployed_biggie'];
     const alreadyEarned = ids.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
     if (alreadyEarned.length > 0) {
@@ -684,7 +733,7 @@ const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
 
     const playedSet = new Set(foodGamesPlayed);
     const hasPlayedAllFoodGames = UNEMPLOYED_BIGGIE_GAMES.every(game => playedSet.has(game));
-    if (hasPlayedAllFoodGames && !localStorage.getItem('achievement_unemployed_biggie')) {
+    if ((hasPlayedAllFoodGames || localStorage.getItem('capy_unemployed_biggie_unlocked_v1') === 'true') && !localStorage.getItem('achievement_unemployed_biggie')) {
       localStorage.setItem('achievement_unemployed_biggie', 'true');
       checkAndAdd('unemployed_biggie');
       setNotification("🍔 Achievement Unlocked: Unemployed Biggie");
@@ -694,6 +743,12 @@ const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
       setAchievements(newAchievements);
     }
   }, [playtimes, favorites, themeChangeCount, foodGamesPlayed, achievements]);
+
+  const earnedAchievementIds = useMemo(() => {
+    const ids = ['first_game', 'marathon', 'collector', 'loyal', 'styler', 'unemployed_biggie'];
+    const fromStorage = ids.filter(id => localStorage.getItem(`achievement_${id}`) === 'true');
+    return Array.from(new Set([...(achievements || []), ...fromStorage]));
+  }, [achievements]);
 
   const handleBackgroundUpload = (e) => {
     const file = e.target.files[0];
@@ -1019,7 +1074,7 @@ const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
                  isLightMode={isLightMode} 
                  gamesData={gamesData}
                  ownPfp={profilePic}
-                 myAchievements={achievements}
+                 myAchievements={earnedAchievementIds}
                  userFavs={favorites}
                  userTimes={playtimes}
                  isInVoice={isInVoice}
@@ -1131,6 +1186,7 @@ const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
                       key={`recent-${game.id}`} 
                       game={game} 
                       onLaunch={launchContent} 
+                      onAchievementUnlock={unlockAchievement}
                       playtime={formatPlaytime(playtimes[game.id])}
                       isFavorite={favorites.includes(String(game.id))}
                       onToggleFavorite={() => toggleFavorite(game.id)}
@@ -1148,6 +1204,7 @@ const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
                   key={game.id} 
                   game={game} 
                   onLaunch={launchContent} 
+                  onAchievementUnlock={unlockAchievement}
                   playtime={formatPlaytime(playtimes[game.id])}
                   isFavorite={favorites.includes(String(game.id))} 
                   onToggleFavorite={() => toggleFavorite(game.id)}
@@ -1174,13 +1231,13 @@ const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
           name: displayName,
           favs: favorites,
           times: playtimes,
-          achievements: ['first_game', 'marathon', 'collector', 'loyal', 'styler', 'unemployed_biggie'].filter(id => localStorage.getItem(`achievement_${id}`) === 'true')
+          achievements: earnedAchievementIds
         } : currentFriend}
         gamesData={gamesData}
         ownPfp={profilePic}
         isOwnProfile={selectedFriendId === 'me'}
         onClose={() => setSelectedFriendId(null)}
-        myAchievements={achievements}
+        myAchievements={earnedAchievementIds}
       />
       
       <SettingsModal 
@@ -1304,7 +1361,7 @@ const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
               setNotification("Friend view refreshed!");
             }, 500);
         }}
-        myAchievements={achievements}
+        myAchievements={earnedAchievementIds}
         activeCloak={activeCloak}
         setActiveCloak={setActiveCloak}
         isPlaying={isPlaying}
