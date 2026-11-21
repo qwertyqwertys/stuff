@@ -4,7 +4,7 @@ export const LOCAL_FONTS = [
   {
     id: "local-default",
     label: "System Default",
-    value: '"Inter", ui-sans-serif, system-ui, sans-serif',
+    value: "'Fredoka', sans-serif",
     type: "system",
   },
   {
