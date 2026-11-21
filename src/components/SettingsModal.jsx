@@ -9,6 +9,7 @@ import {
 import * as db from '../utils/db';
 import { supabase } from '../supabaseClient';
 import gamesData from '../games.json';
+import { LOCAL_FONTS, GOOGLE_FONTS } from '../utils/fontSwitcher';
 
 const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
@@ -409,7 +410,8 @@ function SettingsModalContent({
   isLightMode = false, setIsLightMode,
   activeCloak = '', setActiveCloak,
   selectedFrame = '', setSelectedFrame,
-  selectedEffect = '', setSelectedEffect
+  selectedEffect = '', setSelectedEffect,
+  selectedFont = 'local-default', setSelectedFont
 }) {
   const [friendInput, setFriendInput] = useState('');
   const [friendInputError, setFriendInputError] = useState('');
@@ -1781,6 +1783,39 @@ function SettingsModalContent({
                 </section>
               )}
 
+              {/* FONTS */}
+              {matchesSearch(['font', 'fonts', 'typography', 'text', 'baloo', 'fredoka', 'inter', 'jetbrains', 'google']) && (
+                <section className={`space-y-3 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+                  <label
+                    htmlFor="capy-font-select"
+                    className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}
+                  >
+                    <Type className="w-3 h-3 text-[var(--theme)]" /> Site Font
+                  </label>
+                  <select
+                    id="capy-font-select"
+                    value={selectedFont}
+                    onChange={(e) => typeof setSelectedFont === 'function' && setSelectedFont(e.target.value)}
+                    className={`w-full ${inputBg} border rounded-xl p-2.5 text-xs outline-none font-bold cursor-pointer transition-all focus:border-[var(--theme)] focus:ring-1 focus:ring-[var(--theme)]`}
+                  >
+                    <optgroup label="Your Fonts Folder">
+                      {LOCAL_FONTS.map((font) => (
+                        <option key={font.id} value={font.id}>
+                          {font.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Google Fonts">
+                      {GOOGLE_FONTS.map((font) => (
+                        <option key={font.id} value={font.id}>
+                          {font.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </section>
+              )}
+
               {/* THEMES */}
               {matchesSearch(['themes', 'color', 'palette', 'light mode', 'dark mode']) && (
                 <section className="space-y-3">
@@ -1809,7 +1844,7 @@ function SettingsModalContent({
                       </button>
                     ))}
                   </div>
-
+                  
                   <div 
                     className={`p-3 border rounded-xl flex items-center justify-between ${isLightMode ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}
                     onBlur={(e) => {
