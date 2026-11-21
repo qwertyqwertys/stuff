@@ -165,8 +165,6 @@ function MainDashboard() {
 
   // --- TOP-LEVEL DISPLAY NAME STATE WITH INSTANT EVENT SYNC ---
 const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
-    return localStorage.getItem('capy-display-name') || localStorage.getItem('username') || 'CapyUser';
-  });
 
   const setDisplayName = useCallback((val) => {
     const trimmed = (val || '').slice(0, 25);
