@@ -146,7 +146,7 @@
   border-color: rgba(0, 0, 0, 0.1) !important;
 }
 
-@theme {
+@theme inline {
   --font-sans: var(--site-font);
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
@@ -155,8 +155,9 @@
 }
 
 @layer base {
+  html,
   body {
-    font-family: var(--site-font);
+    font-family: var(--site-font) !important;
     background-color: var(--bg-main);
     color: var(--text-main);
     @apply antialiased transition-colors duration-300;
