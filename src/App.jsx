@@ -164,7 +164,7 @@ function MainDashboard() {
   }, [selectedFont]);
 
   // --- TOP-LEVEL DISPLAY NAME STATE WITH INSTANT EVENT SYNC ---
-  const [displayName, setDisplayNameState] = useState(() => {
+const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
     return localStorage.getItem('capy-display-name') || localStorage.getItem('username') || 'CapyUser';
   });
 
