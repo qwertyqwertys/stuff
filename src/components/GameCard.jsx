@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
-import { Heart, Play } from 'lucide-react'; 
+import { Heart, Play } from 'lucide-react';
 import { recordGamePlayedForUnemployedBiggie } from '../utils/unemployedBiggieAchievement';
 
-export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorite, performanceMode }) {
+export function GameCard({
+  game,
+  onLaunch,
+  onAchievementUnlock,
+  playtime,
+  isFavorite,
+  onToggleFavorite,
+  performanceMode,
+}) {
   const [showGTA3Modal, setShowGTA3Modal] = useState(false);
   const [showFNAEModal, setShowFNAEModal] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
@@ -15,24 +23,34 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
     );
 
     if (result.newlyUnlocked) {
-      alert('Achievement Unlocked: Unemployed Biggie!');
+      const payload = {
+        id: 'unemployed_biggie',
+        title: 'Unemployed Biggie',
+        icon: '🍔',
+        progress: result.progress,
+        matchedGame: result.matchedGame,
+      };
+
+      if (typeof onAchievementUnlock === 'function') {
+        onAchievementUnlock('unemployed_biggie', payload);
+      }
     }
 
     onLaunch(targetGame);
   };
-  
+
   const handleCardClick = (e) => {
     const normalizedId = String(game.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const normalizedTitle = String(game.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-    const isGTA3 = 
-      normalizedId.includes('gta3') || 
+    const isGTA3 =
+      normalizedId.includes('gta3') ||
       normalizedId.includes('gtaiii') ||
-      normalizedTitle.includes('gta3') || 
+      normalizedTitle.includes('gta3') ||
       normalizedTitle.includes('gtaiii') ||
       (normalizedTitle.includes('grandtheftauto') && (normalizedTitle.includes('3') || normalizedTitle.includes('iii')));
 
-    const isFNAE = 
+    const isFNAE =
       normalizedId.includes('fnae') ||
       normalizedId.includes('epstein') ||
       normalizedTitle.includes('fnae') ||
@@ -94,31 +112,31 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
 
   return (
     <>
-      <div 
-        className={`group bg-zinc-900/40 rounded-[2rem] overflow-hidden border border-white/5 hover:border-[var(--theme)]/30 transition-all flex flex-col cursor-pointer ${performanceMode ? '' : 'shadow-lg'}`} 
+      <div
+        className={`group bg-zinc-900/40 rounded-[2rem] overflow-hidden border border-white/5 hover:border-[var(--theme)]/30 transition-all flex flex-col cursor-pointer ${performanceMode ? '' : 'shadow-lg'}`}
         onClick={handleCardClick}
       >
-         <div className={`relative w-full aspect-[4/3] bg-black/20 overflow-hidden transition-all duration-500 ${performanceMode ? '' : 'group-hover:shadow-[inset_0_0_var(--glow)_var(--theme)]'}`}>
-          <img 
-            src={game.thumbnail} 
+        <div className={`relative w-full aspect-[4/3] bg-black/20 overflow-hidden transition-all duration-500 ${performanceMode ? '' : 'group-hover:shadow-[inset_0_0_var(--glow)_var(--theme)]'}`}>
+          <img
+            src={game.thumbnail}
             loading="lazy"
-            className={`absolute inset-0 m-auto transition-transform duration-500 group-hover:scale-110 ${isUtility ? 'w-24 h-24 object-contain' : 'w-full h-full object-cover'}`}  
-            alt={`${game.title} thumbnail`} 
+            className={`absolute inset-0 m-auto transition-transform duration-500 group-hover:scale-110 ${isUtility ? 'w-24 h-24 object-contain' : 'w-full h-full object-cover'}`}
+            alt={`${game.title} thumbnail`}
           />
           {!isUtility && (
-            <button 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                onToggleFavorite(); 
-              }} 
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite();
+              }}
               aria-label={isFavorite ? `Remove ${game.title} from favorites` : `Favorite ${game.title}`}
               className={`absolute top-4 right-4 z-10 p-2 bg-zinc-900/80 rounded-full border border-white/10 transition-transform ${performanceMode ? '' : 'backdrop-blur-sm hover:scale-110 shadow-lg'}`}
             >
-              <Heart 
-                className="w-4 h-4 transition-colors" 
-                stroke={isFavorite ? "var(--theme)" : "#a1a1aa"} 
-                strokeWidth={2.5} 
-                fill={isFavorite ? 'var(--theme)' : 'none'} 
+              <Heart
+                className="w-4 h-4 transition-colors"
+                stroke={isFavorite ? "var(--theme)" : "#a1a1aa"}
+                strokeWidth={2.5}
+                fill={isFavorite ? 'var(--theme)' : 'none'}
               />
             </button>
           )}
@@ -145,41 +163,41 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
 
       {/* GTA III Disclaimer Modal */}
       {showGTA3Modal && (
-        <div 
-          onClick={handleCancelDisclaimer} 
+        <div
+          onClick={handleCancelDisclaimer}
           className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 p-4 font-sans"
         >
-          <div 
-            onClick={(e) => e.stopPropagation()} 
+          <div
+            onClick={(e) => e.stopPropagation()}
             className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 shadow-2xl text-white"
           >
             <h2 className="text-xl font-bold text-red-500 flex items-center gap-2 m-0">
               ⚠️ Disclaimer & Warning
             </h2>
-            
+
             <p className="text-zinc-300 text-sm leading-relaxed my-4">
               Capybara Science is not responsible for you getting in trouble for playing GTA III in or outside of school.
             </p>
-            
+
             <label className="flex items-center gap-2 my-5 cursor-pointer text-sm text-zinc-400 select-none">
-              <input 
-                type="checkbox" 
-                checked={dontShowAgain} 
+              <input
+                type="checkbox"
+                checked={dontShowAgain}
                 onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="w-4 h-4 rounded cursor-pointer accent-red-500" 
+                className="w-4 h-4 rounded cursor-pointer accent-red-500"
               />
               Don't show this again
             </label>
 
             <div className="flex gap-3 justify-end">
-              <button 
-                onClick={handleCancelDisclaimer} 
+              <button
+                onClick={handleCancelDisclaimer}
                 className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white border-0 rounded-lg cursor-pointer text-sm font-medium transition-colors"
               >
                 Cancel
               </button>
-              <button 
-                onClick={handleAcceptDisclaimer} 
+              <button
+                onClick={handleAcceptDisclaimer}
                 className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white border-0 rounded-lg font-bold cursor-pointer text-sm transition-colors"
               >
                 I Understand & Launch GTA III
@@ -191,41 +209,41 @@ export function GameCard({ game, onLaunch, playtime, isFavorite, onToggleFavorit
 
       {/* Five Nights at Epstein's Disclaimer Modal */}
       {showFNAEModal && (
-        <div 
-          onClick={handleCancelFNAE} 
+        <div
+          onClick={handleCancelFNAE}
           className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 p-4 font-sans"
         >
-          <div 
-            onClick={(e) => e.stopPropagation()} 
+          <div
+            onClick={(e) => e.stopPropagation()}
             className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 shadow-2xl text-white"
           >
             <h2 className="text-xl font-bold text-red-500 flex items-center gap-2 m-0">
               ⚠️ Disclaimer & Warning
             </h2>
-            
+
             <p className="text-zinc-300 text-sm leading-relaxed my-4">
               Capybara Science is not responsible for you getting in trouble for playing Five Nights at Epstein's in or outside of school.
             </p>
-            
+
             <label className="flex items-center gap-2 my-5 cursor-pointer text-sm text-zinc-400 select-none">
-              <input 
-                type="checkbox" 
-                checked={dontShowAgain} 
+              <input
+                type="checkbox"
+                checked={dontShowAgain}
                 onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="w-4 h-4 rounded cursor-pointer accent-red-500" 
+                className="w-4 h-4 rounded cursor-pointer accent-red-500"
               />
               Don't show this again
             </label>
 
             <div className="flex gap-3 justify-end">
-              <button 
-                onClick={handleCancelFNAE} 
+              <button
+                onClick={handleCancelFNAE}
                 className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white border-0 rounded-lg cursor-pointer text-sm font-medium transition-colors"
               >
                 Cancel
               </button>
-              <button 
-                onClick={handleAcceptFNAE} 
+              <button
+                onClick={handleAcceptFNAE}
                 className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white border-0 rounded-lg font-bold cursor-pointer text-sm transition-colors"
               >
                 I Understand & Launch Five Nights at Epstein's
