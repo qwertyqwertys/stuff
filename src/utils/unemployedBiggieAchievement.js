@@ -27,8 +27,8 @@ export const REQUIRED_FOOD_GAMES = [
   'bad-ice-cream',
   'bad-ice-cream-2',
   'bad-ice-cream-3',
-  'hungry-llama',
-  'hungry-llama 2',
+  'hungry-lamu',
+  'hungry-lamu-2',
 ];
 
 const normalizeGameName = (value = '') =>
