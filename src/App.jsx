@@ -17,6 +17,8 @@ import { ChatCard } from './components/ChatCard';
 import { SoundboardCard } from './components/SoundboardCard';
 import VoiceRoom from './components/VoiceRoom';
 import { applyCloak } from './utils';
+import { applyCloak } from './utils';
+import { applyFontById, getSavedFontId } from './utils/fontSwitcher';
 
 // --- CONSTANTS & CONFIGS ---
 
@@ -156,6 +158,11 @@ function MainDashboard() {
   // --- EQUIPPED SHOP STATES ---
   const [selectedFrame, setSelectedFrame] = useState(() => localStorage.getItem('capy-selected-frame') || '');
   const [selectedEffect, setSelectedEffect] = useState(() => localStorage.getItem('capy-selected-effect') || '');
+  const [selectedFont, setSelectedFont] = useState(() => getSavedFontId());
+
+  useEffect(() => {
+    applyFontById(selectedFont);
+  }, [selectedFont]);
 
   // --- TOP-LEVEL DISPLAY NAME STATE WITH INSTANT EVENT SYNC ---
   const [displayName, setDisplayNameState] = useState(() => {
