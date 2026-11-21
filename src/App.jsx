@@ -1314,6 +1314,8 @@ function MainDashboard() {
         setSelectedFrame={setSelectedFrame}
         selectedEffect={selectedEffect}
         setSelectedEffect={setSelectedEffect}
+        selectedFont={selectedFont}
+        setSelectedFont={setSelectedFont}
       />
 
       <footer className={`mt-10 py-6 text-center text-xs border-t border-white/5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isHeaderLight && !isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
