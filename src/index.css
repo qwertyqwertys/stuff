@@ -156,8 +156,15 @@
 
 @layer base {
   html,
-  body {
+  body,
+  button,
+  input,
+  select,
+  textarea {
     font-family: var(--site-font) !important;
+  }
+
+  body {
     background-color: var(--bg-main);
     color: var(--text-main);
     @apply antialiased transition-colors duration-300;
