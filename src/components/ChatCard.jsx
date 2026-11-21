@@ -108,8 +108,8 @@ export function ChatCard({
   displayName
 }) {
   const [username, setUsername] = useState(() => {
-    return displayName || localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || localStorage.getItem('username') || 'CapyUser';
-  });
+  return displayName || resolveDisplayName();
+});
 
   const [isJoined, setIsJoined] = useState(true);
   
