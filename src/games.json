@@ -1307,6 +1307,13 @@
     "url": "/stores/games-html/amaze!.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.crazylabs.com%2Fwp-content%2Fuploads%2F2022%2F03%2Famaze-icon-512.png&f=1&nofb=1&ipt=9fe5b91d07720200001c573447375ad792fdecf6de50a5c5d253afca7389e9d0&ipo=images",
     "category": "Easy"
+  },
+  {
+    "id": "red-ball",
+    "title": "Red Ball",
+    "url": "/stores/games-html/red-ball.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.speedrun.com%2Fstatic%2Fgame%2Fj1llwz1g%2Fcover.png%3Fv%3Dfac40a1&f=1&nofb=1&ipt=1fceff3dbd159a903a93d80dda2366f16ca8ac20fbcfeb3820f5a9305a03a12b&ipo=images",
+    "category": "Platformer"
   }
 ]
     
