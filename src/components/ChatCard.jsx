@@ -3,6 +3,7 @@ import { Send, RefreshCcw, Pencil, Trash2, Check, X, Headphones, CornerDownRight
 import { ChatPrivacyModal } from './ChatPrivacyModal';
 import { FriendViewModal } from './FriendViewModal';
 import { ProfileAvatar } from './SettingsModal';
+import { resolveDisplayName } from '../utils/chatIdentity';
 
 const IS_CHAT_MAINTENANCE = false; 
 
@@ -108,8 +109,8 @@ export function ChatCard({
   displayName
 }) {
   const [username, setUsername] = useState(() => {
-  return displayName || resolveDisplayName();
-});
+    return displayName || resolveDisplayName();
+  });
 
   const [isJoined, setIsJoined] = useState(true);
   
@@ -163,7 +164,7 @@ export function ChatCard({
           avatar_url: ownPfp || getStoredAvatar(),
           frame_url: getStoredFrame(),
           effect_url: getStoredEffect(),
-          username: localStorage.getItem('capy-username') || username
+          username: resolveDisplayName()
         }
       }));
     };
@@ -193,7 +194,7 @@ export function ChatCard({
       const currentPfp = ownPfp || getStoredAvatar();
       const currentFrame = getStoredFrame();
       const currentEffect = getStoredEffect();
-      const currentName = localStorage.getItem('capy-display-name') || localStorage.getItem('capy-username') || localStorage.getItem('username') || username;
+      const currentName = displayName || resolveDisplayName() || username;
 
       if (
         lastKnownPfp !== currentPfp ||
@@ -236,7 +237,7 @@ export function ChatCard({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [myId, username, ownPfp]);
+  }, [myId, username, ownPfp, displayName]);
   
   useEffect(() => {
     if (displayName) {
@@ -246,7 +247,7 @@ export function ChatCard({
 
   useEffect(() => {
     const handleNameUpdate = () => {
-      const freshName = localStorage.getItem('capy-display-name') || localStorage.getItem('username') || localStorage.getItem('capy-username');
+      const freshName = resolveDisplayName();
       if (freshName) {
         setUsername(freshName);
       }
@@ -312,7 +313,6 @@ export function ChatCard({
     }
   }, [myId]);
 
-  // Parallel, non-overlapping 300ms poll loop
   const pollData = useCallback(async () => {
     if (isPollingRef.current) return;
     isPollingRef.current = true;
@@ -360,7 +360,6 @@ export function ChatCard({
     }
   }, [messages, typingUsers, pendingImageUrl, isAtBottom]);
 
-  // Instant first-keystroke ping + 800ms throttle so requests never queue up
   const handleTypingInput = (e) => {
     const val = e.target.value;
     setText(val);
@@ -533,7 +532,7 @@ export function ChatCard({
       await fetch(`${API_BASE_URL}/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: updatedText })
+        body: JSON.stringify({ content: updatedText, user_id: myId })
       });
     } catch (err) {
       console.error('Failed to update message:', err);
@@ -548,7 +547,9 @@ export function ChatCard({
 
     try {
       await fetch(`${API_BASE_URL}/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: myId })
       });
     } catch (err) {
       console.error('Failed to delete message:', err);
@@ -558,7 +559,7 @@ export function ChatCard({
   };
 
   const handleOpenProfile = (m) => {
-    const isSelf = (m.user_id === myId) || (username && m.username?.toLowerCase() === username.toLowerCase());
+    const isSelf = Boolean(m.user_id && m.user_id === myId);
 
     const liveFavs = isSelf ? userFavs : (m.favs || []);
     const liveAchievements = isSelf ? myAchievements : (m.achievements || []);
@@ -674,8 +675,7 @@ export function ChatCard({
               messages.map((m, i) => {
                 const _v = profileVersion; 
 
-                const isOwner = (m.user_id && m.user_id === myId) || 
-                                (username && m.username && m.username.toLowerCase() === username.toLowerCase());
+                const isOwner = Boolean(m.user_id && m.user_id === myId);
                 const isEditingThis = editingId === m.id;
 
                 const resolvedProfile = liveProfiles[m.user_id] || {};
