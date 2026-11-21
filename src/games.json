@@ -1314,6 +1314,13 @@
     "url": "/stores/games-html/red-ball.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.speedrun.com%2Fstatic%2Fgame%2Fj1llwz1g%2Fcover.png%3Fv%3Dfac40a1&f=1&nofb=1&ipt=1fceff3dbd159a903a93d80dda2366f16ca8ac20fbcfeb3820f5a9305a03a12b&ipo=images",
     "category": "Platformer"
+  },
+  {
+    "id": "red-ball-2",
+    "title": "Red Ball 2",
+    "url": "/stores/games-html/red-ball-2.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F81AOBna4RuL.png&f=1&nofb=1&ipt=b3d0a0dbdb4be38111e5081739253709d66f4a658558ee8afd568f345a03caeb&ipo=images",
+    "category": "Platformer"
   }
 ]
     
