@@ -167,12 +167,12 @@ function MainDashboard() {
 const [displayName, setDisplayNameState] = useState(() => resolveDisplayName());
 
   const setDisplayName = useCallback((val) => {
-    const trimmed = (val || '').slice(0, 25);
-    setDisplayNameState(trimmed);
-    localStorage.setItem('capy-display-name', trimmed);
-    localStorage.setItem('username', trimmed);
-    window.dispatchEvent(new Event('capy-username-updated'));
-  }, []);
+  const cleaned = (val || '').trim().slice(0, 25) || resolveDisplayName();
+  setDisplayNameState(cleaned);
+  localStorage.setItem('capy-display-name', cleaned);
+  localStorage.setItem('username', cleaned);
+  window.dispatchEvent(new Event('capy-username-updated'));
+}, []);
 
   useEffect(() => {
     if (selectedFrame) {
