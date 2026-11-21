@@ -1,3 +1,767 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:95df5bc77f0ee4d5ffe3d6e91d3396dca387a218a75d9ac036a1102fefeb80c3
-size 30825
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capybara Science - HTML5 & Game Viewer</title>
+  
+  <!-- Google Font: Fredoka -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            fredoka: ['Fredoka', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      background-color: #0f0f11;
+      color: #f4f4f5;
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f0f11;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38bdf8;
+    }
+
+    /* Aspect ratios */
+    .aspect-16-9 {
+      aspect-ratio: 16 / 9;
+    }
+    .aspect-4-3 {
+      aspect-ratio: 4 / 3;
+    }
+
+    /* Dropzone drag-over state */
+    .drag-over {
+      border-color: #38bdf8 !important;
+      background-color: rgba(56, 189, 248, 0.08) !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#0f0f11] text-zinc-100 font-fredoka antialiased selection:bg-[#38bdf8] selection:text-black">
+
+  <!-- TOP HEADER BAR -->
+  <header class="w-full border-b border-white/10 bg-[#0f0f11]/90 backdrop-blur-md sticky top-0 z-40 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo & Title -->
+      <div class="flex items-center gap-3">
+        <img 
+          src="https://img.icons8.com/color/32/capybara.png" 
+          alt="Capybara Logo" 
+          class="w-8 h-8 object-contain shrink-0"
+        />
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm font-black tracking-wider uppercase text-zinc-100">
+              CAPYBARA SCIENCE
+            </h1>
+            <span class="text-[9px] px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-mono font-bold tracking-widest uppercase">
+              HTML5 & Game Viewer
+            </span>
+          </div>
+          <p class="text-[10px] text-zinc-400 font-mono">Paste a URL to launch your game or website directly</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
+        <button
+          onclick="switchTab('viewport')"
+          id="tab-btn-viewport"
+          class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-[#38bdf8] text-black shadow-md cursor-pointer"
+        >
+          <i data-lucide="monitor" class="w-3.5 h-3.5"></i>
+          <span>Viewport</span>
+        </button>
+
+        <button
+          onclick="switchTab('files')"
+          id="tab-btn-files"
+          class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-400 hover:text-white hover:bg-white/5 cursor-pointer"
+        >
+          <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
+          <span>Files</span>
+          <span id="tab-file-count" class="hidden ml-1 text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-black/40 text-sky-300">0</span>
+        </button>
+
+        <button
+          onclick="switchTab('editor')"
+          id="tab-btn-editor"
+          class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-400 hover:text-white hover:bg-white/5 cursor-pointer"
+        >
+          <i data-lucide="code" class="w-3.5 h-3.5"></i>
+          <span>Live Code Editor</span>
+        </button>
+      </nav>
+
+      <!-- Header Settings Controls -->
+      <div class="flex items-center gap-2">
+        <button
+          onclick="toggleSettingsModal(true)"
+          class="p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300 transition-all cursor-pointer"
+          title="Settings & Display"
+        >
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
+
+    <!-- TAB 1: VIEWPORT SECTION -->
+    <section id="tab-viewport" class="flex flex-col gap-4">
+      
+      <!-- Viewport Card -->
+      <div id="iframe-wrapper" class="relative rounded-2xl border border-white/10 bg-[#141417] overflow-hidden flex flex-col shadow-2xl transition-all group">
+        
+        <!-- Viewport Top Controls Bar -->
+        <div class="px-4 py-2.5 border-b border-white/10 bg-[#0f0f11]/90 flex items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse shrink-0"></span>
+            <span id="active-game-title" class="font-bold text-zinc-200 truncate font-mono text-[11px]">No Active Web Page Loaded</span>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="reloadViewer()" class="p-1.5 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer" title="Reload Frame">
+              <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+            </button>
+
+            <button onclick="toggleMute()" class="p-1.5 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer" title="Mute/Unmute Indicator">
+              <i data-lucide="volume-2" id="sound-icon" class="w-3.5 h-3.5"></i>
+            </button>
+
+            <div class="w-[1px] h-3 bg-white/10"></div>
+
+            <button onclick="launchFullscreen()" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sky-400 text-black font-black text-[10px] tracking-wider uppercase hover:bg-sky-300 transition-all cursor-pointer shadow-md active:scale-95">
+              <i data-lucide="maximize-2" class="w-3 h-3"></i>
+              <span>Fullscreen</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Viewport Content Frame -->
+        <div id="viewport-frame-container" class="w-full relative bg-black flex items-center justify-center overflow-hidden transition-all aspect-16-9 min-h-[420px]">
+          <iframe
+            id="game-iframe"
+            title="Game Viewport"
+            class="w-full h-full border-none hidden"
+            allow="autoplay; fullscreen; camera; microphone; clipboard-read; clipboard-write; gamepad"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
+          ></iframe>
+
+          <!-- Exit Fullscreen Button Overlay (Visible only when expanded) -->
+          <button 
+            id="exit-fullscreen-overlay-btn"
+            onclick="launchFullscreen()" 
+            class="hidden fixed top-4 right-4 z-[999999] px-4 py-2 rounded-xl bg-black/80 hover:bg-black text-white font-bold text-xs border border-white/20 shadow-2xl backdrop-blur-md flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <i data-lucide="minimize-2" class="w-4 h-4 text-sky-400"></i>
+            <span>Exit Fullscreen</span>
+          </button>
+
+          <!-- Empty Viewport Placeholder -->
+          <div id="iframe-placeholder" class="flex flex-col items-center justify-center p-8 text-center text-zinc-500 gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400">
+              <i data-lucide="monitor" class="w-6 h-6"></i>
+            </div>
+            <div class="space-y-1">
+              <p class="text-sm font-semibold text-zinc-300">No Web Build Loaded</p>
+              <p class="text-xs text-zinc-500 max-w-sm">
+                Select an uploaded HTML file, build an app in the editor, or launch a website link below.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Viewport Footer Bar -->
+        <div class="px-4 py-2 bg-[#0f0f11] border-t border-white/10 flex items-center justify-between text-[10px] font-mono text-zinc-400">
+          <div></div>
+          <div>
+            <button onclick="clearViewer()" class="hover:text-red-400 transition-colors cursor-pointer">Clear Viewport</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Launch Cards Row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- Website Launcher Card -->
+        <div class="rounded-2xl border border-white/10 bg-[#141417] p-5 flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                <i data-lucide="box" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 class="text-xs font-bold text-zinc-200">Website Launcher</h3>
+                <p class="text-[10px] text-zinc-400">Paste a link to launch the website</p>
+              </div>
+            </div>
+            <span class="text-[9px] font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 uppercase">
+              HTML5
+            </span>
+          </div>
+
+          <div class="flex gap-2">
+            <input
+              type="text"
+              id="custom-url-input"
+              placeholder="Paste a web link to launch..."
+              class="flex-1 bg-[#0f0f11] border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-200 outline-none focus:border-sky-500 transition-all font-fredoka"
+            />
+            <button
+              onclick="launchCustomUrl()"
+              class="px-4 py-2 bg-[#38bdf8] text-black font-bold text-xs rounded-xl hover:bg-sky-300 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <i data-lucide="play" class="w-3.5 h-3.5 fill-black"></i>
+              <span>Launch</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Upload Game File Card -->
+        <div class="rounded-2xl border border-white/10 bg-[#141417] p-5 flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                <i data-lucide="folder-open" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 class="text-xs font-bold text-zinc-200">Quick Upload Game File</h3>
+                <p class="text-[10px] text-zinc-400">Select `.html`, `.htm`, or `.js` file</p>
+              </div>
+            </div>
+            <button 
+              onclick="document.getElementById('file-input').click()"
+              class="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-zinc-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <i data-lucide="upload" class="w-3.5 h-3.5 text-sky-400"></i>
+              <span>Browse</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 2: FILES MANAGER SECTION -->
+    <section id="tab-files" class="flex flex-col gap-6 hidden">
+      
+      <!-- Upload Drag & Drop Area (Primary Focus) -->
+      <div 
+        id="drop-zone"
+        class="rounded-3xl border-2 border-dashed border-sky-400/30 bg-[#141417] p-12 md:p-16 flex flex-col items-center justify-center text-center gap-5 transition-all hover:border-sky-400 hover:bg-sky-500/5 cursor-pointer group shadow-2xl min-h-[320px]"
+      >
+        <input type="file" id="file-input" class="hidden" accept=".html,.htm,.js,.css" multiple onchange="handleFileSelect(event)" />
+        
+        <div class="w-20 h-20 rounded-3xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(56,189,248,0.2)]">
+          <i data-lucide="upload" class="w-10 h-10"></i>
+        </div>
+        
+        <div class="space-y-2 max-w-md">
+          <h3 class="text-xl font-black text-zinc-100 tracking-wide">
+            Drop Game Files Here
+          </h3>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Drag and drop your HTML game files directly onto this zone, or click anywhere to browse your device.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-mono px-3.5 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 font-bold uppercase tracking-wider">
+            Supports .html, .htm, .js, .css
+          </span>
+        </div>
+      </div>
+
+      <!-- Uploaded Files List -->
+      <div class="rounded-2xl border border-white/10 bg-[#141417] p-5 flex flex-col gap-4">
+        <div class="flex items-center justify-between pb-3 border-b border-white/5">
+          <div class="flex items-center gap-2">
+            <i data-lucide="folder-open" class="w-4 h-4 text-sky-400"></i>
+            <h3 class="text-xs font-bold text-zinc-200 uppercase tracking-wider">
+              Stored HTML Builds
+            </h3>
+          </div>
+          <span id="file-count" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-zinc-400">0 Files</span>
+        </div>
+
+        <div id="files-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+          <!-- Empty State -->
+          <div id="empty-files-state" class="py-8 flex flex-col items-center justify-center text-center text-zinc-500 gap-2">
+            <i data-lucide="file-code" class="w-8 h-8 opacity-30"></i>
+            <p class="text-xs font-medium text-zinc-400">No stored builds yet</p>
+            <p class="text-[10px] max-w-xs">Upload an HTML web build or game to save it locally for future sessions.</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB 3: LIVE CODE EDITOR SECTION -->
+    <section id="tab-editor" class="rounded-2xl border border-white/10 bg-[#141417] p-5 flex flex-col gap-4 hidden">
+      <div class="flex items-center justify-between pb-3 border-b border-white/5">
+        <div class="flex items-center gap-2">
+          <i data-lucide="terminal" class="w-4 h-4 text-sky-400"></i>
+          <h3 class="text-xs font-bold text-zinc-200 uppercase tracking-wider">
+            Live Code Editor
+          </h3>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            onclick="resetEditorTemplate()"
+            class="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300 text-xs font-bold transition-all cursor-pointer font-fredoka"
+          >
+            Reset Template
+          </button>
+
+          <button
+            onclick="runLiveCode()"
+            class="px-4 py-1.5 rounded-lg bg-sky-400 text-black font-bold text-xs hover:bg-sky-300 transition-all flex items-center gap-1.5 shadow-md cursor-pointer font-fredoka"
+          >
+            <i data-lucide="play" class="w-3.5 h-3.5 fill-black"></i>
+            <span>Run Code</span>
+          </button>
+        </div>
+      </div>
+
+      <textarea
+        id="live-editor-textarea"
+        placeholder="Paste HTML/JS code here..."
+        class="w-full h-[400px] bg-[#0f0f11] border border-white/10 rounded-xl p-4 text-xs font-mono text-sky-400 outline-none focus:border-sky-500 leading-relaxed resize-y"
+        spellcheck="false"
+      ></textarea>
+    </section>
+
+  </main>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settings-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden" onclick="toggleSettingsModal(false)">
+    <div class="w-full max-w-md rounded-2xl border border-white/10 bg-[#141417] p-6 flex flex-col gap-5 shadow-2xl relative" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div class="flex items-center gap-2">
+          <i data-lucide="settings" class="w-4 h-4 text-sky-400"></i>
+          <h3 class="text-sm font-bold text-zinc-100">Display Settings</h3>
+        </div>
+        <button onclick="toggleSettingsModal(false)" class="p-1 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="space-y-1.5">
+          <label class="font-semibold text-zinc-300">Viewport Aspect Ratio</label>
+          <select id="aspect-ratio-select" onchange="changeAspectRatio(this.value)" class="w-full bg-[#0f0f11] border border-white/10 rounded-xl p-2.5 text-zinc-200 outline-none focus:border-sky-500 font-fredoka">
+            <option value="aspect-16-9">16:9 Widescreen (Standard)</option>
+            <option value="aspect-4-3">4:3 Retro Format</option>
+            <option value="h-[500px]">Fixed 500px Height</option>
+          </select>
+        </div>
+
+        <div class="p-3 rounded-xl bg-white/5 border border-white/5 space-y-2 text-[11px] text-zinc-400">
+          <div class="flex items-center justify-between">
+            <span>Sandbox Script Permissions</span>
+            <span class="text-sky-400 font-bold">Enabled</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Local Blob Storage</span>
+            <span class="text-sky-400 font-bold">Enabled</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-white/10 flex justify-end">
+        <button onclick="toggleSettingsModal(false)" class="px-4 py-2 bg-sky-400 text-black font-bold text-xs rounded-xl hover:bg-sky-300 transition-all cursor-pointer font-fredoka">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const STARTER_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      background: #0f0f11;
+      color: #38bdf8;
+      font-family: 'Fredoka', monospace, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 12px;
+      background: #141417;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+    }
+    .hud {
+      position: absolute;
+      top: 16px;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">CAPYBARA SCIENCE - SANDBOX ACTIVE</div>
+  <canvas id="c" width="480" height="320"></canvas>
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let angle = 0;
+    
+    function render() {
+      ctx.fillStyle = 'rgba(20, 20, 23, 0.2)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const x = cx + Math.cos(angle) * 80;
+      const y = cy + Math.sin(angle) * 80;
+      
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      
+      angle += 0.04;
+      requestAnimationFrame(render);
+    }
+    render();
+  <\/script>
+</body>
+</html>`;
+
+    // State
+    const state = {
+      uploadedFiles: [],
+      activeFileId: null,
+      activeBlobUrl: '',
+      isMuted: false
+    };
+
+    // DOM Elements
+    const gameIframe = document.getElementById('game-iframe');
+    const iframePlaceholder = document.getElementById('iframe-placeholder');
+    const activeGameTitle = document.getElementById('active-game-title');
+    const filesList = document.getElementById('files-list');
+    const emptyFilesState = document.getElementById('empty-files-state');
+    const fileCount = document.getElementById('file-count');
+    const tabFileCount = document.getElementById('tab-file-count');
+    const liveEditorTextarea = document.getElementById('live-editor-textarea');
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      setupDropzone();
+      liveEditorTextarea.value = STARTER_HTML;
+      loadSavedFiles();
+    });
+
+    // Tab Switching
+    function switchTab(tabName) {
+      ['viewport', 'files', 'editor'].forEach(t => {
+        const sec = document.getElementById(`tab-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tabName) {
+          sec.classList.remove('hidden');
+          btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-[#38bdf8] text-black shadow-md cursor-pointer";
+        } else {
+          sec.classList.add('hidden');
+          btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-400 hover:text-white hover:bg-white/5 cursor-pointer";
+        }
+      });
+    }
+
+    // LocalStorage Management
+    function loadSavedFiles() {
+      try {
+        const saved = localStorage.getItem('capy-viewer-files');
+        if (saved) {
+          state.uploadedFiles = JSON.parse(saved);
+          updateFilesUI();
+        }
+      } catch(e) {
+        console.error("Failed loading files", e);
+      }
+    }
+
+    function saveFiles() {
+      try {
+        localStorage.setItem('capy-viewer-files', JSON.stringify(state.uploadedFiles));
+      } catch(e) {
+        console.error("Failed saving files", e);
+      }
+    }
+
+    // Dropzone Setup
+    function setupDropzone() {
+      const dropZone = document.getElementById('drop-zone');
+      ['dragenter', 'dragover'].forEach(name => {
+        dropZone.addEventListener(name, (e) => {
+          e.preventDefault();
+          dropZone.classList.add('drag-over');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(name => {
+        dropZone.addEventListener(name, (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('drag-over');
+        });
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        handleFiles(files);
+      });
+
+      dropZone.addEventListener('click', () => {
+        document.getElementById('file-input').click();
+      });
+    }
+
+    function handleFileSelect(e) {
+      handleFiles(e.target.files);
+    }
+
+    function handleFiles(files) {
+      if (!files || files.length === 0) return;
+
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const content = event.target.result;
+          const newFile = {
+            id: 'file_' + Math.random().toString(36).substring(2, 9),
+            name: file.name,
+            size: (file.size / 1024).toFixed(1) + ' KB',
+            content: content,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+
+          state.uploadedFiles.unshift(newFile);
+          saveFiles();
+          updateFilesUI();
+
+          if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
+            launchHtmlContent(newFile.name, content, newFile.id);
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    // Launch HTML Content into Viewport
+    function launchHtmlContent(title, content, id = null) {
+      if (state.activeBlobUrl && state.activeBlobUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(state.activeBlobUrl);
+      }
+
+      const blob = new Blob([content], { type: 'text/html' });
+      state.activeBlobUrl = URL.createObjectURL(blob);
+      state.activeFileId = id;
+
+      activeGameTitle.textContent = title;
+      gameIframe.src = state.activeBlobUrl;
+      gameIframe.classList.remove('hidden');
+      iframePlaceholder.classList.add('hidden');
+
+      switchTab('viewport');
+      updateFilesUI();
+    }
+
+    // Quick Launch Web URL
+    function launchCustomUrl() {
+      const urlInput = document.getElementById('custom-url-input').value.trim();
+      if (!urlInput) return;
+
+      let finalUrl = urlInput.startsWith('http') ? urlInput : `https://${urlInput}`;
+      state.activeFileId = null;
+      state.activeBlobUrl = finalUrl;
+
+      activeGameTitle.textContent = 'Web Client Build';
+      gameIframe.src = finalUrl;
+      gameIframe.classList.remove('hidden');
+      iframePlaceholder.classList.add('hidden');
+
+      switchTab('viewport');
+    }
+
+    // Live Code Editor Action
+    function runLiveCode() {
+      const code = liveEditorTextarea.value;
+      launchHtmlContent('Live Code Session', code);
+    }
+
+    function resetEditorTemplate() {
+      liveEditorTextarea.value = STARTER_HTML;
+    }
+
+    // File UI Updates
+    function updateFilesUI() {
+      fileCount.textContent = `${state.uploadedFiles.length} File${state.uploadedFiles.length === 1 ? '' : 's'}`;
+      if (state.uploadedFiles.length > 0) {
+        tabFileCount.textContent = state.uploadedFiles.length;
+        tabFileCount.classList.remove('hidden');
+      } else {
+        tabFileCount.classList.add('hidden');
+      }
+
+      if (state.uploadedFiles.length === 0) {
+        filesList.innerHTML = '';
+        filesList.appendChild(emptyFilesState);
+        return;
+      }
+
+      filesList.innerHTML = '';
+      state.uploadedFiles.forEach(file => {
+        const isActive = state.activeFileId === file.id;
+        const fileEl = document.createElement('div');
+        fileEl.className = `p-3 rounded-xl border transition-all flex items-center justify-between gap-3 text-xs ${
+          isActive
+            ? 'bg-sky-500/10 border-sky-500/40 text-sky-300'
+            : 'bg-white/5 border-white/5 hover:border-white/10 text-zinc-300'
+        }`;
+
+        fileEl.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
+              <i data-lucide="file-code" class="w-4 h-4"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="font-bold truncate text-xs">${file.name}</div>
+              <div class="text-[9px] text-zinc-400 font-mono flex items-center gap-2">
+                <span>${file.size}</span>
+                <span>•</span>
+                <span>${file.timestamp}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="launchHtmlContent('${file.name.replace(/'/g, "\\'")}', state.uploadedFiles.find(f => f.id === '${file.id}').content, '${file.id}')" class="px-3 py-1.5 rounded-lg bg-sky-400 text-black font-bold text-[10px] uppercase hover:bg-sky-300 transition-colors flex items-center gap-1 cursor-pointer font-fredoka">
+              <i data-lucide="play" class="w-3 h-3 fill-black"></i>
+              <span>Run</span>
+            </button>
+            <button onclick="deleteFile('${file.id}')" class="p-1.5 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-red-400 transition-colors cursor-pointer" title="Delete File">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+        filesList.appendChild(fileEl);
+      });
+
+      lucide.createIcons();
+    }
+
+    function deleteFile(id) {
+      state.uploadedFiles = state.uploadedFiles.filter(f => f.id !== id);
+      saveFiles();
+      if (state.activeFileId === id) {
+        clearViewer();
+      } else {
+        updateFilesUI();
+      }
+    }
+
+    function clearViewer() {
+      gameIframe.src = 'about:blank';
+      gameIframe.classList.add('hidden');
+      iframePlaceholder.classList.remove('hidden');
+      activeGameTitle.textContent = 'No Active Web Page Loaded';
+      state.activeFileId = null;
+      state.activeBlobUrl = '';
+      updateFilesUI();
+    }
+
+    function reloadViewer() {
+      if (gameIframe.src && gameIframe.src !== 'about:blank') {
+        gameIframe.contentWindow.location.reload();
+      }
+    }
+
+    function toggleMute() {
+      state.isMuted = !state.isMuted;
+      const soundIcon = document.getElementById('sound-icon');
+      soundIcon.setAttribute('data-lucide', state.isMuted ? 'volume-x' : 'volume-2');
+      lucide.createIcons();
+    }
+
+    function launchFullscreen() {
+      const iframe = document.getElementById('game-iframe');
+      const container = document.getElementById('viewport-frame-container');
+      const target = (iframe && !iframe.classList.contains('hidden')) ? iframe : container;
+
+      if (target.requestFullscreen) {
+        target.requestFullscreen();
+      } else if (target.webkitRequestFullscreen) {
+        target.webkitRequestFullscreen();
+      } else if (target.msRequestFullscreen) {
+        target.msRequestFullscreen();
+      }
+    }
+
+    function toggleSettingsModal(show) {
+      const modal = document.getElementById('settings-modal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
+    }
+
+    function changeAspectRatio(val) {
+      const container = document.getElementById('viewport-frame-container');
+      container.className = `w-full relative bg-black flex items-center justify-center overflow-hidden transition-all min-h-[420px] ${val}`;
+    }
+  </script>
+
+</body>
+</html>

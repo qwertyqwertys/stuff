@@ -1,3 +1,44 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:f589bbfda9b522b255c99bcf1bfb486fcea8c203af3e91e4d731cf402228821f
-size 1103
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<base href="https://cdn.jsdelivr.net/gh/web-ports/terraria@main/">
+	<title>Terraria Web Port</title>
+	
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-L7856P3VNT"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+	  gtag('config', 'G-L7856P3VNT');
+	</script>
+
+	<link rel="icon" href="./app.ico" />
+	<style>
+		html, body {
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+		}
+
+		#game-container, iframe, canvas {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			border: none;
+			display: block;
+		}
+	</style>
+	<link rel="canonical" href="https://terraria.mercurywork.shop" />
+	<script type="module" crossorigin src="https://cdn.jsdelivr.net/gh/web-ports/terraria@main/main.js"></script>
+</head>
+<body>
+	<div id="app"></div>
+	<canvas id="canvas" style="width: 100%"></canvas>
+</body>
+</html>
