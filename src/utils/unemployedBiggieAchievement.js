@@ -6,6 +6,7 @@ export const UNEMPLOYED_BIGGIE_ACHIEVEMENT = {
 
 export const UNEMPLOYED_BIGGIE_STORAGE_KEY = 'capy_unemployed_biggie_played_v1';
 export const UNEMPLOYED_BIGGIE_UNLOCKED_KEY = 'capy_unemployed_biggie_unlocked_v1';
+export const APP_FOOD_GAMES_STORAGE_KEY = 'capy-unemployed-biggie-games';
 
 // Canonical list of all 20 required games
 export const REQUIRED_FOOD_GAMES = [
@@ -31,6 +32,29 @@ export const REQUIRED_FOOD_GAMES = [
   'hungry-lamu-2',
 ];
 
+const FOOD_GAME_LABELS = new Map([
+  ['cookie-clicker', 'Cookie Clicker'],
+  ['eggy-car', 'Eggy Car'],
+  ['tiny-fishing', 'Tiny Fishing'],
+  ['bacon-may-die', 'Bacon May Die'],
+  ['crossy-road', 'Crossy Road'],
+  ['google-baseball', 'Google Baseball'],
+  ['growden.io', 'Growden.io'],
+  ['grow-a-garden', 'Grow a Garden (Fake)'],
+  ['candy-crush', 'Candy Crush (Fake)'],
+  ['jelly-drift', 'Jelly Drift'],
+  ['jelly-mario', 'Jelly Mario'],
+  ['jelly-restraunt', 'Jelly Restaurant'],
+  ['crazy-cattle-3d', 'Crazy Cattle 3D'],
+  ['crazy-chicken-3d', 'Crazy Chicken 3D'],
+  ['melon-playground', 'Melon Playground'],
+  ['bad-ice-cream', 'Bad Ice Cream'],
+  ['bad-ice-cream-2', 'Bad Ice Cream 2'],
+  ['bad-ice-cream-3', 'Bad Ice Cream 3'],
+  ['hungry-lamu', 'Hungry Llama'],
+  ['hungry-lamu-2', 'Hungry Llama 2'],
+]);
+
 const normalizeGameName = (value = '') =>
   String(value)
     .toLowerCase()
@@ -51,7 +75,13 @@ const ALIAS_LOOKUP = new Map([
   ['growden io', 'growden.io'],
   ['grow a garden', 'grow-a-garden'],
   ['candy crush', 'candy-crush'],
+  ['hungry llama', 'hungry-lamu'],
+  ['hungry llama 2', 'hungry-lamu-2'],
 ]);
+
+export function formatRequiredFoodGameLabel(canonicalId) {
+  return FOOD_GAME_LABELS.get(canonicalId) || canonicalId;
+}
 
 export function matchRequiredFoodGame(gameTitleOrId) {
   const normalized = normalizeGameName(gameTitleOrId);
@@ -63,9 +93,13 @@ export function matchRequiredFoodGame(gameTitleOrId) {
 
 export function getPlayedFoodGames() {
   try {
-    const raw = JSON.parse(localStorage.getItem(UNEMPLOYED_BIGGIE_STORAGE_KEY) || '[]');
-    if (!Array.isArray(raw)) return [];
-    const matched = raw
+    const rawUtil = JSON.parse(localStorage.getItem(UNEMPLOYED_BIGGIE_STORAGE_KEY) || '[]');
+    const rawApp = JSON.parse(localStorage.getItem(APP_FOOD_GAMES_STORAGE_KEY) || '[]');
+    const combined = [
+      ...(Array.isArray(rawUtil) ? rawUtil : []),
+      ...(Array.isArray(rawApp) ? rawApp : []),
+    ];
+    const matched = combined
       .map((entry) => matchRequiredFoodGame(entry))
       .filter(Boolean);
     return Array.from(new Set(matched));
@@ -90,12 +124,17 @@ export function getUnemployedBiggieProgress() {
   const played = getPlayedFoodGames();
   const playedSet = new Set(played);
   const remaining = REQUIRED_FOOD_GAMES.filter((game) => !playedSet.has(game));
+  const remainingItems = remaining.map((id) => ({
+    id,
+    label: formatRequiredFoodGameLabel(id),
+  }));
   const unlocked = isUnemployedBiggieUnlocked();
 
   return {
     ...UNEMPLOYED_BIGGIE_ACHIEVEMENT,
     played,
     remaining,
+    remainingItems,
     completedCount: played.length,
     totalCount: REQUIRED_FOOD_GAMES.length,
     unlocked,
