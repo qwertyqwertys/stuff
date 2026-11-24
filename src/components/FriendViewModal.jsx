@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { X, UserCircle, Heart, Trophy } from 'lucide-react';
 import { ProfileAvatar } from './SettingsModal';
+import { getUnemployedBiggieProgress } from '../utils/unemployedBiggieAchievement';
 
 const TROPHIES = [
   { id: 'first_game', name: 'THE GOAT', desc: 'Play your first game', icon: '👑' },
@@ -81,6 +82,8 @@ function generateFriendCode(name, pfp, favs, times, achievements) {
 }
 
 export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwnProfile, myAchievements = [], userFavs = [], userTimes = {} }) {
+  const [showRemainingBiggie, setShowRemainingBiggie] = useState(false);
+
   if (!isOwnProfile && (!friend || (!friend.decoded && !friend.f && !friend.favs))) return null;
 
   // Safe parsers in case data comes in as a JSON string from localStorage
@@ -129,6 +132,10 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
     ? (myAchievements.length > 0 ? myAchievements : (friend?.achievements || friend?.a || [])) 
     : (friend?.decoded?.a || friend?.achievements || friend?.a || []);
   const displayAchievements = parseArray(rawAchievements);
+
+  const biggieProgress = useMemo(() => {
+    return getUnemployedBiggieProgress();
+  }, [displayAchievements, isOwnProfile, friend]);
 
   const friendCodeDisplay = isOwnProfile 
     ? (localStorage.getItem('capy-friend-code') || 
@@ -192,18 +199,56 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
             <div className="grid grid-cols-2 gap-2">
               {TROPHIES.map(trophy => {
                 const isEarned = displayAchievements.includes(trophy.id);
+                const isBiggie = trophy.id === 'unemployed_biggie';
+                const remainingList = biggieProgress?.remainingItems || [];
+
                 return (
                   <div 
                     key={trophy.id} 
                     className={`p-2 rounded-xl border transition-all duration-300 ${
-                      isEarned 
-                        ? 'border-yellow-500/30 bg-yellow-500/5 opacity-100 grayscale-0' 
-                        : 'border-white/5 opacity-20 grayscale'
+                      isBiggie && showRemainingBiggie
+                        ? 'col-span-2 border-yellow-500/30 bg-zinc-800/70 opacity-100 grayscale-0'
+                        : isEarned 
+                          ? 'border-yellow-500/30 bg-yellow-500/5 opacity-100 grayscale-0' 
+                          : 'border-white/5 opacity-20 grayscale'
                     }`}
                   >
                     <div className="text-xl">{trophy.icon}</div>
                     <div className="text-[9px] font-black uppercase mt-1 leading-tight text-white">{trophy.name}</div>
                     <div className="text-[7px] text-zinc-400 opacity-60 leading-tight">{trophy.desc}</div>
+
+                    {isBiggie && isOwnProfile && (
+                      <div className="mt-2 pt-1.5 border-t border-white/10 space-y-1.5 opacity-100">
+                        <div className="flex items-center justify-between gap-1 text-[8px] font-bold text-zinc-300">
+                          <span>{biggieProgress.completedCount}/{biggieProgress.totalCount}</span>
+                          {remainingList.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowRemainingBiggie(prev => !prev);
+                              }}
+                              className="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white text-[8px] font-bold transition-colors cursor-pointer"
+                            >
+                              {showRemainingBiggie ? 'Hide' : 'Show Remaining'}
+                            </button>
+                          )}
+                        </div>
+
+                        {showRemainingBiggie && remainingList.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-0.5">
+                            {remainingList.map(item => (
+                              <span
+                                key={item.id}
+                                className="text-[8px] px-1.5 py-0.5 rounded-full bg-zinc-900/90 text-zinc-200 border border-white/10"
+                              >
+                                {item.label}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
