@@ -82,7 +82,12 @@ function generateFriendCode(name, pfp, favs, times, achievements) {
 }
 
 export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwnProfile, myAchievements = [], userFavs = [], userTimes = {} }) {
+  // Always declare hooks before any conditional return
   const [showRemainingBiggie, setShowRemainingBiggie] = useState(false);
+
+  const biggieProgress = useMemo(() => {
+    return getUnemployedBiggieProgress();
+  }, [myAchievements, friend, isOwnProfile]);
 
   if (!isOwnProfile && (!friend || (!friend.decoded && !friend.f && !friend.favs))) return null;
 
@@ -132,10 +137,6 @@ export function FriendViewModal({ friend, gamesData = [], onClose, ownPfp, isOwn
     ? (myAchievements.length > 0 ? myAchievements : (friend?.achievements || friend?.a || [])) 
     : (friend?.decoded?.a || friend?.achievements || friend?.a || []);
   const displayAchievements = parseArray(rawAchievements);
-
-  const biggieProgress = useMemo(() => {
-    return getUnemployedBiggieProgress();
-  }, [displayAchievements, isOwnProfile, friend]);
 
   const friendCodeDisplay = isOwnProfile 
     ? (localStorage.getItem('capy-friend-code') || 
