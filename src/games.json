@@ -1370,6 +1370,13 @@
     "url": "/stores/games-html/blackjack.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fclickhowto.com%2Fwp-content%2Fuploads%2F2017%2F07%2FBlackjack.jpg&f=1&nofb=1&ipt=3e51b7c0ec7eb199077cd76fc662d10dc4afb656f278640e347181a95fce2d1c&ipo=images",
     "category": "Casino"
+  },
+  {
+    "id": "flappy-dunk",
+    "title": "Flappy Dunk",
+    "url": "/stores/games-html/flappy-dunk.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fplay-lh.googleusercontent.com%2FhHR8zPHs2mxz4I1_OhJWPV1-t9eIB9UbBaEY5PW575S2BD7mYLWeNz6ptt0-cfAkGg&f=1&nofb=1&ipt=aaf5abf11b8e873f6f33a8948537e9e7ab8b015ef50f42361eafa57197811bc0&ipo=images",
+    "category": "Arcade"
   }
 ]
 
