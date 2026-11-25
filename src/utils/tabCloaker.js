@@ -63,7 +63,7 @@ export function clearSavedTabCloak(defaultTitle = 'Home', defaultIcon = '/favico
 
 /**
  * Extracts page <title> and icon directly from the fetched HTML of the typed URL,
- * with `<origin>/favicon.ico` as the only icon fallback.
+ * skipping `favicon_32x32.png` and using `<origin>/favicon.ico` as the fallback.
  */
 export async function fetchSiteCloakFromUrl(rawUrl) {
   const normalized = normalizeTargetUrl(rawUrl);
@@ -100,27 +100,17 @@ export async function fetchSiteCloakFromUrl(rawUrl) {
         title = parsedTitle;
       }
 
-      const iconSelectors = [
-        "link[rel='icon']",
-        "link[rel='shortcut icon']",
-        "link[rel='apple-touch-icon']",
-        "link[rel='apple-touch-icon-precomposed']",
-        "link[rel~='icon']",
-      ];
+      const candidates = [...doc.querySelectorAll("link[rel*='icon']")]
+        .map((el) => {
+          const href = el.getAttribute('href')?.trim();
+          const resolved = resolveAssetUrl(href, normalized);
+          if (!resolved || resolved.includes('google.com/s2/favicons')) return null;
+          if (resolved.includes('favicon_32x32.png')) return null;
+          return resolved;
+        })
+        .filter(Boolean);
 
-      for (const selector of iconSelectors) {
-        const iconEl = doc.querySelector(selector);
-        const href = iconEl?.getAttribute('href')?.trim();
-        const resolved = resolveAssetUrl(href, normalized);
-        if (resolved && !resolved.includes('google.com/s2/favicons')) {
-          iconUrl = resolved;
-          break;
-        }
-      }
-
-      if (!iconUrl) {
-        iconUrl = `${parsed.origin}/favicon.ico`;
-      }
+      iconUrl = candidates[0] || `${parsed.origin}/favicon.ico`;
 
       if (title || iconUrl) {
         break;
@@ -136,3 +126,4 @@ export async function fetchSiteCloakFromUrl(rawUrl) {
     sourceUrl: normalized,
   };
 }
+```[cite: 6]
