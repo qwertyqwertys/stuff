@@ -33,12 +33,6 @@ function resolveAssetUrl(href, baseUrl) {
   }
 }
 
-function getFallbackTitleFromUrl(parsedUrl) {
-  const host = parsedUrl.hostname.replace(/^www\./i, '');
-  const root = host.split('.')[0] || host;
-  return root.charAt(0).toUpperCase() + root.slice(1);
-}
-
 export function setDocumentTabIdentity(title, iconUrl) {
   if (title) {
     document.title = title;
@@ -69,11 +63,9 @@ export function loadCustomTabCloak() {
 async function fetchSiteCloakFromUrl(rawUrl) {
   const normalized = normalizeTargetUrl(rawUrl);
   const parsed = new URL(normalized);
-  const fallbackIcon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(parsed.hostname)}&sz=64`;
-  const fallbackTitle = getFallbackTitleFromUrl(parsed);
 
-  let title = fallbackTitle;
-  let iconUrl = fallbackIcon;
+  let title = '';
+  let iconUrl = '';
 
   const proxies = [
     (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
@@ -83,7 +75,7 @@ async function fetchSiteCloakFromUrl(rawUrl) {
   for (const makeProxyUrl of proxies) {
     try {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 4500);
+      const timer = setTimeout(() => controller.abort(), 5000);
       const res = await fetch(makeProxyUrl(normalized), { signal: controller.signal });
       clearTimeout(timer);
 
@@ -92,25 +84,44 @@ async function fetchSiteCloakFromUrl(rawUrl) {
       if (!html) continue;
 
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      const parsedTitle = doc.querySelector('title')?.textContent?.trim();
+
+      const parsedTitle = (
+        doc.querySelector('title')?.textContent ||
+        doc.querySelector("meta[property='og:title']")?.getAttribute('content') ||
+        ''
+      ).trim();
+
       if (parsedTitle) {
         title = parsedTitle;
       }
 
-      const iconEl =
-        doc.querySelector("link[rel='icon']") ||
-        doc.querySelector("link[rel='shortcut icon']") ||
-        doc.querySelector("link[rel='apple-touch-icon']") ||
-        doc.querySelector("link[rel~='icon']");
+      const iconSelectors = [
+        "link[rel='icon']",
+        "link[rel='shortcut icon']",
+        "link[rel='apple-touch-icon']",
+        "link[rel='apple-touch-icon-precomposed']",
+        "link[rel~='icon']",
+      ];
 
-      const resolvedIcon = resolveAssetUrl(iconEl?.getAttribute('href'), normalized);
-      if (resolvedIcon) {
-        iconUrl = resolvedIcon;
+      for (const selector of iconSelectors) {
+        const iconEl = doc.querySelector(selector);
+        const href = iconEl?.getAttribute('href')?.trim();
+        const resolved = resolveAssetUrl(href, normalized);
+        if (resolved && !resolved.includes('google.com/s2/favicons')) {
+          iconUrl = resolved;
+          break;
+        }
       }
 
-      break;
+      if (!iconUrl) {
+        iconUrl = `${parsed.origin}/favicon.ico`;
+      }
+
+      if (title || iconUrl) {
+        break;
+      }
     } catch {
-      // Fall back to next proxy or Google favicon + domain title
+      // Try next proxy
     }
   }
 
@@ -150,7 +161,7 @@ export function UrlCloakBox({ isLightMode = false, onCloakChange }) {
       setCloakTitle(result.title);
       setCloakIcon(result.iconUrl);
       saveAndApply(result);
-      setStatusMsg(`Cloaked as "${result.title}"`);
+      setStatusMsg(result.title ? `Cloaked as "${result.title}"` : 'Cloak updated from URL');
     } catch {
       setStatusMsg('Could not read that URL — check the link and try again.');
     } finally {
