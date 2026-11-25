@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <base href="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@main/survival%20race%20v2/">
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Survival Race</title>
+    <style>
+      html,
+      body {
+        background: #000;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+      }
+
+      div#gameContainer {
+        background: transparent !important;
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      div#gameContainer canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      div#gameContainer canvas[data-pixel-art="true"] {
+        image-rendering: optimizeSpeed;
+        image-rendering: -webkit-crisp-edges;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: -o-crisp-edges;
+        image-rendering: crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: optimize-contrast;
+        image-rendering: pixelated;
+        -ms-interpolation-mode: nearest-neighbor;
+      }
+    </style>
+    <script>
+      localStorage.setItem("savesData", JSON.stringify({}))
+    </script>
+  </head>
+
+  <body>
+    <div id="gameContainer" style="width: 100vw; height: 100vh; top: 0px; left: 0px;">
+      <canvas id="unity-canvas" data-pixel-art="" width="1920" height="1080" style="background: linear-gradient(to right, white, white 100%, transparent 100%, transparent) center center / 100% 1rem no-repeat; width: 100vw; height: 100vh; cursor: default;"></canvas>
+      <script>
+        window.fileMergerConfig = {
+          files: [
+            { name: 'yandexBrotli.wasm.unityweb', parts: 2 },
+          ],
+          basePath: 'Build/',
+          debug: false
+        };
+      </script>
+      <script src="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@main/merge.js"></script>
+      <script src="Build/yandexBrotli.loader.js"></script>
+      <script>
+        let myGameInstance = null;
+        let ysdk = null;
+        let player = null;
+        let leaderboard;
+        let payments = null;
+        let initGame = false;
+        let nowFullAdOpen = false;
+
+        function InitGame() {
+          initGame = true;
+        }
+
+        function FullAdShow() {}
+
+        function RewardedShow(id) {}
+
+        function StickyAdActivity(show) {}
+
+        function InitPayments() {}
+
+        function BuyPayments(id) {}
+        let callCount_GetPayments = 0;
+
+        function GetPayments() {}
+
+        function ConsumePurchase(id) {}
+
+        function ConsumePurchases() {}
+
+        function InitLeaderboard() {}
+
+        function SetLeaderboardScores(_name, score) {}
+
+        function GetLeaderboardScores(nameLB, maxPlayers, quantityTop, quantityAround, photoSize, auth) {}
+
+        function EntriesLB(res, maxPlayers, photoSize) {
+          let LeaderboardEntriesText = 'no data';
+          let playersCount = 0;
+          let ranks = new Array(playersCount);
+          let photos = new Array(playersCount);
+          let mames = new Array(playersCount);
+          let scores = new Array(playersCount);
+          let uniqueIDs = new Array(playersCount);
+          let jsonPlayers = {
+            "entries": LeaderboardEntriesText,
+            "ranks": null,
+            "photos": photos,
+            "names": mames,
+            "scores": scores,
+            "uniqueIDs": uniqueIDs
+          };
+          return jsonPlayers;
+        }
+
+        function Review() {}
+
+        function PromptShow() {}
+
+        function PaintRBT(rbt) {}
+
+        function StaticRBTDeactivate() {}
+        var cloudSaves = 'noData';
+
+        function SaveCloud(jsonData, flush) {}
+
+        function LoadCloud(sendback) {}
+        var environmentData = 'null';
+
+        function RequestingEnvironmentData(sendback) {}
+        var playerData = 'noData';
+
+        function InitPlayer(sendback) {}
+
+        function NotAuthorized() {
+          let authJson = {
+            "playerAuth": "rejected",
+            "playerName": "unauthorized",
+            "playerId": "unauthorized",
+            "playerPhoto": "null"
+          };
+          return JSON.stringify(authJson);
+        }
+
+        function OpenAuthDialog() {}
+        var canvas = document.querySelector("#unity-canvas");
+        var config = {
+          dataUrl: "Build/yandexBrotli.data.unityweb",
+          frameworkUrl: "Build/yandexBrotli.framework.js.unityweb",
+          codeUrl: "Build/yandexBrotli.wasm.unityweb",
+          streamingAssetsUrl: "StreamingAssets",
+          companyName: "Survival",
+          productName: "Survival Race",
+          productVersion: "0.0.15",
+        };
+
+        function progressHandler(progress) {
+          var percent = progress * 100 + '%';
+          canvas.style.background = 'linear-gradient(to right, white, white ' + percent + ', transparent ' + percent + ', transparent) no-repeat center';
+          canvas.style.backgroundSize = '100% 1rem';
+        }
+
+        function onResize() {
+          var container = canvas.parentElement;
+          var w = window.innerWidth;
+          var h = window.innerHeight;
+          container.style.width = canvas.style.width = w + "px";
+          container.style.height = canvas.style.height = h + "px";
+          container.style.top = "0px";
+          container.style.left = "0px";
+        }
+        var gameInstance;
+        createUnityInstance(canvas, config, progressHandler).then(function(instance) {
+          canvas = instance.Module.canvas;
+          onResize();
+          gameInstance = instance;
+        }).catch(function(err) {
+          console.error("Failed to create Unity instance:", err);
+        });
+        window.addEventListener('resize', onResize);
+        onResize();
+      </script>
+    </div>
+  </body>
+</html>
