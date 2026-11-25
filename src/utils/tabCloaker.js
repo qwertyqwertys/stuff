@@ -16,12 +16,6 @@ function resolveAssetUrl(href, baseUrl) {
   }
 }
 
-function getFallbackTitle(parsedUrl) {
-  const host = parsedUrl.hostname.replace(/^www\./i, '');
-  const root = host.split('.')[0] || host;
-  return root.charAt(0).toUpperCase() + root.slice(1);
-}
-
 export function applyTabCloak({ title = '', iconUrl = '', sourceUrl = '' }) {
   if (typeof document !== 'undefined') {
     if (title) {
@@ -68,16 +62,15 @@ export function clearSavedTabCloak(defaultTitle = 'Home', defaultIcon = '/favico
 }
 
 /**
- * Fetches page <title> and icon from a URL with CORS proxy + favicon fallback.
+ * Extracts page <title> and icon directly from the fetched HTML of the typed URL,
+ * with `<origin>/favicon.ico` as the only icon fallback.
  */
 export async function fetchSiteCloakFromUrl(rawUrl) {
   const normalized = normalizeTargetUrl(rawUrl);
   const parsed = new URL(normalized);
-  const fallbackIcon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(parsed.hostname)}&sz=64`;
-  const fallbackTitle = getFallbackTitle(parsed);
 
-  let title = fallbackTitle;
-  let iconUrl = fallbackIcon;
+  let title = '';
+  let iconUrl = '';
 
   const proxies = [
     (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
@@ -87,7 +80,7 @@ export async function fetchSiteCloakFromUrl(rawUrl) {
   for (const makeProxyUrl of proxies) {
     try {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 4500);
+      const timer = setTimeout(() => controller.abort(), 5000);
       const res = await fetch(makeProxyUrl(normalized), { signal: controller.signal });
       clearTimeout(timer);
 
@@ -96,25 +89,44 @@ export async function fetchSiteCloakFromUrl(rawUrl) {
       if (!html) continue;
 
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      const parsedTitle = doc.querySelector('title')?.textContent?.trim();
+
+      const parsedTitle = (
+        doc.querySelector('title')?.textContent ||
+        doc.querySelector("meta[property='og:title']")?.getAttribute('content') ||
+        ''
+      ).trim();
+
       if (parsedTitle) {
         title = parsedTitle;
       }
 
-      const iconEl =
-        doc.querySelector("link[rel='icon']") ||
-        doc.querySelector("link[rel='shortcut icon']") ||
-        doc.querySelector("link[rel='apple-touch-icon']") ||
-        doc.querySelector("link[rel~='icon']");
+      const iconSelectors = [
+        "link[rel='icon']",
+        "link[rel='shortcut icon']",
+        "link[rel='apple-touch-icon']",
+        "link[rel='apple-touch-icon-precomposed']",
+        "link[rel~='icon']",
+      ];
 
-      const resolvedIcon = resolveAssetUrl(iconEl?.getAttribute('href'), normalized);
-      if (resolvedIcon) {
-        iconUrl = resolvedIcon;
+      for (const selector of iconSelectors) {
+        const iconEl = doc.querySelector(selector);
+        const href = iconEl?.getAttribute('href')?.trim();
+        const resolved = resolveAssetUrl(href, normalized);
+        if (resolved && !resolved.includes('google.com/s2/favicons')) {
+          iconUrl = resolved;
+          break;
+        }
       }
 
-      break;
+      if (!iconUrl) {
+        iconUrl = `${parsed.origin}/favicon.ico`;
+      }
+
+      if (title || iconUrl) {
+        break;
+      }
     } catch {
-      // Try next proxy or fall back to Google favicon + domain title
+      // Try next proxy
     }
   }
 
