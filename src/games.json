@@ -1363,6 +1363,13 @@
     "url": "/stores/games-html/8-ball-pool.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fplay-lh.googleusercontent.com%2FF2_Kbn1-vQePDh_Y0qNCDhkmpEK5qdEyPwcJqwXho54ZVG4w6Szt32VHsyPzeVLPR2kfYI62-hGmNpQoDxS-wQ&f=1&nofb=1&ipt=289f2e29044ccd461734197ff7c5ff2ceb713c30929a6c99bdab94b844b42895&ipo=images",
     "category": "Sports"
+  },
+  {
+    "id": "blackjack",
+    "title": "Blackjack",
+    "url": "/stores/games-html/blackjack.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fclickhowto.com%2Fwp-content%2Fuploads%2F2017%2F07%2FBlackjack.jpg&f=1&nofb=1&ipt=3e51b7c0ec7eb199077cd76fc662d10dc4afb656f278640e347181a95fce2d1c&ipo=images",
+    "category": "Casino"
   }
 ]
 
