@@ -379,6 +379,14 @@ function MainDashboard() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [customUrlCloak, setCustomUrlCloak] = useState(() => loadCustomTabCloak());
 
+  useEffect(() => {
+    const handleUrlCloakUpdated = (e) => {
+      setCustomUrlCloak(e.detail ?? loadCustomTabCloak());
+    };
+    window.addEventListener('capy-url-cloak-updated', handleUrlCloakUpdated);
+    return () => window.removeEventListener('capy-url-cloak-updated', handleUrlCloakUpdated);
+  }, []);
+
   // --- INTRO OVERLAY STATE ---
   const [showIntro, setShowIntro] = useState(() => localStorage.getItem('skipIntro') !== 'true');
 
