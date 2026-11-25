@@ -15,6 +15,259 @@ const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
 const safeDeleteSong = db?.deleteSongFromIDB || (async () => {});
 
+const CUSTOM_CLOAK_STORAGE_KEY = 'capy_custom_tab_cloak_v1';
+
+function normalizeTargetUrl(rawUrl = '') {
+  const trimmed = String(rawUrl).trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+function resolveAssetUrl(href, baseUrl) {
+  if (!href) return '';
+  try {
+    return new URL(href, baseUrl).href;
+  } catch {
+    return '';
+  }
+}
+
+function getFallbackTitleFromUrl(parsedUrl) {
+  const host = parsedUrl.hostname.replace(/^www\./i, '');
+  const root = host.split('.')[0] || host;
+  return root.charAt(0).toUpperCase() + root.slice(1);
+}
+
+export function setDocumentTabIdentity(title, iconUrl) {
+  if (title) {
+    document.title = title;
+  }
+  if (iconUrl) {
+    let link = document.querySelector("link[rel*='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.getElementsByTagName('head')[0].appendChild(link);
+    }
+    link.href = iconUrl;
+  }
+}
+
+export function loadCustomTabCloak() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_CLOAK_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && (parsed.title || parsed.iconUrl)) {
+      return parsed;
+    }
+  } catch {}
+  return null;
+}
+
+async function fetchSiteCloakFromUrl(rawUrl) {
+  const normalized = normalizeTargetUrl(rawUrl);
+  const parsed = new URL(normalized);
+  const fallbackIcon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(parsed.hostname)}&sz=64`;
+  const fallbackTitle = getFallbackTitleFromUrl(parsed);
+
+  let title = fallbackTitle;
+  let iconUrl = fallbackIcon;
+
+  const proxies = [
+    (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  ];
+
+  for (const makeProxyUrl of proxies) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4500);
+      const res = await fetch(makeProxyUrl(normalized), { signal: controller.signal });
+      clearTimeout(timer);
+
+      if (!res.ok) continue;
+      const html = await res.text();
+      if (!html) continue;
+
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const parsedTitle = doc.querySelector('title')?.textContent?.trim();
+      if (parsedTitle) {
+        title = parsedTitle;
+      }
+
+      const iconEl =
+        doc.querySelector("link[rel='icon']") ||
+        doc.querySelector("link[rel='shortcut icon']") ||
+        doc.querySelector("link[rel='apple-touch-icon']") ||
+        doc.querySelector("link[rel~='icon']");
+
+      const resolvedIcon = resolveAssetUrl(iconEl?.getAttribute('href'), normalized);
+      if (resolvedIcon) {
+        iconUrl = resolvedIcon;
+      }
+
+      break;
+    } catch {
+      // Fall back to next proxy or Google favicon + domain title
+    }
+  }
+
+  return {
+    title,
+    iconUrl,
+    sourceUrl: normalized,
+  };
+}
+
+export function UrlCloakBox({ isLightMode = false, onCloakChange }) {
+  const saved = loadCustomTabCloak();
+  const [urlInput, setUrlInput] = useState(saved?.sourceUrl || '');
+  const [cloakTitle, setCloakTitle] = useState(saved?.title || '');
+  const [cloakIcon, setCloakIcon] = useState(saved?.iconUrl || '');
+  const [hasSavedCloak, setHasSavedCloak] = useState(Boolean(saved));
+  const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState(saved?.title ? `Cloaked as "${saved.title}"` : '');
+
+  const saveAndApply = (cloakData) => {
+    localStorage.setItem(CUSTOM_CLOAK_STORAGE_KEY, JSON.stringify(cloakData));
+    setHasSavedCloak(true);
+    setDocumentTabIdentity(cloakData.title, cloakData.iconUrl);
+    window.dispatchEvent(new CustomEvent('capy-url-cloak-updated', { detail: cloakData }));
+    if (typeof onCloakChange === 'function') onCloakChange(cloakData);
+  };
+
+  const handleGrabAndApply = async (e) => {
+    e.preventDefault();
+    if (!urlInput.trim()) return;
+
+    setLoading(true);
+    setStatusMsg('Grabbing tab title & icon...');
+
+    try {
+      const result = await fetchSiteCloakFromUrl(urlInput);
+      setCloakTitle(result.title);
+      setCloakIcon(result.iconUrl);
+      saveAndApply(result);
+      setStatusMsg(`Cloaked as "${result.title}"`);
+    } catch {
+      setStatusMsg('Could not read that URL — check the link and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManualSave = () => {
+    const updated = {
+      title: cloakTitle.trim(),
+      iconUrl: cloakIcon.trim(),
+      sourceUrl: urlInput.trim(),
+    };
+    saveAndApply(updated);
+    setStatusMsg(`Cloaked as "${updated.title || 'Custom Tab'}"`);
+  };
+
+  const handleClearCloak = () => {
+    localStorage.removeItem(CUSTOM_CLOAK_STORAGE_KEY);
+    setHasSavedCloak(false);
+    setUrlInput('');
+    setCloakTitle('');
+    setCloakIcon('');
+    setStatusMsg('');
+    window.dispatchEvent(new CustomEvent('capy-url-cloak-updated', { detail: null }));
+    if (typeof onCloakChange === 'function') onCloakChange(null);
+  };
+
+  const boxClass = isLightMode
+    ? 'bg-white border-zinc-200 text-zinc-900'
+    : 'bg-black/25 border-white/10 text-white';
+
+  const fieldClass = isLightMode
+    ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400'
+    : 'bg-zinc-800 border-white/10 text-white placeholder:text-zinc-500';
+
+  return (
+    <div className={`p-3 rounded-xl border space-y-2.5 ${boxClass}`}>
+      <div className="flex items-center justify-between">
+        <span className="text-[9px] font-black uppercase tracking-wider text-[var(--theme)]">
+          Cloak From Any URL
+        </span>
+        {hasSavedCloak && (
+          <button
+            type="button"
+            onClick={handleClearCloak}
+            className="text-[8px] font-black uppercase text-red-400 hover:text-red-300 cursor-pointer"
+          >
+            Clear URL Cloak
+          </button>
+        )}
+      </div>
+
+      <form onSubmit={handleGrabAndApply} className="flex gap-2">
+        <input
+          type="text"
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyDown={(e) => e.stopPropagation()}
+          placeholder="https://classroom.google.com"
+          className={`flex-1 px-2.5 py-2 rounded-lg border text-xs outline-none focus:border-[var(--theme)] ${fieldClass}`}
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-3 py-2 rounded-lg bg-[var(--theme)] text-black text-[10px] font-black uppercase hover:opacity-90 disabled:opacity-50 cursor-pointer"
+        >
+          {loading ? '...' : 'Grab & Cloak'}
+        </button>
+      </form>
+
+      {(cloakTitle || cloakIcon) && (
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center gap-2">
+            {cloakIcon && (
+              <img
+                src={cloakIcon}
+                alt="Tab icon preview"
+                className="w-5 h-5 rounded object-contain bg-white/10 p-0.5 flex-shrink-0"
+              />
+            )}
+            <input
+              type="text"
+              value={cloakTitle}
+              onChange={(e) => setCloakTitle(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              placeholder="Tab title"
+              className={`flex-1 px-2.5 py-1.5 rounded-lg border text-xs outline-none focus:border-[var(--theme)] ${fieldClass}`}
+            />
+          </div>
+          <input
+            type="text"
+            value={cloakIcon}
+            onChange={(e) => setCloakIcon(e.target.value)}
+            onKeyDown={(e) => e.stopPropagation()}
+            placeholder="Favicon image URL"
+            className={`w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none focus:border-[var(--theme)] ${fieldClass}`}
+          />
+          <button
+            type="button"
+            onClick={handleManualSave}
+            className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-[10px] font-black uppercase cursor-pointer"
+          >
+            Apply Edits
+          </button>
+        </div>
+      )}
+
+      {statusMsg && (
+        <p className={`text-[9px] ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+          {statusMsg}
+        </p>
+      )}
+    </div>
+  );
+}
+
 const shopItems = [
   { 
     id: 1, 
@@ -648,7 +901,6 @@ function SettingsModalContent({
     setLocalDisplayName(displayName);
   }, [displayName]);
 
-  // Fixed handleNameInputChange with instant profile backend sync
   const handleNameInputChange = async (e) => {
     const text = e.target.value.slice(0, 25);
     setLocalDisplayName(text);
@@ -1611,7 +1863,7 @@ function SettingsModalContent({
               )}
 
               {/* TAB DISGUISE */}
-              {matchesSearch(['disguise', 'tab', 'cloak', 'google', 'classroom', 'drive']) && (
+              {matchesSearch(['disguise', 'tab', 'cloak', 'url', 'link', 'icon', 'google', 'classroom', 'drive']) && (
                 <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
                   <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
                     <Eye className="w-3 h-3 text-[var(--theme)]" /> Tab Disguise
@@ -1632,6 +1884,8 @@ function SettingsModalContent({
                       </button>
                     ))}
                   </div>
+
+                  <UrlCloakBox isLightMode={isLightMode} />
                 </section>
               )}
 
