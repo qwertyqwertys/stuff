@@ -107,7 +107,11 @@ async function fetchSiteCloakFromUrl(rawUrl) {
         const iconEl = doc.querySelector(selector);
         const href = iconEl?.getAttribute('href')?.trim();
         const resolved = resolveAssetUrl(href, normalized);
-        if (resolved && !resolved.includes('google.com/s2/favicons')) {
+        if (
+          resolved &&
+          !resolved.includes('google.com/s2/favicons') &&
+          !resolved.includes('favicon_32x32.png')
+        ) {
           iconUrl = resolved;
           break;
         }
