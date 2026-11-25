@@ -89,14 +89,14 @@ async function fetchSiteCloakFromUrl(rawUrl) {
 
       const doc = new DOMParser().parseFromString(html, 'text/html');
 
-      const parsedTitle = (
+      const rawTitle = (
         doc.querySelector('title')?.textContent ||
         doc.querySelector("meta[property='og:title']")?.getAttribute('content') ||
         ''
-      ).trim();
+      ).replace(/\s+/g, ' ').trim();
 
-      if (parsedTitle) {
-        title = parsedTitle;
+      if (rawTitle) {
+        title = rawTitle;
       }
 
       const iconSelectors = [
@@ -133,6 +133,12 @@ async function fetchSiteCloakFromUrl(rawUrl) {
 
   if (!iconUrl) {
     iconUrl = `${parsed.origin}/favicon.ico`;
+  }
+
+  if (!title) {
+    const hostParts = parsed.hostname.replace(/^www\./i, '').split('.');
+    const baseName = hostParts[0] || parsed.hostname;
+    title = baseName.charAt(0).toUpperCase() + baseName.slice(1);
   }
 
   return {
