@@ -73,13 +73,17 @@ async function fetchSiteCloakFromUrl(rawUrl) {
   ];
 
   for (const makeProxyUrl of proxies) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 5000);
-      const res = await fetch(makeProxyUrl(normalized), { signal: controller.signal });
-      clearTimeout(timer);
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      try {
+        controller.abort('timeout');
+      } catch {}
+    }, 5000);
 
-      if (!res.ok) continue;
+    try {
+      const res = await fetch(makeProxyUrl(normalized), { signal: controller.signal });
+      if (!res || !res.ok) continue;
+
       const html = await res.text();
       if (!html) continue;
 
@@ -117,16 +121,18 @@ async function fetchSiteCloakFromUrl(rawUrl) {
         }
       }
 
-      if (!iconUrl) {
-        iconUrl = `${parsed.origin}/favicon.ico`;
-      }
-
       if (title || iconUrl) {
         break;
       }
     } catch {
-      // Try next proxy
+      // Ignore proxy timeouts, aborts, or 403s and try the next proxy
+    } finally {
+      clearTimeout(timer);
     }
+  }
+
+  if (!iconUrl) {
+    iconUrl = `${parsed.origin}/favicon.ico`;
   }
 
   return {
