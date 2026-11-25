@@ -1377,6 +1377,13 @@
     "url": "/stores/games-html/flappy-dunk.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fplay-lh.googleusercontent.com%2FhHR8zPHs2mxz4I1_OhJWPV1-t9eIB9UbBaEY5PW575S2BD7mYLWeNz6ptt0-cfAkGg&f=1&nofb=1&ipt=aaf5abf11b8e873f6f33a8948537e9e7ab8b015ef50f42361eafa57197811bc0&ipo=images",
     "category": "Arcade"
+  },
+  {
+    "id": "flying-gorilla",
+    "title": "Flying Gorilla",
+    "url": "/stores/games-html/flying-gorilla.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpapas-games.io%2Fdata%2Fimage%2Fflying-gorilla.jpg&f=1&nofb=1&ipt=36a53d5bc860269421cfa2a65252d0e0a83d31cf390a6e826d2b94bef720638c&ipo=images",
+    "category": "Runner"
   }
 ]
 
