@@ -63,7 +63,8 @@ export function clearSavedTabCloak(defaultTitle = 'Home', defaultIcon = '/favico
 
 /**
  * Extracts page <title> and icon directly from the fetched HTML of the typed URL,
- * skipping `favicon_32x32.png` and using `<origin>/favicon.ico` as the fallback.
+ * skipping `favicon_32x32.png` and `google.com/s2/favicons`, and using
+ * `<origin>/favicon.ico` as the fallback.
  */
 export async function fetchSiteCloakFromUrl(rawUrl) {
   const normalized = normalizeTargetUrl(rawUrl);
@@ -78,13 +79,17 @@ export async function fetchSiteCloakFromUrl(rawUrl) {
   ];
 
   for (const makeProxyUrl of proxies) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 5000);
-      const res = await fetch(makeProxyUrl(normalized), { signal: controller.signal });
-      clearTimeout(timer);
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      try {
+        controller.abort('timeout');
+      } catch {}
+    }, 5000);
 
-      if (!res.ok) continue;
+    try {
+      const res = await fetch(makeProxyUrl(normalized), { signal: controller.signal });
+      if (!res || !res.ok) continue;
+
       const html = await res.text();
       if (!html) continue;
 
@@ -100,24 +105,40 @@ export async function fetchSiteCloakFromUrl(rawUrl) {
         title = parsedTitle;
       }
 
-      const candidates = [...doc.querySelectorAll("link[rel*='icon']")]
-        .map((el) => {
-          const href = el.getAttribute('href')?.trim();
-          const resolved = resolveAssetUrl(href, normalized);
-          if (!resolved || resolved.includes('google.com/s2/favicons')) return null;
-          if (resolved.includes('favicon_32x32.png')) return null;
-          return resolved;
-        })
-        .filter(Boolean);
+      const iconSelectors = [
+        "link[rel='icon']",
+        "link[rel='shortcut icon']",
+        "link[rel='apple-touch-icon']",
+        "link[rel='apple-touch-icon-precomposed']",
+        "link[rel~='icon']",
+      ];
 
-      iconUrl = candidates[0] || `${parsed.origin}/favicon.ico`;
+      for (const selector of iconSelectors) {
+        const iconEl = doc.querySelector(selector);
+        const href = iconEl?.getAttribute('href')?.trim();
+        const resolved = resolveAssetUrl(href, normalized);
+        if (
+          resolved &&
+          !resolved.includes('google.com/s2/favicons') &&
+          !resolved.includes('favicon_32x32.png')
+        ) {
+          iconUrl = resolved;
+          break;
+        }
+      }
 
       if (title || iconUrl) {
         break;
       }
     } catch {
-      // Try next proxy
+      // Ignore proxy timeouts, aborts, or 403s and try the next proxy
+    } finally {
+      clearTimeout(timer);
     }
+  }
+
+  if (!iconUrl) {
+    iconUrl = `${parsed.origin}/favicon.ico`;
   }
 
   return {
@@ -126,4 +147,3 @@ export async function fetchSiteCloakFromUrl(rawUrl) {
     sourceUrl: normalized,
   };
 }
-```[cite: 6]
