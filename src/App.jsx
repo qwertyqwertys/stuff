@@ -446,10 +446,17 @@ function MainDashboard() {
   };
 
   useEffect(() => {
+    localStorage.setItem('capy-cloak-type', activeCloak);
+    if (customUrlCloak && (customUrlCloak.title || customUrlCloak.iconUrl)) {
+      setDocumentTabIdentity(
+        customUrlCloak.title || DEFAULT_TITLE,
+        customUrlCloak.iconUrl || DEFAULT_ICON
+      );
+      return;
+    }
     const config = DISGUISE_CONFIG[activeCloak] || DISGUISE_CONFIG.google;
     applyCloak(config);
-    localStorage.setItem('capy-cloak-type', activeCloak);
-  }, [activeCloak]);
+  }, [activeCloak, customUrlCloak]);
 
   useEffect(() => {
     if (!isSoundboardOpen) {
