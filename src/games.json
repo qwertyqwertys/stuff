@@ -1413,6 +1413,13 @@
     "url": "/stores/games-html/the-legend-of-zelda-majora's-mask.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.lukiegames.com%2Fassets%2Fimages%2FN64%2Fn64_the_legend_zelda_majoras_mask_noho_p_ctp9bx.jpg&f=1&nofb=1&ipt=f5e4da9ac9e1cdb0199e7ea58ffc625b4afff36aac0a63879ccf47956d5fec45&ipo=images",
     "category": "Classic"
+  },
+  {
+    "id": "fih",
+    "title": "Fih",
+    "url": "/stores/games-html/fih.html",
+    "thumbnail": "https://img.itch.zone/aW1nLzI2NTYyMjM1LnBuZw==/315x250%23c/8d26Nx.png",
+    "category": "Platformer"
   }
 ]
 
