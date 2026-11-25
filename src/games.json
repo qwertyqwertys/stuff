@@ -497,6 +497,14 @@
     "category": "Skill"
   },
   {
+    "id": "time-shooter-1",
+    "title": "Time Shooter 1",
+    "url": "/stores/games-html/time-shooter-1.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fgeometryarrow.io%2Fdata%2Fimage%2Fgame%2Ftime-shooter%2Ftime-shooter.png&f=1&nofb=1&ipt=c5b3a1053f50f18901cbe165228ca5ffdad1e34e373aa37ee735d10548584d6e&ipo=images",
+    "category": "Action"
+  },
+  {
+    
     "id": "time-shooter-2",
     "title": "Time Shooter 2",
     "url": "https://bind.strongson.com/games/timeshooter2/index.html",
