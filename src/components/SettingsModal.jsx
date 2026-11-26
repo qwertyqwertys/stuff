@@ -1707,109 +1707,108 @@ function SettingsModalContent({
                 </section>
               )}
 
-              {/* GAME & SOUNDBOARD DISCLAIMERS */}
-              {matchesSearch(['disclaimer', 'gta', 'gta3', 'epstein', 'fnae', 'connie', 'sound', 'soundboard', 'language', 'warning', 'school', 'game']) && (
-                <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
-                  <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    <AlertTriangle className="w-3.5 h-3.5 text-[var(--theme)]" /> Disclaimers
-                  </label>
+{/* GAME & SOUNDBOARD DISCLAIMERS */}
+{matchesSearch(['disclaimer', 'gta', 'gta3', 'epstein', 'fnae', 'connie', 'sound', 'soundboard', 'language', 'warning', 'school', 'game']) && (
+  <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+    <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
+      <AlertTriangle className="w-3.5 h-3.5 text-[var(--theme)]" /> Disclaimers
+    </label>
 
-                  <div className="space-y-3">
-                    {/* GTA III Disclaimer */}
-                    <div className="flex items-center justify-between pt-1">
-                      <div>
-                        <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA III Disclaimer</span>
-                        <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                          {gta3DisclaimerHidden ? "Hidden (Accepted)" : "Active"}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleToggleGta3Disclaimer}
-                        className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
-                          gta3DisclaimerHidden
-                            ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
-                            : isLightMode 
-                              ? "bg-zinc-200 text-zinc-700" 
-                              : "bg-white/10 text-zinc-300"
-                        }`}
-                      >
-                        {gta3DisclaimerHidden ? "Reset Warning" : "Active"}
-                      </button>
-                    </div>
+    <div className="space-y-3">
+      {/* GTA Disclaimer (First) */}
+      <div className="flex items-center justify-between pt-1">
+        <div>
+          <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA Disclaimer</span>
+          <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+            {gtaDisclaimerHidden ? "Hidden (Accepted)" : "Active"}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleToggleGtaDisclaimer}
+          className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+            gtaDisclaimerHidden
+              ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+              : isLightMode
+                ? "bg-zinc-200 text-zinc-700"
+                : "bg-white/10 text-zinc-300"
+          }`}
+        >
+          {gtaDisclaimerHidden ? "Reset Warning" : "Active"}
+        </button>
+      </div>
 
-                    {/* GTA Disclaimer */}
-                    <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
-                      <div>
-                        <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA Disclaimer</span>
-                        <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                          {gtaDisclaimerHidden ? "Hidden (Accepted)" : "Active"}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleToggleGtaDisclaimer}
-                        className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
-                          gtaDisclaimerHidden
-                            ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
-                            : isLightMode 
-                              ? "bg-zinc-200 text-zinc-700" 
-                              : "bg-white/10 text-zinc-300"
-                        }`}
-                      >
-                        {gtaDisclaimerHidden ? "Reset Warning" : "Active"}
-                      </button>
-                    </div>
+      {/* GTA III Disclaimer (Second) */}
+      <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
+        <div>
+          <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA III Disclaimer</span>
+          <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+            {gta3DisclaimerHidden ? "Hidden (Accepted)" : "Active"}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleToggleGta3Disclaimer}
+          className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+            gta3DisclaimerHidden
+              ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+              : isLightMode
+                ? "bg-zinc-200 text-zinc-700"
+                : "bg-white/10 text-zinc-300"
+          }`}
+        >
+          {gta3DisclaimerHidden ? "Reset Warning" : "Active"}
+        </button>
+      </div>
 
-                    {/* Five Nights at Epstein's Disclaimer */}
-                    <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
-                      <div>
-                        <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>Five Nights at Epstein's Disclaimer</span>
-                        <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                          {fnaeDisclaimerHidden ? "Hidden (Accepted)" : "Active"}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleToggleFnaeDisclaimer}
-                        className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
-                          fnaeDisclaimerHidden
-                            ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
-                            : isLightMode 
-                              ? "bg-zinc-200 text-zinc-700" 
-                              : "bg-white/10 text-zinc-300"
-                        }`}
-                      >
-                        {fnaeDisclaimerHidden ? "Reset Warning" : "Active"}
-                      </button>
-                    </div>
+      {/* Five Nights at Epstein's Disclaimer */}
+      <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
+        <div>
+          <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>Five Nights at Epstein's Disclaimer</span>
+          <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+            {fnaeDisclaimerHidden ? "Hidden (Accepted)" : "Active"}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleToggleFnaeDisclaimer}
+          className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+            fnaeDisclaimerHidden
+              ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+              : isLightMode
+                ? "bg-zinc-200 text-zinc-700"
+                : "bg-white/10 text-zinc-300"
+          }`}
+        >
+          {fnaeDisclaimerHidden ? "Reset Warning" : "Active"}
+        </button>
+      </div>
 
-                    {/* Connie Sound Language Disclaimer */}
-                    <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
-                      <div>
-                        <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>"Connie You Evil Bitch" Sound Disclaimer</span>
-                        <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                          {connieDisclaimerHidden ? "Hidden (Skipped on Play)" : "Active (Shows Before Play)"}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleToggleConnieDisclaimer}
-                        className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
-                          !connieDisclaimerHidden
-                            ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
-                            : isLightMode 
-                              ? "bg-zinc-200 text-zinc-700" 
-                              : "bg-white/10 text-zinc-300"
-                        }`}
-                      >
-                        {connieDisclaimerHidden ? "Turn Back On" : "Active"}
-                      </button>
-                    </div>
-                  </div>
-                </section>
-              )}
-
+      {/* Connie Sound Language Disclaimer */}
+      <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
+        <div>
+          <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>"Connie You Evil Bitch" Sound Disclaimer</span>
+          <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+            {connieDisclaimerHidden ? "Hidden (Skipped on Play)" : "Active (Shows Before Play)"}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleToggleConnieDisclaimer}
+          className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+            !connieDisclaimerHidden
+              ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+              : isLightMode
+                ? "bg-zinc-200 text-zinc-700"
+                : "bg-white/10 text-zinc-300"
+          }`}
+        >
+          {connieDisclaimerHidden ? "Turn Back On" : "Active"}
+        </button>
+      </div>
+    </div>
+  </section>
+)}
               {/* ABOUT & ACCESSIBILITY */}
               {matchesSearch(['about', 'accessibility', 'contrast']) && (
                 <section className={`space-y-2 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
