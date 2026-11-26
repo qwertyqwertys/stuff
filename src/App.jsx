@@ -10,6 +10,8 @@ import gamesDataRaw from './games.json';
 import gnMathDataRaw from './gn-math-games.json';
 import { GameCard } from './components/GameCard';
 import { SettingsModal } from './components/SettingsModal';
+import GTADisclaimerModal from './components/GTADisclaimer';
+import GTA3DisclaimerModal from './components/GTA3Disclaimer';
 import { Header } from './components/Header';
 import { FriendViewModal } from './components/FriendViewModal';
 import { tracklist } from './components/tracklist'; 
@@ -379,6 +381,20 @@ function MainDashboard() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [customUrlCloak, setCustomUrlCloak] = useState(() => loadCustomTabCloak());
 
+  // --- GTA DISCLAIMERS STATE ---
+  const [gtaModalOpen, setGtaModalOpen] = useState(false);
+  const [gta3ModalOpen, setGta3ModalOpen] = useState(false);
+  const [pendingGame, setPendingGame] = useState(null);
+  const [disclaimerTick, setDisclaimerTick] = useState(0);
+
+  useEffect(() => {
+    const handleDisclaimersUpdated = () => {
+      setDisclaimerTick((t) => t + 1);
+    };
+    window.addEventListener('capy-disclaimers-updated', handleDisclaimersUpdated);
+    return () => window.removeEventListener('capy-disclaimers-updated', handleDisclaimersUpdated);
+  }, []);
+
   useEffect(() => {
     const handleUrlCloakUpdated = (e) => {
       setCustomUrlCloak(e.detail ?? loadCustomTabCloak());
@@ -636,7 +652,7 @@ function MainDashboard() {
     setNotification("Recently Played history cleared!");
   };
 
-  const launchContent = (item) => {
+  const executeGameLaunch = (item) => {
     const matchedFood = matchFoodGame(item);
     if (matchedFood) {
       setFoodGamesPlayed(prev => {
@@ -690,6 +706,35 @@ function MainDashboard() {
       }, 1000);
       activeIntervals.current.push(intervalId);
     }
+  };
+
+  const launchContent = (item) => {
+    if (!item) return;
+
+    const identifier = `${item.id || ''} ${item.title || ''} ${item.name || ''}`
+      .toLowerCase()
+      .replace(/[-_]+/g, ' ');
+
+    const isGta3 = /\bgta\s*(3|iii)\b/.test(identifier) || identifier.includes('gta3');
+    const isGta = /\bgta\b/.test(identifier) || identifier.includes('grand theft auto');
+
+    if (isGta3) {
+      const accepted = localStorage.getItem('gta3_disclaimer_accepted') === 'true';
+      if (!accepted) {
+        setPendingGame(item);
+        setGta3ModalOpen(true);
+        return;
+      }
+    } else if (isGta) {
+      const accepted = localStorage.getItem('gta_disclaimer_accepted') === 'true';
+      if (!accepted) {
+        setPendingGame(item);
+        setGtaModalOpen(true);
+        return;
+      }
+    }
+
+    executeGameLaunch(item);
   };
 
   useEffect(() => {
@@ -1242,6 +1287,7 @@ function MainDashboard() {
 
   return (
     <div
+      data-disclaimer-sync={disclaimerTick}
       className={`min-h-screen pb-20 antialiased relative ${performanceMode ? '' : 'transition-all'} ${isLightMode ? 'light-mode text-zinc-900' : 'text-zinc-100'}`} 
       style={{ 
         '--theme': theme, 
@@ -1490,6 +1536,34 @@ function MainDashboard() {
         isOwnProfile={selectedFriendId === 'me'}
         onClose={() => setSelectedFriendId(null)}
         myAchievements={earnedAchievementIds}
+      />
+
+      <GTADisclaimerModal
+        isOpen={gtaModalOpen}
+        onClose={() => {
+          setGtaModalOpen(false);
+          setPendingGame(null);
+        }}
+        onConfirm={() => {
+          const gameToLaunch = pendingGame;
+          setGtaModalOpen(false);
+          setPendingGame(null);
+          if (gameToLaunch) executeGameLaunch(gameToLaunch);
+        }}
+      />
+
+      <GTA3DisclaimerModal
+        isOpen={gta3ModalOpen}
+        onClose={() => {
+          setGta3ModalOpen(false);
+          setPendingGame(null);
+        }}
+        onConfirm={() => {
+          const gameToLaunch = pendingGame;
+          setGta3ModalOpen(false);
+          setPendingGame(null);
+          if (gameToLaunch) executeGameLaunch(gameToLaunch);
+        }}
       />
       
       <SettingsModal 
