@@ -1408,7 +1408,13 @@
     "category": "Classic"
   },
   {
-    
+    "id": "zelda-II-the-adventure-of-link",
+    "title": "Zelda II: The Adventure of Link",
+    "url": "/stores/games-html/zelda-II-the-adventure-of-link.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%2Fid%2FOIP.2kn_70bnYdjfydIbTqX9FgHaKI%3Fr%3D0%26pid%3DApi&f=1&ipt=568a2cd2b43530ffce11349aab9d9445382b5c5afcc635b9ba8a16569414d5f3&ipo=images",
+    "category": "Classic"
+  },
+  {
     "id": "the-legend-of-zelda-ocarina-of-time",
     "title": "The Legend of Zelda Ocarina of Time",
     "url": "/stores/games-html/the-legend-of-zelda-ocarina-of-time.html",
