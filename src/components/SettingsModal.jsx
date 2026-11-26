@@ -10,7 +10,6 @@ import * as db from '../utils/db';
 import { supabase } from '../supabaseClient';
 import gamesData from '../games.json';
 import { LOCAL_FONTS, GOOGLE_FONTS } from '../utils/fontSwitcher';
-import GTADisclaimerModal from './GTADisclaimer';
 
 const safeSaveSong = db?.saveSongToIDB || (async () => {});
 const safeLoadSongs = db?.loadSongsFromIDB || (async () => []);
@@ -421,6 +420,7 @@ function SettingsModalContent({
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
+  const [gta3DisclaimerHidden, setGta3DisclaimerHidden] = useState(false);
   const [gtaDisclaimerHidden, setGtaDisclaimerHidden] = useState(false);
   const [fnaeDisclaimerHidden, setFnaeDisclaimerHidden] = useState(false);
   const [connieDisclaimerHidden, setConnieDisclaimerHidden] = useState(false);
@@ -431,10 +431,8 @@ function SettingsModalContent({
 
   useEffect(() => {
     if (show) {
-      setGtaDisclaimerHidden(
-        localStorage.getItem('gta_disclaimer_accepted') === 'true' ||
-        localStorage.getItem('gta3_disclaimer_accepted') === 'true'
-      );
+      setGta3DisclaimerHidden(localStorage.getItem('gta3_disclaimer_accepted') === 'true');
+      setGtaDisclaimerHidden(localStorage.getItem('gta_disclaimer_accepted') === 'true');
       setFnaeDisclaimerHidden(localStorage.getItem('fnae_disclaimer_accepted') === 'true');
       setConnieDisclaimerHidden(localStorage.getItem('hide_connie_disclaimer') === 'true');
       setSkipIntroHidden(localStorage.getItem('skipIntro') === 'true');
@@ -454,15 +452,26 @@ function SettingsModalContent({
     }
   }, [show]);
 
+  const handleToggleGta3Disclaimer = () => {
+    if (gta3DisclaimerHidden) {
+      localStorage.removeItem('gta3_disclaimer_accepted');
+      setGta3DisclaimerHidden(false);
+    } else {
+      localStorage.setItem('gta3_disclaimer_accepted', 'true');
+      setGta3DisclaimerHidden(true);
+    }
+    window.dispatchEvent(new Event('capy-disclaimers-updated'));
+  };
+
   const handleToggleGtaDisclaimer = () => {
     if (gtaDisclaimerHidden) {
       localStorage.removeItem('gta_disclaimer_accepted');
-      localStorage.removeItem('gta3_disclaimer_accepted');
       setGtaDisclaimerHidden(false);
     } else {
       localStorage.setItem('gta_disclaimer_accepted', 'true');
       setGtaDisclaimerHidden(true);
     }
+    window.dispatchEvent(new Event('capy-disclaimers-updated'));
   };
 
   const handleToggleFnaeDisclaimer = () => {
@@ -473,6 +482,7 @@ function SettingsModalContent({
       localStorage.setItem('fnae_disclaimer_accepted', 'true');
       setFnaeDisclaimerHidden(true);
     }
+    window.dispatchEvent(new Event('capy-disclaimers-updated'));
   };
 
   const handleToggleConnieDisclaimer = () => {
@@ -483,6 +493,7 @@ function SettingsModalContent({
       localStorage.setItem('hide_connie_disclaimer', 'true');
       setConnieDisclaimerHidden(true);
     }
+    window.dispatchEvent(new Event('capy-disclaimers-updated'));
   };
 
   const handleToggleSkipIntro = () => {
@@ -653,6 +664,7 @@ function SettingsModalContent({
     setLocalDisplayName(displayName);
   }, [displayName]);
 
+  // Fixed handleNameInputChange with instant profile backend sync
   const handleNameInputChange = async (e) => {
     const text = e.target.value.slice(0, 25);
     setLocalDisplayName(text);
@@ -1703,8 +1715,31 @@ function SettingsModalContent({
                   </label>
 
                   <div className="space-y-3">
-                    {/* GTA Disclaimer */}
+                    {/* GTA III Disclaimer */}
                     <div className="flex items-center justify-between pt-1">
+                      <div>
+                        <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA III Disclaimer</span>
+                        <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                          {gta3DisclaimerHidden ? "Hidden (Accepted)" : "Active"}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleToggleGta3Disclaimer}
+                        className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+                          gta3DisclaimerHidden
+                            ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+                            : isLightMode 
+                              ? "bg-zinc-200 text-zinc-700" 
+                              : "bg-white/10 text-zinc-300"
+                        }`}
+                      >
+                        {gta3DisclaimerHidden ? "Reset Warning" : "Active"}
+                      </button>
+                    </div>
+
+                    {/* GTA Disclaimer */}
+                    <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
                       <div>
                         <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA Disclaimer</span>
                         <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
@@ -2033,5 +2068,3 @@ export function SettingsModal(props) {
     </SettingsErrorBoundary>
   );
 }
-
-export { GTADisclaimerModal };
