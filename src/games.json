@@ -1441,6 +1441,13 @@
     "url": "/stores/games-html/doom.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimage.api.playstation.com%2Fvulcan%2Fap%2Frnd%2F202009%2F2406%2Fm3Ko6r12QZBY6n9JfyfsyXTn.png&f=1&nofb=1&ipt=e90fe69536218b537608f10610ff02fd7d9508aa007279770da8471638a43f90&ipo=images",
     "category": "Action"
+  },
+  {
+    "id": "doomII",
+    "title": "Doom II",
+    "url": "/stores/games-html/doomII.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.playground.ru%2Fe%2FtSB2h4NowkmmsnVn7v_6EQ.jpeg&f=1&nofb=1&ipt=cae32c652059252be33e066c81e3d40f4a6ce92923988aac7c77b2b483fb1fa3&ipo=images",
+    "category": "Action"
   }
 ]
 
