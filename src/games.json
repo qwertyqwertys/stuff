@@ -217,6 +217,13 @@
     "category": "Puzzle"
   },
   {
+    "id": "iron-snout",
+    "title": "Iron Snout",
+    "url": "/stores/games-html/iron-snout.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fassets.altarofgaming.com%2Fwp-content%2Fuploads%2F2024%2F03%2Firon-snout-game-poster-altar-of-gaming.jpg&f=1&nofb=1&ipt=4d37264360ba2ba52c12338af013d02a22a2daad5dad0594ef5f0e89338c72cf&ipo=images",
+    "category": "Action"
+  },
+  {
     "id": "bacon-may-die",
     "title": "Bacon May Die",
     "url": "/stores/games-html/bacon-may-die.html",
