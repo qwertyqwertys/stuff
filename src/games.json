@@ -1441,6 +1441,13 @@
     "url": "/stores/games-html/doom.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimage.api.playstation.com%2Fvulcan%2Fap%2Frnd%2F202009%2F2406%2Fm3Ko6r12QZBY6n9JfyfsyXTn.png&f=1&nofb=1&ipt=e90fe69536218b537608f10610ff02fd7d9508aa007279770da8471638a43f90&ipo=images",
     "category": "Action"
+  },
+  {
+    "id": "rigbmx",
+    "title": "RigBMX",
+    "url": "/stores/games-html/rigbmx.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.kiz10.com%2Fcdn-cgi%2Fimage%2Fquality%3D95%2Cwidth%3D300%2Cheight%3D300%2Cfit%3Dcover%2Cf%3D%2Fupload%2Fthumbnails%2F1414309227_rigbmx.jpg&f=1&nofb=1&ipt=7855c3c102fcd872cd5427383ba10fc368333b41b647e955e6da446b6f612e78&ipo=images",
+    "category": "Platformer"
   }
 ]
 
