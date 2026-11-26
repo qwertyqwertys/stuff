@@ -1212,6 +1212,13 @@
     "category": "Puzzle"
   },
   {
+    "id": "grand-theft-auto",
+    "title": "Grand Theft Auto",
+    "url": "/stores/games-html/grand-theft-auto.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fclassicosps1.com.br%2Fwp-content%2Fuploads%2F2023%2F11%2FGrand-Theft-Auto-capa-ps1-classicosps1.jpg&f=1&nofb=1&ipt=1265f44f8b15407d4f7b6cefa9c00ca9e64e9f9bc51bd508722697726f2b2678&ipo=images",
+    "category": "Action"
+  },
+  {
     "id": "grand-theft-auto-3",
     "title": "Grand Theft Auto III",
     "url": "/stores/games-html/grand-theft-auto-3.html",
