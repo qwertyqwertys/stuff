@@ -1543,49 +1543,49 @@
   },
   {
     "id": "pokemon-red",
-    "title": "Pokemon Red Version",
+    "title": "Pokemon Red",
     "url": "/stores/games-html/pokemon-red.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Farchives.bulbagarden.net%2Fmedia%2Fupload%2F8%2F80%2FRed_EN_boxart.png&f=1&nofb=1&ipt=772bb6cdcde797826ed8c2edab2c4ae3388a6b1f2784e680918705e95f3ae015&ipo=images",
     "category": "Classic"
   },
   {
     "id": "pokemon-blue",
-    "title": "Pokemon Blue Version",
+    "title": "Pokemon Blue",
     "url": "/stores/games-html/pokemon-blue.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fretro-replay.com%2Fwp-content%2Fuploads%2Fsites%2F7%2F2025%2F09%2F4006066-pokemon-blue-version-game-boy-front-cover-1.jpg&f=1&nofb=1&ipt=32ca2c8e8cbaf8c68b501a1a9d12068ccce81ddbbc2a191947d52cca6191b2ee&ipo=images",
     "category": "Classic"
   },
   {
     "id": "pokemon-yellow",
-    "title": "Pokemon Yellow Version",
+    "title": "Pokemon Yellow",
     "url": "/stores/games-html/pokemon-yellow.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.mobygames.com%2Fcovers%2F4505564-pokemon-yellow-version-special-pikachu-edition-game-boy-front-co.jpg&f=1&nofb=1&ipt=4aa8fc6c8f1338a0a51c8acd08d7bdbd2d4885d057df7da0625b43f783213cf4&ipo=images",
     "category": "Classic"
   },
   {
     "id": "pokemon-gold",
-    "title": "Pokemon Gold Version",
+    "title": "Pokemon Gold",
     "url": "/stores/games-html/pokemon-gold.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.lukiegames.com%2Fassets%2Fimages%2FGBC%2Fgbc_pokemon_gold_p_68q9gc.jpg&f=1&nofb=1&ipt=3d369cd3d77d3f5b8075875d045f3c2a74db5d49045f66e321febacc1856758e&ipo=images",
     "category": "Classic"
   },
   {
     "id": "pokemon-silver",
-    "title": "Pokemon Silver Version",
+    "title": "Pokemon Silver",
     "url": "/stores/games-html/pokemon-silver.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F81UQlso%2BfrL.jpg&f=1&nofb=1&ipt=335f59e1d1344ec18ac75ed032ab4d059f3a065569c96d6da84c7a1089cdb68c&ipo=images",
     "category": "Classic"
   },
   {
     "id": "pokemon-crystal",
-    "title": "Pokemon Crystal Version",
+    "title": "Pokemon Crystal",
     "url": "/stores/games-html/pokemon-crystal.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.mobygames.com%2Fcovers%2F6567035-pokemon-crystal-version-game-boy-color-front-cover.png&f=1&nofb=1&ipt=28111373326624240cbb4de0e67fd6f50c55625cd33a7975709693e9ea9c963e&ipo=images",
     "category": "Classic"
   },
   {
     "id": "pokemon-ruby",
-    "title": "Pokemon Ruby Version",
+    "title": "Pokemon Ruby",
     "url": "/stores/games-html/pokemon-ruby.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstorage.googleapis.com%2Fimages.pricecharting.com%2Fhplnh7auk2pnatbf%2F1600.jpg&f=1&nofb=1&ipt=534564acea1686a68c8df7e9e1b60b3af8347613bc164ef91c79977e51e2e247&ipo=images",
     "category": "Classic"
@@ -1612,8 +1612,15 @@
     "category": "Classic"
   },
   {
+    "id": "pokemon-emerald",
+    "title": "Pokemon Emerald",
+    "url": "/stores/games-html/pokemon-emerald.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimg.pokemondb.net%2Fboxes%2Flg%2Femerald-large.jpg&f=1&nofb=1&ipt=21f829e966a70c0804877eac387bc9526db11c649f97894b4a020415c6ee8cfa&ipo=images",
+    "category": "Classic"
+  },
+  {
     "id": "pokemon-green-beta",
-    "title": "Pokemon Green Version (beta)",
+    "title": "Pokemon Green (beta)",
     "url": "/stores/games-html/pokemon-green-beta.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpapercave.com%2Fwp%2Fwp9541419.png&f=1&nofb=1&ipt=c7b202ff888f5b6b8e1c5a24e23e1eb414ff93061ac61858b255b24a8908b298&ipo=images",
     "category": "Classic"
