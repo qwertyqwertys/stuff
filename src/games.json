@@ -1598,6 +1598,13 @@
     "category": "Classic"
   },
   {
+    "id": "pokemon-firered",
+    "title": "Pokemon FireRed",
+    "url": "/stores/games-html/pokemon-firered.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fd1fs8ljxwyzba6.cloudfront.net%2Fassets%2Feditorial%2F2017%2F10%2Fpokemon-fire-red-original.jpg&f=1&nofb=1&ipt=fce4274eae8b7ba49927fddddb87a9347b634f511d7460dd8455aaae820c5859&ipo=images",
+    "category": "Classic"
+  },
+  {
     "id": "pokemon-green-beta",
     "title": "Pokemon Green Version (beta)",
     "url": "/stores/games-html/pokemon-green-beta.html",
