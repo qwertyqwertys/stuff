@@ -421,6 +421,7 @@ function SettingsModalContent({
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const [gta3DisclaimerHidden, setGta3DisclaimerHidden] = useState(false);
+  const [gta2DisclaimerHidden, setGta2DisclaimerHidden] = useState(false);
   const [gtaDisclaimerHidden, setGtaDisclaimerHidden] = useState(false);
   const [fnaeDisclaimerHidden, setFnaeDisclaimerHidden] = useState(false);
   const [connieDisclaimerHidden, setConnieDisclaimerHidden] = useState(false);
@@ -432,6 +433,7 @@ function SettingsModalContent({
   useEffect(() => {
     if (show) {
       setGta3DisclaimerHidden(localStorage.getItem('gta3_disclaimer_accepted') === 'true');
+      setGta2DisclaimerHidden(localStorage.getItem('gta2_disclaimer_accepted') === 'true');
       setGtaDisclaimerHidden(localStorage.getItem('gta_disclaimer_accepted') === 'true');
       setFnaeDisclaimerHidden(localStorage.getItem('fnae_disclaimer_accepted') === 'true');
       setConnieDisclaimerHidden(localStorage.getItem('hide_connie_disclaimer') === 'true');
@@ -463,6 +465,17 @@ function SettingsModalContent({
     window.dispatchEvent(new Event('capy-disclaimers-updated'));
   };
 
+  const handleToggleGta2Disclaimer = () => {
+    if (gta2DisclaimerHidden) {
+      localStorage.removeItem('gta2_disclaimer_accepted');
+      setGta2DisclaimerHidden(false);
+    } else {
+      localStorage.setItem('gta2_disclaimer_accepted', 'true');
+      setGta2DisclaimerHidden(true);
+    }
+    window.dispatchEvent(new Event('capy-disclaimers-updated'));
+  };
+  
   const handleToggleGtaDisclaimer = () => {
     if (gtaDisclaimerHidden) {
       localStorage.removeItem('gta_disclaimer_accepted');
