@@ -1556,6 +1556,13 @@
     "category": "Classic"
   },
   {
+    "id": "pokemon-yellow",
+    "title": "Pokemon Yellow Version",
+    "url": "/stores/games-html/pokemon-yellow.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.mobygames.com%2Fcovers%2F4505564-pokemon-yellow-version-special-pikachu-edition-game-boy-front-co.jpg&f=1&nofb=1&ipt=4aa8fc6c8f1338a0a51c8acd08d7bdbd2d4885d057df7da0625b43f783213cf4&ipo=images",
+    "category": "Classic"
+  },
+  {
     "id": "pokemon-green-beta",
     "title": "Pokemon Green Version (beta)",
     "url": "/stores/games-html/pokemon-green-beta.html",
