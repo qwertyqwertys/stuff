@@ -1571,16 +1571,23 @@
   },
   {
     "id": "pokemon-silver",
-    "title": "Pokemon Silver Edition",
+    "title": "Pokemon Silver Version",
     "url": "/stores/games-html/pokemon-silver.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F81UQlso%2BfrL.jpg&f=1&nofb=1&ipt=335f59e1d1344ec18ac75ed032ab4d059f3a065569c96d6da84c7a1089cdb68c&ipo=images",
     "category": "Classic"
   },
   {
     "id": "pokemon-crystal",
-    "title": "Pokemon Crystal Edition",
+    "title": "Pokemon Crystal Version",
     "url": "/stores/games-html/pokemon-crystal.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.mobygames.com%2Fcovers%2F6567035-pokemon-crystal-version-game-boy-color-front-cover.png&f=1&nofb=1&ipt=28111373326624240cbb4de0e67fd6f50c55625cd33a7975709693e9ea9c963e&ipo=images",
+    "category": "Classic"
+  },
+  {
+    "id": "pokemon-ruby",
+    "title": "Pokemon Ruby Version",
+    "url": "/stores/games-html/pokemon-ruby.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstorage.googleapis.com%2Fimages.pricecharting.com%2Fhplnh7auk2pnatbf%2F1600.jpg&f=1&nofb=1&ipt=534564acea1686a68c8df7e9e1b60b3af8347613bc164ef91c79977e51e2e247&ipo=images",
     "category": "Classic"
   },
   {
