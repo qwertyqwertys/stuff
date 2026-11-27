@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 export default function GTADisclaimerModal({ isOpen, onClose, onConfirm }) {
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
-  // If modal shouldn't be open, don't render anything
   if (!isOpen) return null;
 
   const handleAccept = () => {
@@ -14,52 +13,44 @@ export default function GTADisclaimerModal({ isOpen, onClose, onConfirm }) {
   };
 
   return (
-    <div 
-      onClick={onClose} // Clicking overlay closes modal
-      style={{
-        position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.85)', 
-        zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', 
-        fontFamily: 'system-ui, sans-serif'
-      }}
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 p-4 font-sans"
     >
-      <div 
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside box
-        style={{
-          background: '#1a1a1a', color: '#ffffff', padding: '24px', 
-          borderRadius: '12px', maxWidth: '450px', width: '90%', 
-          border: '1px solid #333', boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
-        }}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 shadow-2xl text-white"
       >
-        <h2 style={{ marginTop: 0, color: '#ff4757', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          ⚠️ Disclaimer & Warning
+        <h2 className="text-xl font-bold text-red-500 flex items-center gap-2 m-0">
+          ⚠️ Disclaimer &amp; Warning
         </h2>
-        
-        <p style={{ color: '#ccc', lineHeight: '1.5', fontSize: '15px', margin: '16px 0' }}>
+
+        <p className="text-zinc-300 text-sm leading-relaxed my-4">
           Capybara Science is not responsible for you getting in trouble for playing GTA in or outside of school.
         </p>
-        
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '20px 0', cursor: 'pointer', fontSize: '14px', color: '#aaa' }}>
-          <input 
-            type="checkbox" 
-            checked={dontShowAgain} 
+
+        <label className="flex items-center gap-2 my-5 cursor-pointer text-sm text-zinc-400 select-none">
+          <input
+            type="checkbox"
+            checked={dontShowAgain}
             onChange={(e) => setDontShowAgain(e.target.checked)}
-            style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
+            className="w-4 h-4 rounded cursor-pointer accent-red-500"
           />
           Don't show this again
         </label>
 
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-          <button 
-            onClick={onClose} 
-            style={{ padding: '8px 16px', background: '#333', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white border-0 rounded-lg cursor-pointer text-sm font-medium transition-colors"
           >
             Cancel
           </button>
-          <button 
-            onClick={handleAccept} 
-            style={{ padding: '8px 16px', background: '#ff4757', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+          <button
+            onClick={handleAccept}
+            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white border-0 rounded-lg font-bold cursor-pointer text-sm transition-colors"
           >
-            I Understand & Launch GTA
+            I Understand &amp; Launch GTA
           </button>
         </div>
       </div>
