@@ -1721,7 +1721,7 @@ function SettingsModalContent({
               )}
 
 {/* GAME & SOUNDBOARD DISCLAIMERS */}
-{matchesSearch(['disclaimer', 'gta', 'gta3', 'epstein', 'fnae', 'connie', 'sound', 'soundboard', 'language', 'warning', 'school', 'game']) && (
+{matchesSearch(['disclaimer', 'gta', 'gta2', 'gta3', 'epstein', 'fnae', 'connie', 'sound', 'soundboard', 'language', 'warning', 'school', 'game']) && (
   <section className={`space-y-4 p-4 rounded-2xl border transition-all ${isLightMode ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
     <label className={`text-[10px] uppercase font-black tracking-widest flex items-center gap-2 ${isLightMode ? 'text-zinc-700' : 'text-zinc-300'}`}>
       <AlertTriangle className="w-3.5 h-3.5 text-[var(--theme)]" /> Disclaimers
@@ -1752,7 +1752,30 @@ function SettingsModalContent({
   </button>
 </div>
 
-{/* GTA III Disclaimer (Second) */}
+      {/* GTA 2 Disclaimer (Second) */}
+<div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
+  <div>
+    <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA 2 Disclaimer</span>
+    <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+      {gta2DisclaimerHidden ? "Hidden (Don't Show Again Enabled)" : "Active (Shows Warning)"}
+    </span>
+  </div>
+  <button
+    type="button"
+    onClick={handleToggleGta2Disclaimer}
+    className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+      gta2DisclaimerHidden
+        ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+        : isLightMode
+          ? "bg-zinc-200 text-zinc-700"
+          : "bg-white/10 text-zinc-300"
+    }`}
+  >
+    {gta2DisclaimerHidden ? "Reset Warning" : "Hide Warning"}
+  </button>
+</div>
+      
+      {/* GTA III Disclaimer (Third) */}
 <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
   <div>
     <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA III Disclaimer</span>
