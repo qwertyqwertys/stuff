@@ -1549,6 +1549,13 @@
     "category": "Classic"
   },
   {
+    "id": "pokemon-blue",
+    "title": "Pokemon Blue Version",
+    "url": "/stores/games-html/pokemon-blue.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fretro-replay.com%2Fwp-content%2Fuploads%2Fsites%2F7%2F2025%2F09%2F4006066-pokemon-blue-version-game-boy-front-cover-1.jpg&f=1&nofb=1&ipt=32ca2c8e8cbaf8c68b501a1a9d12068ccce81ddbbc2a191947d52cca6191b2ee&ipo=images",
+    "category": "Classic"
+  },
+  {
     "id": "pokemon-green-beta",
     "title": "Pokemon Green Version (beta)",
     "url": "/stores/games-html/pokemon-green-beta.html",
