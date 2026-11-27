@@ -1563,6 +1563,13 @@
     "category": "Classic"
   },
   {
+    "id": "pokemon-gold",
+    "title": "Pokemon Gold Version",
+    "url": "/stores/games-html/pokemon-gold.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.lukiegames.com%2Fassets%2Fimages%2FGBC%2Fgbc_pokemon_gold_p_68q9gc.jpg&f=1&nofb=1&ipt=3d369cd3d77d3f5b8075875d045f3c2a74db5d49045f66e321febacc1856758e&ipo=images",
+    "category": "Classic"
+  },
+  {
     "id": "pokemon-green-beta",
     "title": "Pokemon Green Version (beta)",
     "url": "/stores/games-html/pokemon-green-beta.html",
