@@ -1577,6 +1577,13 @@
     "category": "Classic"
   },
   {
+    "id": "pokemon-crystal",
+    "title": "Pokemon Crystal Edition",
+    "url": "/stores/games-html/pokemon-crystal.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.mobygames.com%2Fcovers%2F6567035-pokemon-crystal-version-game-boy-color-front-cover.png&f=1&nofb=1&ipt=28111373326624240cbb4de0e67fd6f50c55625cd33a7975709693e9ea9c963e&ipo=images",
+    "category": "Classic"
+  },
+  {
     "id": "pokemon-green-beta",
     "title": "Pokemon Green Version (beta)",
     "url": "/stores/games-html/pokemon-green-beta.html",
