@@ -710,21 +710,13 @@ function MainDashboard() {
     }
   };
 
-  const launchContent = (item) => {
+ const launchContent = (item) => {
   if (!item) return;
 
   const identifier = `${item.id || ''} ${item.title || ''} ${item.name || ''}`
     .toLowerCase()
     .replace(/[-_]+/g, ' ');
   const compact = identifier.replace(/[^a-z0-9]/g, '');
-
-  const isGta2 =
-    /\bgta\s*(2|ii)\b/i.test(identifier) ||
-    /\bgrand\s*theft\s*auto\s*(2|ii)\b/i.test(identifier) ||
-    compact.includes('gta2') ||
-    compact.includes('gtaii') ||
-    compact.includes('grandtheftauto2') ||
-    compact.includes('grandtheftautoii');
 
   const isGta3 =
     /\bgta\s*(3|iii)\b/i.test(identifier) ||
@@ -733,6 +725,15 @@ function MainDashboard() {
     compact.includes('gtaiii') ||
     compact.includes('grandtheftauto3') ||
     compact.includes('grandtheftautoiii');
+
+  const isGta2 =
+    !isGta3 &&
+    (/\bgta\s*(2|ii)\b/i.test(identifier) ||
+      /\bgrand\s*theft\s*auto\s*(2|ii)\b/i.test(identifier) ||
+      /\bgta2\b/i.test(identifier) ||
+      /\bgtaii\b/i.test(identifier) ||
+      /\bgrandtheftauto2\b/i.test(identifier) ||
+      /\bgrandtheftautoii\b/i.test(identifier));
 
   const isGta =
     !isGta2 &&
@@ -766,7 +767,7 @@ function MainDashboard() {
 
   executeGameLaunch(item);
 };
-
+  
   useEffect(() => {
     return () => {
       activeIntervals.current.forEach(clearInterval);
