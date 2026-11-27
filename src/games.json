@@ -1605,6 +1605,13 @@
     "category": "Classic"
   },
   {
+    "id": "pokemon-leafgreen",
+    "title": "Pokemon LeafGreen",
+    "url": "/stores/games-html/pokemon-leafgreen.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimg.pokemondb.net%2Fboxes%2Flg%2Fleafgreen-large.jpg&f=1&nofb=1&ipt=1c7340a40f5e4b7ac3f01cf76941af6fd98ff5be234a68d75c5a932fe2c99932&ipo=images",
+    "category": "Classic"
+  },
+  {
     "id": "pokemon-green-beta",
     "title": "Pokemon Green Version (beta)",
     "url": "/stores/games-html/pokemon-green-beta.html",
