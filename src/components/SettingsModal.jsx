@@ -1715,51 +1715,52 @@ function SettingsModalContent({
     </label>
 
     <div className="space-y-3">
+      
       {/* GTA Disclaimer (First) */}
-      <div className="flex items-center justify-between pt-1">
-        <div>
-          <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA Disclaimer</span>
-          <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-            {gtaDisclaimerHidden ? "Hidden (Accepted)" : "Active"}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={handleToggleGtaDisclaimer}
-          className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
-            gtaDisclaimerHidden
-              ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
-              : isLightMode
-                ? "bg-zinc-200 text-zinc-700"
-                : "bg-white/10 text-zinc-300"
-          }`}
-        >
-          {gtaDisclaimerHidden ? "Reset Warning" : "Active"}
-        </button>
-      </div>
+<div className="flex items-center justify-between pt-1">
+  <div>
+    <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA Disclaimer</span>
+    <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+      {gtaDisclaimerHidden ? "Hidden (Don't Show Again Enabled)" : "Active (Shows Warning)"}
+    </span>
+  </div>
+  <button
+    type="button"
+    onClick={handleToggleGtaDisclaimer}
+    className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+      gtaDisclaimerHidden
+        ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+        : isLightMode
+          ? "bg-zinc-200 text-zinc-700"
+          : "bg-white/10 text-zinc-300"
+    }`}
+  >
+    {gtaDisclaimerHidden ? "Reset Warning" : "Hide Warning"}
+  </button>
+</div>
 
-      {/* GTA III Disclaimer (Second) */}
-      <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
-        <div>
-          <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA III Disclaimer</span>
-          <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
-            {gta3DisclaimerHidden ? "Hidden (Accepted)" : "Active"}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={handleToggleGta3Disclaimer}
-          className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
-            gta3DisclaimerHidden
-              ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
-              : isLightMode
-                ? "bg-zinc-200 text-zinc-700"
-                : "bg-white/10 text-zinc-300"
-          }`}
-        >
-          {gta3DisclaimerHidden ? "Reset Warning" : "Active"}
-        </button>
-      </div>
+{/* GTA III Disclaimer (Second) */}
+<div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
+  <div>
+    <span className={`text-[9px] font-bold block ${isLightMode ? 'text-zinc-900' : 'text-zinc-200'}`}>GTA III Disclaimer</span>
+    <span className={`text-[8px] uppercase font-medium ${isLightMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+      {gta3DisclaimerHidden ? "Hidden (Don't Show Again Enabled)" : "Active (Shows Warning)"}
+    </span>
+  </div>
+  <button
+    type="button"
+    onClick={handleToggleGta3Disclaimer}
+    className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-xl transition-all cursor-pointer outline-none focus:ring-2 focus:ring-[var(--theme)] ${
+      gta3DisclaimerHidden
+        ? "bg-[var(--theme)] text-black hover:opacity-90 shadow-sm"
+        : isLightMode
+          ? "bg-zinc-200 text-zinc-700"
+          : "bg-white/10 text-zinc-300"
+    }`}
+  >
+    {gta3DisclaimerHidden ? "Reset Warning" : "Hide Warning"}
+  </button>
+</div>
 
       {/* Five Nights at Epstein's Disclaimer */}
       <div className={`flex items-center justify-between pt-2 border-t ${isLightMode ? 'border-zinc-200' : 'border-white/5'}`}>
