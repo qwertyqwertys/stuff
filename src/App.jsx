@@ -1582,6 +1582,20 @@ function MainDashboard() {
         }}
       />
 
+      <GTA2DisclaimerModal
+        isOpen={gta2ModalOpen}
+        onClose={() => {
+          setGta2ModalOpen(false);
+          setPendingGame(null);
+        }}
+        onConfirm={() => {
+          const gameToLaunch = pendingGame;
+          setGta2ModalOpen(false);
+          setPendingGame(null);
+          if (gameToLaunch) executeGameLaunch(gameToLaunch);
+        }}
+      />
+
       <GTA3DisclaimerModal
         isOpen={gta3ModalOpen}
         onClose={() => {
