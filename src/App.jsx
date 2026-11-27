@@ -711,45 +711,61 @@ function MainDashboard() {
   };
 
   const launchContent = (item) => {
-    if (!item) return;
+  if (!item) return;
 
-    const identifier = `${item.id || ''} ${item.title || ''} ${item.name || ''}`
-      .toLowerCase()
-      .replace(/[-_]+/g, ' ');
-    const compact = identifier.replace(/[^a-z0-9]/g, '');
+  const identifier = `${item.id || ''} ${item.title || ''} ${item.name || ''}`
+    .toLowerCase()
+    .replace(/[-_]+/g, ' ');
+  const compact = identifier.replace(/[^a-z0-9]/g, '');
 
-    const isGta3 =
-      /\bgta\s*(3|iii)\b/i.test(identifier) ||
-      /\bgrand\s*theft\s*auto\s*(3|iii)\b/i.test(identifier) ||
-      compact.includes('gta3') ||
-      compact.includes('gtaiii') ||
-      compact.includes('grandtheftauto3') ||
-      compact.includes('grandtheftautoiii');
+  const isGta2 =
+    /\bgta\s*(2|ii)\b/i.test(identifier) ||
+    /\bgrand\s*theft\s*auto\s*(2|ii)\b/i.test(identifier) ||
+    compact.includes('gta2') ||
+    compact.includes('gtaii') ||
+    compact.includes('grandtheftauto2') ||
+    compact.includes('grandtheftautoii');
 
-    const isGta =
-      !isGta3 &&
-      (/\bgta\b/i.test(identifier) ||
-        identifier.includes('grand theft auto') ||
-        compact.includes('grandtheftauto'));
+  const isGta3 =
+    /\bgta\s*(3|iii)\b/i.test(identifier) ||
+    /\bgrand\s*theft\s*auto\s*(3|iii)\b/i.test(identifier) ||
+    compact.includes('gta3') ||
+    compact.includes('gtaiii') ||
+    compact.includes('grandtheftauto3') ||
+    compact.includes('grandtheftautoiii');
 
-    if (isGta3) {
-      const accepted = localStorage.getItem('gta3_disclaimer_accepted') === 'true';
-      if (!accepted) {
-        setPendingGame(item);
-        setGta3ModalOpen(true);
-        return;
-      }
-    } else if (isGta) {
-      const accepted = localStorage.getItem('gta_disclaimer_accepted') === 'true';
-      if (!accepted) {
-        setPendingGame(item);
-        setGtaModalOpen(true);
-        return;
-      }
+  const isGta =
+    !isGta2 &&
+    !isGta3 &&
+    (/\bgta\b/i.test(identifier) ||
+      identifier.includes('grand theft auto') ||
+      compact.includes('grandtheftauto'));
+
+  if (isGta2) {
+    const accepted = localStorage.getItem('gta2_disclaimer_accepted') === 'true';
+    if (!accepted) {
+      setPendingGame(item);
+      setGta2ModalOpen(true);
+      return;
     }
+  } else if (isGta3) {
+    const accepted = localStorage.getItem('gta3_disclaimer_accepted') === 'true';
+    if (!accepted) {
+      setPendingGame(item);
+      setGta3ModalOpen(true);
+      return;
+    }
+  } else if (isGta) {
+    const accepted = localStorage.getItem('gta_disclaimer_accepted') === 'true';
+    if (!accepted) {
+      setPendingGame(item);
+      setGtaModalOpen(true);
+      return;
+    }
+  }
 
-    executeGameLaunch(item);
-  };
+  executeGameLaunch(item);
+};
 
   useEffect(() => {
     return () => {
