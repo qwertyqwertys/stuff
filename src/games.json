@@ -1591,6 +1591,13 @@
     "category": "Classic"
   },
   {
+    "id": "pokemon-sapphire",
+    "title": "Pokemon Sapphire",
+    "url": "/stores/games-html/pokemon-sapphire.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimg.pokemondb.net%2Fboxes%2Fsapphire.jpg&f=1&nofb=1&ipt=1129c8270a0a8e52fc5c86b86ed310bee7985f592d42a6c9caac65186e728ebf&ipo=images",
+    "category": "Classic"
+  },
+  {
     "id": "pokemon-green-beta",
     "title": "Pokemon Green Version (beta)",
     "url": "/stores/games-html/pokemon-green-beta.html",
