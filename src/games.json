@@ -1570,6 +1570,13 @@
     "category": "Classic"
   },
   {
+    "id": "pokemon-silver",
+    "title": "Pokemon Silver Edition",
+    "url": "/stores/games-html/pokemon-silver.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fm.media-amazon.com%2Fimages%2FI%2F81UQlso%2BfrL.jpg&f=1&nofb=1&ipt=335f59e1d1344ec18ac75ed032ab4d059f3a065569c96d6da84c7a1089cdb68c&ipo=images",
+    "category": "Classic"
+  },
+  {
     "id": "pokemon-green-beta",
     "title": "Pokemon Green Version (beta)",
     "url": "/stores/games-html/pokemon-green-beta.html",
