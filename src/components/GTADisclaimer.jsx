@@ -15,40 +15,108 @@ export default function GTADisclaimerModal({ isOpen, onClose, onConfirm }) {
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 p-4 font-sans"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0, 0, 0, 0.85)',
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl p-6 shadow-2xl text-white"
+        style={{
+          background: '#18181b',
+          color: '#ffffff',
+          padding: '24px',
+          borderRadius: '16px',
+          maxWidth: '450px',
+          width: '100%',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.65)',
+        }}
       >
-        <h2 className="text-xl font-bold text-red-500 flex items-center gap-2 m-0">
-          ⚠️ Disclaimer &amp; Warning
+        <h2
+          style={{
+            margin: 0,
+            color: '#ff0000',
+            fontWeight: 800,
+            fontSize: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
+          <span>⚠️</span>
+          <span>Disclaimer &amp; Warning</span>
         </h2>
 
-        <p className="text-zinc-300 text-sm leading-relaxed my-4">
+        <p
+          style={{
+            color: '#e4e4e7',
+            lineHeight: '1.5',
+            fontSize: '15px',
+            fontWeight: 500,
+            margin: '16px 0',
+          }}
+        >
           Capybara Science is not responsible for you getting in trouble for playing GTA in or outside of school.
         </p>
 
-        <label className="flex items-center gap-2 my-5 cursor-pointer text-sm text-zinc-400 select-none">
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            margin: '20px 0',
+            cursor: 'pointer',
+            fontSize: '14px',
+            color: '#a1a1aa',
+            userSelect: 'none',
+          }}
+        >
           <input
             type="checkbox"
             checked={dontShowAgain}
             onChange={(e) => setDontShowAgain(e.target.checked)}
-            className="w-4 h-4 rounded cursor-pointer accent-red-500"
+            style={{ width: '16px', height: '16px', cursor: 'pointer' }}
           />
-          Don't show this again
+          <span>Don't show this again</span>
         </label>
 
-        <div className="flex gap-3 justify-end">
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white border-0 rounded-lg cursor-pointer text-sm font-medium transition-colors"
+            style={{
+              padding: '10px 18px',
+              background: '#27272a',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '10px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleAccept}
-            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white border-0 rounded-lg font-bold cursor-pointer text-sm transition-colors"
+            style={{
+              padding: '10px 18px',
+              background: '#ff0000',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '10px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
           >
             I Understand &amp; Launch GTA
           </button>
