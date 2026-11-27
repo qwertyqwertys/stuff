@@ -715,8 +715,8 @@ function MainDashboard() {
       .toLowerCase()
       .replace(/[-_]+/g, ' ');
 
-    const isGta3 = /\bgta\s*(3|iii)\b/.test(identifier) || identifier.includes('gta3');
-    const isGta = /\bgta\b/.test(identifier) || identifier.includes('grand theft auto');
+    const isGta3 = /\bgta\s*(3|iii)\b/i.test(identifier) || identifier.includes('gta3');
+    const isGta = !isGta3 && (/\bgta\b/i.test(identifier) || identifier.includes('grand theft auto'));
 
     if (isGta3) {
       const accepted = localStorage.getItem('gta3_disclaimer_accepted') === 'true';
