@@ -714,9 +714,21 @@ function MainDashboard() {
     const identifier = `${item.id || ''} ${item.title || ''} ${item.name || ''}`
       .toLowerCase()
       .replace(/[-_]+/g, ' ');
+    const compact = identifier.replace(/[^a-z0-9]/g, '');
 
-    const isGta3 = /\bgta\s*(3|iii)\b/i.test(identifier) || identifier.includes('gta3');
-    const isGta = !isGta3 && (/\bgta\b/i.test(identifier) || identifier.includes('grand theft auto'));
+    const isGta3 =
+      /\bgta\s*(3|iii)\b/i.test(identifier) ||
+      /\bgrand\s*theft\s*auto\s*(3|iii)\b/i.test(identifier) ||
+      compact.includes('gta3') ||
+      compact.includes('gtaiii') ||
+      compact.includes('grandtheftauto3') ||
+      compact.includes('grandtheftautoiii');
+
+    const isGta =
+      !isGta3 &&
+      (/\bgta\b/i.test(identifier) ||
+        identifier.includes('grand theft auto') ||
+        compact.includes('grandtheftauto'));
 
     if (isGta3) {
       const accepted = localStorage.getItem('gta3_disclaimer_accepted') === 'true';
