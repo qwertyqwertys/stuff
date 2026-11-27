@@ -384,6 +384,7 @@ function MainDashboard() {
 
   // --- GTA DISCLAIMERS STATE ---
   const [gtaModalOpen, setGtaModalOpen] = useState(false);
+  const [gta2ModalOpen, setGta2ModalOpen] = useState(false);
   const [gta3ModalOpen, setGta3ModalOpen] = useState(false);
   const [pendingGame, setPendingGame] = useState(null);
   const [disclaimerTick, setDisclaimerTick] = useState(0);
