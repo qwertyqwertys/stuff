@@ -1,7 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function GTA3DisclaimerModal({ isOpen, onClose, onConfirm }) {
   const [dontShowAgain, setDontShowAgain] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setDontShowAgain(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleDisclaimersReset = () => {
+      setDontShowAgain(false);
+    };
+    window.addEventListener('capy-disclaimers-updated', handleDisclaimersReset);
+    return () => window.removeEventListener('capy-disclaimers-updated', handleDisclaimersReset);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -9,6 +23,7 @@ export default function GTA3DisclaimerModal({ isOpen, onClose, onConfirm }) {
     if (dontShowAgain) {
       localStorage.setItem('gta3_disclaimer_accepted', 'true');
     }
+    setDontShowAgain(false);
     onConfirm();
   };
 
