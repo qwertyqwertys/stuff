@@ -11,6 +11,7 @@ import gnMathDataRaw from './gn-math-games.json';
 import { GameCard } from './components/GameCard';
 import { SettingsModal } from './components/SettingsModal';
 import GTADisclaimerModal from './components/GTADisclaimer';
+import GTA2DisclaimerModal from './components/GTA2Disclaimer';
 import GTA3DisclaimerModal from './components/GTA3Disclaimer';
 import { Header } from './components/Header';
 import { FriendViewModal } from './components/FriendViewModal';
