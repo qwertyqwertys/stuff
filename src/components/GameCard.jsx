@@ -100,12 +100,17 @@ export function GameCard({
               aria-label={isFavorite ? `Remove ${game.title} from favorites` : `Favorite ${game.title}`}
               className={`absolute top-4 right-4 z-10 p-2 bg-zinc-900/80 rounded-full border border-white/10 transition-transform ${performanceMode ? '' : 'backdrop-blur-sm hover:scale-110 shadow-lg'}`}
             >
-              <Heart "#a1a1aa"} "var(--theme)" 'none'} 'var(--theme)' : ? className="w-4 h-4 transition-colors" fill="{isFavorite" stroke="{isFavorite" strokeWidth="{2.5}"/>
+              <Heart
+                className="w-4 h-4 transition-colors"
+                stroke={isFavorite ? 'var(--theme)' : '#a1a1aa'}
+                strokeWidth={2.5}
+                fill={isFavorite ? 'var(--theme)' : 'none'}
+              />
             </button>
           )}
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <div className={`w-12 h-12 bg-[var(--theme)] rounded-full flex items-center justify-center ${performanceMode ? '' : 'shadow-[0_0_20px_var(--theme)]'}`}>
-              <Play className="w-6 h-6 text-black fill-current ml-1"/>
+              <Play className="w-6 h-6 text-black fill-current ml-1" />
             </div>
           </div>
         </div>
