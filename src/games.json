@@ -1610,6 +1610,13 @@
     "url": "/stores/games-html/pokemon-emerald.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimg.pokemondb.net%2Fboxes%2Flg%2Femerald-large.jpg&f=1&nofb=1&ipt=21f829e966a70c0804877eac387bc9526db11c649f97894b4a020415c6ee8cfa&ipo=images",
     "category": "Classic"
+  },
+  {
+    "id": "blocky-snakes",
+    "title": "Blocky Snakes",
+    "url": "/stores/games-html/blocky-snakes.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimg.gamesgo.net%2Fstorage%2Fimages%2Fgames%2Fblocky-snakes%2Fsn300jpg.jpg&f=1&nofb=1&ipt=c8c1c8fd5adc81a0796605c73bfaaee184471a1438bb10aa85408d0f394651f4&ipo=images",
+    "category": "Arcade"
   }
 ]
 
