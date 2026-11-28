@@ -63,6 +63,13 @@
     "category": "Sports"
   },
   {
+    "id": "karate-bros",
+    "title": "Karate Bros",
+    "url": "/stores/games-html/karate-bros.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.blipzi.com%2Fka%2Fra%2Fkarate-bros-d.jpg&f=1&nofb=1&ipt=bc7cd6be5969e5072d8e41466871a406ad2f22b59e3ef0982ff9ab7abed57e1d&ipo=images",
+    "category": "Sports"
+  },
+  {
     "id": "granny",
     "title": "Granny",
     "url": "https://bind.strongson.com/gamefile/granny.html",
@@ -1661,7 +1668,6 @@
     "category": "Casual"
   }
 ]
-
     
 
 
