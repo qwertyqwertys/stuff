@@ -1645,6 +1645,13 @@
     "url": "/stores/games-html/attack-hole.html",
     "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fassets-prd.ignimgs.com%2F2025%2F03%2F16%2F1x1-attackhole-button-1742132882788.jpg&f=1&nofb=1&ipt=9376c19898354c7d0630f78ad1d85ba9384e264883e6cf49a34e678559beb27b&ipo=images",
     "category": "Casual"
+  },
+  {
+    "id": "re:run",
+    "title": "RE:RUN",
+    "url": "/stores/games-html/rerun.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fsnake-game.io%2Fdata%2Fimage%2Fgame%2Fre-run%2Fre-run.png&f=1&nofb=1&ipt=56264668bf00a5d93bcdc1d1aceefb840fc7ca3b600dafa3732aeffe486eadf1&ipo=images",
+    "category": "Platformer"
   }
 ]
 
