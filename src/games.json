@@ -70,6 +70,13 @@
     "category": "Sports"
   },
   {
+    "id": "kart-bros",
+    "title": "Kart Bros",
+    "url": "/stores/games-html/kart-bros.html",
+    "thumbnail": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn.blipzi.com%2Fka%2Frt%2Fkart-bros-d.jpg&f=1&nofb=1&ipt=55ef3ae29639ef6d5161101e7c2d91c2932f1846ba15e19dbc3ea8a7d0b18164&ipo=images",
+    "category": "Sports"
+  },
+  {
     "id": "granny",
     "title": "Granny",
     "url": "https://bind.strongson.com/gamefile/granny.html",
